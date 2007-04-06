@@ -1,0 +1,20 @@
+#summary A random walk through code.
+
+= Introduction =
+
+Here are various and sundry pieces of code with commentary.
+
+
+= Details =
+
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/lispm.init lispm.init]
+ My init file for the Lisp Machine.  Not especially interesting, but we have to begin somewhere.  The bobhack file gave me a mouse cursor that was J. R. "Bob" Dobbs with his pipe being the hot spot.  Unfortunately, that would cause occasional microcode crashes (something to do with the size of the bitmap).  I also had a cons cell mouse cursor and a middle finger cursor.  I started using a Dvorak keyboard at LMI.
+
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/custom.lisp custom.lisp]
+ Some customizations.  These are embarrassing.  Well, I was young.  I wouldn't use most of these now because it is important that other programmers can read your code.  These little name changes and hacks just add a layer of obfuscation.  I still think question marks are better than the trailing P however.
+
+
+
+
+
+
