@@ -1,4 +1,5 @@
 #summary A random walk through code.
+#labels Featured
 
 = Introduction =
 
@@ -12,6 +13,29 @@ Here are various and sundry pieces of code with commentary.
 
   * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/custom.lisp custom.lisp]
  Some customizations.  These are embarrassing.  Well, I was young.  I wouldn't use most of these now because it is important that other programmers can read your code.  These little name changes and hacks just add a layer of obfuscation.  I still think question marks are better than the trailing P however.
+
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/pace/ Pace's files]
+ Pace Willisson was one of best programmers I've ever worked with.  Here are some of his files.
+
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/pace/disable-page-out-words.lisp disable-page-out-words.lisp]
+ The LMI Lambda had a background process that would `scrub' dirty pages and write them back to disk.  It would also free the scrubbed pages, but that turned out to be a bad idea.  This hack that Pace wrote disables the freeing of the scrubbed pages.
+
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/rg/ RG's files]
+ [http://en.wikipedia.org/wiki/Richard_Greenblatt_(programmer) Rick Greenblatt] is one of the amazing people I have had the pleasure to work with.  We've had our differences over the years, but I have learned a lot from Rick.  Here are some of his files.
+
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/rg/old-micro-tracer.lisp old-micro-tracer.lisp]
+ When I started at LMI, Rick asked me to dust off the microcode tracer.  This was a program designed to check assertions in the Lambda microcode.  I played around with Rick's version for a while, but I found the code difficult to understand and wrote my own version.  The version here has a mixture of some code of mine with Rick's original code.
+
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/m-p.lisp m-p.lisp]
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/numsets.lisp numsets.lisp]
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/uregs.lisp uregs.lisp]
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/udasm.lisp udasm.lisp]
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/utrace.lisp utrace.lisp]
+ These files are parts of my version of the microcode tracer.  I started hitting the limitations of the LMI Lambda fairly quickly.  Closures didn't work right, lexical environments were limited to 64 variables, the garbage collector would crap out and halt the machine.  It was a nightmare.  Rick suggested that I simply fix the compiler and microcode.  So I became a compiler and microcode hacker.
+
+
+
+
 
 
 
