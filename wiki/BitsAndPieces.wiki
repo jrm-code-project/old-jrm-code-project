@@ -33,6 +33,12 @@ Here are various and sundry pieces of code with commentary.
   * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/utrace.lisp utrace.lisp]
  These files are parts of my version of the microcode tracer.  I started hitting the limitations of the LMI Lambda fairly quickly.  Closures didn't work right, lexical environments were limited to 64 variables, the garbage collector would crap out and halt the machine.  It was a nightmare.  Rick suggested that I simply fix the compiler and microcode.  So I became a compiler and microcode hacker.
 
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys/qcp1.lisp qcp1.lisp]
+ The first problem was aliasing of lexical variables in parallel environments.  This turned out to be a thorny problem.  The `breakoff` function in qcp1 handles lexical closures.  Right after this function is a comment I wrote that explains the rather nasty solution.  We temporarily replace the lexical variables with GENSYMS to avoid the aliasing, but set them back when we do the recursive compile.  Some of the comments in this file are mine, but I forget which ones.
+
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys/ SYS]
+ The SYS directory contains the basic Lisp Machine code.
+
 
 
 
