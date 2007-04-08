@@ -46,9 +46,14 @@ Here are various and sundry pieces of code with commentary.
 
  Lowell Hawkinson, however, was not too happy about this.  The PICON group at LMI (which later broke off to start the [http://www.gensym.com/ GENSYM] corporation) was his pet project and he worked hard to ensure that the PICON program would do no consing whatsoever when it was running in a steady state.  Of course the implicit consing done by heap-allocation of closures threw a monkey wrench in that plan.  We pointed out that the choice was between consing and random, unpredictable crashing, and that the generational garbage collector actually worked, he grudgingly accepted it.
  
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/ Lambda Microcode]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ubin/ ubin]
+ Here is the microcode to the LMI Lambda.  I did a bunch of tweaking and fixing here as you can see if you look at the ulambda-comments.txt file.  When I started using closures I became the major source of runtime garbage at LMI.  Most users simply turned of the garbage collector, wrote code that avoided consing, and rebooted once the machine ran out of memory.  I thought that the machine should be taking care of the garbage rather than me, so I got nominated to get the GC working.
+
+ It turned out that there were few bugs in the GC that Ken Sinclair wrote.  The majority of `GC' bugs were errors in the rest of the runtime system that violated the invariants that were required by the GC.  This would cause random crashes when some invalid pointer caused the GC to trash part of the heap.  The bug wasn't caused by the GC, but we always blamed the messenger.  I spent the better part of year tracking these things down and became very familiar with all different parts of the microcode.
+
  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys/ SYS]
  The SYS directory contains the basic Lisp Machine code.
-
 
 
 
