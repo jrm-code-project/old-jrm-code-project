@@ -38,6 +38,7 @@ Here are various and sundry pieces of code with commentary.
 
  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/closures.txt closures.txt]
  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/uc-stack-closure.lisp uc-stack-closure.lisp]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/lex-fix.txt lex-fix.txt]
  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/uc-closure.lisp uc-closure.lisp]
  The second problem turned out to be bugs in the microcode.  The original closure microcode was overly complicated and buggy.  I rewrote good chunks of it and finally rewrote the entire heap allocated closure routines.
 
@@ -47,7 +48,6 @@ Here are various and sundry pieces of code with commentary.
  
  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys/ SYS]
  The SYS directory contains the basic Lisp Machine code.
-
 
 
 
