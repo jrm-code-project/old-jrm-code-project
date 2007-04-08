@@ -36,8 +36,21 @@ Here are various and sundry pieces of code with commentary.
   * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys/qcp1.lisp qcp1.lisp]
  The first problem was aliasing of lexical variables in parallel environments.  This turned out to be a thorny problem.  The `breakoff` function in qcp1 handles lexical closures.  Right after this function is a comment I wrote that explains the rather nasty solution.  We temporarily replace the lexical variables with GENSYMS to avoid the aliasing, but set them back when we do the recursive compile.  Some of the comments in this file are mine, but I forget which ones.
 
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/closures.txt closures.txt]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/uc-stack-closure.lisp uc-stack-closure.lisp]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/uc-closure.lisp uc-closure.lisp]
+ The second problem turned out to be bugs in the microcode.  The original closure microcode was overly complicated and buggy.  I rewrote good chunks of it and finally rewrote the entire heap allocated closure routines.
+
+ As it turned out, Pace and I discovered a fundamental problem in the stack closure implementation.  It was possible, under certain circumstances, to create a stack frame that contained pointers to dead structure that appeared to be stack closures.  An unlucky garbage collection at that point would trash the stack.  We couldn't figure out a viable solution to the problem, so we made the decision to simply allocate all closures in the heap.  At that time, we had enough confidence in the generational GC, so the decision was easy.
+
+ Lowell Hawkinson, however, was not too happy about this.  The PICON group at LMI (which later broke off to start the [http://www.gensym.com/ GENSYM] corporation) was his pet project and he worked hard to ensure that the PICON program would do no consing whatsoever when it was running in a steady state.  Of course the implicit consing done by heap-allocation of closures threw a monkey wrench in that plan.  We pointed out that the choice was between consing and random, unpredictable crashing, and that the generational garbage collector actually worked, he grudgingly accepted it.
+ 
  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys/ SYS]
  The SYS directory contains the basic Lisp Machine code.
+
+
+
+
 
 
 
