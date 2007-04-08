@@ -50,10 +50,11 @@ Here are various and sundry pieces of code with commentary.
  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ubin/ ubin]
  Here is the microcode to the LMI Lambda.  I did a bunch of tweaking and fixing here as you can see if you look at the ulambda-comments.txt file.  When I started using closures I became the major source of runtime garbage at LMI.  Most users simply turned of the garbage collector, wrote code that avoided consing, and rebooted once the machine ran out of memory.  I thought that the machine should be taking care of the garbage rather than me, so I got nominated to get the GC working.
 
- It turned out that there were few bugs in the GC that Ken Sinclair wrote.  The majority of `GC' bugs were errors in the rest of the runtime system that violated the invariants that were required by the GC.  This would cause random crashes when some invalid pointer caused the GC to trash part of the heap.  The bug wasn't caused by the GC, but we always blamed the messenger.  I spent the better part of year tracking these things down and became very familiar with all different parts of the microcode.  As an example, look at the ulambda-comments for late March to early April 1986.  It took me a week to find the bug in [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/uc-storage-allocation.lisp uc-storage-allocation.lisp].
+ It turned out that there were few bugs in the GC that Ken Sinclair wrote.  The majority of `GC' bugs were errors in the rest of the runtime system that violated the invariants that were required by the GC.  This would cause random crashes when some invalid pointer caused the GC to trash part of the heap.  The bug wasn't caused by the GC, but we always blamed the messenger.  I spent the better part of year tracking these things down and became very familiar with all different parts of the microcode.  As an example, look at the ulambda-comments for late March to early April 1986.  It took me a week to find the bug in [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/uc-storage-allocation.lisp uc-storage-allocation.lisp] (look in x-make-array.  The fix is to put a NIL in m-d before returning).
 
  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys/ SYS]
  The SYS directory contains the basic Lisp Machine code.
+
 
 
 
