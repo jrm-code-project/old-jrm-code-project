@@ -1530,7 +1530,7 @@ XCPH (MISC-INST-ENTRY %COMPUTE-PAGE-HASH)
 ;;; Foo.  Somewhere in the system someone depends on some property of the old
 ;;; hash algorithm.  I'm going to wimp out and revert it.
 
-;;; Try using KHS algorithm. -JRM 07/03/86
+;;; Try using KHS algorithm. -Jrm 07/03/86
 
 ;;; This "unknown" property is that the hashing is independent
 ;;; of the bottom 8 bits.
@@ -1541,6 +1541,8 @@ XCPH (MISC-INST-ENTRY %COMPUTE-PAGE-HASH)
 ;        ((m-t) xor m-t a-tem1)
 ;       ((m-t) and m-t a-pht-index-mask)
 
+;;; Using the bit-mirror gives us the best hash if the GC improves
+;;; locality.  This makes a noticable improvement.  ~jrm
 compute-page-hash
   ((m-tem1) output-selector-bit-mirror m-t)
   (popj-after-next (m-t) ldb (byte 16. 8.) m-tem1)
@@ -2835,6 +2837,12 @@ P-R-PF    ;TOOK PAGE FAULT RELOADING PDL BUFFER, CLEAR UP THEN PROCESS IT.
 
 ;;;Merge from LAD on 9-23-86 (mrc)
 ;;; An example of how to use a poor mans mar.  Leave this here.
+
+;;; jrm wrote this to find a nasty explorer bug.  The page hash table
+;;; was being corrupted early in the boot.  This code checked the pht
+;;; every time something was read.  It turned out that another board
+;;; on the nubus was trying to post an interrupt to the middle of the pht.
+
 ;poor-mans-mar
 ;  ((m-lam) vma)
 ;  ((vma-start-read) (a-constant 500)) ;;magic location

@@ -1,3 +1,5 @@
+[2007-04-09 Jrm wrote this.]
+
 Funargs.
 
 In LISP, functions are first class data objects.  That is, a function

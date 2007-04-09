@@ -26,6 +26,7 @@
 (defvar *line-in-length* :unbound
   "Within FREAD, length of valid data in *LINE-IN*")
 
+;;; Allow font markers in microcode ~jrm
 (defconstant *font-change-indicator* #\epsilon)
 (defconstant *font-change-data-skip* 1 "One character after the indicator")
 

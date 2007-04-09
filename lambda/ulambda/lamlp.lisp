@@ -295,6 +295,7 @@
            (BREAK "FOO"))))
   0)
 
+;; utility to improve performance ~jrm
 (defun measuring-elapsed-time (thunk-to-time receiver)
   (let ((begin-time (time)))
     (multiple-value-prog1
@@ -2736,6 +2737,9 @@ ARGS-INFO = ~O~%"
 (defconstant *wildcard* '*)
 
 ;;; Next three accomplish the same thing.
+;;; This turns out to be a big time sink when recompiling the microcode.
+;;; I came up with these three different mechanisms in order to speed
+;;; things up.  ~jrm
 
 ;;; The fastest way.
 ;;; Reparses the pattern each match, but does it rather quickly.
@@ -2793,6 +2797,9 @@ ARGS-INFO = ~O~%"
 
 
 ;;; Really fast matcher, but too much time is lost generating it.
+;;; A cool hack:  Generate a fast pattern matcher and compile it.
+;;; The resulting code is blazingly fast, but it takes so much time
+;;; to generate it that we don't get a win.  ~jrm
 ;(defun compile-pattern (pattern value)
 ;  (let ((name 'pattern)
 ;       (adr  'address))
