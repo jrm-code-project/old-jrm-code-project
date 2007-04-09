@@ -740,7 +740,7 @@ a-page-volatility                                      ;Scavenger uses this name
 a-gc-trap-md-volatility (0)
 (locality i-mem)
 
-;;; No more stack closures.
+;;; No more stack closures. ~jrm
 ;gc-write-and-stack-closure-trap
 
 ;     ;; note: stack-closure-trap needs the i-arg (set by pdl-buffer dumper).

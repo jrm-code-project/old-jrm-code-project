@@ -845,7 +845,7 @@ FAST-QMDDR
 
 ;;; DESTINATION RETURN  value in M-T.  Q-ALL-BUT-TYPED-POINTER bits must be 0.
 ;FAST-QMDDR
-;;; No more dtp-stack-closures.
+;;; No more dtp-stack-closures. ~jrm
 ;       (CALL-DATA-TYPE-EQUAL M-T (A-CONSTANT (BYTE-VALUE Q-DATA-TYPE DTP-STACK-CLOSURE))
 ;                   STACK-CLOSURE-RETURN-TRAP)   ;do this first because it can result
 ;               ;in attention getting set in current frame!.
@@ -896,7 +896,7 @@ QMDDR0  ((PDL-INDEX) ADD M-AP (A-CONSTANT (EVAL %LP-CALL-STATE)))
         (CALL-IF-BIT-SET (LISP-BYTE %%LP-CLS-TRAP-ON-EXIT) PDL-INDEX-INDIRECT QMEX1-TRAP)
         (CALL-IF-BIT-SET M-QBBFL BBLKP)         ;POP BINDING BLOCK (IF STORED ONE)
 QMEX1A
-;;; No more dtp-stack-closures.
+;;; No more dtp-stack-closures. ~jrm
 ;       (CALL-DATA-TYPE-EQUAL M-T (A-CONSTANT (BYTE-VALUE Q-DATA-TYPE DTP-STACK-CLOSURE))
 ;                   STACK-CLOSURE-RETURN-TRAP)
 ;       ((PDL-INDEX) M-AP)              ;Save returning function for metering
@@ -972,7 +972,7 @@ QME1-QMRCL-TRAP
 ;;Here from QMDDR if data type of M-T is DTP-STACK-CLOSURE.
 ;;Copy the closure into the heap, in case the frame it is in
 ;;is about to go away.
-;;; No more dtp-stack-closure
+;;; No more dtp-stack-closure ~jrm
 ;STACK-CLOSURE-RETURN-TRAP
 ;       ((md) m-t)
 ;        ((vma-start-write) (a-constant (eval (+ 400 %sys-com-temporary))))
@@ -1191,7 +1191,7 @@ MKCONT1 (POPJ-AFTER-NEXT (VMA-START-READ) M-K)
 ;Contents of untyped virtual address in M-K gets MD, when likely to be in pdl buffer
 ;and known not to be off the top end of the pdl buffer.
 MKWRIT
-;;; No more dtp-stack-closure.
+;;; No more dtp-stack-closure. ~jrm
 ;       (JUMP-DATA-TYPE-EQUAL MD (A-CONSTANT (BYTE-VALUE Q-DATA-TYPE DTP-STACK-CLOSURE))
 ;               MKWRIT2)
         (JUMP-LESS-THAN M-K A-PDL-BUFFER-VIRTUAL-ADDRESS MKWRIT1)
@@ -1233,7 +1233,7 @@ MKWRIT1
 ;from which the value is to be returned, which is known to have ADI.
 ;Investigate that ADI to see if there is a multiple-value receiver.
 MVR
-;;; No more stack closures
+;;; No more stack closures ~jrm
 ;(CALL-DATA-TYPE-EQUAL M-T (A-CONSTANT (BYTE-VALUE Q-DATA-TYPE DTP-STACK-CLOSURE))
 ;                   STACK-CLOSURE-RETURN-TRAP)
         ;; Get address of highest word of ADI
@@ -1499,7 +1499,7 @@ XTHROW (MISC-INST-ENTRY *THROW)
         ((A-CATCH-COUNT) A-V-NIL)
 XUWS0   ((M-T) Q-TYPED-POINTER PDL-POP)  ;Value thrown
 
-;;;*** I think this is what we want to do here. jrm
+;;;*** I think this is what we want to do here. ~jrm
 ;;; That is, of course, if stack closures existed.  Which they don't.
 ;       (call-data-type-equal m-t (a-constant (byte-value q-data-type dtp-stack-closure))
 ;                   stack-closure-return-trap)   ;do this first because it can result
