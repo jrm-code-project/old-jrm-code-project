@@ -52,8 +52,23 @@ Here are various and sundry pieces of code with commentary.
 
  It turned out that there were few bugs in the GC that Ken Sinclair wrote.  The majority of `GC' bugs were errors in the rest of the runtime system that violated the invariants that were required by the GC.  This would cause random crashes when some invalid pointer caused the GC to trash part of the heap.  The bug wasn't caused by the GC, but we always blamed the messenger.  I spent the better part of year tracking these things down and became very familiar with all different parts of the microcode.  As an example, look at the ulambda-comments for late March to early April 1986.  It took me a week to find the bug in [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/uc-storage-allocation.lisp uc-storage-allocation.lisp] (look in x-make-array.  The fix is to put a NIL in m-d before returning).
 
- * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys/ SYS]
- The SYS directory contains the basic Lisp Machine code.
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/cold/ cold]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/debugger/ debugger]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/demo/ demo]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/dired-fsdebug/ dired-fsdebug]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/examples/ examples]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/file/ file]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/io/ io]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/io1/ io1]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/network/ network]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys/ sys]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/sys2/ sys2]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ubin/ ubin]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/ulambda/ ulambda]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/window/ window]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/zmail/ zmail]
+ * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/zwei/ zwei]
+ These directories contain the basic Lisp Machine code.
 
 
 
