@@ -70,6 +70,14 @@ Here are various and sundry pieces of code with commentary.
  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/zwei/ zwei]
  These directories contain the basic Lisp Machine code.
 
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/des-data.lisp des-data.lisp]
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/fdes-microcode.lisp fdes-microcode.lisp]
+  * [http://jrm-code-project.googlecode.com/svn/trunk/lambda/jrm/fdes.lisp fdes.lisp]
+ My friend Bob Baldwin was working on a password cracker at MIT.  I thought I'd try doing the same on a Lisp Machine.  It turns out that the LMI Lambda was built with 4K by 1 RAMs for the register file.  This was double the number of registers that the CADR had, but since the Lambda instructions were the same size, there was no way to address the extra registers.  The extra address line was instead routed to a config register and was never used.
+
+ The Lambda had pageable microcode.  You could actually write microcode on the fly, assemble it into the micro-paging area and access it through dynamically generated misc instructions.  I wrote some microcode that loaded the hidden register set with DES S-boxes.  Some more microcode would swap the register sets by toggling the config register, run several rounds of DES, the swap the registers back.  A little bit of Lisp code glued this together so that the machine could run dictionary attacks in microcode in the background.
+
+ The barrel shifter on the Lambda made it easy to do the kind of bit manipulation you want with DES, but the Lambda was never a blazingly fast machine, so the password cracker was no faster than VAX/8600.  It was a fun hack, though.
 
 
 
