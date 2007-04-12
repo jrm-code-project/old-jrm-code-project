@@ -23,14 +23,14 @@
       (SETQ ADDRESS (%POINTER ADDRESS))
       ;; This DO is over the whole frob
       (DO ((ADDR (LOGAND (- PAGE-SIZE) ADDRESS) (%MAKE-POINTER-OFFSET DTP-FIX ADDR PAGE-SIZE))
-	   (N (+ NWDS (LOGAND (1- PAGE-SIZE) ADDRESS)) (- N PAGE-SIZE)))
-	  ((NOT (PLUSP N)))
-	(OR (NULL (SETQ STS (%PAGE-STATUS ADDR)))	;Swapped out
-	    ( (LDB %%PHT1-SWAP-STATUS-CODE STS)
-	       %PHT-SWAP-STATUS-WIRED)		;Wired
-	    (%CHANGE-PAGE-STATUS ADDRESS %PHT-SWAP-STATUS-FLUSHABLE
-				 (LDB %%REGION-MAP-BITS
-				      (%REGION-BITS (%REGION-NUMBER ADDRESS)))))))))
+           (N (+ NWDS (LOGAND (1- PAGE-SIZE) ADDRESS)) (- N PAGE-SIZE)))
+          ((NOT (PLUSP N)))
+        (OR (NULL (SETQ STS (%PAGE-STATUS ADDR)))       ;Swapped out
+            ( (LDB %%PHT1-SWAP-STATUS-CODE STS)
+               %PHT-SWAP-STATUS-WIRED)          ;Wired
+            (%CHANGE-PAGE-STATUS ADDRESS %PHT-SWAP-STATUS-FLUSHABLE
+                                 (LDB %%REGION-MAP-BITS
+                                      (%REGION-BITS (%REGION-NUMBER ADDRESS)))))))))
 
 (DEFUN REALLY-PAGE-OUT-PAGE (ADDRESS &AUX CCWP PS PHYS-ADR)
   "Write it on the disk, changing in-core page table status to RWF, etc."
@@ -38,31 +38,31 @@
     (select-processor
       ((:lambda :cadr)
        (WITHOUT-INTERRUPTS
-	 (SETQ ADDRESS (%POINTER ADDRESS))
-	 (UNWIND-PROTECT
-	     (PROG ()
-		   (WIRE-PAGE-RQB)
-		   (SETQ CCWP %DISK-RQ-CCW-LIST)
-		   ;; We collect some page frames to put them in, remembering the
-		   ;; PFNs as CCWs.
-		   (COND ((OR (NULL (SETQ PS (%PAGE-STATUS ADDRESS)))
-			      (= 0 (LDB %%PHT1-MODIFIED-BIT PS))
-			      (NULL (SETQ PHYS-ADR (%PHYSICAL-ADDRESS ADDRESS))))
-			  (RETURN NIL))
-			 (T (LET ((PFN (LSH PHYS-ADR -8)))
-			      (ASET (1+ (LSH PFN 8)) PAGE-RQB CCWP)
-			      (ASET (LSH PFN -8) PAGE-RQB (1+ CCWP)))
-			    (SETQ CCWP (+ 2 CCWP))
-			    (ASET (LOGAND (AREF PAGE-RQB (- CCWP 2)) -2)	;Turn off chain bit
-				  PAGE-RQB (- CCWP 2))
-			    (DISK-WRITE-WIRED PAGE-RQB 0 (+ (LSH ADDRESS -8) PAGE-OFFSET))
-			    (%CHANGE-PAGE-STATUS ADDRESS (+ 1_23. %PHT-SWAP-STATUS-FLUSHABLE)
-						 (LDB %%REGION-MAP-BITS
-						      (%REGION-BITS (%REGION-NUMBER ADDRESS))))
-			    (RETURN T)
-			    )))
-	   ;; UNWIND-PROTECT forms
-	   (UNWIRE-PAGE-RQB)
-	   )))
+         (SETQ ADDRESS (%POINTER ADDRESS))
+         (UNWIND-PROTECT
+             (PROG ()
+                   (WIRE-PAGE-RQB)
+                   (SETQ CCWP %DISK-RQ-CCW-LIST)
+                   ;; We collect some page frames to put them in, remembering the
+                   ;; PFNs as CCWs.
+                   (COND ((OR (NULL (SETQ PS (%PAGE-STATUS ADDRESS)))
+                              (= 0 (LDB %%PHT1-MODIFIED-BIT PS))
+                              (NULL (SETQ PHYS-ADR (%PHYSICAL-ADDRESS ADDRESS))))
+                          (RETURN NIL))
+                         (T (LET ((PFN (LSH PHYS-ADR -8)))
+                              (ASET (1+ (LSH PFN 8)) PAGE-RQB CCWP)
+                              (ASET (LSH PFN -8) PAGE-RQB (1+ CCWP)))
+                            (SETQ CCWP (+ 2 CCWP))
+                            (ASET (LOGAND (AREF PAGE-RQB (- CCWP 2)) -2)        ;Turn off chain bit
+                                  PAGE-RQB (- CCWP 2))
+                            (DISK-WRITE-WIRED PAGE-RQB 0 (+ (LSH ADDRESS -8) PAGE-OFFSET))
+                            (%CHANGE-PAGE-STATUS ADDRESS (+ 1_23. %PHT-SWAP-STATUS-FLUSHABLE)
+                                                 (LDB %%REGION-MAP-BITS
+                                                      (%REGION-BITS (%REGION-NUMBER ADDRESS))))
+                            (RETURN T)
+                            )))
+           ;; UNWIND-PROTECT forms
+           (UNWIRE-PAGE-RQB)
+           )))
       (:explorer nil))))
 ))
