@@ -79,6 +79,9 @@ Here are various and sundry pieces of code with commentary.
 
  The barrel shifter on the Lambda made it easy to do the kind of bit manipulation you want with DES, but the Lambda was never a blazingly fast machine, so the password cracker was no faster than VAX/8600.  It was a fun hack, though.
 
+ Here's a little detour through the [http://code.google.com/p/jrm-code-project/wiki/KMachineBits K-Machine Bits and Pieces].
+
+
 
 
 
