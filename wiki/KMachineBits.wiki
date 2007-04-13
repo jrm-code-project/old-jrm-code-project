@@ -38,11 +38,10 @@ The plan for cold booting was that a boot image on the disk would be plopped int
 
 I had started writing the garbage collector as LMI imploded, but didn't get very far.  The design was fairly simple, but the Gigamos people didn't know enough details to finish it, so there is some weird stuff kicking around in this code.
 
-  * [http://jrm-code-project.googlecode.com/svn/trunk/kmachine/asm/datatype-ram.lisp asm/datatype-ram.lisp]
+  * [http://jrm-code-project.googlecode.com/svn/trunk/kmachine/asm/datatype.lisp asm/datatype.lisp]
  I'm not sure whether I wrote this or not.  The `load-dt-ram-pattern` function looks familiar, so maybe.  We tried to avoid using K-machine assembly code as much as possible, but it was tricky to load the datatype ram.  You had to drop two objects of the correct type through the pipeline and arrange for a write pulse as the objects hit the ALU input registers.  This might be why there is assembly code in here.  I do remember that loading the datatype RAM took the longest part of the boot sequence --- something like 2 or 3 seconds.
  
 
 
  
-
 
