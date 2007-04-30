@@ -1,0 +1,40 @@
+The board consists of a 4 by 4 grid of positions.  Each player has 3
+stacks of 4 nesting pieces each for a total of 12 pieces.  The object
+of the game is to get four of your pieces visibly in a row, but since
+the pieces nest, your opponent can obscure some of your pieces by
+covering them with some of his.
+
+The board starts empty and play alternates between players.
+
+A player starts with three stacks of nested pieces.
+
+On each turn, a player must move an exposed piece of his color.
+
+There are two kinds of moves:  a regular move is from one position on
+the board to another position on the board.  An `entering' move is
+from off-board to on-board.  Pieces are never removed from the board.
+
+For a regular move, a piece may move to a position if the position is
+*not* occupied by a piece of the same size or larger.  If the position
+is occupied by a smaller piece, the moving piece will cover it.  You
+may cover your own pieces.  Moving a piece will expose whatever was
+underneath it.
+
+For an entering move, a player takes the topmost piece from one of his
+stacks and places it either on an empty position, or covers one of his
+own pieces.  It is not permitted to cover an opponents piece on entry
+*with one exception*:  if three exposed opponent pieces are aligned (on
+a row, column or one of the two primary diagonals), then one of those
+pieces may be covered.
+
+A player may not move a piece that is not exposed, and may not make an
+entering move with a piece that is not exposed.
+
+You are not permitted to `peek' under a piece.
+
+If one player has 4 exposed pieces in a row at the end of a turn, he
+wins.  If both players have 4 exposed pieces in a row at the end of a
+turn, it is a draw.  If the same position is repeated 3 times, a
+player may claim a draw.
+
+
