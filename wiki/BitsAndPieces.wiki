@@ -134,6 +134,8 @@ print ack 3 5 ; should print 253
 
  Carl abandoned my implementation after I left Rebol Technologies.  He completely rewrote the interpreter and, in the process, substantially changed the semantics of the language.  Rebol 2.0 is a quirky and bizarre language.  I don't see any opportunity in the language so I never tried to write a compiler for Carl's semantics.  Rebol seems to still be popular in France, but I think the company has shrunk down to be just Carl and his wife.
 
+ * [http://jrm-code-project.googlecode.com/svn/trunk/scheme/gobblet/ Gobblet]
+ [http://www.blueorangegames.com/gobblet.php Gobblet] is a really cool board game from [http://www.blueorangegames.com/ Blue Orange Games].  It's easy to learn, games are reasonably short, but the strategy can get quite difficult.  After we played it around the lab at Northeastern, I decided to write a computer player.  The board representation is similar to that used in chess programs.  A bitvector represents a slice through the board and 8 of these are used to represent the board.  The advantage of a bitvector is that you can operate on the entire board in parallel.  Incidentally, this version of Gobblet is unrelated to the version that comes with [http://www.plt-scheme.org/ PLT Scheme].
 
 
 
