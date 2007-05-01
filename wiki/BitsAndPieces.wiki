@@ -137,6 +137,9 @@ print ack 3 5 ; should print 253
  * [http://jrm-code-project.googlecode.com/svn/trunk/scheme/gobblet/ Gobblet]
  [http://www.blueorangegames.com/gobblet.php Gobblet] is a really cool board game from [http://www.blueorangegames.com/ Blue Orange Games].  It's easy to learn, games are reasonably short, but the strategy can get quite difficult.  After we played it around the lab at Northeastern, I decided to write a computer player.  The board representation is similar to that used in chess programs.  A bitvector represents a slice through the board and 8 of these are used to represent the board.  The advantage of a bitvector is that you can operate on the entire board in parallel.  Incidentally, this version of Gobblet is unrelated to the version that comes with [http://www.plt-scheme.org/ PLT Scheme].
 
+ * [http://jrm-code-project-googlecode.com/svn/trunk/fog/ Fog]
+ [http://www.computing.surrey.ac.uk/research/dsrg/fog/ FOG] is a meta-compiler for C++.  Ed Willink wrote this as part of his Doctoral dissertation.  The code here is a modification of the original FOG parser that emits s-expressions as it parses the C++ code.  The output can be further processed by Scheme or Lisp.  The source tree is set up as a Visual Studio Express project.
+
 
 
 
