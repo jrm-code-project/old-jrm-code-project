@@ -140,6 +140,37 @@ print ack 3 5 ; should print 253
  * [http://jrm-code-project.googlecode.com/svn/trunk/fog/ Fog]
  [http://www.computing.surrey.ac.uk/research/dsrg/fog/ FOG] is a meta-compiler for C++.  Ed Willink wrote this as part of his Doctoral dissertation.  The code here is a modification of the original FOG parser that emits s-expressions as it parses the C++ code.  The output can be further processed by Scheme or Lisp.  The source tree is set up as a Visual Studio Express project.
 
+ * [http://jrm-code-project.googlecode.com/svn/trunk/scheme/evil/ Evil]
+ Evil is a C++ to Scheme --- yes, _from_ C++ _to_ Scheme --- that I wrote to help me translate the GUI layer of DrScheme.  Input like this:
+{{{
+void wxMediaStreamOut::PrettyFinish()
+{
+  if (!bad && col) {
+    f->Write("\n", 1);
+    col = 0;
+  }
+}
+}}}
+ is translated to output like this:
+{{{
+  (define-method
+    ("void" (wx-media-stream-out pretty-finish))
+    (call-with-current-continuation
+      (lambda (return)
+        (if (and (not (->boolean (instance-ref ':arrow self 'bad)))
+                 (->boolean (instance-ref ':arrow self 'col)))
+          (begin
+            (send (instance-ref ':arrow self 'f) 'write "\n" 1)
+            (instance-set! ':arrow self 'col 0))
+          #f)
+        (return (void)))))
+}}}
+ It ain't pretty, but it beats doing it by hand.
+
+  I'll get around to documenting it later (maybe earlier if someone nudges me).  For people interested in getting into CLOS, this has some good examples.
+
+
+
 
 
 
