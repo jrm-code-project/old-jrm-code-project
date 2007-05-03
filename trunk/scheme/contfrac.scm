@@ -796,7 +796,7 @@
 
        ;; use floating point
        (fan (/ 61.0 11.0) (- 111 (/ (- 1130 (/ 3000 fan-1)) fan)))
-       (fan-1 (/ 11 2) fan)
+       (fan-1 (/ 11.0 2.0) fan)
 
        ;; use continued fractions
        (can (ratio->cf 61 11) (rat*cf:- 111 (cf*cf:/ (rat*cf:- 1130 (rat*cf:/ 3000 can-1)) can)))
@@ -808,8 +808,8 @@
     (newline)
     (display n)
     (display " ")
-    (display (exact->inexact an))
+    (display (exact->inexact an-1))
     (display " ")
-    (display fan)))
+    (display fan-1)))
 
 ||#
