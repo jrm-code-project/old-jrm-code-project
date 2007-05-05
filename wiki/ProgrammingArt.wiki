@@ -45,6 +45,11 @@ When I first showed this solution to my colleagues the universal reaction was on
 
 (I guess someone mentioned this page on reddit.  There are some interesting comments there.  I'm going to address some here.)
 
+jeroenl: 
+Am I the only one or is nobody seeing that his proposed "better" solution is potentially a crasher thanks to an endless recursion?
+
+I'm not proposing either as "better", I'm proposing the second as "funnier", and suggesting that other qualitative, non-technical measures might exist.  For the record, though, these programs fail if the numbers are all the same.  The trivial fix is left to the reader. 
+
 mgsloan wrote:
 If this is proof that programs are art, then I hope that I never work with an artist-programmer.
 
@@ -72,7 +77,6 @@ jamescoleuk writes:
 You're intentionally using a cliched image of art, but maybe (this could be wrong) the difference is this: a program simply does not have enough to say about what it means to be human.
 
 James raises an interesting point.  How much does it have to say?  If it doesn't say it literally, does metaphor suffice?  Can Cage's acoustic work be considered art?
-
 
 
 
