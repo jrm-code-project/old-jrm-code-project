@@ -43,4 +43,30 @@ When I first showed this solution to my colleagues the universal reaction was on
 
 (I'm intending to add more to this essay as the muse strikes.  I enjoy receiving comments even while I work on this.)
 
+(I guess someone mentioned this page on reddit.  There are some interesting comments there.  I'm going to address some here.)
+
+mgsloan wrote:
+If this is proof that programs are art, then I hope that I never work with an artist-programmer.
+
+I don't think that the short version is more _artistic_ than the long.  I mention this example because it struck me that everyone thought it was funny or amusing.  This is an emotional reaction that is unrelated to its nominal purpose.  Of course I've heard code described as "beautiful" or "ugly", but this is very much a "joke".  Not only is it a joke, but you have to have a fair amount of training to appreciate it.  I started to wonder if there were other emotions one could convey through code.
+
+So for the record:  The code above is *art* in that I wrote it for no purpose other than to communicate some humor.  It is _not_ intended to be an example of good programming any more than an Escher print is intended to be an example of an architectural plan.  I wouldn't consider it _fine_ art either.  It reminds me of this limerick:
+{{{
+  A man from Kalamazoo
+  Wrote limericks that stopped at line two.
+}}}
+No one would place this alongside Eliot's _Wasteland_, but it is an art of a sort.
+
+TheNoxx writes:
+Well, they definitely are Post-Modern Art, or better than it, as it takes years of schooling to understand the beauty in them, and they have absolutely zero accessibility to the common man.
+
+I find that to be a shame.  I wish I could show this to my mom and get her to laugh.
+
+Other people question whether coding is an art or a craft.  Certainly the bulk of code is craft.  I find it interesting that some people seem to be almost offended by the notion that some code could have artistic value.  Others seem to think it to be the height of self-indulgence to suggest that a mundane activity such as programming might have any resemblence whatsoever to classical art.
+
+I have to say that I largely agree.  The bulk of code, even good code, is as artistic as a Thomas Kinkcaid print.  I've always felt that people who compared code with art were delusional at best.  Maybe I've fallen into that delusion.  But I have seen code that inspired me to emulate it, and code that filled me with disgust. 
+
+I'll agree that I'm being too broad with the term `art', but I'm interested in what goes beyond the `craft' part of code.
+
+
 
