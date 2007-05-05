@@ -33,7 +33,14 @@ Consider this solution:
          (+ (* y y) (* z z)))
         (else (sum-square-largest y z x))))
 }}}
-When I first showed this solution to my colleagues the universal reaction was one of surprised laughter.  The solution doesn't seem to have enough "parts" to work, nonetheless it does.  I think the short solution is surprising because everyone knows the intent of the exercise is to teach multi-way branches, and the recursive call shows up unexpectedly.
+When I first showed this solution to my colleagues the universal reaction was one of surprised laughter.  The solution doesn't seem to have enough "parts" to work, nonetheless it does.  I think the short solution is surprising because everyone knows the intent of the exercise is to teach multi-way branches, and the recursive call shows up unexpectedly.  Joe Garvin gives this alternative:
+{{{
+(define (sls x y z) 
+   (cond ((> z x) (sls z y x)) 
+         ((> z y) (sls x z y)) 
+         (else (+ (* x x) (* y y)))))
+}}}
 
-...
+(I'm intending to add more to this essay as the muse strikes.  I enjoy receiving comments even while I work on this.)
+
 
