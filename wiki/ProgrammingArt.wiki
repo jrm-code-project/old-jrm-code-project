@@ -66,7 +66,7 @@ What I'm trying to do on this web site is present my work, in the context in whi
 
 (I'm intending to add more to this essay as the muse strikes.  I enjoy receiving comments even while I work on this.)
 
-(I guess someone mentioned this page on reddit.  There are some interesting comments there.  I'm going to address some here.)
+(I guess someone mentioned [http://programming.reddit.com/info/1nb8t/comments this page on reddit].  There are some interesting comments there.  I'm going to address some here.)
 
 jeroenl: 
 Am I the only one or is nobody seeing that his proposed "better" solution is potentially a crasher thanks to an endless recursion?
@@ -100,5 +100,4 @@ jamescoleuk writes:
 You're intentionally using a cliched image of art, but maybe (this could be wrong) the difference is this: a program simply does not have enough to say about what it means to be human.
 
 James raises an interesting point.  How much does it have to say?  If it doesn't say it literally, does metaphor suffice?  Can Cage's acoustic work be considered art?
-
 
