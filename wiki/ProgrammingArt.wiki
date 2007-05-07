@@ -94,10 +94,9 @@ Other people question whether coding is an art or a craft.  Certainly the bulk o
 
 I have to say that I largely agree.  The bulk of code, even good code, is as artistic as a Thomas Kinkcaid print.  I've always felt that people who compared code with art were delusional at best.  Maybe I've fallen into that delusion.  But I have seen code that inspired me to emulate it, and code that filled me with disgust. 
 
-I'll agree that I'm being too broad with the term `art', but I'm interested in what goes beyond the `craft' part of code.
+I'll agree that I'm being too broad with the term _art_, but I'm interested in what goes beyond the _craft_ part of code.
 
 jamescoleuk writes:
 You're intentionally using a cliched image of art, but maybe (this could be wrong) the difference is this: a program simply does not have enough to say about what it means to be human.
 
 James raises an interesting point.  How much does it have to say?  If it doesn't say it literally, does metaphor suffice?  Can Cage's acoustic work be considered art?
-
