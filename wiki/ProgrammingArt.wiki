@@ -9,6 +9,8 @@ On the home page, I stated that programs are art.
 
 Many people have made the connection between programming and art.  I believe the connection to be a literal one, not a metaphor.
 
+== A Programming Joke ==
+
 In [http://mitpress.mit.edu/sicp/ Structure and Interpretation of Computer Programs], Exercise 1.3 asks the user to
 
   Define a procedure that takes three numbers as arguments and returns the sum of the squares of the two larger numbers.
@@ -40,6 +42,27 @@ When I first showed this solution to my colleagues the universal reaction was on
          ((> z y) (sls x z y)) 
          (else (+ (* x x) (* y y)))))
 }}}
+
+The code above is a joke.  The setup is the problem description and the first solution.  The punchline is when you encounter a recursive call instead of the remaining two thirds of the program.  The object of the code is to surprise the reader, not to perform an actual computation.
+
+== So Where's the Art? ==
+
+I don't want to get involved in the debate over what constitutes `art'.  I will only point out that some computer programs satisfy much of the criteria that is often used to determine what art is.
+
+  * It is a product of human skill and imagination.
+
+  * It is intended to communicate in addition to any other function it may have.
+
+  * There is an aesthetic associated with it.
+
+  * The aesthetics and ideas communicated transcend the particulars of an individual work. 
+
+The definition of art has changed over time, and some works that have been ridiculed at first have later been accepted as sublime.
+
+
+What I'm trying to do on this web site is present my work, in the context in which it was developed, not for the purpose of maintaining them as working programs, but for the purpose of communicating my thoughts and my aesthetics about code.  Perhaps I'm being pompous and no one cares.  Perhaps someone will be inspired to create something new.
+
+= Feedback and Comments =
 
 (I'm intending to add more to this essay as the muse strikes.  I enjoy receiving comments even while I work on this.)
 
@@ -77,6 +100,5 @@ jamescoleuk writes:
 You're intentionally using a cliched image of art, but maybe (this could be wrong) the difference is this: a program simply does not have enough to say about what it means to be human.
 
 James raises an interesting point.  How much does it have to say?  If it doesn't say it literally, does metaphor suffice?  Can Cage's acoustic work be considered art?
-
 
 
