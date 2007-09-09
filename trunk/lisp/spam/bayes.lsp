@@ -2,10 +2,13 @@
 
 (in-package "CL-USER")
 
-(defconstant *keyword-package*
-  (if (boundp '*keyword-package*)
-      (symbol-value '*keyword-package*)
-      (find-package "KEYWORD")))
+(defpackage "TOKEN"
+   (:use ))
+
+(defconstant *token-package*
+  (if (boundp '*token-package*)
+      (symbol-value '*token-package*)
+      (find-package "TOKEN")))
 
 (defclass message ()
   ((file :initarg :file
@@ -32,7 +35,7 @@
   (declare (optimizable-series-function))
   (mapping (((start end) (chunk 2 1 (scan-breaks string))))
     (intern (string-upcase (subseq string (+ start 1) end))
-	    *keyword-package*)))
+	    *token-package*)))
 
 (defun tokenize (string)
   (collect 'list (scan-tokens string)))
@@ -173,5 +176,71 @@
   (dotimes (ix 10)
     (let ((i (+ ix 1)))
       (score-corpus (corpus->filter (remove i '(1 2 3 4 5 6 7 8 9 10))) i))))
+
+(defclass cluster ()
+  ((messages :initarg :messages 
+	     :reader messages
+	     :initform (error "Required initarg :messages omitted."))))
+
+(defun foo ()
+  (let* ((messages1 (subcorpus 1))
+	 (all-clusters (map 'list (lambda (msg) (make-instance 'cluster :messages (list msg))) messages1)))
+    all-clusters))
+
+(defun combine-clusters (c1 c2)
+  (make-instance 'cluster :messages (union (messages c1) (messages c2))))
+
+(defun score-cluster (best-score c)
+  (let ((score 0))
+    (do-symbols (token (find-package "TOKEN"))
+      (let ((yes 0)
+	    (no  0))
+	(mapc (lambda (msg)
+		(if (member token (body msg))
+		    (incf yes)
+		    (incf no)))
+	      (messages c))
+	(when (and (> yes 0)
+		   (> no 0))
+	  (decf score (+ (* (/ yes (+ yes no))
+			    (10log10 (/ yes (+ yes no))))
+			 (* (/ no (+ yes no))
+			    (10log10 (/ no (+ yes no))))))
+	  (when (> score best-score)
+	    (return score)))))
+    score))
+
+(defun scan-all-clusters ()
+  (let ((best-score most-positive-double-float)
+	(best-head nil)
+	(best-tail nil))
+  (do ((tail *all-clusters* (cdr tail)))
+      ((null (cdr tail)))
+    (let ((*package* *token-package*))
+      (format t "~&Next... ~s" (body (car (messages (car tail))))))
+    (let ((first (car tail)))
+      (dolist (next (cdr tail))
+	(let ((score (score-cluster best-score (combine-clusters first next))))
+	  (if (< score best-score)
+	      (progn
+		(setq best-score score)
+		(setq best-head first)
+		(setq best-tail next)
+		(format t "~&*~s" score)
+		(let ((*package* *token-package*))
+		  (format t "~&~s" (body (car (messages next))))))
+	      (format t "."))))))
+  (list best-head best-tail)))
+
+(defun try-it-step ()
+  (let ((ab (scan-all-clusters)))
+    (setq *all-clusters* (delete (car ab) *all-clusters*))
+    (setq *all-clusters* (delete (cadr ab) *all-clusters*))
+    (setq *all-clusters* (cons (combine-clusters (car ab) (cadr ab)) *all-clusters*))))
+
+(defun try-it ()
+  (do ()
+      ((null (cdr *all-clusters*)))
+    (try-it-step)))
 
 ;(collect 'list (#m read-message (scan-directory (logical-pathname "LINGSPAM:bare;part1;*.txt"))))
