@@ -1,0 +1,11 @@
+IActiveScript::SetScriptSite
+IActiveScriptParse::InitNew
+IActiveScript::AddNamedItem('WScript', 00000002)
+	SCRIPTITEM_ISVISIBLE
+IActiveScript::AddNamedItem('WSH', 00000002)
+	SCRIPTITEM_ISVISIBLE
+IActiveScript::SetScriptState(00000005)
+IActiveScriptParse::ParseScriptText((.Echo WScript "This is Hello.ls")
+)
+IActiveScript::SetScriptState(00000001)
+IActiveScript::Close

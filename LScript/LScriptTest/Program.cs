@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace LScriptTest
 {
     using ActiveScripting;
-    using LScript;
+
 
   
 
@@ -61,7 +61,7 @@ ref stdole.EXCEPINFO info)
         public void Run ()
         {
             try {
-                object engine = new LScript ();
+                object engine = new LScript.LScript ();
                 IActiveScriptParse32 iap = engine as IActiveScriptParse32;
                 iap.InitNew ();
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using ActiveScripting;
 
 namespace LScript
 {
@@ -59,7 +58,32 @@ namespace LScript
         ITypeInfo = 0x0002,
     }
 
-  
+    [ComVisible(true),
+    InterfaceType (ComInterfaceType.InterfaceIsIUnknown),
+     Guid ("BB1A2AE1-A4F9-11cf-8F20-00805F2CD064")]
+    public interface IActiveScript
+    {
+        void SetScriptSite ([In, MarshalAs (UnmanagedType.Interface)]
+ IActiveScriptSite site);
+        void GetScriptSite (ref System.Guid riid,
+out System.IntPtr ppvObject);
+        void SetScriptState ([In, MarshalAs (UnmanagedType.U4)] ScriptState ss);
+        void GetScriptState ([Out, MarshalAs (UnmanagedType.U4)] out ScriptState ss);
+        void Close ();
+        void AddNamedItem ([In, MarshalAs (UnmanagedType.BStr)] 
+string pstrName, [In, MarshalAs (UnmanagedType.U4)] uint dwFlags);
+        void AddTypeLib (ref System.Guid rguidTypeLib, uint dwMajor,
+uint dwMinor, uint dwFlags);
+        void GetScriptDispatch (string pstrItemName, out object ppdisp);
+        void GetCurrentScriptThreadID (out uint id);
+        void GetScriptThreadID (uint threadid, out uint id);
+        void GetScriptThreadState (uint id, [Out, MarshalAs(UnmanagedType.U4)] out ScriptThreadState state);
+        void InterruptScriptThread (uint id,
+ref stdole.EXCEPINFO info,
+uint flags);
+        void Clone (out IActiveScript item);
+    };
+
 
     [ComVisible (true)]
     [InterfaceType (ComInterfaceType.InterfaceIsIUnknown),
@@ -89,6 +113,26 @@ namespace LScript
                 uint flags,
                 IntPtr result,
                 out stdole.EXCEPINFO info);
+    }
+
+    [InterfaceType (ComInterfaceType.InterfaceIsIUnknown),
+    Guid ("DB01A1E3-A42B-11cf-8F20-00805F2CD064")]
+    public interface IActiveScriptSite
+    {
+        void GetLCID (out uint id);
+        void GetItemInfo (string pstrName,
+                    uint dwReturnMask,
+                    [Out, MarshalAs (UnmanagedType.IUnknown)] 
+                        out object item,
+                    IntPtr ppti);
+        void GetDocVersionString (out string v);
+        void OnScriptTerminate (ref object result,
+                    ref stdole.EXCEPINFO info);
+        void OnStateChange (uint state);
+        void OnScriptError (
+            [In, MarshalAs (UnmanagedType.IUnknown)] object err);
+        void OnEnterScript ();
+        void OnLeaveScript ();
     }
 
 
@@ -132,10 +176,12 @@ namespace LScript
  
     [ComVisible(true)]
     [Guid("62416980-8B84-4c51-A09C-AB9623C3CC3E")]
+    [ClassInterface (ClassInterfaceType.AutoDispatch)]
+    [ProgId ("LScript")]
     public class LScript : IActiveScript, IActiveScriptParse, IScript
     {
         IActiveScriptSite site;
-        tagSCRIPTSTATE currentScriptState = tagSCRIPTSTATE.SCRIPTSTATE_UNINITIALIZED;
+        ScriptState currentScriptState = ScriptState.Uninitialized;
 
         public LScript ()
         {
@@ -158,14 +204,14 @@ namespace LScript
             site = new IntPtr (0);
         }
 
-        public void SetScriptState (tagSCRIPTSTATE state)
+        public void SetScriptState (ScriptState state)
         {
             System.Diagnostics.Debug.Assert (false, "SetScriptState()");
 
             this.currentScriptState =  state;
         }
 
-        public void GetScriptState (out tagSCRIPTSTATE scriptState)
+        public void GetScriptState (out ScriptState scriptState)
         {
             System.Diagnostics.Debug.Assert (false, "GetScriptState()");
             scriptState = this.currentScriptState;
@@ -199,10 +245,10 @@ namespace LScript
             System.Diagnostics.Debug.Assert (false, "GetScriptThreadID()");
             thread = 0;
         }
-        public void GetScriptThreadState (uint thread, out tagSCRIPTTHREADSTATE state)
+        public void GetScriptThreadState (uint thread, out ScriptThreadState state)
         {
             System.Diagnostics.Debug.Assert (false, "GetScriptThreadState()");
-            state = tagSCRIPTTHREADSTATE.SCRIPTTHREADSTATE_NOTINSCRIPT;
+            state = ScriptThreadState.NotInScript;
         }
         public void InterruptScriptThread (uint thread, ref stdole.EXCEPINFO exceptionInfo, uint flags)
         {
@@ -219,10 +265,10 @@ namespace LScript
         public void InitNew ()
         {
             System.Diagnostics.Debug.Assert (false, "InitNew()");
-                this.currentScriptState = tagSCRIPTSTATE.SCRIPTSTATE_DISCONNECTED;
+                this.currentScriptState = ScriptState.Disconnected;
                 try {
                     if (this.site != null)
-                        this.site.OnStateChange (this.currentScriptState);
+                        this.site.OnStateChange ((uint)this.currentScriptState);
                 }
                 catch (Exception e) {
                     System.Diagnostics.Debug.Assert (false, e.Message);
