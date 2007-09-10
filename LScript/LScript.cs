@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Linq;
-using System.Text;
+using ActiveScripting;
 
 namespace LScript
 {
     //
     // Scripting Interfaces
     //
-
+    [ComVisible(true)]
     public enum ScriptState : uint
     {
         Uninitialized = 0,
@@ -38,6 +36,7 @@ namespace LScript
         HostManageSource = 0x0080,
     }
 
+    [ComVisible(true)]
     [Flags]
     public enum ScriptItem : uint
     {
@@ -60,28 +59,10 @@ namespace LScript
         ITypeInfo = 0x0002,
     }
 
-    [ComVisible(true)]
-    [Guid ("BB1A2AE1-A4F9-11cf-8F20-00805F2CD064")]
-    [InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
-    public interface IActiveScript
-    {
-        void SetScriptSite (IActiveScriptSite pass);
-        void GetScriptSite (Guid riid, out IntPtr site);
-        void SetScriptState (ScriptState state);
-        void GetScriptState (out ScriptState scriptState);
-        void Close ();
-        void AddNamedItem (string name, ScriptItem flags);
-        void AddTypeLib (Guid typeLib, uint major, uint minor, uint flags);
-        void GetScriptDispatch (string itemName, out IScript dispatch);
-        void GetCurrentScriptThreadID (out uint thread);
-        void GetScriptThreadID (uint win32ThreadId, out uint thread);
-        void GetScriptThreadState (uint thread, out ScriptThreadState state);
-        void InterruptScriptThread (uint thread, out System.Runtime.InteropServices.ComTypes.EXCEPINFO exceptionInfo, uint flags);
-        void Clone (out IActiveScript script);
-    }
+  
 
-
-    [ComVisible(true),InterfaceType (ComInterfaceType.InterfaceIsIUnknown),
+    [ComVisible (true)]
+    [InterfaceType (ComInterfaceType.InterfaceIsIUnknown),
     Guid ("BB1A2AE2-A4F9-11cf-8F20-00805F2CD064")]
     public interface IActiveScriptParse
     {
@@ -96,7 +77,7 @@ namespace LScript
                     uint startingLineNumber,
                     uint flags,
                     out string name,
-                    out System.Runtime.InteropServices.ComTypes.EXCEPINFO info);
+                    out stdole.EXCEPINFO info);
 
         void ParseScriptText (
                 string code,
@@ -107,26 +88,27 @@ namespace LScript
                 uint startingLineNumber,
                 uint flags,
                 IntPtr result,
-                out System.Runtime.InteropServices.ComTypes.EXCEPINFO info);
+                out stdole.EXCEPINFO info);
     }
 
-    [Guid ("DB01A1E3-A42B-11cf-8F20-00805F2CD064")]
-    [InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
-    public interface IActiveScriptSite
-    {
-        void GetLCID (out int lcid);
-        void GetItemInfo (
-            string name,
-            ScriptInfo returnMask,
-            [Out] [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.IUnknown)] object [] item,
-            [Out] [MarshalAs (UnmanagedType.LPArray)] IntPtr [] typeInfo);
-        void GetDocVersionString (out string version);
-        void OnScriptTerminate (object result, System.Runtime.InteropServices.ComTypes.EXCEPINFO exceptionInfo);
-        void OnStateChange (ScriptState scriptState);
-        void OnScriptError (IActiveScriptError scriptError);
-        void OnEnterScript ();
-        void OnLeaveScript ();
+
+    [ComImport]
+    [ComVisible(true)]
+    [Guid("1CFF0050-6FDD-11d0-9328-00A0C90DCAA9")]
+     [InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IActiveScriptParseProcedure {
+
+           void ParseProcedureText (string code,
+                string formalParameters,
+               string itemName,
+               IntPtr context,
+               string delimiter,
+               uint sourceContextCookie,
+               uint startingLineNumber,
+               uint flags,
+               out IScript dispatch);
     }
+
 
     //
     // A "fake" interface to use to interact with the script itself through IDispatch.
@@ -140,15 +122,6 @@ namespace LScript
         object FindProxyForURL (string url, string host);
     }
 
-    [Guid ("EAE1BA61-A4ED-11cf-8F20-00805F2CD064")]
-    [InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
-    public interface IActiveScriptError
-    {
-        void GetExceptionInfo (out System.Runtime.InteropServices.ComTypes.EXCEPINFO exceptionInfo);
-        void GetSourcePosition (out uint sourceContext, out uint lineNumber, out int characterPosition);
-        void GetSourceLineText (out string sourceLine);
-    }
-
     [ComVisible(true)]
     [InterfaceTypeAttribute (1)]
     [Guid ("0000010C-0000-0000-C000-000000000046")]
@@ -159,10 +132,10 @@ namespace LScript
  
     [ComVisible(true)]
     [Guid("62416980-8B84-4c51-A09C-AB9623C3CC3E")]
-    public class LScript : IActiveScript, IActiveScriptParse, IPersist, IScript
+    public class LScript : IActiveScript, IActiveScriptParse, IScript
     {
         IActiveScriptSite site;
-        ScriptState currentScriptState = ScriptState.Uninitialized;
+        tagSCRIPTSTATE currentScriptState = tagSCRIPTSTATE.SCRIPTSTATE_UNINITIALIZED;
 
         public LScript ()
         {
@@ -179,42 +152,20 @@ namespace LScript
             this.site = site;
         }
 
-        public void GetScriptSite (Guid riid, out IntPtr site)
+        public void GetScriptSite (ref Guid riid, out IntPtr site)
         {
             System.Diagnostics.Debug.Assert (false, "GetScriptSite()");
             site = new IntPtr (0);
         }
 
-        public void SetScriptState (ScriptState state)
+        public void SetScriptState (tagSCRIPTSTATE state)
         {
-            switch (state) {
-                case ScriptState.Uninitialized:
-                    System.Diagnostics.Debug.Assert (false, "SetScriptState(Uninitialized)");
-                    break;
-                case ScriptState.Closed:
-                    System.Diagnostics.Debug.Assert (false, "SetScriptState(Closed)");
-                    break;
-                case ScriptState.Connected:
-                    System.Diagnostics.Debug.Assert (false, "SetScriptState(Connected)");
-                    break;
-                case ScriptState.Disconnected:
-                    System.Diagnostics.Debug.Assert (false, "SetScriptState(Disconnected)");
-                    break;
-                case ScriptState.Initialized:
-                    System.Diagnostics.Debug.Assert (false, "SetScriptState(Initialised)");
-                    break;
-                case ScriptState.Started:
-                    System.Diagnostics.Debug.Assert (false, "SetScriptState(Started)");
-                    break;
-                default:
-                    System.Diagnostics.Debug.Assert (false, "SetScriptState(??)");
-                    break;
-            }
+            System.Diagnostics.Debug.Assert (false, "SetScriptState()");
 
-            this.currentScriptState = state;
+            this.currentScriptState =  state;
         }
 
-        public void GetScriptState (out ScriptState scriptState)
+        public void GetScriptState (out tagSCRIPTSTATE scriptState)
         {
             System.Diagnostics.Debug.Assert (false, "GetScriptState()");
             scriptState = this.currentScriptState;
@@ -224,19 +175,19 @@ namespace LScript
         {
             System.Diagnostics.Debug.Assert (false, "Close()");
         }
-        public void AddNamedItem (string name, ScriptItem flags)
+        public void AddNamedItem (string name, uint flags)
         {
-            System.Diagnostics.Debug.Assert (false, "AddNamedItem(\"" + name + "\")");
+            System.Diagnostics.Debug.Assert (false, "AddNamedItem()");
         }
-        public void AddTypeLib (Guid typeLib, uint major, uint minor, uint flags)
+        public void AddTypeLib (ref Guid typeLib, uint major, uint minor, uint flags)
         {
             System.Diagnostics.Debug.Assert (false, "AddTypeLib()");
         }
 
-        public void GetScriptDispatch (string itemName, out IScript dispatch)
+        public void GetScriptDispatch (string itemName, out object dispatch)
         {
             System.Diagnostics.Debug.Assert (false, "GetScriptDispatch()");
-            dispatch = this;
+            dispatch = this as IScript;
         }
         public void GetCurrentScriptThreadID (out uint thread)
         {
@@ -248,15 +199,15 @@ namespace LScript
             System.Diagnostics.Debug.Assert (false, "GetScriptThreadID()");
             thread = 0;
         }
-        public void GetScriptThreadState (uint thread, out ScriptThreadState state)
+        public void GetScriptThreadState (uint thread, out tagSCRIPTTHREADSTATE state)
         {
             System.Diagnostics.Debug.Assert (false, "GetScriptThreadState()");
-            state = ScriptThreadState.NotInScript;
+            state = tagSCRIPTTHREADSTATE.SCRIPTTHREADSTATE_NOTINSCRIPT;
         }
-        public void InterruptScriptThread (uint thread, out System.Runtime.InteropServices.ComTypes.EXCEPINFO exceptionInfo, uint flags)
+        public void InterruptScriptThread (uint thread, ref stdole.EXCEPINFO exceptionInfo, uint flags)
         {
             System.Diagnostics.Debug.Assert (false, "InterruptScriptThread()");
-            exceptionInfo = new System.Runtime.InteropServices.ComTypes.EXCEPINFO ();
+            exceptionInfo = new stdole.EXCEPINFO ();
         }
 
         public void Clone (out IActiveScript script)
@@ -268,7 +219,7 @@ namespace LScript
         public void InitNew ()
         {
             System.Diagnostics.Debug.Assert (false, "InitNew()");
-                this.currentScriptState = ScriptState.Disconnected;
+                this.currentScriptState = tagSCRIPTSTATE.SCRIPTSTATE_DISCONNECTED;
                 try {
                     if (this.site != null)
                         this.site.OnStateChange (this.currentScriptState);
@@ -292,11 +243,11 @@ namespace LScript
                     uint startingLineNumber,
                     uint flags,
                     out string name,
-                    out System.Runtime.InteropServices.ComTypes.EXCEPINFO info)
+                    out stdole.EXCEPINFO info)
         {
             System.Diagnostics.Debug.Assert (false, "AddScriptlet");
             name = "";
-            info = new System.Runtime.InteropServices.ComTypes.EXCEPINFO ();
+            info = new stdole.EXCEPINFO ();
         }
 
         public void ParseScriptText (
@@ -308,12 +259,29 @@ namespace LScript
                 uint startingLineNumber,
                 uint flags,
                 IntPtr result,
-                out System.Runtime.InteropServices.ComTypes.EXCEPINFO info)
+                out stdole.EXCEPINFO info)
         {
             System.Diagnostics.Debug.Assert (false, "ParseScriptText");
-            info = new System.Runtime.InteropServices.ComTypes.EXCEPINFO ();
+            info = new stdole.EXCEPINFO ();
 
         }
+
+        public void ParseProcedureText (
+        string code,
+        string itemName,
+            string objectName,
+        IntPtr context,
+        string delimiter,
+        uint sourceContextCookie,
+        uint startingLineNumber,
+        uint flags,
+        out IScript result)
+        {
+            System.Diagnostics.Debug.Assert (false, "ParseProcedureText");
+            result = this;
+
+        }
+
 
         public void GetClassID (out Guid classId)
         {

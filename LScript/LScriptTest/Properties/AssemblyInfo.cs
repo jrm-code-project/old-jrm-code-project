@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle ("LScriptTest")]
 [assembly: AssemblyDescription ("")]
 [assembly: AssemblyConfiguration ("")]
-[assembly: AssemblyCompany ("Google")]
+[assembly: AssemblyCompany ("")]
 [assembly: AssemblyProduct ("LScriptTest")]
-[assembly: AssemblyCopyright ("Copyright © Google 2007")]
+[assembly: AssemblyCopyright ("Copyright © Joe Marshall 2007")]
 [assembly: AssemblyTrademark ("")]
 [assembly: AssemblyCulture ("")]
 
