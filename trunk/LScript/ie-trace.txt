@@ -1,0 +1,12 @@
+IActiveScriptParse::InitNew
+IActiveScript::SetScriptSite
+IActiveScript::GetScriptState
+IActiveScript::SetScriptState(00000001)
+IActiveScript::AddNamedItem('window', 0000000e)
+	SCRIPTITEM_GLOBALMEMBERS
+	SCRIPTITEM_ISSOURCE
+	SCRIPTITEM_ISVISIBLE
+IActiveScriptParse::ParseScriptText(
+This is LScript.
+)
+IActiveScript::SetScriptState(00000002)
