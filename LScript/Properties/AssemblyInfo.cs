@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle ("LScript")]
-[assembly: AssemblyDescription ("")]
+[assembly: AssemblyDescription ("Simple Script Engine")]
 [assembly: AssemblyConfiguration ("")]
 [assembly: AssemblyCompany ("Albatross Vaporware")]
 [assembly: AssemblyProduct ("LScript")]
