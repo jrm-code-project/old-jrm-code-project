@@ -24,6 +24,10 @@
    "WITH-MONITORING"
    ))
 
+(defpackage "PXREF" (:use "COMMON-LISP"))
+
+(defpackage "SLIME-NREGEX" (:use "COMMON-LISP"))
+
 (defpackage "SWANK" (:use "COMMON-LISP"
                           "CLOS"
                           #+clisp "GRAY"
