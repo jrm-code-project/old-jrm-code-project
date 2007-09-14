@@ -5,7 +5,7 @@ using System.Runtime.InteropServices.ComTypes;
 namespace LScript
 {
     // A hand-rolled interop assembly for active scripting.
-    [Flags]
+    [ComVisible(true), Flags]
     public enum ScriptInfo : uint
     {
         None = 0x0000,
@@ -57,7 +57,8 @@ namespace LScript
         Running = 1,
     }
 
-    [ComVisible (true),
+    [ComImport,
+     ComVisible (true),
      InterfaceType (ComInterfaceType.InterfaceIsIUnknown),
      Guid ("BB1A2AE1-A4F9-11cf-8F20-00805F2CD064")]
     public interface IActiveScript
@@ -73,13 +74,15 @@ namespace LScript
         void GetCurrentScriptThreadID (out uint id);
         void GetScriptThreadID (uint threadid, out uint id);
         void GetScriptThreadState (uint id, out ScriptThreadState state);
-        void InterruptScriptThread (uint id, ref System.Runtime.InteropServices.ComTypes.EXCEPINFO info, uint flags);
+        // This next one is wrong, but I can't figure out how to fix it yet.
+        void InterruptScriptThread (uint id, IntPtr info, uint flags);
         void Clone (out IActiveScript item);
     };
 
-    [ComVisible (true),
-  Guid ("BB1A2AE2-A4F9-11cf-8F20-00805F2CD064"),
-  InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
+    [ComImport,
+     ComVisible (true),
+     Guid ("BB1A2AE2-A4F9-11cf-8F20-00805F2CD064"),
+     InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
     public interface IActiveScriptParse
     {
         void InitNew ();
@@ -92,8 +95,9 @@ namespace LScript
                     uint sourceContextCookie,
                     uint startingLineNumber,
                     uint flags,
-                    [Out, MarshalAs (UnmanagedType.LPWStr)]out string name,
-                    out System.Runtime.InteropServices.ComTypes.EXCEPINFO info);
+                  // These next two are wrong, but I can't figure out how to fix them yet.
+	            IntPtr result,
+                    IntPtr info);
 
         void ParseScriptText (
             [MarshalAs (UnmanagedType.LPWStr)] string code,
@@ -109,7 +113,8 @@ namespace LScript
     }
 
  
-    [Guid ("DB01A1E3-A42B-11cf-8F20-00805F2CD064"),
+    [ComImport,
+     Guid ("DB01A1E3-A42B-11cf-8F20-00805F2CD064"),
      InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
     public interface IActiveScriptSite
     {

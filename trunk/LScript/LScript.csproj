@@ -69,6 +69,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>gacutil /i $(TargetPath)</PostBuildEvent>
+    <PostBuildEvent>gacutil /u $(TargetName)
+gacutil /i $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
 </Project>

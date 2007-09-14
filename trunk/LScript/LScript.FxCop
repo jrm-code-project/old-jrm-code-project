@@ -1,0 +1,930 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<FxCopProject Version="1.35" Name="LScript Project">
+ <ProjectOptions>
+  <SharedProject>True</SharedProject>
+  <Stylesheet Apply="False">c:\program files\microsoft fxcop 1.35\Xml\FxCopReport.Xsl</Stylesheet>
+  <SaveMessages>
+   <Project Status="Active, Excluded" NewOnly="False" />
+   <Report Status="Active" NewOnly="False" />
+  </SaveMessages>
+  <ProjectFile Compress="True" DefaultTargetCheck="True" DefaultRuleCheck="True" SaveByRuleGroup="" Deterministic="True" />
+  <EnableMultithreadedLoad>True</EnableMultithreadedLoad>
+  <EnableMultithreadedAnalysis>True</EnableMultithreadedAnalysis>
+  <SourceLookup>True</SourceLookup>
+  <AnalysisExceptionsThreshold>100</AnalysisExceptionsThreshold>
+  <RuleExceptionsThreshold>10</RuleExceptionsThreshold>
+  <Spelling Locale="en-us" />
+  <VersionAware>False</VersionAware>
+  <OverrideRuleVisibilities>False</OverrideRuleVisibilities>
+  <CustomDictionaries SearchFxCopDir="True" SearchUserProfile="True" SearchProjectDir="True" />
+  <SearchGlobalAssemblyCache>True</SearchGlobalAssemblyCache>
+  <DeadlockDetectionTimeout>120</DeadlockDetectionTimeout>
+ </ProjectOptions>
+ <Targets>
+  <Target Name="$(ProjectDir)/bin/Debug/LScript.dll" Analyze="True" AnalyzeAllChildren="True" />
+ </Targets>
+ <Rules>
+  <RuleFiles>
+   <RuleFile Name="$(FxCopDir)\Rules\DesignRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\GlobalizationRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\InteroperabilityRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\MobilityRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\NamingRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\PerformanceRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\PortabilityRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\SecurityRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\UsageRules.dll" Enabled="True" AllRulesEnabled="True" />
+  </RuleFiles>
+  <Groups />
+  <Settings />
+ </Rules>
+ <FxCopReport Version="1.35">
+  <Targets>
+   <Target Name="$(ProjectDir)/bin/Debug/LScript.dll">
+    <Modules>
+     <Module Name="lscript.dll">
+      <Namespaces>
+       <Namespace Name="LScript">
+        <Types>
+         <Type Name="Engine">
+          <Members>
+           <Member Name="AddNamedItem(System.String,LScript.ScriptItem):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>name</Item>
+               <Item>Engine.AddNamedItem(String, ScriptItem):Void</Item>
+               <Item>pstrName</Item>
+               <Item>IActiveScript.AddNamedItem(String, ScriptItem):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="1#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>flags</Item>
+               <Item>Engine.AddNamedItem(String, ScriptItem):Void</Item>
+               <Item>dwFlags</Item>
+               <Item>IActiveScript.AddNamedItem(String, ScriptItem):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="AddScriptlet(System.String,System.String,System.String,System.String,System.String,System.String,System.UInt32,System.UInt32,System.UInt32,System.IntPtr,System.IntPtr):System.Void">
+            <Messages>
+             <Message Id="9#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>name</Item>
+               <Item>Engine.AddScriptlet(String, String, String, String, String, String, UInt32, UInt32, UInt32, IntPtr, IntPtr):Void</Item>
+               <Item>result</Item>
+               <Item>IActiveScriptParse.AddScriptlet(String, String, String, String, String, String, UInt32, UInt32, UInt32, IntPtr, IntPtr):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="AddTypeLib(System.Guid&amp;,System.UInt32,System.UInt32,System.UInt32):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>typeLib</Item>
+               <Item>Engine.AddTypeLib(Guid&amp;, UInt32, UInt32, UInt32):Void</Item>
+               <Item>rguidTypeLib</Item>
+               <Item>IActiveScript.AddTypeLib(Guid&amp;, UInt32, UInt32, UInt32):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="1#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>major</Item>
+               <Item>Engine.AddTypeLib(Guid&amp;, UInt32, UInt32, UInt32):Void</Item>
+               <Item>dwMajor</Item>
+               <Item>IActiveScript.AddTypeLib(Guid&amp;, UInt32, UInt32, UInt32):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="2#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>minor</Item>
+               <Item>Engine.AddTypeLib(Guid&amp;, UInt32, UInt32, UInt32):Void</Item>
+               <Item>dwMinor</Item>
+               <Item>IActiveScript.AddTypeLib(Guid&amp;, UInt32, UInt32, UInt32):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="3#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>flags</Item>
+               <Item>Engine.AddTypeLib(Guid&amp;, UInt32, UInt32, UInt32):Void</Item>
+               <Item>dwFlags</Item>
+               <Item>IActiveScript.AddTypeLib(Guid&amp;, UInt32, UInt32, UInt32):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Clone(LScript.IActiveScript&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>script</Item>
+               <Item>Engine.Clone(IActiveScript&amp;):Void</Item>
+               <Item>item</Item>
+               <Item>IActiveScript.Clone(IActiveScript&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetCurrentScriptThreadID(System.UInt32&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>thread</Item>
+               <Item>Engine.GetCurrentScriptThreadID(UInt32&amp;):Void</Item>
+               <Item>id</Item>
+               <Item>IActiveScript.GetCurrentScriptThreadID(UInt32&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptDispatch(System.String,System.Object&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>itemName</Item>
+               <Item>Engine.GetScriptDispatch(String, Object&amp;):Void</Item>
+               <Item>pstrItemName</Item>
+               <Item>IActiveScript.GetScriptDispatch(String, Object&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="1#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>dispatch</Item>
+               <Item>Engine.GetScriptDispatch(String, Object&amp;):Void</Item>
+               <Item>ppdisp</Item>
+               <Item>IActiveScript.GetScriptDispatch(String, Object&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptSite(System.Guid&amp;,System.IntPtr&amp;):System.Void">
+            <Messages>
+             <Message Id="1#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>site</Item>
+               <Item>Engine.GetScriptSite(Guid&amp;, IntPtr&amp;):Void</Item>
+               <Item>ppvObject</Item>
+               <Item>IActiveScript.GetScriptSite(Guid&amp;, IntPtr&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptState(LScript.ScriptState&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>scriptState</Item>
+               <Item>Engine.GetScriptState(ScriptState&amp;):Void</Item>
+               <Item>ss</Item>
+               <Item>IActiveScript.GetScriptState(ScriptState&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptThreadID(System.UInt32,System.UInt32&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>win32ThreadId</Item>
+               <Item>Engine.GetScriptThreadID(UInt32, UInt32&amp;):Void</Item>
+               <Item>threadid</Item>
+               <Item>IActiveScript.GetScriptThreadID(UInt32, UInt32&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="1#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>thread</Item>
+               <Item>Engine.GetScriptThreadID(UInt32, UInt32&amp;):Void</Item>
+               <Item>id</Item>
+               <Item>IActiveScript.GetScriptThreadID(UInt32, UInt32&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptThreadState(System.UInt32,LScript.ScriptThreadState&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>thread</Item>
+               <Item>Engine.GetScriptThreadState(UInt32, ScriptThreadState&amp;):Void</Item>
+               <Item>id</Item>
+               <Item>IActiveScript.GetScriptThreadState(UInt32, ScriptThreadState&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="InterruptScriptThread(System.UInt32,System.IntPtr,System.UInt32):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>thread</Item>
+               <Item>Engine.InterruptScriptThread(UInt32, IntPtr, UInt32):Void</Item>
+               <Item>id</Item>
+               <Item>IActiveScript.InterruptScriptThread(UInt32, IntPtr, UInt32):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="1#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>excepinfo</Item>
+               <Item>Engine.InterruptScriptThread(UInt32, IntPtr, UInt32):Void</Item>
+               <Item>info</Item>
+               <Item>IActiveScript.InterruptScriptThread(UInt32, IntPtr, UInt32):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ParseScriptText(System.String,System.String,System.Object,System.String,System.Int32,System.UInt32,LScript.ScriptText,System.IntPtr,System.IntPtr):System.Void">
+            <Messages>
+             <Message Id="read" TypeName="RemoveUnusedLocals" Category="Microsoft.Performance" CheckId="CA1804" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>Engine.ParseScriptText(String, String, Object, String, Int32, UInt32, ScriptText, IntPtr, IntPtr):Void</Item>
+               <Item>read</Item>
+               <Item>System.Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="SetScriptState(LScript.ScriptState):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725" Status="Excluded" Created="2007-09-14 20:42:06Z">
+              <Issue>
+               <Item>state</Item>
+               <Item>Engine.SetScriptState(ScriptState):Void</Item>
+               <Item>ss</Item>
+               <Item>IActiveScript.SetScriptState(ScriptState):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="11" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="IActiveScript">
+          <Members>
+           <Member Name="AddNamedItem(System.String,LScript.ScriptItem):System.Void">
+            <Messages>
+             <Message Id="0#pstr" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IActiveScript.AddNamedItem(String, ScriptItem):Void</Item>
+               <Item>pstr</Item>
+               <Item>pstrName</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="5" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="AddTypeLib(System.Guid&amp;,System.UInt32,System.UInt32,System.UInt32):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="DoNotPassTypesByReference" Category="Microsoft.Design" CheckId="CA1045" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Certainty="50">
+               <Item>rguidTypeLib</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="0#rguid" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IActiveScript.AddTypeLib(Guid&amp;, UInt32, UInt32, UInt32):Void</Item>
+               <Item>rguid</Item>
+               <Item>rguidTypeLib</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="6" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Clone(LScript.IActiveScript&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>item</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetCurrentScriptThreadID(System.UInt32&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>id</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="Member" TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="MemberId">
+               <Item>IActiveScript.GetCurrentScriptThreadID(UInt32&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="2" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptDispatch(System.String,System.Object&amp;):System.Void">
+            <Messages>
+             <Message Id="1#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>ppdisp</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="0#pstr" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IActiveScript.GetScriptDispatch(String, Object&amp;):Void</Item>
+               <Item>pstr</Item>
+               <Item>pstrItemName</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="4" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="1#ppdisp" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IActiveScript.GetScriptDispatch(String, Object&amp;):Void</Item>
+               <Item>ppdisp</Item>
+               <Item>ppdisp</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="3" />
+               </User>
+              </Notes>
+             </Message>
+             <Message TypeName="UseGenericsWhereAppropriate" Category="Microsoft.Design" CheckId="CA1007" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>IActiveScript.GetScriptDispatch(String, Object&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="0" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptSite(System.Guid&amp;,System.IntPtr&amp;):System.Void">
+            <Messages>
+             <Message Id="1#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>ppvObject</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="0#" TypeName="DoNotPassTypesByReference" Category="Microsoft.Design" CheckId="CA1045" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Certainty="50">
+               <Item>riid</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="0#riid" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IActiveScript.GetScriptSite(Guid&amp;, IntPtr&amp;):Void</Item>
+               <Item>riid</Item>
+               <Item>riid</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="1#ppv" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IActiveScript.GetScriptSite(Guid&amp;, IntPtr&amp;):Void</Item>
+               <Item>ppv</Item>
+               <Item>ppvObject</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptState(LScript.ScriptState&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>ss</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptThreadID(System.UInt32,System.UInt32&amp;):System.Void">
+            <Messages>
+             <Message Id="1#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>id</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="0#threadid" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IActiveScript.GetScriptThreadID(UInt32, UInt32&amp;):Void</Item>
+               <Item>threadid</Item>
+               <Item>threadid</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="7" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="Member" TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="MemberId">
+               <Item>IActiveScript.GetScriptThreadID(UInt32, UInt32&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="1" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetScriptThreadState(System.UInt32,LScript.ScriptThreadState&amp;):System.Void">
+            <Messages>
+             <Message Id="1#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>state</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="8" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="IActiveScriptSite">
+          <Members>
+           <Member Name="GetDocVersionString(System.String&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>v</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="0#v" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>IActiveScriptSite.GetDocVersionString(String&amp;):Void</Item>
+               <Item>v</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetItemInfo(System.String,LScript.ScriptInfo,System.Object&amp;,System.Object&amp;):System.Void">
+            <Messages>
+             <Message Id="2#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>item</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="3#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>ppti</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="0#pstr" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IActiveScriptSite.GetItemInfo(String, ScriptInfo, Object&amp;, Object&amp;):Void</Item>
+               <Item>pstr</Item>
+               <Item>pstrName</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="3#ppti" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IActiveScriptSite.GetItemInfo(String, ScriptInfo, Object&amp;, Object&amp;):Void</Item>
+               <Item>ppti</Item>
+               <Item>ppti</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+             <Message TypeName="UseGenericsWhereAppropriate" Category="Microsoft.Design" CheckId="CA1007" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>IActiveScriptSite.GetItemInfo(String, ScriptInfo, Object&amp;, Object&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetLCID(System.UInt32&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>id</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="OnScriptTerminate(System.Object&amp;,System.Runtime.InteropServices.ComTypes.EXCEPINFO&amp;):System.Void">
+            <Messages>
+             <Message Id="0#" TypeName="DoNotPassTypesByReference" Category="Microsoft.Design" CheckId="CA1045" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Level="CriticalWarning">
+               <Item>result</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="1#" TypeName="DoNotPassTypesByReference" Category="Microsoft.Design" CheckId="CA1045" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Certainty="50">
+               <Item>info</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+             <Message TypeName="UseGenericsWhereAppropriate" Category="Microsoft.Design" CheckId="CA1007" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue>
+               <Item>IActiveScriptSite.OnScriptTerminate(Object&amp;, EXCEPINFO&amp;):Void</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="9" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="IDispatch">
+          <Members>
+           <Member Name="GetTypeInfo(System.Int32,System.Int32):System.Type">
+            <Messages>
+             <Message Id="0#i" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IDispatch.GetTypeInfo(Int32, Int32):Type</Item>
+               <Item>i</Item>
+               <Item>iTInfo</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="10" />
+               </User>
+              </Notes>
+             </Message>
+             <Message Id="1#lcid" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Status="Excluded" Created="2007-09-14 20:12:55Z">
+              <Issue Name="Parameter">
+               <Item>IDispatch.GetTypeInfo(Int32, Int32):Type</Item>
+               <Item>lcid</Item>
+               <Item>lcid</Item>
+              </Issue>
+              <Notes>
+               <User Name="jmarshall">
+                <Note Id="10" />
+               </User>
+              </Notes>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="ScriptInfo">
+          <Messages>
+           <Message TypeName="EnumStorageShouldBeInt32" Category="Microsoft.Design" CheckId="CA1028" Status="Excluded" Created="2007-09-14 20:12:55Z">
+            <Issue Name="NotIntegral">
+             <Item>LScript.ScriptInfo</Item>
+             <Item>System.UInt32</Item>
+            </Issue>
+            <Notes>
+             <User Name="jmarshall">
+              <Note Id="12" />
+             </User>
+            </Notes>
+           </Message>
+           <Message TypeName="FlagsEnumsShouldHavePluralNames" Category="Microsoft.Naming" CheckId="CA1714" Status="Excluded" Created="2007-09-14 20:12:55Z">
+            <Issue>
+             <Item>ScriptInfo</Item>
+            </Issue>
+            <Notes>
+             <User Name="jmarshall">
+              <Note Id="12" />
+             </User>
+            </Notes>
+           </Message>
+          </Messages>
+         </Type>
+         <Type Name="ScriptItem">
+          <Messages>
+           <Message TypeName="EnumStorageShouldBeInt32" Category="Microsoft.Design" CheckId="CA1028" Status="Excluded" Created="2007-09-14 20:12:55Z">
+            <Issue Name="NotIntegral">
+             <Item>LScript.ScriptItem</Item>
+             <Item>System.UInt32</Item>
+            </Issue>
+            <Notes>
+             <User Name="jmarshall">
+              <Note Id="12" />
+             </User>
+            </Notes>
+           </Message>
+           <Message TypeName="FlagsEnumsShouldHavePluralNames" Category="Microsoft.Naming" CheckId="CA1714" Status="Excluded" Created="2007-09-14 20:12:55Z">
+            <Issue>
+             <Item>ScriptItem</Item>
+            </Issue>
+            <Notes>
+             <User Name="jmarshall">
+              <Note Id="12" />
+             </User>
+            </Notes>
+           </Message>
+          </Messages>
+         </Type>
+         <Type Name="ScriptState">
+          <Messages>
+           <Message TypeName="EnumStorageShouldBeInt32" Category="Microsoft.Design" CheckId="CA1028" Status="Excluded" Created="2007-09-14 20:12:55Z">
+            <Issue Name="NotIntegral">
+             <Item>LScript.ScriptState</Item>
+             <Item>System.UInt32</Item>
+            </Issue>
+            <Notes>
+             <User Name="jmarshall">
+              <Note Id="12" />
+             </User>
+            </Notes>
+           </Message>
+          </Messages>
+         </Type>
+         <Type Name="ScriptText">
+          <Messages>
+           <Message TypeName="EnumStorageShouldBeInt32" Category="Microsoft.Design" CheckId="CA1028" Status="Excluded" Created="2007-09-14 20:12:55Z">
+            <Issue Name="NotIntegral">
+             <Item>LScript.ScriptText</Item>
+             <Item>System.UInt32</Item>
+            </Issue>
+            <Notes>
+             <User Name="jmarshall">
+              <Note Id="12" />
+             </User>
+            </Notes>
+           </Message>
+           <Message TypeName="FlagsEnumsShouldHavePluralNames" Category="Microsoft.Naming" CheckId="CA1714" Status="Excluded" Created="2007-09-14 20:12:55Z">
+            <Issue>
+             <Item>ScriptText</Item>
+            </Issue>
+            <Notes>
+             <User Name="jmarshall">
+              <Note Id="12" />
+             </User>
+            </Notes>
+           </Message>
+          </Messages>
+         </Type>
+         <Type Name="ScriptThreadState">
+          <Messages>
+           <Message TypeName="EnumStorageShouldBeInt32" Category="Microsoft.Design" CheckId="CA1028" Status="Excluded" Created="2007-09-14 20:12:55Z">
+            <Issue Name="NotIntegral">
+             <Item>LScript.ScriptThreadState</Item>
+             <Item>System.UInt32</Item>
+            </Issue>
+            <Notes>
+             <User Name="jmarshall">
+              <Note Id="12" />
+             </User>
+            </Notes>
+           </Message>
+          </Messages>
+         </Type>
+        </Types>
+       </Namespace>
+      </Namespaces>
+     </Module>
+    </Modules>
+   </Target>
+  </Targets>
+  <Notes>
+   <User Name="jmarshall">
+    <Note Id="0" Modified="2007-09-14 20:17:37Z">Can't change external interface.</Note>
+    <Note Id="1" Modified="2007-09-14 20:18:16Z">Can't change external interface.</Note>
+    <Note Id="2" Modified="2007-09-14 20:18:28Z">Can't change external interface.</Note>
+    <Note Id="3" Modified="2007-09-14 20:18:40Z">Can't change external interface.</Note>
+    <Note Id="4" Modified="2007-09-14 20:18:51Z">Can't change external interface.</Note>
+    <Note Id="5" Modified="2007-09-14 20:19:04Z">Can't change external interface.</Note>
+    <Note Id="6" Modified="2007-09-14 20:19:13Z">Can't change external interface.</Note>
+    <Note Id="7" Modified="2007-09-14 20:19:21Z">Can't change external interface.</Note>
+    <Note Id="8" Modified="2007-09-14 20:19:41Z">Can't change external interface.</Note>
+    <Note Id="9" Modified="2007-09-14 20:27:36Z">Can't change external interface.</Note>
+    <Note Id="10" Modified="2007-09-14 20:27:53Z">Can't change external interface.</Note>
+    <Note Id="11" Modified="2007-09-14 20:44:17Z">First you complain about the original names....</Note>
+    <Note Id="12" Modified="2007-09-14 20:45:38Z">Can't change the API.</Note>
+   </User>
+  </Notes>
+  <Rules>
+   <Rule TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021">
+    <Resolution Name="Default">Consider a design that does not require that '{0}' be an out parameter.</Resolution>
+   </Rule>
+   <Rule TypeName="DoNotPassTypesByReference" Category="Microsoft.Design" CheckId="CA1045">
+    <Resolution Name="Default">Consider a design that does not require that '{0}' be a reference parameter.</Resolution>
+   </Rule>
+   <Rule TypeName="EnumStorageShouldBeInt32" Category="Microsoft.Design" CheckId="CA1028">
+    <Resolution Name="NotIntegral">If possible, make the underlying type of '{0}' Int32 instead of {1}. Otherwise consider Byte, Int16, or Int64.</Resolution>
+   </Rule>
+   <Rule TypeName="FlagsEnumsShouldHavePluralNames" Category="Microsoft.Naming" CheckId="CA1714">
+    <Resolution Name="Default">If enumeration name '{0}' is singular, change it to a plural form.</Resolution>
+   </Rule>
+   <Rule TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704">
+    <Resolution Name="Parameter">In method {0}, correct the spelling of the unrecognized token '{1}' in parameter name '{2}' or strip it entirely if it represents any sort of hungarian notation.</Resolution>
+    <Resolution Name="ParameterOneLetter">In method {0}, consider providing a more meaningful name than the one-letter parameter name '{1}'.</Resolution>
+   </Rule>
+   <Rule TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725">
+    <Resolution Name="Default">Change parameter name '{0}' of method {1} to '{2}' in order to match the identifier as it has been declared in {3}.</Resolution>
+   </Rule>
+   <Rule TypeName="RemoveUnusedLocals" Category="Microsoft.Performance" CheckId="CA1804">
+    <Resolution Name="Default">{0} declares a local, '{1}', of type {2}, which is never used or is only assigned to. Use this local or remove it.</Resolution>
+   </Rule>
+   <Rule TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706">
+    <Resolution Name="MemberId">'Id' is an abbreviation and therefore is not subject to acronym casing guidelines. Correct the capitalization of 'ID' in member name '{0}' by changing it to 'Id'.</Resolution>
+   </Rule>
+   <Rule TypeName="UseGenericsWhereAppropriate" Category="Microsoft.Design" CheckId="CA1007">
+    <Resolution Name="Default">Consider using generics instead of a reference to System.Object in {0}.</Resolution>
+   </Rule>
+  </Rules>
+ </FxCopReport>
+</FxCopProject>

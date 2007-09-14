@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Dictionary>
+ <Words>
+ <Recognized><Word>Scriptlet</Word></Recognized>
+ <Deprecated></Deprecated>
+ <Inappropriate/>
+ </Words>
+<Acronyms>
+  <CasingExceptions>
+   <Acronym>LCID</Acronym>
+  </CasingExceptions>
+</Acronyms>
+</Dictionary>

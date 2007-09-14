@@ -7,28 +7,40 @@ using System.Runtime.InteropServices.ComTypes;
 
 namespace LScript
 {
-
     [ClassInterface (ClassInterfaceType.None),
      ComVisible(true),
      Guid("62416980-8B84-4c51-A09C-AB9623C3CC3E"),
      ProgId ("LScript")]
-    public class LScript : IActiveScript, IActiveScriptParse, IDisposable
+    public class Engine : IActiveScript, IActiveScriptParse, IDisposable
     {
         TraceListener traceListener = new TextWriterTraceListener (Console.Out);
         IActiveScriptSite site;
         ScriptState currentScriptState = ScriptState.Uninitialized;
 
-        public LScript ()
+        public Engine ()
         {
             Debug.Listeners.Add (traceListener);
         }
 
+        ~Engine ()
+        {
+            Dispose (false);
+        }
+
         public void Dispose ()
         {
-            if (traceListener != null) {
-                Debug.Listeners.Remove (traceListener);
-                traceListener.Dispose ();
-                traceListener = null;
+            Dispose (true);
+            GC.SuppressFinalize (this);
+        }
+
+        protected virtual void Dispose (bool disposing)
+        {
+            if (disposing) {
+                if (traceListener != null) {
+                    Debug.Listeners.Remove (traceListener);
+                    traceListener.Dispose ();
+                    traceListener = null;
+                }
             }
         }
 
@@ -112,10 +124,9 @@ namespace LScript
             Debug.WriteLine ("GetScriptThreadState()");
             state = ScriptThreadState.NotInScript;
         }
-        public void InterruptScriptThread (uint thread, ref System.Runtime.InteropServices.ComTypes.EXCEPINFO exceptionInfo, uint flags)
+        public void InterruptScriptThread (uint thread, IntPtr excepinfo, uint flags)
         {
             Debug.WriteLine ("InterruptScriptThread()");
-            exceptionInfo = new System.Runtime.InteropServices.ComTypes.EXCEPINFO ();
         }
 
         public void Clone (out IActiveScript script)
@@ -142,12 +153,10 @@ namespace LScript
                     uint sourceContextCookie,
                     uint startingLineNumber,
                     uint flags,
-                    out string name,
-                    out System.Runtime.InteropServices.ComTypes.EXCEPINFO info)
+                    IntPtr name,
+                    IntPtr info)
         {
             Debug.WriteLine ("AddScriptlet");
-            name = "";
-            info = new System.Runtime.InteropServices.ComTypes.EXCEPINFO ();
         }
 
         public void ParseScriptText (
