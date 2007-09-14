@@ -11,16 +11,19 @@ namespace LScript
 
         public DebugMarshaler (string cookie)
         {
+            System.Diagnostics.Debug.Assert (false, "GetInstance(\"" + cookie + "\")");
             this.cookie = cookie;
         }
 
         public object MarshalNativeToManaged (IntPtr pNativeData)
         {
-            System.Diagnostics.Debug.Assert (false, "MarshalNativeToManaged(\""+cookie+"\","+pNativeData.ToString()+")");
-            return null;
+            System.Diagnostics.Debug.Assert (false, "MarshalNativeToManaged(\"" + cookie + "\"," + ")");
+            string result = System.Runtime.InteropServices.Marshal.PtrToStringAuto (pNativeData);
+            System.Diagnostics.Debug.Assert (false, result);
+            return result;
         }
 
-        public IntPtr MarshalManagedToNative (object managedObj)
+        public IntPtr MarshalManagedToNative (object ManagedObj)
         {
             System.Diagnostics.Debug.Assert (false, "MarshalManagedToNative()");
             return IntPtr.Zero;
@@ -32,7 +35,7 @@ namespace LScript
             Marshal.Release (pNativeData);
         }
 
-        public void CleanUpManagedData (object managedObj)
+        public void CleanUpManagedData (object ManagedObj)
         {
             System.Diagnostics.Debug.Assert (false, "CleanUpManagedData()");
         }
@@ -45,8 +48,7 @@ namespace LScript
 
         public static ICustomMarshaler GetInstance (string cookie)
         {
-            System.Diagnostics.Debug.Assert (false, "GetInstance(\""+cookie+"\")");
-                return  new DebugMarshaler (cookie);
+            return new DebugMarshaler (cookie);
         }
     }
 }

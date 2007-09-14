@@ -73,14 +73,13 @@ namespace LScript
         void GetCurrentScriptThreadID (out uint id);
         void GetScriptThreadID (uint threadid, out uint id);
         void GetScriptThreadState (uint id, out ScriptThreadState state);
-        void InterruptScriptThread (uint id, ref stdole.EXCEPINFO info, uint flags);
+        void InterruptScriptThread (uint id, ref System.Runtime.InteropServices.ComTypes.EXCEPINFO info, uint flags);
         void Clone (out IActiveScript item);
     };
 
-
     [ComVisible (true),
-     Guid ("BB1A2AE2-A4F9-11cf-8F20-00805F2CD064"),
-     InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
+  Guid ("BB1A2AE2-A4F9-11cf-8F20-00805F2CD064"),
+  InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
     public interface IActiveScriptParse
     {
         void InitNew ();
@@ -94,7 +93,7 @@ namespace LScript
                     uint startingLineNumber,
                     uint flags,
                     [Out, MarshalAs (UnmanagedType.LPWStr)]out string name,
-                    out stdole.EXCEPINFO info);
+                    out System.Runtime.InteropServices.ComTypes.EXCEPINFO info);
 
         void ParseScriptText (
             [MarshalAs (UnmanagedType.LPWStr)] string code,
@@ -104,10 +103,12 @@ namespace LScript
             int sourceContextCookie,
             uint startingLineNumber,
             ScriptText flags,
+            // These next two are wrong, but I can't figure out how to fix them yet.
             IntPtr result,
             IntPtr info);
     }
 
+ 
     [Guid ("DB01A1E3-A42B-11cf-8F20-00805F2CD064"),
      InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
     public interface IActiveScriptSite
@@ -118,7 +119,7 @@ namespace LScript
                           [Out, MarshalAs (UnmanagedType.IDispatch)] out object item,
                           [Out, MarshalAs (UnmanagedType.IUnknown)] out object ppti);
         void GetDocVersionString (out string v);
-        void OnScriptTerminate (ref object result, ref stdole.EXCEPINFO info);
+        void OnScriptTerminate (ref object result, ref System.Runtime.InteropServices.ComTypes.EXCEPINFO info);
         void OnStateChange (ScriptState state);
         void OnScriptError ([MarshalAs (UnmanagedType.IUnknown)] object err);
         void OnEnterScript ();

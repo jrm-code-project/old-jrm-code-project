@@ -9,7 +9,6 @@ namespace LScriptTest
         static void Main (string [] args)
         {
             Console.WriteLine ("Dummy executable to fool VisualStudio.");
-
         }
     }
 }
