@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.InteropServices.CustomMarshalers;
 
 namespace LScript
 {
@@ -12,8 +13,8 @@ namespace LScript
         [PreserveSig, Obsolete ("PLACEHOLDER", true)]
         int GetTypeInfoCount ();
 
-        [return: MarshalAs (UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof (TypeInfoMarshaler))]
-        ITypeInfo GetTypeInfo (int iTInfo, int lcid);
+        [return: MarshalAs (UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof (TypeToTypeInfoMarshaler))]
+        Type GetTypeInfo (int iTInfo, int lcid);
 
         [PreserveSig, Obsolete ("PLACEHOLDER", true)]
         int GetIDsOfNames ();
