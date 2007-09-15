@@ -1,4 +1,4 @@
-﻿using Jrm.Lisp;
+﻿using Lisp;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -7,6 +7,22 @@ using System.Runtime.InteropServices.ComTypes;
 
 namespace LScript
 {
+    //[ComImport,
+    //Guid ("CB5BDC81-93C1-11cf-8F20-00805F2CD064"),
+    //InterfaceType (ComInterfaceType.InterfaceIsIUnknown)]
+    //interface IObjectSafety
+    //{
+    //    [PreserveSig ()]
+    //    int GetInterfaceSafetyOptions (ref Guid riid, 
+    //            [Out] out int pdwSupportedOptions, 
+    //            [Out] out int pdwEnabledOptions);
+
+    //    [PreserveSig ()]
+    //    int SetInterfaceSafetyOptions (ref Guid riid, 
+    //        int dwOptionSetMask, 
+    //        int dwEnabledOptions);
+    //}
+    
     [ClassInterface (ClassInterfaceType.None),
      ComVisible(true),
      Guid("62416980-8B84-4c51-A09C-AB9623C3CC3E"),
@@ -181,6 +197,8 @@ namespace LScript
             // info = new System.Runtime.InteropServices.ComTypes.EXCEPINFO ();
             object read = CL.ReadFromString (code);
         }
+
+
 
     }
 }
