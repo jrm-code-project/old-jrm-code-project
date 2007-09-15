@@ -154,10 +154,10 @@ namespace LScript
         public void InitNew ()
         {
             Debug.WriteLine ("InitNew()");
-                this.currentScriptState = ScriptState.Disconnected;
-                    if (this.site != null)
-                        this.site.OnStateChange (this.currentScriptState);
-         
+            this.currentScriptState = ScriptState.Disconnected;
+            if (this.site != null)
+                this.site.OnStateChange (this.currentScriptState);
+            CL.Readtable.Case = ReadtableCase.Preserve;
         }
 
         public void AddScriptlet (string defaultName,
