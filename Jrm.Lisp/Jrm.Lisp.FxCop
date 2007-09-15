@@ -1,0 +1,469 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<FxCopProject Version="1.35" Name="Lisp">
+ <ProjectOptions>
+  <SharedProject>True</SharedProject>
+  <Stylesheet Apply="False">c:\program files\microsoft fxcop 1.35\Xml\FxCopReport.Xsl</Stylesheet>
+  <SaveMessages>
+   <Project Status="Active, Excluded" NewOnly="False" />
+   <Report Status="Active" NewOnly="False" />
+  </SaveMessages>
+  <ProjectFile Compress="True" DefaultTargetCheck="True" DefaultRuleCheck="True" SaveByRuleGroup="" Deterministic="True" />
+  <EnableMultithreadedLoad>True</EnableMultithreadedLoad>
+  <EnableMultithreadedAnalysis>True</EnableMultithreadedAnalysis>
+  <SourceLookup>True</SourceLookup>
+  <AnalysisExceptionsThreshold>100</AnalysisExceptionsThreshold>
+  <RuleExceptionsThreshold>10</RuleExceptionsThreshold>
+  <Spelling Locale="en-us" />
+  <VersionAware>False</VersionAware>
+  <OverrideRuleVisibilities>False</OverrideRuleVisibilities>
+  <CustomDictionaries SearchFxCopDir="True" SearchUserProfile="True" SearchProjectDir="True" />
+  <SearchGlobalAssemblyCache>False</SearchGlobalAssemblyCache>
+  <DeadlockDetectionTimeout>120</DeadlockDetectionTimeout>
+ </ProjectOptions>
+ <Targets>
+  <Target Name="$(ProjectDir)/bin/Debug/Jrm.Lisp.dll" Analyze="True" AnalyzeAllChildren="True" />
+ </Targets>
+ <Rules>
+  <RuleFiles>
+   <RuleFile Name="$(FxCopDir)\Rules\DesignRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\GlobalizationRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\InteroperabilityRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\MobilityRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\NamingRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\PerformanceRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\PortabilityRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\SecurityRules.dll" Enabled="True" AllRulesEnabled="True" />
+   <RuleFile Name="$(FxCopDir)\Rules\UsageRules.dll" Enabled="True" AllRulesEnabled="True" />
+  </RuleFiles>
+  <Groups />
+  <Settings />
+ </Rules>
+ <FxCopReport Version="1.35">
+  <Targets>
+   <Target Name="$(ProjectDir)/bin/Debug/Jrm.Lisp.dll">
+    <Modules>
+     <Module Name="jrm.lisp.dll">
+      <Namespaces>
+       <Namespace Name="Lisp">
+        <Types>
+         <Type Name="CL">
+          <Members>
+           <Member Name="MakeStringInputStream(System.String):System.IO.StringReader">
+            <Messages>
+             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>CL.MakeStringInputStream(String):StringReader</Item>
+               <Item>s</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="MakeStringInputStream(System.String,System.Int32):System.IO.StringReader">
+            <Messages>
+             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>CL.MakeStringInputStream(String, Int32):StringReader</Item>
+               <Item>s</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="MakeStringInputStream(System.String,System.Int32,System.Int32):System.IO.StringReader">
+            <Messages>
+             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>CL.MakeStringInputStream(String, Int32, Int32):StringReader</Item>
+               <Item>s</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Read():System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>CL.Read():Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Read</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Read(System.IO.TextReader):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>CL.Read(TextReader):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Read</Item>
+              </Issue>
+             </Message>
+             <Message Id="inputStream" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-09-15 20:49:12Z" FixCategory="Breaking">
+              <Issue>
+               <Item>inputStream</Item>
+               <Item>CL.Read(TextReader):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Read(System.IO.TextReader,System.Boolean):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>CL.Read(TextReader, Boolean):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Read</Item>
+              </Issue>
+             </Message>
+             <Message Id="inputStream" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-09-15 20:49:12Z" FixCategory="Breaking">
+              <Issue>
+               <Item>inputStream</Item>
+               <Item>CL.Read(TextReader, Boolean):Object</Item>
+              </Issue>
+             </Message>
+             <Message Id="isEofError" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-09-15 20:49:12Z" FixCategory="Breaking">
+              <Issue>
+               <Item>isEofError</Item>
+               <Item>CL.Read(TextReader, Boolean):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Read(System.IO.TextReader,System.Boolean,System.Object,System.Boolean):System.Object">
+            <Messages>
+             <Message Id="isRecursive" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-09-15 20:49:12Z" FixCategory="Breaking">
+              <Issue>
+               <Item>isRecursive</Item>
+               <Item>CL.Read(TextReader, Boolean, Object, Boolean):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadFromString(System.String,System.Boolean,System.Object,System.Object[]):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>CL.ReadFromString(String, Boolean, Object, Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadFromString</Item>
+              </Issue>
+             </Message>
+             <Message Id="eofValue" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-09-15 20:49:12Z" FixCategory="Breaking">
+              <Issue>
+               <Item>eofValue</Item>
+               <Item>CL.ReadFromString(String, Boolean, Object, Object[]):Object</Item>
+              </Issue>
+             </Message>
+             <Message Id="isEofError" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-09-15 20:49:12Z" FixCategory="Breaking">
+              <Issue>
+               <Item>isEofError</Item>
+               <Item>CL.ReadFromString(String, Boolean, Object, Object[]):Object</Item>
+              </Issue>
+             </Message>
+             <Message Id="keywordArguments" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-09-15 20:49:12Z" FixCategory="Breaking">
+              <Issue>
+               <Item>keywordArguments</Item>
+               <Item>CL.ReadFromString(String, Boolean, Object, Object[]):Object</Item>
+              </Issue>
+             </Message>
+             <Message Id="source" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-09-15 20:49:12Z" FixCategory="Breaking">
+              <Issue>
+               <Item>source</Item>
+               <Item>CL.ReadFromString(String, Boolean, Object, Object[]):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace():System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace():Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Read</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace(System.IO.TextReader):System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace(TextReader):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadPreservingWhitespace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace(System.IO.TextReader,System.Boolean):System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace(TextReader, Boolean):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadPreservingWhitespace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace(System.IO.TextReader,System.Boolean,System.Object):System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace(TextReader, Boolean, Object):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadPreservingWhitespace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace(System.IO.TextReader,System.Boolean,System.Object,System.Boolean):System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace(TextReader, Boolean, Object, Boolean):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadPreservingWhitespace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="FinalReaderMacroStep">
+          <Members>
+           <Member Name="NextStep():Lisp.ReaderMacroStep">
+            <Messages>
+             <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>FinalReaderMacroStep.NextStep():ReaderMacroStep</Item>
+               <Item>1</Item>
+               <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+               <Item>Called NextStep() on FinalReaderMacroStep</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="FinalReaderStep">
+          <Members>
+           <Member Name="NextStep():Lisp.ReaderStep">
+            <Messages>
+             <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+              <Issue>
+               <Item>FinalReaderStep.NextStep():ReaderStep</Item>
+               <Item>1</Item>
+               <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+               <Item>Called NextStep() on FinalReaderStep</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="NonFinalReaderMacroStep">
+          <Members>
+           <Member Name="Result(System.Int32):System.Object">
+            <Messages>
+             <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 21:25:20Z">
+              <Issue>
+               <Item>NonFinalReaderMacroStep.Result(Int32):Object</Item>
+               <Item>1</Item>
+               <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+               <Item>Result of NonFinalReaderMacroStep</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ResultCount">
+            <Accessors>
+             <Accessor Name="get_ResultCount():System.Int32">
+              <Messages>
+               <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 21:25:20Z">
+                <Issue>
+                 <Item>NonFinalReaderMacroStep.get_ResultCount():Int32</Item>
+                 <Item>1</Item>
+                 <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+                 <Item>ResultCount of NonFinalReaderMacroStep</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="NonFinalReaderStep">
+          <Members>
+           <Member Name="Result">
+            <Accessors>
+             <Accessor Name="get_Result():System.Object">
+              <Messages>
+               <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+                <Issue>
+                 <Item>NonFinalReaderStep.get_Result():Object</Item>
+                 <Item>1</Item>
+                 <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+                 <Item>Result of NonFinalReaderStep</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="ReaderMacroStep">
+          <Members>
+           <Member Name="Result(System.Int32):System.Object">
+            <Messages>
+             <Message Id="0#i" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-09-15 21:25:20Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>ReaderMacroStep.Result(Int32):Object</Item>
+               <Item>i</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="Readtable">
+          <Members>
+           <Member Name="IsWhitespaceSyntax(System.Char):System.Boolean">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>IsWhitespaceSyntax</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="SyntaxType">
+          <Members>
+           <Member Name="Whitespace">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-09-15 20:49:12Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>field</Item>
+               <Item>Whitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="TokenToSymbol">
+          <Members>
+           <Member Name="Result">
+            <Accessors>
+             <Accessor Name="get_Result():System.Object">
+              <Messages>
+               <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-09-15 20:49:12Z">
+                <Issue>
+                 <Item>TokenToSymbol.get_Result():Object</Item>
+                 <Item>1</Item>
+                 <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+                 <Item>Result of NonFinalReaderStep</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="Utility">
+          <Members>
+           <Member Name="Ignore(System.Object):System.Void">
+            <Messages>
+             <Message Id="x" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-09-15 20:49:12Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>x</Item>
+               <Item>Utility.Ignore(Object):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+        </Types>
+       </Namespace>
+      </Namespaces>
+     </Module>
+    </Modules>
+   </Target>
+  </Targets>
+  <Rules>
+   <Rule TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702">
+    <Resolution Name="ShouldBeCompoundWord">The discrete term '{0}' in {1} '{2}' should be expressed as a compound term, '{3}'.</Resolution>
+   </Rule>
+   <Rule TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303">
+    <Resolution Name="Default">{0} passes a literal as parameter {1} of a call to {2}. Retrieve the following string argument from a resource table instead: '{3}'</Resolution>
+   </Rule>
+   <Rule TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704">
+    <Resolution Name="ParameterOneLetter">In method {0}, consider providing a more meaningful name than the one-letter parameter name '{1}'.</Resolution>
+   </Rule>
+   <Rule TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801">
+    <Resolution Name="Default">Parameter '{0}' of {1} is never used. Remove the parameter or use it in the method body.</Resolution>
+   </Rule>
+  </Rules>
+ </FxCopReport>
+</FxCopProject>

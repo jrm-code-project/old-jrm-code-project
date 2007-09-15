@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Dictionary>
+ <Words>
+ <Recognized><Word>Car</Word></Recognized>
+ <Recognized><Word>Cdr</Word></Recognized>
+ <Recognized><Word>Whitespace</Word></Recognized>
+ <Deprecated></Deprecated>
+ <Inappropriate/>
+ </Words>
+<Acronyms>
+  <CasingExceptions>
+  </CasingExceptions>
+</Acronyms>
+</Dictionary>
