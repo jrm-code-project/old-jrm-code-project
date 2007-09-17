@@ -90,20 +90,43 @@ namespace LScript
             Debug.WriteLine ("Close()");
         }
 
+        public void ProcessItem (string name, ScriptItem flags, object item, Type itemType)
+        {
+            if ((flags & ScriptItem.IsVisible) != 0) {
+                CL.SetSymbolValue (CL.Intern (name), item);
+            }
+            throw new NotImplementedException ();
+        }
+
         public void AddNamedItem (string name, ScriptItem flags)
         {
             Debug.WriteLine ("AddNamedItem(\"" + name + "\", " + flags.ToString () + ")");
-            //// What did he give us?
-            //object item;
-            //object typeinfo;
+            // What did he give us?
+            object item;
+            object typeinfo;
+            if (this.site != null) {
+                this.site.GetItemInfo (name, ScriptInfo.IUnknown, out item, out typeinfo);
+                Type itemType = item.GetType ();
+                if (itemType.FullName == "System.__ComObject") {
+                    throw new NotImplementedException ();
+                }
+                else {
+                    ProcessItem (name, flags, item, itemType);
+                }
+
+            }
+            else {
+                throw new NotImplementedException ();
+            }
+
             //if (this.site != null) {
             //    try {
             //        this.site.GetItemInfo (name, ScriptInfo.IUnknown, out item, out typeinfo);
             //        Debug.WriteLine ("item is " + item.ToString ());
-            //        Type type = (item as IDispatch).GetTypeInfo(0,0x409);
-            //            Debug.WriteLine ("Type is " + type.ToString());
-            //            foreach (System.Reflection.MemberInfo minfo in type.GetMembers ())
-            //                Debug.WriteLine (minfo);
+            //        Type type = (item as IDispatch).GetTypeInfo (0, 0x409);
+            //        Debug.WriteLine ("Type is " + type.ToString ());
+            //        foreach (System.Reflection.MemberInfo minfo in type.GetMembers ())
+            //            Debug.WriteLine (minfo);
             //    }
             //    catch (Exception e) {
             //        Debug.WriteLine ("Exception " + e.ToString ());
@@ -195,7 +218,7 @@ namespace LScript
             
             //result = null;
             // info = new System.Runtime.InteropServices.ComTypes.EXCEPINFO ();
-            object read = CL.ReadFromString (code);
+            CL.Eval (CL.ReadFromString (code));
         }
 
 
