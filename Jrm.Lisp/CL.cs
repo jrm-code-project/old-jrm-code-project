@@ -13,6 +13,30 @@ namespace Lisp
         {
         }
 
+        // *PACKAGE*
+        private static readonly ValueCell<Package> globalPackage
+            = new ValueCell<Package> (Package.CommonLispUser);
+
+        [ThreadStatic]
+        private static ValueCell<Package> package;
+
+        public static Package Package
+        {
+            get
+            {
+                if (package == null)
+                    package = globalPackage;
+                return package.Value;
+            }
+
+            set
+            {
+                if (package == null)
+                    package = globalPackage;
+                package.Value = value;
+            }
+        }
+
         // *READ-SUPPRESS*
         private static readonly ValueCell<bool> globalReadSuppress
                 = new ValueCell<bool> (false);
@@ -72,10 +96,43 @@ namespace Lisp
             }
         }
 
+        // APPLY
+        public static object Apply (object op, object rands)
+        {
+            throw new NotImplementedException ();
+        }
+
         // CONS
         public static Cons Cons (object car, object cdr)
         {
             return new Cons (car, cdr);
+        }
+
+        // EVAL
+        // Actually a simple evaluator, not the `real thing' yet.
+        static public object Eval (object form)
+        {
+            return SimpleEvaluator.Eval (form);
+        }
+
+        // INTERN
+        static public Symbol Intern (object s)
+        {
+            string sAsString = s as string;
+            if (sAsString != null)
+                return Intern (sAsString, CL.Package);
+            else
+                throw new NotImplementedException ();
+        }
+
+        static public Symbol Intern (string s)
+        {
+            return Intern (s, CL.Package);
+        }
+
+        static public Symbol Intern (string s, Package package)
+        {
+            throw new NotImplementedException ();
         }
 
         // MAKE-STRING-INPUT-STREAM
@@ -217,6 +274,22 @@ namespace Lisp
                 return Reconc (ctail.Cdr, new Cons (ctail.Car, head));
             else 
                 throw new NotImplementedException ();
+        }
+
+        // SYMBOL-FUNCTION
+        static public object SymbolFunction (object sym)
+        {
+            throw new NotImplementedException ();
+        }
+
+        static public object SymbolValue (object sym)
+        {
+            throw new NotImplementedException ();
+        }
+
+        static public object SetSymbolValue (object sym, object value)
+        {
+            throw new NotImplementedException ();
         }
     }
 }
