@@ -13,7 +13,18 @@ namespace Lisp
 
         static Cons Evlis (object formlist)
         {
-            throw new NotImplementedException ();
+            Cons evaluated = null;
+            while (true) {
+                Cons formpair = formlist as Cons;
+                if (formpair != null) {
+                    evaluated = new Cons (Eval (formpair.Car), evaluated);
+                    formlist = formpair.Cdr;
+                }
+                else if (formpair == null)
+                    return (Cons) CL.Reverse (evaluated);
+                else
+                    throw new NotImplementedException ();
+            }
         }
 
         static public object Eval (object form)
@@ -32,10 +43,16 @@ namespace Lisp
             else {
                 Symbol identifier = form as Symbol;
                 if (identifier != null) {
-                    throw new NotImplementedException ("No variables yet");
+                    return CL.SymbolValue (form);
                 }
-                else
-                    throw new NotImplementedException ("No lambda functions yet");
+                else {
+                    string literal = form as String;
+                    if (literal != null) {
+                        return literal;
+                    }
+                    else
+                        throw new NotImplementedException ("No lambda functions yet");
+                }
             }
         }
     }

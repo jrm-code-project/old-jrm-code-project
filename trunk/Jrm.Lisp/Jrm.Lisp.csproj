@@ -48,14 +48,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CL.cs" />
+    <Compile Include="CLOS.cs" />
     <Compile Include="Cons.cs" />
+    <Compile Include="DotNet.cs" />
+    <Compile Include="Environment.cs" />
+    <Compile Include="Function.cs" />
+    <Compile Include="ILocation.cs" />
     <Compile Include="ImplementationBugException.cs" />
+    <Compile Include="Keyword.cs" />
+    <Compile Include="KW.cs" />
     <Compile Include="Package.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reader.cs" />
     <Compile Include="ReaderMacro.cs" />
     <Compile Include="Readtable.cs" />
     <Compile Include="SimpleEvaluator.cs" />
+    <Compile Include="StringMatcher.cs" />
     <Compile Include="Symbol.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="ValueCell.cs" />

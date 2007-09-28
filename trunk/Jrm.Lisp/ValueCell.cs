@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Lisp
 {
-    internal class ValueCell<T>
+    internal class ValueCell<T> : ILocation<T>
     {
         bool IsBound;
         T CurrentValue;

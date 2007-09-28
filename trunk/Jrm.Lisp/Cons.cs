@@ -35,5 +35,16 @@ namespace Lisp
                 return this.cdr;
             }
         }
+
+        public static Cons SubvectorToList (object [] vector, int start, int limit)
+        {
+            Cons answer = null;
+            int count = 1;
+            for (int i = start; i < limit; i++) {
+                answer = new Cons (vector [limit - count], answer);
+                count += 1;
+            }
+            return answer;
+        }
     }
 }
