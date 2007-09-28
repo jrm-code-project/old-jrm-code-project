@@ -326,13 +326,76 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="ParseScriptText(System.String,System.String,System.Object,System.String,System.Int32,System.UInt32,LScript.ScriptText,System.IntPtr,System.IntPtr):System.Void">
+           <Member Name="ProcessConstructor(System.Reflection.ConstructorInfo):System.Void">
             <Messages>
-             <Message Id="read" TypeName="RemoveUnusedLocals" Category="Microsoft.Performance" CheckId="CA1804" Created="2007-09-14 20:42:06Z">
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-09-21 02:40:24Z">
               <Issue>
-               <Item>Engine.ParseScriptText(String, String, Object, String, Int32, UInt32, ScriptText, IntPtr, IntPtr):Void</Item>
-               <Item>read</Item>
-               <Item>System.Object</Item>
+               <Item>Engine.ProcessConstructor(ConstructorInfo):Void</Item>
+              </Issue>
+             </Message>
+             <Message TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822" Created="2007-09-21 02:38:56Z" FixCategory="Breaking">
+              <Issue>
+               <Item>Engine.ProcessConstructor(ConstructorInfo):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ProcessEvent(System.Reflection.EventInfo):System.Void">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-09-21 02:40:24Z">
+              <Issue>
+               <Item>Engine.ProcessEvent(EventInfo):Void</Item>
+              </Issue>
+             </Message>
+             <Message TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822" Created="2007-09-21 02:38:56Z" FixCategory="Breaking">
+              <Issue>
+               <Item>Engine.ProcessEvent(EventInfo):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ProcessItem(System.String,LScript.ScriptItem,System.Object,System.Type):System.Void">
+            <Messages>
+             <Message TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822" Created="2007-09-21 02:38:56Z" FixCategory="Breaking">
+              <Issue>
+               <Item>Engine.ProcessItem(String, ScriptItem, Object, Type):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ProcessMember(System.Reflection.MemberInfo):System.Void">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-09-21 02:40:24Z">
+              <Issue>
+               <Item>Engine.ProcessMember(MemberInfo):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ProcessMethod(System.Reflection.MethodInfo):System.Void">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-09-21 02:40:24Z">
+              <Issue>
+               <Item>Engine.ProcessMethod(MethodInfo):Void</Item>
+              </Issue>
+             </Message>
+             <Message TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822" Created="2007-09-21 02:38:56Z" FixCategory="Breaking">
+              <Issue>
+               <Item>Engine.ProcessMethod(MethodInfo):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ProcessProperty(System.Reflection.PropertyInfo):System.Void">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-09-21 02:40:24Z">
+              <Issue>
+               <Item>Engine.ProcessProperty(PropertyInfo):Void</Item>
+              </Issue>
+             </Message>
+             <Message TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822" Created="2007-09-21 02:38:56Z" FixCategory="Breaking">
+              <Issue>
+               <Item>Engine.ProcessProperty(PropertyInfo):Void</Item>
               </Issue>
              </Message>
             </Messages>
@@ -900,6 +963,9 @@
    <Rule TypeName="AvoidOutParameters" Category="Microsoft.Design" CheckId="CA1021">
     <Resolution Name="Default">Consider a design that does not require that '{0}' be an out parameter.</Resolution>
    </Rule>
+   <Rule TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811">
+    <Resolution Name="Default">'{0}' appears to have no upstream public or protected callers.</Resolution>
+   </Rule>
    <Rule TypeName="DoNotPassTypesByReference" Category="Microsoft.Design" CheckId="CA1045">
     <Resolution Name="Default">Consider a design that does not require that '{0}' be a reference parameter.</Resolution>
    </Rule>
@@ -913,11 +979,11 @@
     <Resolution Name="Parameter">In method {0}, correct the spelling of the unrecognized token '{1}' in parameter name '{2}' or strip it entirely if it represents any sort of hungarian notation.</Resolution>
     <Resolution Name="ParameterOneLetter">In method {0}, consider providing a more meaningful name than the one-letter parameter name '{1}'.</Resolution>
    </Rule>
+   <Rule TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822">
+    <Resolution Name="Default">The 'this' parameter (or 'Me' in VB) of {0} is never used. Mark the member as static (or Shared in VB) or use 'this'/'Me' in the method body or at least one property accessor, if appropriate.</Resolution>
+   </Rule>
    <Rule TypeName="ParameterNamesShouldMatchBaseDeclaration" Category="Microsoft.Naming" CheckId="CA1725">
     <Resolution Name="Default">Change parameter name '{0}' of method {1} to '{2}' in order to match the identifier as it has been declared in {3}.</Resolution>
-   </Rule>
-   <Rule TypeName="RemoveUnusedLocals" Category="Microsoft.Performance" CheckId="CA1804">
-    <Resolution Name="Default">{0} declares a local, '{1}', of type {2}, which is never used or is only assigned to. Use this local or remove it.</Resolution>
    </Rule>
    <Rule TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706">
     <Resolution Name="MemberId">'Id' is an abbreviation and therefore is not subject to acronym casing guidelines. Correct the capitalization of 'ID' in member name '{0}' by changing it to 'Id'.</Resolution>

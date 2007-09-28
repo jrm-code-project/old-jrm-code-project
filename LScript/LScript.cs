@@ -1,6 +1,7 @@
 ﻿using Lisp;
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
@@ -27,7 +28,7 @@ namespace LScript
      ComVisible(true),
      Guid("62416980-8B84-4c51-A09C-AB9623C3CC3E"),
      ProgId ("LScript")]
-    public class Engine : IActiveScript, IActiveScriptParse, IDisposable
+    public class Engine : IActiveScript, IActiveScriptParse, IDisposable //, IObjectSafety
     {
         TraceListener traceListener = new TextWriterTraceListener (Console.Out);
         IActiveScriptSite site;
@@ -90,12 +91,66 @@ namespace LScript
             Debug.WriteLine ("Close()");
         }
 
-        public void ProcessItem (string name, ScriptItem flags, object item, Type itemType)
+        void ProcessConstructor (ConstructorInfo constructorInfo)
+        {
+            Debug.WriteLine ("Add constructor " + constructorInfo.ToString ());
+        }
+
+        void ProcessEvent (EventInfo eventInfo)
+        {
+            Debug.WriteLine ("Add event " + eventInfo.ToString ());
+        }
+
+        void ProcessMethod (System.Reflection.MethodInfo methodInfo)
+        {
+            Debug.WriteLine ("Add method " + methodInfo.ToString ());
+        }
+
+        void ProcessProperty (PropertyInfo propertyInfo)
+        {
+            Debug.WriteLine ("Add property " + propertyInfo.ToString ());
+        }
+
+        void ProcessMember (System.Reflection.MemberInfo memInfo)
+        {
+            System.Reflection.MethodInfo methodInfo = memInfo as System.Reflection.MethodInfo;
+            if (methodInfo != null)
+                ProcessMethod (methodInfo);
+            else {
+                System.Reflection.ConstructorInfo constructorInfo = memInfo as ConstructorInfo;
+                if (constructorInfo != null)
+                    ProcessConstructor (constructorInfo);
+                else {
+                    PropertyInfo propertyInfo = memInfo as PropertyInfo;
+                    if (propertyInfo != null)
+                        ProcessProperty (propertyInfo);
+                    else {
+                        EventInfo eventInfo = memInfo as EventInfo;
+                        if (eventInfo != null) 
+                            ProcessEvent (eventInfo);
+                        else
+                        Debug.WriteLine ("Add member " + memInfo.ToString ());
+                    }
+                }
+            }
+        }
+
+        void ProcessItem (string name, ScriptItem flags, object item, Type itemType)
         {
             if ((flags & ScriptItem.IsVisible) != 0) {
                 CL.SetSymbolValue (CL.Intern (name), item);
             }
-            throw new NotImplementedException ();
+            if ((flags & ScriptItem.GlobalMembers) != 0) {
+                foreach (FieldInfo fieldInfo in itemType.GetFields ()) {
+                    Debug.WriteLine ("Process Field " + fieldInfo.ToString ());
+                }
+                foreach (PropertyInfo propertyInfo in itemType.GetProperties ()) {
+                    string propName = propertyInfo.Name;
+                    CL.SetSymbolValue (CL.Intern (propName), propertyInfo);
+                }
+                Debug.WriteLine ("Installed");
+            }
+            Debug.WriteLine ("processed");
         }
 
         public void AddNamedItem (string name, ScriptItem flags)
@@ -177,6 +232,7 @@ namespace LScript
         public void InitNew ()
         {
             Debug.WriteLine ("InitNew()");
+            DotNet.Enable ();
             this.currentScriptState = ScriptState.Disconnected;
             if (this.site != null)
                 this.site.OnStateChange (this.currentScriptState);
@@ -221,7 +277,24 @@ namespace LScript
             CL.Eval (CL.ReadFromString (code));
         }
 
+        //private const int INTERFACESAFE_FOR_UNTRUSTED_CALLER = 0x00000001;
+        //private const int INTERFACESAFE_FOR_UNTRUSTED_DATA = 0x00000002;
+        //private const int S_OK = 0;
 
+        //public int GetInterfaceSafetyOptions (ref Guid riid,
+        //         out int pdwSupportedOptions,
+        //         out int pdwEnabledOptions)
+        //{
+        //    pdwSupportedOptions = 3;
+        //    pdwEnabledOptions = 3;
+        //    return S_OK;
+        //}
 
+        //public int SetInterfaceSafetyOptions (ref Guid riid, 
+        //    int dwOptionSetMask, 
+        //    int dwEnabledOptions)
+        //{
+        //    return S_OK;
+        //}
     }
 }

@@ -355,16 +355,16 @@ namespace Lisp
 
                     // handle numbers here
                 else
-                    return new TokenToSymbol (this.packagePrefix, this.token);
+                    return new TokenToSymbol (this.packagePrefix == null ? CL.Package : CL.FindPackage (packagePrefix), this.token);
             }
         }
 
         internal class TokenToSymbol : ReaderStep
         {
-            string package;
+            Package package;
             string token;
 
-            public TokenToSymbol (string package, string token)
+            public TokenToSymbol (Package package, string token)
                 : base (false)
             {
                 this.package = package;
@@ -382,10 +382,9 @@ namespace Lisp
             public override ReaderStep NextStep ()
             {
                 if (this.package == null)
-                    return new FinalReaderStep (new Symbol (token)); // uninterned
+                    return new FinalReaderStep (new Symbol (token));
                 else
-                    throw new NotImplementedException ();
-                    // return new FinalReaderStep (this.package.Intern (token).ReturnValue);
+                    return new FinalReaderStep (CL.Intern (token, package));
             }
         }
 

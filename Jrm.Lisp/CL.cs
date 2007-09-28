@@ -13,6 +13,32 @@ namespace Lisp
         {
         }
 
+        static readonly Symbol QuoteList = Package.CommonLisp.FindSymbol ("LIST");
+
+        // *PACKAGE*
+        private static readonly ValueCell<Lisp.Environment> globalEnvironment
+            = new ValueCell<Lisp.Environment> (Lisp.Environment.Default);
+
+        [ThreadStatic]
+        private static ValueCell<Lisp.Environment> environment;
+
+        private static Lisp.Environment Environment
+        {
+            get
+            {
+                if (environment == null)
+                    environment = globalEnvironment;
+                return environment.Value;
+            }
+
+            set
+            {
+                if (environment == null)
+                    environment = globalEnvironment;
+                environment.Value = value;
+            }
+        }
+
         // *PACKAGE*
         private static readonly ValueCell<Package> globalPackage
             = new ValueCell<Package> (Package.CommonLispUser);
@@ -99,8 +125,105 @@ namespace Lisp
         // APPLY
         public static object Apply (object op, object rands)
         {
+            Delegate opd = op as Delegate;
+            if (opd != null) {
+                switch (CL.Length (rands)) {
+                    case 0: 
+                        return opd.DynamicInvoke ();
+                    case 1:
+                        return opd.DynamicInvoke ((object) new object [] {CL.Car (rands)});
+                    case 2:
+                        return opd.DynamicInvoke ((object) new object [] {CL.Car (rands), CL.Cadr (rands)});
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+                else
             throw new NotImplementedException ();
+            
         }
+
+
+        public static Cons Assq (object element, Cons alist)
+        {
+            Cons ec = null;
+            while (alist != null) {
+              object entry = alist.Car;
+              ec = entry as Cons;
+              if (ec == null) throw new NotImplementedException();
+              if (ec.Car == element) break;
+              object tail = alist.Cdr;
+              Cons ttail = tail as Cons;
+              if (ttail == null) throw new NotImplementedException();
+              alist = ttail;
+              }
+            return ec;
+        }
+
+        public static Cons Assq (object element, object alist)
+        {
+            if (alist == null) return null;
+            Cons ac = alist as Cons;
+            if (ac == null) throw new NotImplementedException();
+            return Assq (element, ac);
+        }
+
+        // CADR
+        public static object Cadr (Cons thing)
+        {
+            return (thing == null) ? null : CL.Car (thing.Cdr);
+        }
+
+
+        public static object Cadr (object thing)
+        {
+            return (thing == null) ? null : CL.Car (CL.Cdr (thing));
+        }
+
+        // CADDR
+        public static object Caddr (Cons thing)
+        {
+            return (thing == null) ? null : CL.Car (CL.Cdr (thing.Cdr));
+        }
+
+
+        public static object Caddr (object thing)
+        {
+            return (thing == null) ? null : CL.Car (CL.Cdr (CL.Cdr (thing)));
+        }
+
+        // CAR
+        public static object Car (Cons thing)
+        {
+            return (thing == null) ? null : thing.Car;
+        }
+
+        public static object Car (object thing)
+        {
+            if (thing == null)
+                return null;
+            Cons pair = thing as Cons;
+            if (pair != null)
+                return pair.Car;
+            throw new NotFiniteNumberException ();
+        }
+
+        // CDR
+        public static object Cdr (Cons thing)
+        {
+            return (thing == null) ? null : thing.Cdr;
+        }
+
+        public static object Cdr (object thing)
+        {
+            if (thing == null)
+                return null;
+            Cons pair = thing as Cons;
+            if (pair != null)
+                return pair.Cdr;
+            throw new NotFiniteNumberException ();
+        }
+
 
         // CONS
         public static Cons Cons (object car, object cdr)
@@ -115,25 +238,116 @@ namespace Lisp
             return SimpleEvaluator.Eval (form);
         }
 
-        // INTERN
-        static public Symbol Intern (object s)
+        static public bool Eql (object left, object right)
         {
-            string sAsString = s as string;
-            if (sAsString != null)
-                return Intern (sAsString, CL.Package);
-            else
-                throw new NotImplementedException ();
+            if (left.Equals (right))
+                return true;
+            throw new NotImplementedException ();
         }
 
+        static public Package FindPackage (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        static public object Identity (object item)
+        {
+            return item;
+        }
+
+        // INTERN
         static public Symbol Intern (string s)
         {
+            if (s == null)
+                throw new ArgumentNullException ("s");
             return Intern (s, CL.Package);
         }
 
         static public Symbol Intern (string s, Package package)
         {
-            throw new NotImplementedException ();
+            if (s == null)
+                throw new ArgumentNullException ("s");
+            if (package == null)
+                throw new ArgumentNullException ("package");
+            return package.Intern (s);
         }
+
+        static public Cons List () {
+            return null;
+        }
+
+        static public Cons List (object arg0) {
+            return new Cons (arg0, null);
+        }
+
+        static public Cons List (object arg0, object arg1) {
+            return new Cons (arg0, new Cons (arg1, null));
+        }
+
+        static public Cons List (object arg0, object arg1, object arg2) {
+            return new Cons (arg0, new Cons (arg1, new Cons (arg2, null)));
+        }
+
+        static public Cons List (object arg0, object arg1, object arg2, object arg3) {
+            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, null))));
+        }
+
+        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4) {
+            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, null)))));
+        }
+
+        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5) {
+            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, null))))));
+        }
+
+        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6) {
+            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, null)))))));
+        }
+
+        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7) {
+            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, new Cons (arg7, null))))))));
+        }
+
+        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9) {
+            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, new Cons (arg7, new Cons (arg8, new Cons (arg9, null))))))))));
+        }
+
+        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9, object arg10) {
+            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, new Cons (arg7, new Cons (arg8, new Cons (arg9, new Cons (arg10, null)))))))))));
+        }
+
+        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9, object arg10, object arg11) {
+            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, new Cons (arg7, new Cons (arg8, new Cons (arg9, new Cons (arg10, new Cons (arg11, null))))))))))));
+        }
+
+        static int ListLength (Cons list)
+        {
+            int length = 1;
+            while (list != null) {
+                object tail = list.Cdr;
+                if (tail == null)
+                    break;
+                Cons ltail = tail as Cons;
+                if (ltail == null)
+                    throw new NotImplementedException ();
+                list = ltail;
+                length += 1;
+            }
+            return length;
+        }
+        static public int Length (object obj)
+        {
+            if (obj == null)
+                return 0;
+            Cons c = obj as Cons;
+            if (c != null)
+                return ListLength (c);
+            else {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public static readonly StandardObject MakeInstance = CLOS.MakeInstance;
 
         // MAKE-STRING-INPUT-STREAM
         static public StringReader MakeStringInputStream (string s)
@@ -157,6 +371,131 @@ namespace Lisp
             return new StringReader (s.Substring(start,end - start));
         }
 
+        static object MapForEffect (object functionSpecifier, object [] sequences)
+        {
+            throw new NotImplementedException ();
+        }
+
+        static Cons MapToList (object functionSpecifier, object [] sequences)
+        {
+            switch (sequences.Length) {
+                case 1:
+                    return MapToList1 (functionSpecifier, sequences [0]);
+                default:
+                    throw new NotImplementedException ();
+            }
+        }
+
+        static Cons MapToList1 (object functionSpecifier, object sequence)
+        {
+            object [] sa = sequence as object [];
+            if (sa != null)
+                return MapVectorToList1 (functionSpecifier, sa);
+            else {
+                Cons sc = sequence as Cons;
+                if (sc != null)
+                    return MapListToList1 (functionSpecifier, sc);
+                else {
+                    throw new NotImplementedException ();
+                }
+            }
+        }
+
+        static Cons MapListToList1 (object functionSpecifier, Cons sequence)
+        {
+            Delegate function = ResolveFunctionSpecifier (functionSpecifier);
+            Cons answer = null;
+            while (sequence != null) {
+                answer = new Cons (function.DynamicInvoke (sequence.Car), answer);
+                object temp = sequence.Cdr;
+                if (temp == null)
+                    break;
+                Cons next = temp as Cons;
+                if (next == null)
+                    throw new NotImplementedException ();
+                sequence = next;
+            }
+            return (Cons) CL.Reverse (answer);
+        }
+
+        static Cons MapVectorToList1 (object functionSpecifier, object [] sequence)
+        {
+            Delegate function = ResolveFunctionSpecifier (functionSpecifier);
+            Cons answer = null;
+            foreach (object element in sequence)
+                answer = Cons (function.DynamicInvoke (element), answer);
+            return (Cons) CL.Reverse (answer);
+        }
+
+        static Delegate ResolveFunctionSpecifier (object functionSpecifier)
+        {
+            Delegate fasd = functionSpecifier as Delegate;
+            if (fasd != null)
+                return fasd;
+            else
+                throw new NotImplementedException ();
+        }
+
+        static public object Map (object sequenceTypeSpecifier, object functionSpecifier, params object [] sequences)
+        {
+            if (functionSpecifier == null)
+                throw new ArgumentNullException ("functionSpecifier");
+            else if (sequenceTypeSpecifier == null)
+                return MapForEffect (functionSpecifier, sequences);
+            else if (sequenceTypeSpecifier == QuoteList)
+                return MapToList (functionSpecifier, sequences);
+            else
+                throw new NotImplementedException ();
+        }
+
+        delegate bool EqualityTest (object left, object right);
+        delegate object KeySelector (object item);
+
+        static int Position (object item, Cons list)
+        {
+            int answer = 0;
+            while (list != null) {
+                if (item == list.Car)
+                    break;
+
+                object tail = list.Cdr;
+                if (tail == null)
+                    return -1;
+                Cons tail1 = tail as Cons;
+                if (tail1 == null)
+                    throw new NotImplementedException ();
+                answer += 1;
+                list = tail1;
+            }
+            return answer;
+        }
+
+        static public int Position (object item, object sequence)
+        {
+            if (sequence == null)
+                return -1;
+            Cons list = sequence as Cons;
+            if (list != null) {
+                return Position (item, list);
+            }
+            return Position (item, sequence,
+                             KW.FromEnd, false,
+                             KW.Key, new KeySelector (CL.Identity),
+                             KW.Test, new EqualityTest (CL.Eql),
+                             KW.Start, 0,
+                             KW.End, CL.Length (sequence));
+        }
+
+        static public int Position (object item, object sequence,
+                                    object key0, object val0,
+                                    object key1, object val1,
+                                    object key2, object val2,
+                                    object key3, object val3,
+                                    object key4, object val4)
+        {
+            throw new NotImplementedException ();
+        }
+
         static public object Read ()
         {
             throw new NotImplementedException ("Read");
@@ -164,12 +503,16 @@ namespace Lisp
 
         static public object Read (TextReader inputStream)
         {
-            throw new NotImplementedException ("Read");
+            if (inputStream == null)
+                throw new ArgumentNullException ("inputStream");
+            return Read (inputStream, true, null, false);
         }
 
         static public object Read (TextReader inputStream, bool isEofError)
         {
-            throw new NotImplementedException ("Read");
+            if (inputStream == null)
+                throw new ArgumentNullException ("inputStream");
+            return Read (inputStream, isEofError, null, false);
         }
 
         static public object Read (TextReader inputStream, bool isEofError, object eofValue)
@@ -276,20 +619,40 @@ namespace Lisp
                 throw new NotImplementedException ();
         }
 
-        // SYMBOL-FUNCTION
-        static public object SymbolFunction (object sym)
+        static public object Reverse (object list)
         {
-            throw new NotImplementedException ();
+            return CL.Reconc (list, null);
+        }
+
+        // SYMBOL-FUNCTION
+        static public Delegate SymbolFunction (object sym)
+        {
+            Symbol sym1 = sym as Symbol;
+            if (sym1 != null)
+                return SymbolFunction (sym1);
+            else
+                throw new ArgumentException ("wrong type", "sym");
+        }
+
+        static public Delegate SymbolFunction (Symbol sym)
+        {
+            return CL.Environment.SymbolFunction (sym);
         }
 
         static public object SymbolValue (object sym)
         {
-            throw new NotImplementedException ();
+            return CL.Environment.SymbolValue ((Symbol) sym);
         }
 
         static public object SetSymbolValue (object sym, object value)
         {
-            throw new NotImplementedException ();
+            Symbol realSymbol = sym as Symbol;
+            return SetSymbolValue (realSymbol, value);
+        }
+
+        static public object SetSymbolValue (Symbol sym, object value)
+        {
+            return CL.Environment.Setq (sym, value);
         }
     }
 }
