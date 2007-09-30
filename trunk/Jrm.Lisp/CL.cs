@@ -122,6 +122,12 @@ namespace Lisp
             }
         }
 
+	// Append
+        public static object Append (object left, object right)
+        {
+             return CL.Reconc (CL.Reverse (left), right);
+        }
+
         // APPLY
         public static object Apply (object op, object rands)
         {
@@ -231,6 +237,8 @@ namespace Lisp
             return new Cons (car, cdr);
         }
 
+        public static readonly StandardObject EnsureGenericFunction = CLOS.EnsureGenericFunction;
+
         // EVAL
         // Actually a simple evaluator, not the `real thing' yet.
         static public object Eval (object form)
@@ -276,48 +284,8 @@ namespace Lisp
             return null;
         }
 
-        static public Cons List (object arg0) {
-            return new Cons (arg0, null);
-        }
-
-        static public Cons List (object arg0, object arg1) {
-            return new Cons (arg0, new Cons (arg1, null));
-        }
-
-        static public Cons List (object arg0, object arg1, object arg2) {
-            return new Cons (arg0, new Cons (arg1, new Cons (arg2, null)));
-        }
-
-        static public Cons List (object arg0, object arg1, object arg2, object arg3) {
-            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, null))));
-        }
-
-        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4) {
-            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, null)))));
-        }
-
-        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5) {
-            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, null))))));
-        }
-
-        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6) {
-            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, null)))))));
-        }
-
-        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7) {
-            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, new Cons (arg7, null))))))));
-        }
-
-        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9) {
-            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, new Cons (arg7, new Cons (arg8, new Cons (arg9, null))))))))));
-        }
-
-        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9, object arg10) {
-            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, new Cons (arg7, new Cons (arg8, new Cons (arg9, new Cons (arg10, null)))))))))));
-        }
-
-        static public Cons List (object arg0, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9, object arg10, object arg11) {
-            return new Cons (arg0, new Cons (arg1, new Cons (arg2, new Cons (arg3, new Cons (arg4, new Cons (arg5, new Cons (arg6, new Cons (arg7, new Cons (arg8, new Cons (arg9, new Cons (arg10, new Cons (arg11, null))))))))))));
+        static public Cons List (object arg0, params object [] restArguments) {
+                   return new Cons (arg0, Lisp.Cons.SubvectorToList (restArguments, 0, restArguments.Length));
         }
 
         static int ListLength (Cons list)
@@ -347,7 +315,13 @@ namespace Lisp
             }
         }
 
-        public static readonly StandardObject MakeInstance = CLOS.MakeInstance;
+        public static StandardObject MakeInstance
+        {
+            get
+            {
+                return CLOS.MakeInstance;
+            }
+        }
 
         // MAKE-STRING-INPUT-STREAM
         static public StringReader MakeStringInputStream (string s)
@@ -388,6 +362,8 @@ namespace Lisp
 
         static Cons MapToList1 (object functionSpecifier, object sequence)
         {
+            if (sequence == null)
+                return null;
             object [] sa = sequence as object [];
             if (sa != null)
                 return MapVectorToList1 (functionSpecifier, sa);
@@ -425,6 +401,14 @@ namespace Lisp
             foreach (object element in sequence)
                 answer = Cons (function.DynamicInvoke (element), answer);
             return (Cons) CL.Reverse (answer);
+        }
+
+        static public bool Memq (object item, object list)
+        {
+            if (list == null) return false;
+            Cons pair = list as Cons;
+            if (pair == null) throw new NotImplementedException();
+            return (item == pair.Car) || Memq (item, pair.Cdr);
         }
 
         static Delegate ResolveFunctionSpecifier (object functionSpecifier)

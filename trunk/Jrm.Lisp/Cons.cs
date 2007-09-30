@@ -38,6 +38,12 @@ namespace Lisp
 
         public static Cons SubvectorToList (object [] vector, int start, int limit)
         {
+            if (vector == null) {
+                if (start == limit)
+                    return null;
+                throw new ArgumentNullException ("vector");
+            }
+              
             Cons answer = null;
             int count = 1;
             for (int i = start; i < limit; i++) {
