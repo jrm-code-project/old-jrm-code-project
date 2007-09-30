@@ -110,6 +110,24 @@ namespace Lisp
             }
         }
 
+        static readonly Keyword directDefaultInitargs = (Keyword) Package.Keyword.Intern ("DIRECT-DEFAULT-INITARGS");
+        public static Keyword DirectDefaultInitargs
+        {
+            get
+            {
+                return directDefaultInitargs;
+            }
+        }
+
+        static readonly Keyword directSlots = (Keyword) Package.Keyword.Intern ("DIRECT-SLOTS");
+        public static Keyword DirectSlots
+        {
+            get
+            {
+                return directSlots;
+            }
+        }
+
         static readonly Keyword directSuperclasses = (Keyword) Package.Keyword.Intern ("DIRECT-SUPERCLASSES");
         public static Keyword DirectSuperclasses
         {
@@ -251,6 +269,15 @@ namespace Lisp
             get
             {
                 return input;
+            }
+        }
+
+        static readonly Keyword initializer = (Keyword) Package.Keyword.Intern ("INITIALIZER");
+        public static Keyword Initializer
+        {
+            get
+            {
+                return initializer;
             }
         }
 
