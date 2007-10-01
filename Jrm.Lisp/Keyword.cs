@@ -7,6 +7,7 @@ namespace Lisp
 {
  
         [CLSCompliant (true)]
+        [System.Diagnostics.DebuggerDisplay (":{Name,nq}")]
         public class Keyword : Symbol
         {
             public Keyword (string name)

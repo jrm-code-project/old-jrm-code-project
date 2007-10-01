@@ -6,6 +6,7 @@ using System.Text;
 namespace Lisp
 {
     [CLSCompliant (true)]
+    [System.Diagnostics.DebuggerDisplay ("{Package}::{Name}")]
     public class Symbol
     {
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -31,6 +32,7 @@ namespace Lisp
 
         public string Name
         {
+            [System.Diagnostics.DebuggerStepThrough ()]
             get
             {
                 return this.name;
@@ -39,6 +41,7 @@ namespace Lisp
 
         public Package Package
         {
+            [System.Diagnostics.DebuggerStepThrough ()]
             get
             {
                 return this.package;
