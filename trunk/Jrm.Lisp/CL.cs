@@ -317,6 +317,7 @@ namespace Lisp
 
         public static StandardObject MakeInstance
         {
+            [System.Diagnostics.DebuggerStepThrough]
             get
             {
                 return CLOS.MakeInstance;

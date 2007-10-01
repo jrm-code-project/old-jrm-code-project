@@ -22,6 +22,7 @@ namespace Lisp
 
         public object Car
         {
+            [System.Diagnostics.DebuggerStepThrough]
             get
             {
                 return this.car;
@@ -30,6 +31,7 @@ namespace Lisp
 
         public object Cdr
         {
+            [System.Diagnostics.DebuggerStepThrough]
             get
             {
                 return this.cdr;
