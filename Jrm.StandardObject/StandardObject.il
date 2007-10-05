@@ -32,11 +32,48 @@
 }
 .module Jrm.StandardObject.dll
 
+.class /*02000003*/ public auto ansi sealed Lisp.ApplyHandler
+       extends [mscorlib/*23000001*/]System.MulticastDelegate/*01000001*/
+{
+  .method /*06000005*/ public hidebysig specialname rtspecialname 
+          instance void  .ctor(object 'object',
+                               native int 'method') runtime managed
+  // SIG: 20 02 01 1C 18
+  {
+  } // end of method ApplyHandler::.ctor
+
+  .method /*06000006*/ public hidebysig newslot virtual 
+          instance object  Invoke(class Lisp.StandardObject/*02000004*/ function,
+                                  object[] arguments) runtime managed
+  // SIG: 20 02 1C 12 10 1D 1C
+  {
+  } // end of method ApplyHandler::Invoke
+
+  .method /*06000007*/ public hidebysig newslot virtual 
+          instance class [mscorlib/*23000001*/]System.IAsyncResult/*01000003*/ 
+          BeginInvoke(class Lisp.StandardObject/*02000004*/ function,
+                      object[] arguments,
+                      class [mscorlib/*23000001*/]System.AsyncCallback/*01000004*/ callback,
+                      object 'object') runtime managed
+  // SIG: 20 04 12 0D 12 10 1D 1C 12 11 1C
+  {
+  } // end of method ApplyHandler::BeginInvoke
+
+  .method /*06000008*/ public hidebysig newslot virtual 
+          instance object  EndInvoke(class [mscorlib/*23000001*/]System.IAsyncResult/*01000003*/ result) runtime managed
+  // SIG: 20 01 1C 12 0D
+  {
+  } // end of method ApplyHandler::EndInvoke
+
+} // end of class Lisp.ApplyHandler
+
 .class /*02000026*/ public auto ansi sealed Lisp.StandardObject
        extends [mscorlib/*23000001*/]System.MulticastDelegate/*01000001*/
 {
   .field /*0400003F*/ private class Lisp.StandardObject/*02000026*/ closClass
   .field /*04000040*/ private object[] slots
+  .field /*04000001*/ private class Lisp.ApplyHandler/*02000003*/ onApply
+
   .method /*0600007B*/ public hidebysig specialname rtspecialname 
           instance void  .ctor(object 'object',
                                native int 'method') runtime managed
@@ -148,29 +185,22 @@
     IL_0008:  /* 2A   |                  */ ret
   } // end of method StandardObject::set_Slots
 
-  .method /*06000087*/ private hidebysig 
-          instance object  DefaultInstanceMethod(object[] arguments) cil managed
-  // SIG: 20 01 1C 1D 1C
+  .method /*0600000B*/ private hidebysig static 
+          object  defaultInstanceMethod(class Lisp.StandardObject/*02000004*/ that,
+                                  object[] arguments) cil managed
+  // SIG: 00 02 1C 12 10 1D 1C
   {
-    .param [1]/*08000078*/ 
-    .custom /*0C000020:0A000001*/ instance void [mscorlib/*23000001*/]System.ParamArrayAttribute/*01000012*/::.ctor() /* 0A000001 */ = ( 01 00 00 00 ) 
-    // Method begins at RVA 0x9de0
-    // Code size       34 (0x22)
+    // Method begins at RVA 0x20e1
+    // Code size       14 (0xe)
     .maxstack  8
-    IL_0000:  /* 00   |                  */ nop
-    IL_0001:  /* 72   | (70)006363       */ ldstr      "Application of non-funcallable instance " /* 70006363 */
+    IL_0000:  /* 02   |                  */ ldarg.0
+    IL_0001:  /* 7B   | (04)000001       */ ldfld      class Lisp.ApplyHandler/*02000003*/ Lisp.StandardObject/*02000004*/::onApply /* 04000001 */
     IL_0006:  /* 02   |                  */ ldarg.0
-    IL_0007:  /* 6F   | (0A)000016       */ callvirt   instance string [mscorlib/*23000001*/]System.Object/*01000002*/::ToString() /* 0A000016 */
-    IL_000c:  /* 72   | (70)0063B5       */ ldstr      " applied to " /* 700063B5 */
-    IL_0011:  /* 03   |                  */ ldarg.1
-    IL_0012:  /* 6F   | (0A)000016       */ callvirt   instance string [mscorlib/*23000001*/]System.Object/*01000002*/::ToString() /* 0A000016 */
-    IL_0017:  /* 28   | (0A)00004C       */ call       string [mscorlib/*23000001*/]System.String/*01000026*/::Concat(string,
-                                                                                                                      string,
-                                                                                                                      string,
-                                                                                                                      string) /* 0A00004C */
-    IL_001c:  /* 73   | (0A)000026       */ newobj     instance void [mscorlib/*23000001*/]System.NotImplementedException/*01000025*/::.ctor(string) /* 0A000026 */
-    IL_0021:  /* 7A   |                  */ throw
-  } // end of method ManifestInstance::DefaultInstanceMethod
+    IL_0007:  /* 03   |                  */ ldarg.1
+    IL_0008:  /* 6F   | (06)000006       */ callvirt   instance object Lisp.ApplyHandler/*02000003*/::Invoke(class Lisp.StandardObject/*02000004*/,
+                                                                                                                 object[]) /* 06000006 */
+    IL_000d:  /* 2A   |                  */ ret
+  } // end of method StandardObject::defaultInstanceMethod
 
   .method /*06000085*/ public hidebysig instance object 
           InstanceRef(int32 index) cil managed
@@ -214,5 +244,24 @@
     IL_000e:  /* 06   |                  */ ldloc.0
     IL_000f:  /* 2A   |                  */ ret
   } // end of method StandardObject::InstanceSet
+
+  .property /*17000001*/ instance class Lisp.ApplyHandler/*02000003*/
+          OnApply()
+  {
+    .set instance void Lisp.StandardObject/*02000004*/::set_OnApply(class Lisp.ApplyHandler/*02000003*/) /* 06000009 */
+  } // end of property StandardObject::OnApply
+
+  .method /*06000009*/ public hidebysig specialname 
+          instance void  set_OnApply(class Lisp.ApplyHandler/*02000003*/ 'value') cil managed
+  // SIG: 20 01 01 12 0C
+  {
+    // Method begins at RVA 0x20d0
+    // Code size       8 (0x8)
+    .maxstack  8
+    IL_0000:  /* 02   |                  */ ldarg.0
+    IL_0001:  /* 03   |                  */ ldarg.1
+    IL_0002:  /* 7D   | (04)000001       */ stfld      class Lisp.ApplyHandler/*02000003*/ Lisp.StandardObject/*02000004*/::onApply /* 04000001 */
+    IL_0007:  /* 2A   |                  */ ret
+  } // end of method StandardObject::set_OnApply
 
 } // end of class Lisp.StandardObject
