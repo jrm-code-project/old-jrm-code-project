@@ -21,6 +21,9 @@
   <DeadlockDetectionTimeout>120</DeadlockDetectionTimeout>
  </ProjectOptions>
  <Targets>
+  <AssemblyReferenceDirectories>
+   <Directory>$(ProjectDir)/../../Program Files/Reference Assemblies/Microsoft/Framework/v3.5/</Directory>
+  </AssemblyReferenceDirectories>
   <Target Name="$(ProjectDir)/bin/Debug/Jrm.Lisp.dll" Analyze="True" AnalyzeAllChildren="True" />
  </Targets>
  <Rules>
@@ -38,5 +41,1037 @@
   <Groups />
   <Settings />
  </Rules>
- <FxCopReport Version="1.35" />
+ <FxCopReport Version="1.35">
+  <Targets>
+   <Target Name="$(ProjectDir)/bin/Debug/Jrm.Lisp.dll">
+    <Modules>
+     <Module Name="jrm.lisp.dll">
+      <Namespaces>
+       <Namespace Name="Lisp">
+        <Types>
+         <Type Name="CL">
+          <Members>
+           <Member Name="Apply(System.Object,System.Object):System.Object">
+            <Messages>
+             <Message Id="1#rands" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Parameter">
+               <Item>CL.Apply(Object, Object):Object</Item>
+               <Item>rands</Item>
+               <Item>rands</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Assq(System.Object,Lisp.Cons):Lisp.Cons">
+            <Messages>
+             <Message Id="1#alist" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Parameter">
+               <Item>CL.Assq(Object, Cons):Cons</Item>
+               <Item>alist</Item>
+               <Item>alist</Item>
+              </Issue>
+             </Message>
+             <Message Id="Assq" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Member">
+               <Item>Assq</Item>
+               <Item>CL.Assq(Object, Cons):Cons</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Assq(System.Object,System.Object):Lisp.Cons">
+            <Messages>
+             <Message Id="1#alist" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Parameter">
+               <Item>CL.Assq(Object, Object):Cons</Item>
+               <Item>alist</Item>
+               <Item>alist</Item>
+              </Issue>
+             </Message>
+             <Message Id="Assq" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Member">
+               <Item>Assq</Item>
+               <Item>CL.Assq(Object, Object):Cons</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Environment">
+            <Accessors>
+             <Accessor Name="set_Environment(Lisp.Environment):System.Void">
+              <Messages>
+               <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+                <Issue>
+                 <Item>CL.set_Environment(Environment):Void</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+           <Member Name="Eql(System.Object,System.Object):System.Boolean">
+            <Messages>
+             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>'left'</Item>
+               <Item>CL.Eql(Object, Object):Boolean</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="FindPackage(System.String):Lisp.Package">
+            <Messages>
+             <Message Id="name" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>name</Item>
+               <Item>CL.FindPackage(String):Package</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Intern(System.String):Lisp.Symbol">
+            <Messages>
+             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>CL.Intern(String):Symbol</Item>
+               <Item>s</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Intern(System.String,Lisp.Package):Lisp.Symbol">
+            <Messages>
+             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>CL.Intern(String, Package):Symbol</Item>
+               <Item>s</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="List(System.Object,System.Object[]):Lisp.Cons">
+            <Messages>
+             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>'restArguments'</Item>
+               <Item>CL.List(Object, Object[]):Cons</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="MakeStringInputStream(System.String):System.IO.StringReader">
+            <Messages>
+             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>CL.MakeStringInputStream(String):StringReader</Item>
+               <Item>s</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="MakeStringInputStream(System.String,System.Int32):System.IO.StringReader">
+            <Messages>
+             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>CL.MakeStringInputStream(String, Int32):StringReader</Item>
+               <Item>s</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="MakeStringInputStream(System.String,System.Int32,System.Int32):System.IO.StringReader">
+            <Messages>
+             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>CL.MakeStringInputStream(String, Int32, Int32):StringReader</Item>
+               <Item>s</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="MapForEffect(System.Object,System.Object[]):System.Object">
+            <Messages>
+             <Message Id="functionSpecifier" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>functionSpecifier</Item>
+               <Item>CL.MapForEffect(Object, Object[]):Object</Item>
+              </Issue>
+             </Message>
+             <Message Id="sequences" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>sequences</Item>
+               <Item>CL.MapForEffect(Object, Object[]):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Memq(System.Object,System.Object):System.Boolean">
+            <Messages>
+             <Message Id="Memq" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Member">
+               <Item>Memq</Item>
+               <Item>CL.Memq(Object, Object):Boolean</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Position(System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object):System.Int32">
+            <Messages>
+             <Message Id="item" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>item</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="key0" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>key0</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="key1" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>key1</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="key2" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>key2</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="key3" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>key3</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="key4" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>key4</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="sequence" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>sequence</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="val0" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>val0</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="val1" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>val1</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="val2" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>val2</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="val3" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>val3</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+             <Message Id="val4" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>val4</Item>
+               <Item>CL.Position(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object):Int32</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Read():System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CL.Read():Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Read</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Read(System.IO.TextReader,System.Boolean,System.Object,System.Boolean):System.Object">
+            <Messages>
+             <Message Id="isRecursive" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>isRecursive</Item>
+               <Item>CL.Read(TextReader, Boolean, Object, Boolean):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadFromString(System.String,System.Boolean,System.Object,System.Object[]):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CL.ReadFromString(String, Boolean, Object, Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadFromString</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace():System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace():Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Read</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace(System.IO.TextReader):System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace(TextReader):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadPreservingWhitespace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace(System.IO.TextReader,System.Boolean):System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace(TextReader, Boolean):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadPreservingWhitespace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace(System.IO.TextReader,System.Boolean,System.Object):System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace(TextReader, Boolean, Object):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadPreservingWhitespace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ReadPreservingWhitespace(System.IO.TextReader,System.Boolean,System.Object,System.Boolean):System.Object">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>ReadPreservingWhitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CL.ReadPreservingWhitespace(TextReader, Boolean, Object, Boolean):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>ReadPreservingWhitespace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="SymbolFunction(System.Object):System.Delegate">
+            <Messages>
+             <Message Id="System.ArgumentException.#ctor(System.String,System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CL.SymbolFunction(Object):Delegate</Item>
+               <Item>1</Item>
+               <Item>ArgumentException.ArgumentException(String, String)</Item>
+               <Item>wrong type</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="CLOS">
+          <Messages>
+           <Message TypeName="LongAcronymsShouldBePascalCased" Category="Microsoft.Naming" CheckId="CA1705" Created="2007-10-05 18:09:46Z">
+            <Issue Name="Type">
+             <Item>CLOS</Item>
+            </Issue>
+           </Message>
+          </Messages>
+          <Members>
+           <Member Name="allocateInstance">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.allocateInstance</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="applyStandardObject(Lisp.ManifestInstance,System.Object[]):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.applyStandardObject(ManifestInstance, Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Attempt to apply non function ____ to __</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="bootstrap_step2">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.bootstrap_step2</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="bootstrapComputeDiscriminatingFunction(Lisp.ManifestInstance,System.Object[]):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.bootstrapComputeDiscriminatingFunction(ManifestInstance, Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>bootstrap compute discriminating function</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="bootstrapMakeInstance(Lisp.ManifestInstance,System.Object[]):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.bootstrapMakeInstance(ManifestInstance, Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>make standard method</Item>
+              </Issue>
+              <Issue>
+               <Item>CLOS.bootstrapMakeInstance(ManifestInstance, Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>missing lambda list</Item>
+              </Issue>
+              <Issue>
+               <Item>CLOS.bootstrapMakeInstance(ManifestInstance, Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>something else</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="bootstrapStep0">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.bootstrapStep0</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="bootstrapStep0a">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.bootstrapStep0a</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="bootstrapStep1">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.bootstrapStep1</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="builtInClass">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.builtInClass</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Class(Lisp.StandardObject):Lisp.StandardObject">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.Class(StandardObject):StandardObject</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="foo">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.foo</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="internalClassName">
+            <Messages>
+             <Message TypeName="NonConstantFieldsShouldNotBeVisible" Category="Microsoft.Usage" CheckId="CA2211" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>internalClassName</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="internalClassSlots">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.internalClassSlots</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="lookupSlotInfo(Lisp.StandardObject,Lisp.Symbol):Lisp.Cons">
+            <Messages>
+             <Message Id="className" TypeName="RemoveUnusedLocals" Category="Microsoft.Performance" CheckId="CA1804" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.lookupSlotInfo(StandardObject, Symbol):Cons</Item>
+               <Item>className</Item>
+               <Item>Lisp.Symbol</Item>
+              </Issue>
+             </Message>
+             <Message Id="classSlots" TypeName="RemoveUnusedLocals" Category="Microsoft.Performance" CheckId="CA1804" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.lookupSlotInfo(StandardObject, Symbol):Cons</Item>
+               <Item>classSlots</Item>
+               <Item>System.Object[]</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Metaobject">
+            <Messages>
+             <Message Id="Metaobject" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Member">
+               <Item>Metaobject</Item>
+               <Item>CLOS.Metaobject:StandardObject</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="OnApply(Lisp.StandardObject):Lisp.ApplyHandler">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.OnApply(StandardObject):ApplyHandler</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.OnApply(StandardObject):ApplyHandler</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>OnApply</Item>
+              </Issue>
+             </Message>
+             <Message Id="obj" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>obj</Item>
+               <Item>CLOS.OnApply(StandardObject):ApplyHandler</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="PrintStandardObject(System.Object):System.String">
+            <Messages>
+             <Message Id="thing" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
+              <Issue>
+               <Item>thing</Item>
+               <Item>CLOS.PrintStandardObject(Object):String</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="QuoteMakeInstance">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.QuoteMakeInstance</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="SetClass(Lisp.StandardObject,Lisp.StandardObject):System.Void">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.SetClass(StandardObject, StandardObject):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="SetOnApply(Lisp.StandardObject,Lisp.ApplyHandler):System.Void">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.SetOnApply(StandardObject, ApplyHandler):Void</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.SetOnApply(StandardObject, ApplyHandler):Void</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>SetOnApply</Item>
+              </Issue>
+             </Message>
+             <Message Id="newValue" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>newValue</Item>
+               <Item>CLOS.SetOnApply(StandardObject, ApplyHandler):Void</Item>
+              </Issue>
+             </Message>
+             <Message Id="obj" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>obj</Item>
+               <Item>CLOS.SetOnApply(StandardObject, ApplyHandler):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="SetSlots(Lisp.StandardObject,System.Object[]):System.Void">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.SetSlots(StandardObject, Object[]):Void</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.SetSlots(StandardObject, Object[]):Void</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Slots</Item>
+              </Issue>
+             </Message>
+             <Message Id="newSlots" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>newSlots</Item>
+               <Item>CLOS.SetSlots(StandardObject, Object[]):Void</Item>
+              </Issue>
+             </Message>
+             <Message Id="obj" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>obj</Item>
+               <Item>CLOS.SetSlots(StandardObject, Object[]):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Slots(Lisp.StandardObject):System.Object[]">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.Slots(StandardObject):Object[]</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.Slots(StandardObject):Object[]</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Slots</Item>
+              </Issue>
+             </Message>
+             <Message Id="obj" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>obj</Item>
+               <Item>CLOS.Slots(StandardObject):Object[]</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Specializer">
+            <Messages>
+             <Message Id="Specializer" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Member">
+               <Item>Specializer</Item>
+               <Item>CLOS.Specializer:StandardObject</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="unspecificInitializer():System.Object">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>CLOS.unspecificInitializer():Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="Environment">
+          <Members>
+           <Member Name="IsBound(Lisp.Symbol):System.Boolean">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>Environment.IsBound(Symbol):Boolean</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="IsFbound(Lisp.Symbol):System.Boolean">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>Environment.IsFbound(Symbol):Boolean</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="FinalReaderMacroStep">
+          <Members>
+           <Member Name="NextStep():Lisp.ReaderMacroStep">
+            <Messages>
+             <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>FinalReaderMacroStep.NextStep():ReaderMacroStep</Item>
+               <Item>1</Item>
+               <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+               <Item>Called NextStep() on FinalReaderMacroStep</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="FinalReaderStep">
+          <Members>
+           <Member Name="NextStep():Lisp.ReaderStep">
+            <Messages>
+             <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>FinalReaderStep.NextStep():ReaderStep</Item>
+               <Item>1</Item>
+               <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+               <Item>Called NextStep() on FinalReaderStep</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="KW">
+          <Members>
+           <Member Name="DirectDefaultInitargs">
+            <Messages>
+             <Message Id="Initargs" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Member">
+               <Item>Initargs</Item>
+               <Item>KW.DirectDefaultInitargs:Keyword</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="NonFinalReaderMacroStep">
+          <Members>
+           <Member Name="Result(System.Int32):System.Object">
+            <Messages>
+             <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>NonFinalReaderMacroStep.Result(Int32):Object</Item>
+               <Item>1</Item>
+               <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+               <Item>Result of NonFinalReaderMacroStep</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="ResultCount">
+            <Accessors>
+             <Accessor Name="get_ResultCount():System.Int32">
+              <Messages>
+               <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+                <Issue>
+                 <Item>NonFinalReaderMacroStep.get_ResultCount():Int32</Item>
+                 <Item>1</Item>
+                 <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+                 <Item>ResultCount of NonFinalReaderMacroStep</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="NonFinalReaderStep">
+          <Members>
+           <Member Name="Result">
+            <Accessors>
+             <Accessor Name="get_Result():System.Object">
+              <Messages>
+               <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+                <Issue>
+                 <Item>NonFinalReaderStep.get_Result():Object</Item>
+                 <Item>1</Item>
+                 <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+                 <Item>Result of NonFinalReaderStep</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="Package">
+          <Members>
+           <Member Name=".cctor()">
+            <Messages>
+             <Message TypeName="InitializeReferenceTypeStaticFieldsInline" Category="Microsoft.Performance" CheckId="CA1810" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>Lisp.Package</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="ReaderMacroStep">
+          <Members>
+           <Member Name="Result(System.Int32):System.Object">
+            <Messages>
+             <Message Id="0#i" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ParameterOneLetter">
+               <Item>ReaderMacroStep.Result(Int32):Object</Item>
+               <Item>i</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="Readtable">
+          <Members>
+           <Member Name="IsWhitespaceSyntax(System.Char):System.Boolean">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>method</Item>
+               <Item>IsWhitespaceSyntax</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="SimpleEvaluator">
+          <Members>
+           <Member Name="Eval(System.Object):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>SimpleEvaluator.Eval(Object):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>No lambda functions yet</Item>
+              </Issue>
+              <Issue>
+               <Item>SimpleEvaluator.Eval(Object):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Operator not a symbol</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="StringMatcher">
+          <Members>
+           <Member Name="MatchesPackage(Lisp.Package):System.Boolean">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
+              <Issue>
+               <Item>StringMatcher.MatchesPackage(Package):Boolean</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="Symbol">
+          <Members>
+           <Member Name="NamesDotnetMethod():System.Boolean">
+            <Messages>
+             <Message Id="Dotnet" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
+              <Issue Name="Member">
+               <Item>Dotnet</Item>
+               <Item>Symbol.NamesDotnetMethod():Boolean</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="SyntaxType">
+          <Members>
+           <Member Name="Whitespace">
+            <Messages>
+             <Message Id="Whitespace" TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702" Created="2007-10-05 18:09:46Z">
+              <Issue Name="ShouldBeCompoundWord">
+               <Item>Whitespace</Item>
+               <Item>field</Item>
+               <Item>Whitespace</Item>
+               <Item>WhiteSpace</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="TokenToSymbol">
+          <Members>
+           <Member Name="Result">
+            <Accessors>
+             <Accessor Name="get_Result():System.Object">
+              <Messages>
+               <Message Id="Lisp.ImplementationBugException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
+                <Issue>
+                 <Item>TokenToSymbol.get_Result():Object</Item>
+                 <Item>1</Item>
+                 <Item>ImplementationBugException.ImplementationBugException(String)</Item>
+                 <Item>Result of NonFinalReaderStep</Item>
+                </Issue>
+               </Message>
+              </Messages>
+             </Accessor>
+            </Accessors>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="Utility">
+          <Members>
+           <Member Name="Ignore(System.Object):System.Void">
+            <Messages>
+             <Message Id="x" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>x</Item>
+               <Item>Utility.Ignore(Object):Void</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+        </Types>
+       </Namespace>
+      </Namespaces>
+     </Module>
+    </Modules>
+   </Target>
+  </Targets>
+  <Rules>
+   <Rule TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811">
+    <Resolution Name="Default">'{0}' appears to have no upstream public or protected callers.</Resolution>
+   </Rule>
+   <Rule TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823">
+    <Resolution Name="Default">It appears that field '{0}' is never used or is only ever assigned to. Use this field or remove it.</Resolution>
+   </Rule>
+   <Rule TypeName="CompoundWordsShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1702">
+    <Resolution Name="ShouldBeCompoundWord">The discrete term '{0}' in {1} '{2}' should be expressed as a compound term, '{3}'.</Resolution>
+   </Rule>
+   <Rule TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303">
+    <Resolution Name="Default">{0} passes a literal as parameter {1} of a call to {2}. Retrieve the following string argument from a resource table instead: '{3}'</Resolution>
+   </Rule>
+   <Rule TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704">
+    <Resolution Name="Member">Correct the spelling of the unrecognized token '{0}' in member name '{1}'.</Resolution>
+    <Resolution Name="Parameter">In method {0}, correct the spelling of the unrecognized token '{1}' in parameter name '{2}' or strip it entirely if it represents any sort of hungarian notation.</Resolution>
+    <Resolution Name="ParameterOneLetter">In method {0}, consider providing a more meaningful name than the one-letter parameter name '{1}'.</Resolution>
+   </Rule>
+   <Rule TypeName="InitializeReferenceTypeStaticFieldsInline" Category="Microsoft.Performance" CheckId="CA1810">
+    <Resolution Name="Default">Initialize all static fields in {0} when those fields are declared and remove the explicit static constructor.</Resolution>
+   </Rule>
+   <Rule TypeName="LongAcronymsShouldBePascalCased" Category="Microsoft.Naming" CheckId="CA1705">
+    <Resolution Name="Type">Correct the capitalization of type name '{0}'.</Resolution>
+   </Rule>
+   <Rule TypeName="NonConstantFieldsShouldNotBeVisible" Category="Microsoft.Usage" CheckId="CA2211">
+    <Resolution Name="Default">Consider making '{0}' non-public or a constant.</Resolution>
+   </Rule>
+   <Rule TypeName="RemoveUnusedLocals" Category="Microsoft.Performance" CheckId="CA1804">
+    <Resolution Name="Default">{0} declares a local, '{1}', of type {2}, which is never used or is only assigned to. Use this local or remove it.</Resolution>
+   </Rule>
+   <Rule TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801">
+    <Resolution Name="Default">Parameter '{0}' of {1} is never used. Remove the parameter or use it in the method body.</Resolution>
+   </Rule>
+   <Rule TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062">
+    <Resolution Name="Default">Validate parameter {0} passed to externally visible method {1}.</Resolution>
+   </Rule>
+  </Rules>
+ </FxCopReport>
 </FxCopProject>

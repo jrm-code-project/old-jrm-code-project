@@ -1,30 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 
 namespace Lisp
 {
-    [System.Diagnostics.DebuggerDisplay ("{((ManifestInstance)Target).ObjectDebuggerDisplay, nq}")]
+    [DebuggerDisplay ("{((ManifestInstance)Target).ObjectDebuggerDisplay, nq}")]
+    /// <summary>Represents a CLOS object.</summary>
     public delegate object StandardObject (params object [] arguments);
 
     delegate object ApplyHandler (ManifestInstance self, object [] arguments);
 
-    [System.Diagnostics.DebuggerDisplay ("{InstanceDebuggerDisplay, nq}")]
-    class ManifestInstance
+    [DebuggerDisplay ("{InstanceDebuggerDisplay, nq}")]
+    /// <summary>Represents the state of a CLOS object.</summary>
+    /// <remarks>ManifestInstance objects should not be used or
+    /// manipulated by code outside of the CLOS class.  External code
+    /// should always be using a StandardObject delegate.</remarks>
+    internal class ManifestInstance
     {
         static int nextSerialNumber;
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
-        int serialNumber;
+        readonly int serialNumber;
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         StandardObject closClass;
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object [] slotVector;
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         ApplyHandler onApply;
 
         public ManifestInstance (StandardObject closClass, object [] slotVector, ApplyHandler onApply)
@@ -37,21 +39,22 @@ namespace Lisp
 
         public StandardObject Class
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return this.closClass;
             }
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             set
             {
                 this.closClass = value;
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public int SerialNumber
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return this.SerialNumber;
@@ -60,12 +63,12 @@ namespace Lisp
 
         public object [] Slots
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return this.slotVector;
             }
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             set
             {
                 this.slotVector = value;
@@ -74,7 +77,7 @@ namespace Lisp
 
         public ApplyHandler OnApply
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             set
             {
                 this.onApply = value;
@@ -84,22 +87,22 @@ namespace Lisp
         object DefaultInstanceMethod (params object [] arguments)
         {
             if (onApply == null)
-                throw new NotImplementedException ("Attempt to call " + this.ToString1 () + " on " + arguments.ToString ());
+                throw new NotImplementedException ("Attempt to call " + this.ToString () + " on " + arguments.ToString ());
             else {
                 return this.onApply (this, arguments);
             }
         }
 
-        public string ToString1 ()
-        {
-            return "mi.tostring1";
-        }
+        // We shouldn't try to use the ToString method
+        // in `real' code, so we don't override it here.
+        //public override string ToString ()
+        //{
+        //    return "{ManifestInstance " + this.serialNumber + "}";
+        //}
 
-        public override string ToString ()
-        {
-            return "{ManifestInstance " + this.serialNumber + "}";
-        }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        ///<summary>Debugging helper property.</summary>
         public string ObjectDebuggerDisplay
         {
             get
@@ -108,6 +111,8 @@ namespace Lisp
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        /// <summary>Debugging helper property.</summary>
         public string InstanceDebuggerDisplay
         {
             get
@@ -115,7 +120,5 @@ namespace Lisp
                 return "{ManifestInstance " + this.serialNumber + "}";
             }
         }
-
     }
-
 }
