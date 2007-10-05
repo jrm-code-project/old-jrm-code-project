@@ -122,6 +122,15 @@ namespace Lisp
             }
         }
 
+        public static StandardObject AddMethod
+        {
+            [System.Diagnostics.DebuggerStepThrough]
+            get
+            {
+                return CLOS.AddMethod;
+            }
+        }
+
 	// Append
         public static object Append (object left, object right)
         {
@@ -230,6 +239,14 @@ namespace Lisp
             throw new NotFiniteNumberException ();
         }
 
+        // CLASS-NAME
+        public static StandardObject ClassName
+        {
+            get
+            {
+                return CLOS.ClassName;
+            }
+        }
 
         // CONS
         public static Cons Cons (object car, object cdr)
@@ -237,7 +254,13 @@ namespace Lisp
             return new Cons (car, cdr);
         }
 
-        public static readonly StandardObject EnsureGenericFunction = CLOS.EnsureGenericFunction;
+        public static StandardObject EnsureGenericFunction
+        {
+            get
+            {
+                return CLOS.EnsureGenericFunction;
+            }
+        }
 
         // EVAL
         // Actually a simple evaluator, not the `real thing' yet.
@@ -317,7 +340,6 @@ namespace Lisp
 
         public static StandardObject MakeInstance
         {
-            [System.Diagnostics.DebuggerStepThrough]
             get
             {
                 return CLOS.MakeInstance;
