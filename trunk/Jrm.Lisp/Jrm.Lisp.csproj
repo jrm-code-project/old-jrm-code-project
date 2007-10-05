@@ -33,10 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Jrm.StandardObject, Version=0.0.0.0, Culture=neutral, PublicKeyToken=fe5ce37451f3749b, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Jrm.StandardObject\Jrm.StandardObject.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -67,6 +63,7 @@
     <Compile Include="ReaderMacro.cs" />
     <Compile Include="Readtable.cs" />
     <Compile Include="SimpleEvaluator.cs" />
+    <Compile Include="StandardObject.cs" />
     <Compile Include="StringMatcher.cs" />
     <Compile Include="Symbol.cs" />
     <Compile Include="Utility.cs" />

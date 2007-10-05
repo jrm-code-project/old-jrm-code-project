@@ -6,7 +6,7 @@ using System.Text;
 namespace Lisp
 {
     [CLSCompliant (true)]
-    [System.Diagnostics.DebuggerDisplay ("{Package}::{Name}")]
+    [System.Diagnostics.DebuggerDisplay ("{Package.Name,nq}::{Name,nq}")]
     public class Symbol
     {
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]

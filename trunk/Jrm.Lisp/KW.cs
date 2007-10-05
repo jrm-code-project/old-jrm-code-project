@@ -407,6 +407,18 @@ namespace Lisp
             }
         }
 
+        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        static readonly Keyword methodClass = (Keyword) Package.Keyword.Intern ("METHOD-CLASS");
+        public static Keyword MethodClass
+        {
+            [System.Diagnostics.DebuggerStepThrough]
+            get
+            {
+                return methodClass;
+            }
+        }
+
+
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         static readonly Keyword name = (Keyword) Package.Keyword.Intern ("NAME");
         public static Keyword Name
