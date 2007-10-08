@@ -233,6 +233,7 @@ namespace LScript
         {
             Debug.WriteLine ("InitNew()");
             DotNet.Enable ();
+            CLOS.Init ();
             this.currentScriptState = ScriptState.Disconnected;
             if (this.site != null)
                 this.site.OnStateChange (this.currentScriptState);
