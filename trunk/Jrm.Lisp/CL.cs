@@ -168,6 +168,8 @@ namespace Lisp
               if (ec == null) throw new NotImplementedException();
               if (ec.Car == element) break;
               object tail = alist.Cdr;
+              if (tail == null)
+                  return null;
               Cons ttail = tail as Cons;
               if (ttail == null) throw new NotImplementedException();
               alist = ttail;
@@ -206,6 +208,19 @@ namespace Lisp
         {
             return (thing == null) ? null : CL.Car (CL.Cdr (CL.Cdr (thing)));
         }
+
+        // CADDDR
+        public static object Cadddr (Cons thing)
+        {
+            return (thing == null) ? null : CL.Car (CL.Cdr (CL.Cdr (thing.Cdr)));
+        }
+
+
+        public static object Cadddr (object thing)
+        {
+            return (thing == null) ? null : CL.Car (CL.Cdr (CL.Cdr (CL.Cdr (thing))));
+        }
+
 
         // CAR
         public static object Car (Cons thing)
@@ -258,7 +273,8 @@ namespace Lisp
         {
             get
             {
-                return CLOS.EnsureGenericFunction;
+                throw new NotImplementedException ();
+                //return CLOS.EnsureGenericFunction;
             }
         }
 
@@ -629,6 +645,13 @@ namespace Lisp
         static public object Reverse (object list)
         {
             return CL.Reconc (list, null);
+        }
+
+        static public object RemoveIf (object predicate, object sequence)
+        {
+            if (sequence == null)
+                return null;
+            throw new NotImplementedException ("RemoveIf");
         }
 
         // SYMBOL-FUNCTION
