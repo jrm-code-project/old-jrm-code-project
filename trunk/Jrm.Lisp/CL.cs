@@ -238,6 +238,18 @@ namespace Lisp
             throw new NotFiniteNumberException ();
         }
 
+        // CDAR
+        public static object Cdar (Cons thing)
+        {
+            return (thing == null) ? null : CL.Cdr (thing.Car);
+        }
+
+        public static object Cdar (object thing)
+        {
+            return (thing == null) ? null : CL.Cdr (CL.Car(thing));
+        }
+
+
         // CDR
         public static object Cdr (Cons thing)
         {
@@ -251,7 +263,7 @@ namespace Lisp
             Cons pair = thing as Cons;
             if (pair != null)
                 return pair.Cdr;
-            throw new NotFiniteNumberException ();
+            throw new NotImplementedException ("CDR of non-list");
         }
 
         // CLASS-NAME

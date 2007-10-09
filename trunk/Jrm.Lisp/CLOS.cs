@@ -62,8 +62,8 @@ namespace Lisp
         }
     }
 
-    public delegate object NextMethodFunction (object [] arguments);
-    public delegate object MethodFunction (NextMethodFunction callNextMethod, object [] arguments);
+    public delegate object NextMethodFunction (params object [] arguments);
+    public delegate object MethodFunction (NextMethodFunction callNextMethod, params object [] arguments);
 
     public static class CLOS
     {
@@ -136,6 +136,7 @@ namespace Lisp
         static readonly Symbol QuoteComputeApplicableMethods = closSymbol ("COMPUTE-APPLICABLE-METHODS");
         static readonly Symbol QuoteComputeDiscriminatingFunction = closSymbol ("COMPUTE-DISCRIMINATING-FUNCTION");
         static readonly Symbol QuoteComputeEffectiveMethod = closSymbol ("COMPUTE-EFFECTIVE-METHOD");
+        static readonly Symbol QuoteComputeMethodMoreSpecific = closSymbol ("COMPUTE-METHOD-MORE-SPECIFIC");
         static readonly Symbol QuoteDeclarations = closSymbol ("DECLARATIONS");
         static readonly Symbol QuoteDefaultInitargs = closSymbol ("DEFAULT-INITARGS");
         static readonly Symbol QuoteDirectDefaultInitargs = closSymbol ("DIRECT-DEFAULT-INITARGS");
@@ -162,6 +163,7 @@ namespace Lisp
         static readonly Symbol QuoteMethodComputeApplicableMethods = closSymbol ("METHOD:compute-applicable-methods");
         static readonly Symbol QuoteMethodComputeDiscriminatingFunction = closSymbol ("METHOD:compute-discriminating-function");
         static readonly Symbol QuoteMethodComputeEffectiveMethod = closSymbol ("METHOD:compute-effective-method");
+        static readonly Symbol QuoteMethodComputeMethodMoreSpecific = closSymbol ("METHOD:compute-method-more-specific");
         static readonly Symbol QuoteMethods = closSymbol ("METHODS");
         static readonly Symbol QuoteMethodClass = closSymbol ("METHOD-CLASS");
         static readonly Symbol QuoteMethodCombination = closSymbol ("METHOD-COMBINATION");
@@ -472,6 +474,12 @@ namespace Lisp
             return internalSlotSet (obj, QuoteName, newValue);
         });
 
+        static SlotReader internalClassPrecedenceList =
+            new SlotReader (delegate (StandardObject obj)
+                {
+                    return internalSlotRef (obj, QuoteClassPrecedenceList);
+                });
+
         static SlotWriter internalSetClassPrecedenceList =
           new SlotWriter (delegate (StandardObject obj, object newValue)
         {
@@ -565,7 +573,7 @@ new SlotWriter (delegate (StandardObject obj, object newValue)
         static SlotWriter internalSetGenericMethods =
     new SlotWriter (delegate (StandardObject generic, object newValue)
     {
-        return internalSlotSet (generic, QuoteMethods, newValue);
+        return internalSlotSet (generic, QuoteMethods, (Cons) newValue);
     });
 
 
@@ -720,7 +728,26 @@ new SlotWriter (delegate (StandardObject method, object newValue)
     });
 
 
-	// End of internal slot accessors
+	    // End of internal slot accessors
+        static bool IsInstanceOf (object item, object closClass)
+        {
+            if (closClass.Equals(Top))
+                return true;
+            StandardObject cx = ClassOf (item);
+            if (cx.Equals(closClass))
+                return true;
+            else {
+                return CL.Memq (closClass, internalClassPrecedenceList (GuaranteeClass (cx)));
+            }
+        }
+
+
+        static bool InstancesOf (Cons items, Cons classes)
+        {
+            if ((items == null) || (classes == null))
+                return true;
+            return IsInstanceOf (items.Car, classes.Car) && InstancesOf ((Cons)items.Cdr, (Cons)classes.Cdr);
+        }
 
         static Cons SLOTS_OF_STANDARD_CLASS =
               CL.List (CL.List (QuoteDefaultInitargs),
@@ -931,6 +958,11 @@ bootstrapMakeBuiltInClass ();
                                               KW.Name, QuoteComputeEffectiveMethod,
                                               KW.LambdaList, CL.List (QuoteComputeEffectiveMethod));
 
+        static readonly StandardObject computeMethodMoreSpecific =
+            (StandardObject) CL.MakeInstance (StandardGenericFunction,
+                                              KW.Name, QuoteComputeMethodMoreSpecific,
+                                              KW.LambdaList, CL.List (QuoteGenericFunction));
+
         static readonly StandardObject addMethod =
             (StandardObject) CL.MakeInstance (StandardGenericFunction,
                                               KW.Name, QuoteAddMethod,
@@ -939,7 +971,8 @@ bootstrapMakeBuiltInClass ();
         static readonly List<StandardObject> GenericInvocationGenerics = 
             new List<StandardObject> {computeDiscriminatingFunction,
                                       computeApplicableMethods,
-                                      computeEffectiveMethod};
+                                      computeEffectiveMethod,
+                                      computeMethodMoreSpecific};
 
         static Cons GenericApplicationCacheTag = new Cons (null, null);
 
@@ -1089,18 +1122,160 @@ bootstrapMakeBuiltInClass ();
         {
             return  new ApplyHandler (realComputeDiscriminatingFunction);
         }
+        delegate bool MethodCompare2 (StandardObject left, StandardObject right);
+        delegate bool MethodCompare3 (StandardObject left, StandardObject right, Cons arglist);
 
-        static MethodFunction realComputeApplicableMethods =
-            new MethodFunction (delegate (NextMethodFunction callNextMethod, object [] args)
-                {
-                    throw new NotImplementedException ("realComputeApplicableMethods");
-                });
+        static Cons SortMethods (Cons methodList, MethodCompare2 comp)
+        {
+            if (methodList == null)
+                return null;
+            if (methodList.Cdr == null)
+                return methodList;
+            else
+                throw new NotImplementedException ("SortMethods");
+        }
 
-        static MethodFunction realComputeEffectiveMethod =
-            new MethodFunction (delegate (NextMethodFunction callNextMethod, object [] args)
-            {
-                throw new NotImplementedException ("realComputeEffectiveMethod");
+        static MethodCompare2 MakeSortPredicate (MethodCompare3 internalCompare, Cons arglist)
+        {
+            return new MethodCompare2 ((left, right) => internalCompare (left, right, arglist));
+        }
+
+        delegate bool MethodPredicate (StandardObject method);
+
+        static Cons FilterMethods (MethodPredicate mp, Cons methodList)
+        {
+            if (methodList == null)
+                return null;
+            StandardObject thisMethod = GuaranteeMethod ((StandardObject) methodList.Car);
+            if (mp (thisMethod))
+                return new Cons (thisMethod, FilterMethods (mp, (Cons) methodList.Cdr));
+            else
+                return FilterMethods (mp, (Cons) methodList.Cdr);
+        }
+
+
+        static Cons realComputeApplicableMethods (NextMethodFunction callNextMethod, object [] arguments)
+        {
+            StandardObject generic = GuaranteeGeneric ((StandardObject) arguments [0]);
+            Cons arglist = Cons.SubvectorToList (arguments, 1, arguments.Length);
+            Cons methods = (Cons) internalGenericMethods (generic);
+            Cons filteredMethods = FilterMethods ((m) => InstancesOf (arglist, (Cons) internalMethodSpecializers (m)), methods);
+            Cons sortedMethods = SortMethods (filteredMethods,
+                                              MakeSortPredicate ((MethodCompare3) ComputeMethodMoreSpecific (generic), arglist));
+            return sortedMethods;
+        }
+
+        static bool realComputeMethodMoreSpecificLoop (StandardObject generic, StandardObject left, StandardObject right, Cons arglist)
+        {
+            throw new NotImplementedException ();
+        }
+
+        static MethodCompare3 realComputeMethodMoreSpecific (NextMethodFunction callNextMethod, object [] arguments)
+        {
+            return new MethodCompare3 ((left, right, arglist) => realComputeMethodMoreSpecificLoop ((StandardObject) arguments [0], left, right, arglist));
+        }
+
+
+
+        static ApplyHandler oneAroundStep (Cons methods, Cons args)
+        {
+            throw new NotImplementedException ();
+        }
+
+        delegate ApplyHandler methodStepper (methodStepper nextStep, Cons methodList, Cons args);
+
+        static ApplyHandler oneStepper (methodStepper nextStep, Cons tail, Cons args)
+        {
+            return new ApplyHandler (delegate (StandardObject generic, object [] newargs) {
+                return oneStepperGuts (nextStep, tail, args, Cons.SubvectorToList (newargs, 0, newargs.Length));
             });
+        }
+
+        static object noNextMethod (object [] args)
+        {
+            throw new NotImplementedException ("noNextMethod");
+        }
+
+        static NextMethodFunction makeNoNextMethod ()
+        {
+            return (NextMethodFunction) ((args) => noNextMethod(args));
+        }
+
+        static object ListRef (Cons args, int n)
+        {
+            if (args == null)
+                throw new NotImplementedException ();
+            if (n == 0)
+                return args.Car;
+            else
+                return ListRef ((Cons) args.Cdr, n - 1);
+        }
+
+        static object oneStepperGuts (methodStepper nextStep, Cons tail, Cons arglist, Cons newargs)
+        {
+            Cons args1 = newargs == null ? arglist : newargs;
+            MethodFunction func = (MethodFunction) CL.Cdar (tail);
+            NextMethodFunction a1 = tail.Cdr == null
+                           ? makeNoNextMethod ()
+                           : new NextMethodFunction (delegate (object [] args)
+            {
+                return nextStep (nextStep, (Cons) tail.Cdr, args1);
+            });
+            int nargs = CL.Length (args1);
+           switch (nargs) {
+               case 0:
+                   return func (a1);
+               case 1:
+                   return func (a1, args1.Car);
+               case 2:
+                   return func (a1, CL.Car (args1), CL.Cadr (args1));
+               case 5:
+                   return func (a1, CL.Car (args1), CL.Cadr (args1),
+                                    ListRef (args1, 2), ListRef (args1, 3),
+                                    ListRef (args1, 4));
+               case 6:
+                   return func (a1, CL.Car (args1), CL.Cadr (args1),
+                                    ListRef (args1, 2), ListRef (args1, 3),
+                                    ListRef (args1, 4), ListRef (args1, 5));
+               default:
+                   throw new NotImplementedException ();
+           }
+
+        }
+
+        static ApplyHandler realComputeEffectiveMethod (NextMethodFunction callNextMethod, object [] arguments)
+        {
+            StandardObject generic = GuaranteeGeneric ((StandardObject) arguments [0]);
+            Cons methodList = (Cons) arguments [1];
+
+            Cons primaryMethods = null;
+            Cons aroundMethods = null;
+            Cons beforeMethods = null;
+            Cons afterMethods = null;
+
+            methodStepper oneStep = oneStepper;
+
+            while (methodList != null) {
+                StandardObject method = GuaranteeMethod ((StandardObject) methodList.Car);
+                methodList = (Cons) methodList.Cdr;
+                Symbol q = (Symbol) internalMethodQualifier (method);
+                if (q.Equals (KW.Primary)) {
+                    primaryMethods = new Cons (new Cons (method, internalMethodProcedure (method)), primaryMethods);
+                }
+                else
+                    throw new NotImplementedException ();
+            }
+            primaryMethods = (Cons) CL.Reverse (primaryMethods);
+
+            if (primaryMethods == null)
+                throw new NotImplementedException ("no applicable method");
+            else if (beforeMethods == null
+                && afterMethods == null
+                && aroundMethods == null)
+                return oneStep (oneStep, primaryMethods, null);
+            else
+                return oneAroundStep (aroundMethods, null);
+        }
 
         static bool bootstrapStep2Function ()
         {
@@ -1116,12 +1291,17 @@ bootstrapMakeBuiltInClass ();
             CL.AddMethod (ComputeApplicableMethods,
                           CL.MakeInstance (GenericFunctionMethodClass (ComputeApplicableMethods),
                                            KW.Name, QuoteMethodComputeApplicableMethods,
-                                           KW.Procedure, realComputeApplicableMethods,
+                                           KW.Procedure, (MethodFunction) realComputeApplicableMethods,
                                            KW.Specializers, CL.List (StandardGenericFunction)));
             CL.AddMethod (ComputeEffectiveMethod,
                           CL.MakeInstance (GenericFunctionMethodClass (ComputeEffectiveMethod),
                                            KW.Name, QuoteMethodComputeEffectiveMethod,
-                                           KW.Procedure, realComputeEffectiveMethod,
+                                           KW.Procedure, (MethodFunction) realComputeEffectiveMethod,
+                                           KW.Specializers, CL.List (StandardGenericFunction)));
+            CL.AddMethod (ComputeMethodMoreSpecific,
+                          CL.MakeInstance (GenericFunctionMethodClass (ComputeMethodMoreSpecific),
+                                           KW.Name, QuoteMethodComputeMethodMoreSpecific,
+                                           KW.Procedure, (MethodFunction) realComputeMethodMoreSpecific,
                                            KW.Specializers, CL.List (StandardGenericFunction)));
             return true;
         }
@@ -1144,8 +1324,9 @@ bootstrapMakeBuiltInClass ();
             AddMethod (newMakeInstance,
                        CL.MakeInstance (StandardMethod,
                                         KW.Name, QuoteNewMakeInstanceMethod,
-                                        KW.Specializers, CL.List (StandardClass),
+                                        KW.Specializers, CL.List (ClosClass),
                                         KW.Procedure, (MethodFunction) realMakeInstance));
+
 
             ManifestInstance oldMakeInstance = (ManifestInstance) CL.MakeInstance.Target;
             ManifestInstance newInstance = (ManifestInstance) newMakeInstance.Target;
@@ -1216,6 +1397,15 @@ bootstrapMakeBuiltInClass ();
             get
             {
                 return computeDiscriminatingFunction;
+            }
+        }
+
+        static public StandardObject ComputeMethodMoreSpecific
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return computeMethodMoreSpecific;
             }
         }
 
