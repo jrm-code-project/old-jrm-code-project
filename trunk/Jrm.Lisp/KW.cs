@@ -604,6 +604,17 @@ namespace Lisp
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword studlyName = (Keyword) Package.Keyword.Intern ("STUDLY-NAME");
+        public static Keyword StudlyName
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return studlyName;
+            }
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static readonly Keyword supersede = (Keyword) Package.Keyword.Intern ("SUPESEDE");
         public static Keyword Supersede

@@ -138,23 +138,10 @@ namespace Lisp
         }
 
         // APPLY
-        public static object Apply (object op, object rands)
+        public static object Apply (object op, params object [] rands)
         {
-            Delegate opd = op as Delegate;
-            if (opd != null) {
-                switch (CL.Length (rands)) {
-                    case 0: 
-                        return opd.DynamicInvoke ();
-                    case 1:
-                        return opd.DynamicInvoke ((object) new object [] {CL.Car (rands)});
-                    case 2:
-                        return opd.DynamicInvoke ((object) new object [] {CL.Car (rands), CL.Cadr (rands)});
-                    default:
-                        throw new NotImplementedException();
-                }
-            }
-                else
-            throw new NotImplementedException ();
+            // return ((Delegate) op).DynamicInvoke ((object) rands);
+            throw new NotImplementedException ("Apply");
             
         }
 
@@ -659,10 +646,24 @@ namespace Lisp
             return CL.Reconc (list, null);
         }
 
+        static public Cons RemoveIf (Delegate predicate, Cons sequence)
+        {
+            if (sequence == null)
+                return null;
+            else if ((bool) predicate.DynamicInvoke (sequence.Car))
+                return RemoveIf (predicate, (Cons) sequence.Cdr);
+            else
+                return new Cons (sequence.Car, RemoveIf (predicate, (Cons) sequence.Cdr));
+        }
+
         static public object RemoveIf (object predicate, object sequence)
         {
             if (sequence == null)
                 return null;
+            Cons seq = sequence as Cons;
+            if (seq != null)
+                return RemoveIf (ResolveFunctionSpecifier (predicate), seq);
+            else
             throw new NotImplementedException ("RemoveIf");
         }
 

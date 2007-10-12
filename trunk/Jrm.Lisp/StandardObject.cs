@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Lisp
 {
@@ -7,7 +8,43 @@ namespace Lisp
     /// <summary>Represents a CLOS object.</summary>
     public delegate object StandardObject (params object [] arguments);
 
-    delegate object ApplyHandler (StandardObject self, object [] arguments);
+    delegate object FuncallHandler (StandardObject self, object [] arguments);
+
+    internal class FuncallHandlerWrapper
+    {
+        Delegate del;
+
+        FuncallHandlerWrapper (Delegate del) {
+            this.del = del;
+        }
+
+        object [] PrePend (object element, object [] arguments)
+        {
+            object [] answer = new object [arguments.Length + 1];
+            arguments.CopyTo (answer, 1);
+            answer [0] = element;
+            return answer;
+        }
+
+        object Funcall (StandardObject self, object [] arguments)
+        {
+            return del.DynamicInvoke (PrePend (self, arguments));
+        }
+
+        static MethodInfo FuncallMethod =
+            typeof (FuncallHandlerWrapper)
+              .GetMethod ("Funcall", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        public static FuncallHandler Create (Delegate del)
+        {
+            return (FuncallHandler) 
+                Delegate.CreateDelegate (typeof (FuncallHandler),
+                                            new FuncallHandlerWrapper (del),
+                                            FuncallMethod
+                                            );
+        }
+
+    }
 
     class UnboundSlot
     {
@@ -50,14 +87,14 @@ namespace Lisp
         object [] slotVector;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        ApplyHandler onApply;
+        FuncallHandler onFuncall;
 
-        public ManifestInstance (StandardObject closClass, object [] slotVector, ApplyHandler onApply)
+        public ManifestInstance (StandardObject closClass, object [] slotVector, FuncallHandler onFuncall)
         {
             this.serialNumber = nextSerialNumber++;
             this.closClass = closClass;
             this.slotVector = slotVector;
-            this.onApply = onApply;
+            this.onFuncall = onFuncall;
         }
 
         public StandardObject Class
@@ -98,27 +135,29 @@ namespace Lisp
             }
         }
 
-        public ApplyHandler OnApply
+        public FuncallHandler OnFuncall
         {
             [DebuggerStepThrough]
             get
             {
-                return this.onApply;
+                return this.onFuncall;
             }
             [DebuggerStepThrough]
             set
             {
-                this.onApply = value;
+                if (value == null)
+                    throw new ArgumentNullException ("value");
+                this.onFuncall = value;
             }
         }
 
         [DebuggerStepThrough]
         object DefaultInstanceMethod (params object [] arguments)
         {
-            if (onApply == null)
+            if (onFuncall == null)
                 throw new NotImplementedException ("Attempt to call " + this.ToString () + " on " + arguments.ToString ());
             else {
-                return this.onApply (this.self, arguments);
+                return this.onFuncall (this.self, arguments);
             }
         }
 
@@ -136,11 +175,20 @@ namespace Lisp
         {
             get
             {
-                Symbol className = (Symbol) CLOS.StandardObjectName (this.closClass);
-                Symbol instanceName = (Symbol) CLOS.StandardObjectName (this.self);
-                string classInfo = (className == null) ? "StandardObject" : className.Name;
-                string info = (instanceName == null) ? "" : instanceName.Name;
-                return "{" + classInfo + " " + this.serialNumber + " " + info + "}";
+                object className = CLOS.StandardObjectName (this.closClass);
+                string classNameString = (className is string)
+                    ? (string) className
+                    : (className is Symbol)
+                    ? ((Symbol) className).Name
+                    : "StandardObject";
+                object instanceName = CLOS.StandardObjectName (this.self);
+                string instanceNameString = (instanceName is string)
+            ? (string) instanceName
+            : (instanceName is Symbol)
+                ? ((Symbol) instanceName).Name
+                : "";
+
+                return "{" + classNameString + " " + this.serialNumber + " " + instanceName + "}";
             }
         }
 
@@ -154,17 +202,17 @@ namespace Lisp
             }
         }
 
-        static object applyStandardObject (StandardObject self, object [] arguments)
+        static object funcallStandardObject (StandardObject self, object [] arguments)
         {
             throw new NotImplementedException ("Attempt to apply non function " + self + " to " + arguments.ToString ());
         }
 
-        static object applyUninitializedObject (StandardObject self, object [] arguments)
+        static object funcallUninitializedObject (StandardObject self, object [] arguments)
         {
             throw new NotImplementedException (self.ToString () + ": Attempt to apply uninitialized " + ((Symbol) CL.ClassName (((ManifestInstance) self.Target).Class)).Name + " to " + arguments.ToString ());
         }
 
-        static StandardObject CreateInstance (StandardObject closClass, int nSlots, ApplyHandler method)
+        static StandardObject CreateInstance (StandardObject closClass, int nSlots, FuncallHandler method)
         {
             object [] slotVector = new object [nSlots];
             for (int i = 0; i < nSlots; i++)
@@ -182,17 +230,17 @@ namespace Lisp
 
         public static StandardObject CreateInstance (StandardObject closClass, int nSlots)
         {
-            return CreateInstance (closClass, nSlots, applyStandardObject);
+            return CreateInstance (closClass, nSlots, funcallStandardObject);
         }
 
         public static StandardObject CreateFuncallableInstance (StandardObject closClass, int nSlots)
         {
-            return CreateInstance (closClass, nSlots, applyUninitializedObject);
+            return CreateInstance (closClass, nSlots, funcallUninitializedObject);
         }
 
-        public static StandardObject CreateFuncallableInstance (StandardObject closClass, int nSlots, ApplyHandler applyHandler)
+        public static StandardObject CreateFuncallableInstance (StandardObject closClass, int nSlots, FuncallHandler funcallHandler)
         {
-            return CreateInstance (closClass, nSlots, applyHandler);
+            return CreateInstance (closClass, nSlots, funcallHandler);
         }
     }
 }
