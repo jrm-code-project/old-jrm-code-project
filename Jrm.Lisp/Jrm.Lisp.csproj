@@ -52,6 +52,7 @@
     <Compile Include="Cons.cs" />
     <Compile Include="DotNet.cs" />
     <Compile Include="Environment.cs" />
+    <Compile Include="Funcall.cs" />
     <Compile Include="Function.cs" />
     <Compile Include="ILocation.cs" />
     <Compile Include="ImplementationBugException.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="StandardObject.cs" />
     <Compile Include="StringMatcher.cs" />
     <Compile Include="Symbol.cs" />
+    <Compile Include="Trampoline.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="ValueCell.cs" />
   </ItemGroup>
