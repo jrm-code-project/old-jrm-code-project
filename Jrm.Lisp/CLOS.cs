@@ -119,6 +119,37 @@ namespace Lisp
         }
     }
 
+    class ClassInitializer
+    {
+        public ClassInitializer ()
+        {
+        }
+
+        public void Initialize (StandardObject instance, Cons initargs)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    delegate object SlotInitFunction (Cons initargs);
+
+    class SlotInitializer
+    {
+        SlotInitFunction init;
+        public SlotInitializer (SlotInitFunction init)
+        {
+            this.init = init;
+        }
+
+        public void Initialize (StandardObject instance, int slot, Cons initargs)
+        {
+            ((ManifestInstance) instance.Target).Slots [slot] = init(initargs);
+        }
+    }
+
+    public delegate object SlotReader (StandardObject obj);
+    delegate T SlotReader<T> (StandardObject obj);
+
     public static class CLOS
     {
         static object UnboundSlotValue = UnboundSlot.Value;
@@ -186,6 +217,7 @@ namespace Lisp
         static readonly Symbol QuoteClassPrototype = closSymbol ("CLASS-PROTOTYPE");
         static readonly Symbol QuoteClassSlots = closSymbol ("CLASS-SLOTS");
         static readonly Symbol QuoteClass = closSymbol ("CLASS");
+        static readonly Symbol QuoteClassInitializers = closSymbol ("CLASS-INITIALIZERS");
         static readonly Symbol QuoteComputeApplicableMethods = closSymbol ("COMPUTE-APPLICABLE-METHODS");
         static readonly Symbol QuoteComputeDiscriminatingFunction = closSymbol ("COMPUTE-DISCRIMINATING-FUNCTION");
         static readonly Symbol QuoteComputeEffectiveMethod = closSymbol ("COMPUTE-EFFECTIVE-METHOD");
@@ -209,6 +241,7 @@ namespace Lisp
         static readonly Symbol QuoteGettersAndSetters = closSymbol ("GETTERS-AND-SETTERS");
         static readonly Symbol QuoteInstance = closSymbol ("INSTANCE");
         static readonly Symbol QuoteInitargs = closSymbol ("INITARGS");
+        static readonly Symbol QuoteInitializers = closSymbol ("INITIALIZERS");
         static readonly Symbol QuoteInitializeInstance = closSymbol ("INITIALIZE-INSTANCE");
         static readonly Symbol QuoteLambdaList = closSymbol ("LAMBDA-LIST");
         static readonly Symbol QuoteList = Package.CommonLisp.FindSymbol ("LIST");
@@ -224,6 +257,8 @@ namespace Lisp
         static readonly Symbol QuoteMethods = closSymbol ("METHODS");
         static readonly Symbol QuoteMethodClass = closSymbol ("METHOD-CLASS");
         static readonly Symbol QuoteMethodCombination = closSymbol ("METHOD-COMBINATION");
+        static readonly Symbol QuoteMethodEnsureGenericFunction = closSymbol ("METHOD:ensure-generic-function");
+        static readonly Symbol QuoteMethodInitializeInstance = closSymbol ("METHOD:initialize-instance");
         static readonly Symbol QuoteMethodMethodQualifier = closSymbol ("METHOD:method-qualifier");
         static readonly Symbol QuoteMethodMethodSpecializers = closSymbol ("METHOD:method-specializers");
         static readonly Symbol QuoteMethodQualifier = closSymbol ("METHOD-QUALIFIER");
@@ -234,6 +269,7 @@ namespace Lisp
         static readonly Symbol QuoteProcedure = closSymbol ("PROCEDURE");
         static readonly Symbol QuoteQualifier = closSymbol ("QUALIFIER");
         static readonly Symbol QuoteSingletonsList = closSymbol ("SINGLETONS-LIST");
+        static readonly Symbol QuoteSlotInitializers = closSymbol ("SLOT-INITIALIZERS");
         static readonly Symbol QuoteSlotNames = closSymbol ("SLOT-NAMES");
         static readonly Symbol QuoteSpecializer = closSymbol ("SPECIALIZER");
         static readonly Symbol QuoteSpecializers = closSymbol ("SPECIALIZERS");
@@ -249,11 +285,13 @@ namespace Lisp
         static readonly Symbol QuoteTop = closSymbol ("TOP");
         #endregion Symbols
 
-        public delegate object SlotReader (StandardObject obj);
+
         delegate object SlotWriter (StandardObject obj, object newValue);
         delegate object SlotChangingFunction (object currentValue);
         delegate object SlotChanger (StandardObject obj, SlotChangingFunction func);
 
+        delegate T SlotChangingFunction<T> (T currentValue);
+        delegate T SlotChanger<T> (StandardObject obj, SlotChangingFunction<T> func);
 
                                    
 
@@ -296,17 +334,56 @@ namespace Lisp
             if (superclasses == null)
                 return (Cons) CL.Reverse (soFar);
             return bootstrapComputeClassPrecedenceList ((Cons) CL.Append (superclasses.Cdr, InternalClassDirectSuperclasses ((StandardObject) superclasses.Car)),
-                                                        CL.Memq (superclasses.Car, soFar)
-                                                           ? soFar
-                                                           : CL.Cons (superclasses.Car, soFar));
+                                                        (CL.Memq (superclasses.Car, soFar) == null)
+                                                        ? CL.Cons (superclasses.Car, soFar)
+                                                            : soFar);
         }
 
-        delegate Cons Allocator (object initargs);
+        delegate Cons Allocator (Cons initargs);
 
         static object unspecificInitializer ()
         {
             throw new NotImplementedException ();
         }
+
+        static SlotInitFunction MakeSlotInitFunction (Cons slotSpec)
+        {
+            object initvalue = UnboundSlotValue;
+            ConsList<Keyword> initkeys = null;
+
+            Cons tail = (Cons) slotSpec.Cdr;
+            while (true) {
+                if (tail == null)
+                    break;
+
+                if (tail.Car == KW.Initvalue) {
+                    initvalue = CL.Cadr (tail);
+                }
+                else if (tail.Car == KW.Initarg) {
+                    initkeys = new ConsList<Keyword> ((Keyword) CL.Cadr(tail), initkeys);
+                }
+
+                tail = (Cons) tail.Cdr;
+                tail = (Cons) tail.Cdr;
+            }
+            return new SlotInitFunction(
+                delegate (Cons initargList) {
+                    while (true) {
+                        if (initargList == null)
+                            break;
+                        if (initkeys != null)
+                        foreach (Keyword initkey in initkeys) {
+                            if (initkey == initargList.Car)
+                                return CL.Cadr (initargList);
+                        }
+                        initargList = (Cons) CL.Cdr (initargList);
+                        initargList = (Cons) CL.Cdr (initargList);
+                    }
+                    return initvalue;
+                });
+
+ 
+         }
 
         static object bootstrapMakeInstance (StandardObject self, object [] arguments)
         {
@@ -329,15 +406,16 @@ namespace Lisp
                 Cons slots = (Cons) CL.Append (directSlots, inheritedSlots);
 
                 int nfields = 0;
-                Cons fieldInitializers = null;
+                ConsList<SlotInitializer> reverseSlotInitializers = null;
 
 
 
-                Delegate allocator = new Allocator (delegate (object init)
+                Delegate allocator = new Allocator (delegate (Cons init)
                 {
                     int f = nfields;
                     nfields += 1;
-                    fieldInitializers = new Cons (init, fieldInitializers);
+                    SlotInitializer slotInit = new SlotInitializer (MakeSlotInitFunction (init));
+                    reverseSlotInitializers = new ConsList<SlotInitializer> (slotInit, reverseSlotInitializers);
                     return CL.List (
                          new SlotReader (delegate (StandardObject o)
                              {
@@ -353,11 +431,13 @@ namespace Lisp
                              }));
                 });
 
+
+
                 Cons gettersAndSetters =
                   (Cons) CL.Map (QuoteList, new MapFunction (
                                       delegate (Cons s)
                                       {
-                                          return CL.Cons (s.Car, allocator.DynamicInvoke (Utility.GetArg (s.Cdr, KW.Initializer, null)));
+                                          return CL.Cons (s.Car, allocator.DynamicInvoke (s));
                                       }), slots);
                 if (CL.Length (slots) < CL.Length (directSlots))
                     throw new NotImplementedException ();
@@ -368,13 +448,23 @@ namespace Lisp
                 internalSetClassDirectSlots (instance, directSlots);
                 internalSetClassDirectSubclasses (instance, null);
                 internalSetClassDirectSuperclasses (instance, directSuperclasses);
+                internalSetClassInitializers (instance, null);
                 internalSetClassIsFinalized (instance, true);
+
+
+                ConsList<SlotInitializer> slotInitializers = null;
+                 if (reverseSlotInitializers != null)
+                foreach (SlotInitializer si in reverseSlotInitializers)
+                    slotInitializers = new ConsList<SlotInitializer> (si, slotInitializers);
+
+                internalSetClassSlotInitializers (instance, slotInitializers);
                 internalSetClassName (instance, name);
                 internalSetClassStudlyName (instance, studlyName);
                 internalSetClassPrecedenceList (instance, classPrecedenceList);
                 internalSetClassPrototype (instance, null);
                 internalSetClassGettersAndSetters (instance, gettersAndSetters);
                 internalSetClassSlots (instance, null);
+                internalSetClassInitializers (instance, null);
                 return instance;
             }
             else if (object.ReferenceEquals (closClass, StandardGenericFunction)) {
@@ -442,6 +532,11 @@ namespace Lisp
             return ((SlotReader) (CL.Cadr (lookupSlotInfo (ClassOf (obj), slotName)))) (obj);
         }
 
+        static T internalSlotRef<T> (StandardObject obj, Symbol slotName)
+        {
+            return (T) ((SlotReader) (CL.Cadr (lookupSlotInfo (ClassOf (obj), slotName)))) (obj);
+        }
+
         static internal object StandardObjectName (StandardObject obj)
         {
             try {
@@ -468,6 +563,11 @@ namespace Lisp
         static object internalSlotChange (StandardObject obj, Symbol slotName, SlotChangingFunction value)
         {
             return ((SlotChanger) (CL.Cadddr (lookupSlotInfo (ClassOf (obj), slotName)))) (obj, value);
+        }
+
+        static T internalSlotChange<T> (StandardObject obj, Symbol slotName, SlotChangingFunction<T> change)
+        {
+            return (T) ((SlotChanger) (CL.Cadddr (lookupSlotInfo (ClassOf (obj), slotName)))) (obj, (oldValue) => change((T) oldValue));
         }
 
         #region InternalClassAccessors
@@ -598,6 +698,30 @@ namespace Lisp
         {
             return internalSlotSet (obj, QuoteClassSlots, newValue);
         });
+
+        static SlotReader<ConsList<ClassInitializer>> internalClassInitializers =
+            new SlotReader<ConsList<ClassInitializer>> (delegate (StandardObject obj)
+            {
+                return internalSlotRef<ConsList<ClassInitializer>> (obj, QuoteInitializers);
+            });
+
+        static SlotWriter internalSetClassInitializers =
+            new SlotWriter (delegate (StandardObject obj, object newValue)
+            {
+                return internalSlotSet (obj, QuoteInitializers, newValue);
+            });
+
+        static SlotReader<ConsList<SlotInitializer>> internalClassSlotInitializers =
+            new SlotReader<ConsList<SlotInitializer>> (delegate (StandardObject obj)
+                {
+                    return internalSlotRef<ConsList<SlotInitializer>> (obj, QuoteSlotInitializers);
+                });
+
+        static SlotWriter internalSetClassSlotInitializers =
+            new SlotWriter (delegate (StandardObject obj, object newValue)
+                {
+                    return internalSlotSet (obj, QuoteSlotInitializers, newValue);
+                });
 
         #endregion InternalClassAccessors
 
@@ -828,6 +952,12 @@ namespace Lisp
            return (Cons) internalMethodSpecializers (GuaranteeMethod (method));
         }
 
+        static SlotChanger<Cons> internalChangeMethodSpecializers =
+            new SlotChanger<Cons> (delegate (StandardObject method, SlotChangingFunction<Cons> proc)
+        {
+            return internalSlotChange<Cons> (method, QuoteSpecializers, proc);
+        });
+
         static SlotWriter internalSetMethodSpecializers =
           new SlotWriter (delegate (StandardObject method, object specializers)
         {
@@ -844,7 +974,7 @@ namespace Lisp
             if (cx.Equals(closClass))
                 return true;
             else {
-                return CL.Memq (closClass, internalClassPrecedenceList (GuaranteeClass (cx)));
+                return CL.Memq (closClass, internalClassPrecedenceList (GuaranteeClass (cx))) != null;
             }
         }
 
@@ -861,7 +991,9 @@ namespace Lisp
                        CL.List (QuoteDirectSlots),
                        CL.List (QuoteDirectSubclasses),
                        CL.List (QuoteDirectSuperclasses),
+                       CL.List (QuoteSlotInitializers),
                        CL.List (QuoteFinalizedP),
+                       CL.List (QuoteInitializers),
                        CL.List (QuoteName),
                        CL.List (QuoteStudlyName),
                        CL.List (QuoteClassPrecedenceList),
@@ -1003,12 +1135,12 @@ namespace Lisp
         static readonly StandardObject standardGenericFunction =
                  (StandardObject) CL.MakeInstance (FuncallableStandardClass,
                                 KW.DirectSlots, CL.List (CL.List (QuoteApplicationCache),
-                                                         CL.List (QuoteLambdaList), 
-                                                         CL.List (QuoteMethods),
-                                                         CL.List (QuoteName),
-                                                         CL.List (QuoteStudlyName),
-                                                         CL.List (QuoteMethodClass),
-                                                         CL.List (QuoteSingletonsList)),
+                                                         CL.List (QuoteLambdaList, KW.Initarg, KW.LambdaList), 
+                                                         CL.List (QuoteMethods, KW.Initvalue, null),
+                                                         CL.List (QuoteName, KW.Initarg, KW.Name),
+                                                         CL.List (QuoteStudlyName, KW.Initarg, KW.StudlyName),
+                                                         CL.List (QuoteMethodClass, KW.Initarg, KW.MethodClass, KW.Initvalue, StandardMethod),
+                                                         CL.List (QuoteSingletonsList, KW.Initvalue, null)),
                                 KW.DirectSuperclasses, CL.List (GenericFunction),
                                 KW.Name, QuoteStandardGenericFunction,
                                 KW.StudlyName, "StandardGenericFunction");
@@ -1024,11 +1156,11 @@ namespace Lisp
             (StandardObject) CL.MakeInstance (FuncallableStandardClass,
                                               KW.DirectSlots, CL.List (
                                                                        CL.List (QuoteLambdaList),
-                                                                       CL.List (QuoteName),
-                                                                       CL.List (QuoteStudlyName),
-                                                                       CL.List (QuoteProcedure),
-                                                                       CL.List (QuoteQualifier),
-                                                                       CL.List (QuoteSpecializers)),
+                                                                       CL.List (QuoteName, KW.Initarg, KW.Name),
+                                                                       CL.List (QuoteStudlyName, KW.Initarg, KW.StudlyName),
+                                                                       CL.List (QuoteProcedure, KW.Initarg, KW.Procedure),
+                                                                       CL.List (QuoteQualifier, KW.Initarg, KW.Qualifier, KW.Initvalue, KW.Primary),
+                                                                       CL.List (QuoteSpecializers, KW.Initarg, KW.Specializers, KW.Initvalue, null)),
                                               KW.DirectSuperclasses, CL.List (Method),
                                               KW.Name, QuoteStandardMethod,
                                               KW.StudlyName, "StandardMethod");
@@ -1091,6 +1223,7 @@ namespace Lisp
                                               KW.StudlyName, "ComputeMethodMoreSpecific",
                                               KW.LambdaList, CL.List (QuoteGenericFunction));
 
+        delegate StandardObject AddMethodSignature (StandardObject generic, StandardObject method);
         static readonly StandardObject addMethod =
             (StandardObject) CL.MakeInstance (StandardGenericFunction,
                                               KW.Name, QuoteAddMethod,
@@ -1123,8 +1256,14 @@ namespace Lisp
 
         static bool SameMethodSignatureLoop (Cons leftSpecs, Cons rightSpecs)
         {
-            throw new NotImplementedException ();
-        }
+            if (leftSpecs != null)
+                return (rightSpecs != null) 
+                     && Object.ReferenceEquals (leftSpecs, rightSpecs)
+                     && SameMethodSignatureLoop ((Cons)leftSpecs.Cdr, (Cons)rightSpecs.Cdr);
+             else 
+                return rightSpecs == null;
+
+       }
 
         static bool SameMethodSignature (StandardObject left, StandardObject right)
         {
@@ -1283,14 +1422,53 @@ namespace Lisp
         delegate bool MethodCompare2 (StandardObject left, StandardObject right);
         delegate bool MethodCompare3 (StandardObject left, StandardObject right, Cons arglist);
 
+        static Cons MergeMethods (Cons left, Cons right, MethodCompare2 comp)
+        {
+            Cons result = null;
+            while (true) {
+                if (left == null) {
+                    if (right == null)
+                        break;
+                    else {
+                        result = CL.Cons (CL.Car (right), result);
+                        right = (Cons) CL.Cdr (right);
+                    }
+                }
+                else {
+                    if (right == null) {
+                        result = CL.Cons (CL.Car (left), result);
+                        left = (Cons) CL.Cdr (left);
+                    }
+                    else if (comp (GuaranteeMethod ((StandardObject) CL.Car (left)),
+                                   GuaranteeMethod ((StandardObject) CL.Car (right)))) {
+                        result = CL.Cons (CL.Car (left), result);
+                        left = (Cons) CL.Cdr (left);
+                    }
+                    else {
+                        result = CL.Cons (CL.Car (right), result);
+                        right = (Cons) CL.Cdr (right);
+                    }
+                }
+            }
+
+            return CL.Reverse (result);
+        }
+        
         static Cons SortMethods (Cons methodList, MethodCompare2 comp)
         {
             if (methodList == null)
                 return null;
             if (methodList.Cdr == null)
                 return methodList;
-            else
-                throw new NotImplementedException ("SortMethods");
+            Cons left = null;
+            Cons right = null;
+            while (methodList != null) {
+                Cons temp = CL.Cons (CL.Car (methodList), left);
+                left = right;
+                right = temp;
+                methodList = (Cons) CL.Cdr (methodList);
+            }
+            return MergeMethods (SortMethods (left, comp), SortMethods (right, comp), comp);
         }
 
         static MethodCompare2 MakeSortPredicate (MethodCompare3 internalCompare, Cons arglist)
@@ -1322,9 +1500,61 @@ namespace Lisp
             return sortedMethods;
         }
 
+        static bool IsMoreSpecific (StandardObject left, StandardObject right, object arg)
+        {
+            Cons cc1 = CL.Memq (left, internalClassPrecedenceList (ClassOf (arg)));
+            return (cc1 != null)
+                && CL.Memq (right, CL.Cdr (cc1)) != null;
+        }
+
         static bool realComputeMethodMoreSpecificLoop (StandardObject generic, StandardObject left, StandardObject right, Cons arglist)
         {
-            throw new NotImplementedException ();
+            Cons speclsLeft = (Cons) internalMethodSpecializers (GuaranteeMethod (left));
+            Cons speclsRight = (Cons) internalMethodSpecializers (GuaranteeMethod (right));
+            while (true) {
+                if ((speclsLeft == null) && (speclsRight == null)) {
+                    if (CL.Eq (internalMethodQualifier (left),
+                               internalMethodQualifier (right)))
+                        throw new NotImplementedException ("equally specific");
+                    else
+                        return false;
+                }
+                else if (arglist == null) {
+                    throw new NotImplementedException ("fewer args than specializers");
+                }
+                else if (speclsLeft == null) {
+                    if (CL.Eq (CL.Car (speclsRight), Top)) {
+                        speclsRight = (Cons) CL.Cdr (speclsRight);
+                        arglist = (Cons) CL.Cdr (arglist);
+                        continue;
+                    }
+                    return false;
+                }
+                else if (speclsRight == null) {
+                    if (CL.Eq (CL.Car (speclsLeft), Top)) {
+                        speclsLeft = (Cons) CL.Cdr (speclsLeft);
+                        arglist = (Cons) CL.Cdr (arglist);
+                        continue;
+                    }
+                    return true;
+                }
+                else {
+                    StandardObject c1 = (StandardObject) CL.Car (speclsLeft);
+                    StandardObject c2 = (StandardObject) CL.Car (speclsRight);
+                    if (CL.Eq (c1, c2)) {
+                        speclsLeft = (Cons) CL.Cdr (speclsLeft);
+                        speclsRight = (Cons) CL.Cdr (speclsRight);
+                        arglist = (Cons) CL.Cdr (arglist);
+                        continue;
+                    }
+                    else {
+                        return IsMoreSpecific (c1, c2, CL.Car (arglist));
+
+                    }
+
+
+                }
+            }
         }
 
         delegate MethodCompare3 ComputeMethodMoreSpecificMethodSignature (NextMethodFunction callNextMethod, StandardObject generic);
@@ -1385,7 +1615,7 @@ namespace Lisp
                            ? makeNoNextMethod ()
                            : new NextMethodFunction (delegate (object [] args)
             {
-                return nextStep (nextStep, (Cons) tail.Cdr, args1);
+                return nextStep (nextStep, (Cons) tail.Cdr, args1).Invoke(null, args);
             });
             return func.DynamicInvoke (a1, ListToVector (args1));
          }
@@ -1441,6 +1671,71 @@ namespace Lisp
 					   KW.StudlyName, "InitializeInstance",
 					   KW.LambdaList, CL.List (QuoteInstance, QuoteAndRest, QuoteInitargs));
 
+        delegate object InitializeInstanceMethodSignature (NextMethodFunction callNextMethod, StandardObject instance, params object [] initargs);
+        static object methodInitializeInstanceAll (NextMethodFunction callNextMethod, StandardObject instance, params object [] initargs)
+        {
+            throw new NotImplementedException ("methodInitializeInstanceAll");
+        }
+
+
+
+        static object methodInitializeInstanceStdObj (NextMethodFunction callNextMethod, StandardObject instance, params object [] initargs)
+        {
+            Cons initargList = Cons.SubvectorToList (initargs, 0, initargs.Length);
+            StandardObject closClass = ClassOf (instance);
+            ConsList<ClassInitializer> classInitializers = (ConsList<ClassInitializer>) internalClassInitializers (closClass);
+            if (classInitializers != null) {
+                foreach (ClassInitializer init in (ConsList<ClassInitializer>) internalClassInitializers (closClass)) {
+                    init.Initialize (instance, initargList);
+                }
+            }
+            int index = 0;
+            foreach (SlotInitializer init in (ConsList<SlotInitializer>) internalClassSlotInitializers (closClass)) {
+                init.Initialize (instance, index, initargList);
+                index += 1;
+            }
+            return null;
+        }
+
+        static object methodInitializeInstanceStdClass (NextMethodFunction callNextMethod, StandardObject instance, params object [] initargs)
+        {
+            callNextMethod ();  
+            throw new NotImplementedException ("methodInitializeInstanceStdClass");
+        }
+
+        static object methodInitializeInstanceStdGeneric (NextMethodFunction callNextMethod, StandardObject instance, params object [] initargs)
+        {
+            callNextMethod ();
+            Cons initialMethods = Utility.GetArgs (initargs, KW.MethodClass);
+            if (initialMethods != null)
+                foreach (object method in Utility.GetArgs (initargs, KW.Method))
+                    AddMethod (instance, method);
+            throw new NotImplementedException ("methodInitializeInstanceStdGeneric");
+        }
+
+        static Cons TrimLoop (Cons remaining)
+        {
+            if (remaining == null)
+                return null;
+            else if (Object.ReferenceEquals (remaining.Car, Top)) {
+                return TrimLoop ((Cons) remaining.Cdr);
+            }
+            else
+                return CL.Reverse (remaining);
+        }
+
+        static Cons TrimMethodSpecializers (Cons methodSpecializers)
+        {
+            return TrimLoop (CL.Reverse (methodSpecializers));
+        }
+
+        static object methodInitializeInstanceStdMethod (NextMethodFunction callNextMethod, StandardObject instance, params object [] initargs)
+        {
+            callNextMethod ();
+            internalChangeMethodSpecializers (instance, TrimMethodSpecializers);
+            return instance;
+        }
+
         static StandardObject sharedInitialize =
 	         (StandardObject) CL.MakeInstance (StandardGenericFunction,
 					   KW.Name, QuoteDefaultInitargs,
@@ -1473,15 +1768,15 @@ namespace Lisp
             return internalMethodSpecializers (GuaranteeMethod (method));
         }
 
-        delegate object AllocateInstanceMethodSignature (NextMethodFunction callNextMethod, StandardObject closClass, Cons initargs);
-        static object methodAllocateStandardInstance (NextMethodFunction callNextMethod, StandardObject closClass, Cons initargs)
+        delegate object AllocateInstanceMethodSignature (NextMethodFunction callNextMethod, StandardObject closClass, params object [] initargs);
+        static object methodAllocateStandardInstance (NextMethodFunction callNextMethod, StandardObject closClass, params object [] initargs)
         {
-            throw new NotImplementedException ("methodAllocateInstance");
+            return ManifestInstance.CreateInstance (closClass, CL.Length (internalClassSlotInitializers (closClass)));
         }
 
-        static object methodAllocateFuncallableInstance (NextMethodFunction callNextMethod, StandardObject closClass, Cons initargs)
+        static object methodAllocateFuncallableInstance (NextMethodFunction callNextMethod, StandardObject closClass, params object [] initargs)
         {
-            throw new NotImplementedException ("methodAllocateInstance");
+            return ManifestInstance.CreateFuncallableInstance (closClass, ((ICollection<SlotInitializer>)internalClassSlotInitializers (closClass)).Count);
         }
 
         static bool bootstrapStep2Function ()
@@ -1543,17 +1838,49 @@ namespace Lisp
                                KW.Specializers, CL.List (StandardMethod)));
 
 	    // InitializeInstance default
-	    // InitializeInstance StandardObject
+            CL.AddMethod (InitializeInstance,
+               CL.MakeInstance (GenericFunctionMethodClass (InitializeInstance),
+                     KW.Name, QuoteMethodInitializeInstance,
+                     KW.StudlyName, "Method:InitializeInstance",
+                     KW.Procedure, new InitializeInstanceMethodSignature (methodInitializeInstanceAll),
+                     KW.Specializers, CL.List ()));
+            // InitializeInstance StandardObject
+            CL.AddMethod (InitializeInstance,
+               CL.MakeInstance (GenericFunctionMethodClass (InitializeInstance),
+                     KW.Name, QuoteMethodInitializeInstance,
+                     KW.StudlyName, "Method:InitializeInstance",
+                     KW.Procedure, new InitializeInstanceMethodSignature (methodInitializeInstanceStdObj),
+                     KW.Specializers, CL.List (StandardObjectClass)));
             // InitializeInstance Class
-            // InitializeInstance StandardGenericFunction
-            // InitializeInstance StandardMethod
+            CL.AddMethod (InitializeInstance,
+               CL.MakeInstance (GenericFunctionMethodClass (InitializeInstance),
+                     KW.Name, QuoteMethodInitializeInstance,
+                     KW.StudlyName, "Method:InitializeInstance",
+                     KW.Procedure, new InitializeInstanceMethodSignature (methodInitializeInstanceStdClass),
+                     KW.Specializers, CL.List (StandardClass)));
 
-            CL.AddMethod (AllocateInstance,
-                          CL.MakeInstance (GenericFunctionMethodClass (AllocateInstance),
-                                           KW.Name, QuoteMethodAllocateInstance,
-                                           KW.StudlyName, "Method:AllocateInstance",
-                                           KW.Procedure, new AllocateInstanceMethodSignature (methodAllocateStandardInstance),
-                                           KW.Specializers, CL.List (StandardClass)));
+            // InitializeInstance StandardGenericFunction
+            CL.AddMethod (InitializeInstance,
+                CL.MakeInstance (GenericFunctionMethodClass (InitializeInstance),
+                                 KW.Name, QuoteMethodInitializeInstance,
+                                 KW.StudlyName, "Method:InitializeInstance",
+                                 KW.Procedure, new InitializeInstanceMethodSignature (methodInitializeInstanceStdGeneric),
+                                 KW.Specializers, CL.List (StandardGenericFunction)));
+
+            // InitializeInstance StandardMethod
+            CL.AddMethod (InitializeInstance,
+      CL.MakeInstance (GenericFunctionMethodClass (InitializeInstance),
+                       KW.Name, QuoteMethodInitializeInstance,
+                       KW.StudlyName, "Method:InitializeInstance",
+                       KW.Procedure, new InitializeInstanceMethodSignature (methodInitializeInstanceStdMethod),
+                       KW.Specializers, CL.List (StandardMethod)));
+
+            //CL.AddMethod (AllocateInstance,
+            //              CL.MakeInstance (GenericFunctionMethodClass (AllocateInstance),
+            //                               KW.Name, QuoteMethodAllocateInstance,
+            //                               KW.StudlyName, "Method:AllocateInstance",
+            //                               KW.Procedure, new AllocateInstanceMethodSignature (methodAllocateStandardInstance),
+            //                               KW.Specializers, CL.List (StandardClass)));
 
             CL.AddMethod (AllocateInstance,
                           CL.MakeInstance (GenericFunctionMethodClass (AllocateInstance),
@@ -1604,9 +1931,62 @@ namespace Lisp
 
         static readonly bool bootstrap_step3 = bootstrapStep3Function ();
 
+        static StandardObject methodAddMethod (StandardObject generic, StandardObject method)
+        {
+            throw new NotImplementedException ("MethodAddMethod");
+        }
+
+        static bool bootstrapStepFixAddMethodFunction ()
+        {
+            StandardObject oldAddMethod = (StandardObject) CL.MakeInstance (StandardGenericFunction,
+                                                           KW.Name, QuoteAddMethod,
+                                                           KW.StudlyName, "AddMethod",
+                                                           KW.LambdaList, CL.List (QuoteGenericFunction, QuoteMethod));
+
+            StandardObject newAddMethod = (StandardObject) CL.MakeInstance (StandardGenericFunction,
+                                                           KW.Name, QuoteAddMethod,
+                                                           KW.StudlyName, "AddMethod",
+                                                           KW.LambdaList, CL.List (QuoteGenericFunction, QuoteMethod));
+
+            ManifestInstance oldInstance = (ManifestInstance) oldAddMethod.Target;
+            ManifestInstance newInstance = (ManifestInstance) newAddMethod.Target;
+            ManifestInstance existingInstance = (ManifestInstance) AddMethod.Target;
+
+            oldInstance.Class = existingInstance.Class;
+            oldInstance.Slots = existingInstance.Slots;
+            oldInstance.OnFuncall = existingInstance.OnFuncall;
+
+            existingInstance.Class = newInstance.Class;
+            existingInstance.Slots = newInstance.Slots;
+            existingInstance.OnFuncall = newInstance.OnFuncall;
+
+            oldAddMethod (existingInstance,
+                CL.MakeInstance (GenericFunctionMethodClass (existingInstance),
+                                 KW.StudlyName, "METHOD:add-method",
+                                 KW.Specializers, CL.List (StandardGenericFunction, StandardMethod),
+                                 KW.Procedure, new AddMethodSignature (methodAddMethod)));
+            return true;
+        }
+
+
+        static readonly bool bootstrap_step_fix_add_method = bootstrapStepFixAddMethodFunction ();
+
+        delegate StandardObject EnsureGenericFunctionSignature (StandardObject gf, object name, params object [] keyargs);
+        static StandardObject ensureGenericFunctionMethod (StandardObject gf, object name, params object [] keyargs)
+        {
+            throw new NotImplementedException();
+        }
+        static readonly StandardObject egfm =
+            (StandardObject) CL.MakeInstance (StandardMethod,
+                                                                                 KW.Name, QuoteMethodEnsureGenericFunction,
+                                                                                 KW.StudlyName, "METHOD:ensure-generic-function",
+                                                                                 KW.Specializers, CL.List (StandardGenericFunction),
+                                                                                 KW.Procedure, new EnsureGenericFunctionSignature (ensureGenericFunctionMethod));
+
         static readonly StandardObject ensureGenericFunction
                 = (StandardObject) CL.MakeInstance (StandardGenericFunction,
                                                     KW.Name, QuoteEnsureGenericFunction,
+                                                    KW.StudlyName, "EnsureGenericFunction",
                                                     KW.LambdaList,               
                                                     CL.List (QuoteGenericFunction,
                                                           QuoteFunctionName,
@@ -1619,7 +1999,12 @@ namespace Lisp
                                                           QuoteMethodClass,
                                                           QuoteMethodCombination,
                                                           QuoteName,
-                                                          QuoteAndAllowOtherKeys));
+                                                          QuoteAndAllowOtherKeys),
+                                                     KW.Method, CL.MakeInstance (StandardMethod,
+                                                                                 KW.Name, QuoteMethodEnsureGenericFunction,
+                                                                                 KW.StudlyName, "METHOD:ensure-generic-function",
+                                                                                 KW.Specializers, CL.List (StandardGenericFunction),
+                                                                                 KW.Procedure, new EnsureGenericFunctionSignature (ensureGenericFunctionMethod)));
 
         #region ExportedGenerics
 

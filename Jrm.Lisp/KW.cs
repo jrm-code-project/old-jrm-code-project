@@ -339,6 +339,28 @@ namespace Lisp
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword initarg = (Keyword) Package.Keyword.Intern ("INITARG");
+        public static Keyword Initarg
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return initarg;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword initvalue = (Keyword) Package.Keyword.Intern ("INITVALUE");
+        public static Keyword Initvalue
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return initvalue;
+            }
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static readonly Keyword io = (Keyword) Package.Keyword.Intern ("IO");
         public static Keyword IO
@@ -402,6 +424,17 @@ namespace Lisp
             get
             {
                 return local;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword method = (Keyword) Package.Keyword.Intern ("METHOD");
+        public static Keyword Method
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return method;
             }
         }
 

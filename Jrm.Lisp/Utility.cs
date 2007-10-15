@@ -16,6 +16,16 @@ namespace Lisp
             return;
         }
 
+        static public Cons GetArgs (object [] ra, object key)
+        {
+            Cons reversedAnswer = null;
+            for (int i = 0; i < ra.Length; i += 2) {
+                if (ra [i] == key)
+                    reversedAnswer = new Cons (ra [i + 1], reversedAnswer);
+            }
+            return CL.Reverse (reversedAnswer);
+        }
+
         static public object GetArg (object list, object key, object defaultValue)
         {
             if (list == null)

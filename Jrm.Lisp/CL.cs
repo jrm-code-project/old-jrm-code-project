@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 
 namespace Lisp
@@ -140,9 +141,20 @@ namespace Lisp
         // APPLY
         public static object Apply (object op, params object [] rands)
         {
-            // return ((Delegate) op).DynamicInvoke ((object) rands);
-            throw new NotImplementedException ("Apply");
-            
+            if (rands.Length == 0)
+               return ResolveFunctionSpecifier (op).DynamicInvoke ();
+              Cons arglist = (Cons) rands [rands.Length - 1];
+            for (int i = rands.Length - 2; i > -1; i--)
+               arglist = CL.Cons (rands [i], arglist);
+            int limit = CL.Length (arglist);
+            object [] argarray = new object [limit];
+
+            for (int i = 0; i < limit; i++) {
+                argarray [i] = arglist.Car;
+                arglist = (Cons) arglist.Cdr;
+            }
+            return ResolveFunctionSpecifier (op).DynamicInvoke ((object)argarray);
+
         }
 
 
@@ -284,6 +296,11 @@ namespace Lisp
             return SimpleEvaluator.Eval (form);
         }
 
+        static public bool Eq (object left, object right)
+        {
+            return Object.ReferenceEquals (left, right);
+        }
+
         static public bool Eql (object left, object right)
         {
             if (left.Equals (right))
@@ -326,28 +343,13 @@ namespace Lisp
                    return new Cons (arg0, Lisp.Cons.SubvectorToList (restArguments, 0, restArguments.Length));
         }
 
-        static int ListLength (Cons list)
-        {
-            int length = 1;
-            while (list != null) {
-                object tail = list.Cdr;
-                if (tail == null)
-                    break;
-                Cons ltail = tail as Cons;
-                if (ltail == null)
-                    throw new NotImplementedException ();
-                list = ltail;
-                length += 1;
-            }
-            return length;
-        }
         static public int Length (object obj)
         {
             if (obj == null)
                 return 0;
-            Cons c = obj as Cons;
+            ICollection c = obj as ICollection;
             if (c != null)
-                return ListLength (c);
+                return c.Count;
             else {
                 throw new NotImplementedException ();
             }
@@ -441,12 +443,15 @@ namespace Lisp
             return (Cons) CL.Reverse (answer);
         }
 
-        static public bool Memq (object item, object list)
+        static public Cons Memq (object item, object list)
         {
-            if (list == null) return false;
+            if (list == null) return null;
             Cons pair = list as Cons;
             if (pair == null) throw new NotImplementedException();
-            return (item == pair.Car) || Memq (item, pair.Cdr);
+            if (item == pair.Car)
+                return pair;
+            else
+                return Memq (item, pair.Cdr);
         }
 
         static Delegate ResolveFunctionSpecifier (object functionSpecifier)
@@ -639,6 +644,10 @@ namespace Lisp
                 return Reconc (ctail.Cdr, new Cons (ctail.Car, head));
             else 
                 throw new NotImplementedException ();
+        }
+        static public Cons Reverse (Cons list)
+        {
+            return (Cons) CL.Reconc (list, null);
         }
 
         static public object Reverse (object list)
