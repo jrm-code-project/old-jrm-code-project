@@ -102,6 +102,26 @@
              </Message>
             </Messages>
            </Member>
+           <Member Name="Caar(Lisp.Cons):System.Object">
+            <Messages>
+             <Message Id="Caar" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-18 02:40:46Z">
+              <Issue Name="Member">
+               <Item>Caar</Item>
+               <Item>CL.Caar(Cons):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="Caar(System.Object):System.Object">
+            <Messages>
+             <Message Id="Caar" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-18 02:40:46Z">
+              <Issue Name="Member">
+               <Item>Caar</Item>
+               <Item>CL.Caar(Object):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
            <Member Name="Cadddr(Lisp.Cons):System.Object">
             <Messages>
              <Message Id="Cadddr" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-07 23:38:40Z">
@@ -669,15 +689,6 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="egfm">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-15 16:49:01Z">
-              <Issue>
-               <Item>CLOS.egfm</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
            <Member Name="extendSingletonsList(Lisp.Cons,Lisp.Cons):System.Void">
             <Messages>
              <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-07 23:38:40Z">
@@ -793,6 +804,15 @@
              </Message>
             </Messages>
            </Member>
+           <Member Name="ListToVector(Lisp.Cons):System.Object[]">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-18 02:40:46Z">
+              <Issue>
+               <Item>CLOS.ListToVector(Cons):Object[]</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
            <Member Name="lookupSlotInfo(Lisp.StandardObject,Lisp.Symbol):Lisp.Cons">
             <Messages>
              <Message Id="className" TypeName="RemoveUnusedLocals" Category="Microsoft.Performance" CheckId="CA1804" Created="2007-10-05 18:09:46Z">
@@ -821,11 +841,11 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="methodAddMethod(Lisp.StandardObject,Lisp.StandardObject):Lisp.StandardObject">
+           <Member Name="methodAddMethod(Lisp.NextMethodFunction,Lisp.StandardObject,Lisp.StandardObject):Lisp.StandardObject">
             <Messages>
-             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-15 16:49:01Z">
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-18 02:40:46Z">
               <Issue>
-               <Item>CLOS.methodAddMethod(StandardObject, StandardObject):StandardObject</Item>
+               <Item>CLOS.methodAddMethod(NextMethodFunction, StandardObject, StandardObject):StandardObject</Item>
                <Item>1</Item>
                <Item>NotImplementedException.NotImplementedException(String)</Item>
                <Item>MethodAddMethod</Item>
@@ -878,42 +898,12 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="methodInitializeInstanceStdGeneric(Lisp.NextMethodFunction,Lisp.StandardObject,System.Object[]):System.Object">
-            <Messages>
-             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-14 16:47:26Z">
-              <Issue>
-               <Item>CLOS.methodInitializeInstanceStdGeneric(NextMethodFunction, StandardObject, Object[]):Object</Item>
-               <Item>1</Item>
-               <Item>NotImplementedException.NotImplementedException(String)</Item>
-               <Item>methodInitializeInstanceStdGeneric</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
            <Member Name="MethodSpecializers">
             <Messages>
              <Message Id="Specializers" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-14 16:47:26Z">
               <Issue Name="Member">
                <Item>Specializers</Item>
                <Item>CLOS.MethodSpecializers:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="noNextMethod(System.Object[]):System.Object">
-            <Messages>
-             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-14 16:47:26Z">
-              <Issue>
-               <Item>CLOS.noNextMethod(Object[]):Object</Item>
-               <Item>1</Item>
-               <Item>NotImplementedException.NotImplementedException(String)</Item>
-               <Item>noNextMethod</Item>
-              </Issue>
-             </Message>
-             <Message Id="args" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-14 16:47:26Z" FixCategory="NonBreaking">
-              <Issue>
-               <Item>args</Item>
-               <Item>CLOS.noNextMethod(Object[]):Object</Item>
               </Issue>
              </Message>
             </Messages>
@@ -927,18 +917,18 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="oneAroundStep(Lisp.Cons,Lisp.Cons):Lisp.FuncallHandler">
+           <Member Name="oneAroundStep(Lisp.Cons,Lisp.Cons):Lisp.NextMethodFunction">
             <Messages>
-             <Message Id="args" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-14 16:47:26Z" FixCategory="NonBreaking">
+             <Message Id="args" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-18 02:40:46Z" FixCategory="NonBreaking">
               <Issue>
                <Item>args</Item>
-               <Item>CLOS.oneAroundStep(Cons, Cons):FuncallHandler</Item>
+               <Item>CLOS.oneAroundStep(Cons, Cons):NextMethodFunction</Item>
               </Issue>
              </Message>
-             <Message Id="methods" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-14 16:47:26Z" FixCategory="NonBreaking">
+             <Message Id="methods" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-18 02:40:46Z" FixCategory="NonBreaking">
               <Issue>
                <Item>methods</Item>
-               <Item>CLOS.oneAroundStep(Cons, Cons):FuncallHandler</Item>
+               <Item>CLOS.oneAroundStep(Cons, Cons):NextMethodFunction</Item>
               </Issue>
              </Message>
             </Messages>
@@ -1358,6 +1348,21 @@
            </Member>
           </Members>
          </Type>
+         <Type Name="GroundMethodFunction">
+          <Members>
+           <Member Name="GetFuncallMethod(System.Delegate):System.Reflection.MethodInfo">
+            <Messages>
+             <Message Id="System.Int32.ToString" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2007-10-18 02:40:46Z">
+              <Issue>
+               <Item>GroundMethodFunction.GetFuncallMethod(Delegate):MethodInfo</Item>
+               <Item>System.Int32.ToString</Item>
+               <Item>System.Int32.ToString(System.IFormatProvider)</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
          <Type Name="KW">
           <Members>
            <Member Name="DirectDefaultInitargs">
@@ -1507,6 +1512,51 @@
                <Item>MethodStepWrapper.GetFuncallMethod(Delegate):MethodInfo</Item>
                <Item>System.Int32.ToString</Item>
                <Item>System.Int32.ToString(System.IFormatProvider)</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="NoNextMethod">
+          <Members>
+           <Member Name="Funcall(System.Object[]):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-18 02:40:46Z">
+              <Issue>
+               <Item>NoNextMethod.Funcall(Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>No Next Method</Item>
+              </Issue>
+             </Message>
+             <Message TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822" Created="2007-10-18 02:40:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>NoNextMethod.Funcall(Object[]):Object</Item>
+              </Issue>
+             </Message>
+             <Message Id="args" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-18 02:40:46Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>args</Item>
+               <Item>NoNextMethod.Funcall(Object[]):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="generic">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-18 02:40:46Z">
+              <Issue>
+               <Item>NoNextMethod.generic</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="info">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-18 02:40:46Z">
+              <Issue>
+               <Item>NoNextMethod.info</Item>
               </Issue>
              </Message>
             </Messages>

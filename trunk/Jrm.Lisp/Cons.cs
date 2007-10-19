@@ -158,6 +158,11 @@ namespace Lisp
             }
             return answer;
         }
+
+        public static Cons VectorToList (object [] vector)
+        {
+            return SubvectorToList (vector, 0, vector.Length);
+        }
     }
 
     public struct ConsListEnumerator<T> : IEnumerator<T>
@@ -216,7 +221,7 @@ namespace Lisp
     }
 
     // A linked list of cons cells.
-    public sealed class ConsList<T> : ICollection<T>, IEnumerable<T>, IEnumerable
+    public sealed class ConsList<T> : ICollection<T>, ICollection, IEnumerable<T>, IEnumerable
     {
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
         readonly T car;
@@ -268,11 +273,37 @@ namespace Lisp
             throw new NotImplementedException ("CopyTo");
         }
 
+        void ICollection.CopyTo (Array array, int arrayIndex)
+        {
+            throw new NotImplementedException ("CopyTo");
+        }
+
         bool ICollection<T>.Remove (T thing)
         {
             throw new NotSupportedException ();
         }
         int ICollection<T>.Count
+        {
+            get
+            {
+                int length = 1;
+                ConsList<T> tail = this;
+                while (true) {
+                    ConsList<T> next = tail.cdr;
+                    if (next == null) {
+                        if (tail.cdr == null)
+                            break;
+                        else
+                            throw new NotImplementedException ("dotted list");
+                    }
+                    length += 1;
+                    tail = next;
+                }
+                return length;
+            }
+        }
+
+        int ICollection.Count
         {
             get
             {
@@ -307,12 +338,30 @@ namespace Lisp
 
         IEnumerator IEnumerable.GetEnumerator ()
         {
-            throw new NotImplementedException();
+            return (IEnumerator) new ConsListEnumerator<T> (this);
         }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator ()
         {
             throw new NotImplementedException();
+        }
+
+        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        public bool IsSynchronized
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        public object SyncRoot
+        {
+            get
+            {
+                return this.car;
+            }
         }
     }
 }
