@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Arity.cs" />
     <Compile Include="CL.cs" />
     <Compile Include="CLOS.cs" />
     <Compile Include="Cons.cs" />

@@ -138,6 +138,11 @@ namespace Lisp
              return CL.Reconc (CL.Reverse (left), right);
         }
 
+        public static ConsList<T> Append<T> (ConsList<T> left, ConsList<T> right)
+        {
+            return CL.Reconc<T> (CL.Reverse<T> (left), right);
+        }
+
         // APPLY
         public static object Apply (object op, params object [] rands)
         {
@@ -183,6 +188,17 @@ namespace Lisp
             if (ac == null) throw new NotImplementedException();
             return Assq (element, ac);
         }
+
+        public static object Caar (Cons thing)
+        {
+            return (thing == null) ? null : CL.Car (thing.Car);
+        }
+
+        public static object Caar (object thing)
+        {
+            return (thing == null) ? null : CL.Car (CL.Car(thing));
+        }
+
 
         // CADR
         public static object Cadr (Cons thing)
@@ -284,8 +300,8 @@ namespace Lisp
         {
             get
             {
-                throw new NotImplementedException ();
-                //return CLOS.EnsureGenericFunction;
+                //throw new NotImplementedException ();
+                return CLOS.EnsureGenericFunction;
             }
         }
 
@@ -390,6 +406,11 @@ namespace Lisp
             throw new NotImplementedException ();
         }
 
+        static O MapForEffect<I,O> (object functionSpecifier, object [] sequences)
+        {
+            throw new NotImplementedException ();
+        }
+
         static Cons MapToList (object functionSpecifier, object [] sequences)
         {
             switch (sequences.Length) {
@@ -399,6 +420,17 @@ namespace Lisp
                     throw new NotImplementedException ();
             }
         }
+
+        static ConsList<T> MapToList<I,T> (object functionSpecifier, object [] sequences)
+        {
+            switch (sequences.Length) {
+                case 1:
+                    return MapToList1<I,T> (functionSpecifier, sequences [0]);
+                default:
+                    throw new NotImplementedException ();
+            }
+        }
+
 
         static Cons MapToList1 (object functionSpecifier, object sequence)
         {
@@ -417,6 +449,40 @@ namespace Lisp
             }
         }
 
+        static ConsList<T> MapToList1<I,T> (object functionSpecifier, object sequence)
+        {
+            if (sequence == null)
+                return null;
+            I [] sa = sequence as I [];
+            if (sa != null)
+                return MapVectorToList1<I, T> (functionSpecifier, sa);
+            else {
+                ConsList<I> sc = sequence as ConsList<I>;
+                if (sc != null)
+                    return MapListToList1<I,T> (functionSpecifier, sc);
+                else {
+                    ICollection si = sequence as ICollection;
+                    if (si != null)
+                        return MapCollectionToList1<T> (functionSpecifier, si);
+                    else
+                        throw new NotImplementedException ();
+                
+                }
+            }
+        }
+
+        static ConsList<T> MapCollectionToList1<T> (object functionSpecifier, ICollection sequence)
+        {
+            Delegate function = ResolveFunctionSpecifier (functionSpecifier);
+            ConsList<T> reverseAnswer = null;
+            foreach (object element in sequence) {
+                T item = (T) function.DynamicInvoke (element);
+                reverseAnswer = new ConsList<T> (item, reverseAnswer);
+            }
+            return CL.Reverse < T > (reverseAnswer);
+        }
+
+
         static Cons MapListToList1 (object functionSpecifier, Cons sequence)
         {
             Delegate function = ResolveFunctionSpecifier (functionSpecifier);
@@ -432,6 +498,32 @@ namespace Lisp
                 sequence = next;
             }
             return (Cons) CL.Reverse (answer);
+        }
+
+        static ConsList<T> MapListToList1<I,T> (object functionSpecifier, ConsList<I> sequence)
+        {
+            Delegate function = ResolveFunctionSpecifier (functionSpecifier);
+            ConsList<T> answer = null;
+            while (sequence != null) {
+                answer = new ConsList<T> ((T) function.DynamicInvoke (sequence.Car), answer);
+                object temp = sequence.Cdr;
+                if (temp == null)
+                    break;
+                ConsList<I> next = temp as ConsList<I>;
+                if (next == null)
+                    throw new NotImplementedException ();
+                sequence = next;
+            }
+            return CL.Reverse<T> (answer);
+        }
+
+        static ConsList<T> MapVectorToList1<I,T> (object functionSpecifier, I [] sequence)
+        {
+            Delegate function = ResolveFunctionSpecifier (functionSpecifier);
+            ConsList<T> answer = null;
+            foreach (I element in sequence)
+                answer = new ConsList<T> ((T) function.DynamicInvoke (element), answer);
+            return CL.Reverse<T> (answer);
         }
 
         static Cons MapVectorToList1 (object functionSpecifier, object [] sequence)
@@ -471,6 +563,18 @@ namespace Lisp
                 return MapForEffect (functionSpecifier, sequences);
             else if (sequenceTypeSpecifier == QuoteList)
                 return MapToList (functionSpecifier, sequences);
+            else
+                throw new NotImplementedException ();
+        }
+
+        static public object Map<I,O> (object sequenceTypeSpecifier, object functionSpecifier, params object [] sequences)
+        {
+            if (functionSpecifier == null)
+                throw new ArgumentNullException ("functionSpecifier");
+            else if (sequenceTypeSpecifier == null)
+                return MapForEffect<I,O> (functionSpecifier, sequences);
+            else if (sequenceTypeSpecifier == QuoteList)
+                return MapToList<I,O> (functionSpecifier, sequences);
             else
                 throw new NotImplementedException ();
         }
@@ -521,6 +625,28 @@ namespace Lisp
                                     object key4, object val4)
         {
             throw new NotImplementedException ();
+        }
+
+        static public int PositionIf<T> (Predicate<T> pred, object sequence)
+        {
+            if (sequence == null)
+                return -1;
+            ConsList<T> cl = sequence as ConsList<T>;
+            if (cl != null)
+                return PositionIf<T> ((Predicate < T >) pred, cl);
+            else
+                throw new NotImplementedException ();
+        }
+
+        static public int PositionIf<T> (Predicate<T> pred, ConsList<T> sequence)
+        {
+            int pos = 0;
+            foreach (T element in sequence) {
+                if (pred (element))
+                    return pos;
+                pos += 1;
+            }
+            return -1;
         }
 
         static public object Read ()
@@ -645,9 +771,23 @@ namespace Lisp
             else 
                 throw new NotImplementedException ();
         }
+
+        static public ConsList<T> Reconc<T> (ConsList<T> tail, ConsList<T> head)
+        {
+            if (tail == null)
+                return head;
+                // yeah I'll fix it...
+                return Reconc<T> (tail.Cdr, new ConsList<T> (tail.Car, head));
+        }
+
         static public Cons Reverse (Cons list)
         {
             return (Cons) CL.Reconc (list, null);
+        }
+
+        static public ConsList<T> Reverse<T> (ConsList<T> list)
+        {
+            return CL.Reconc<T> (list, null);
         }
 
         static public object Reverse (object list)

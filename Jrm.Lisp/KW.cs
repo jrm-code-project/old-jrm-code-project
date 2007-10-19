@@ -42,6 +42,17 @@ namespace Lisp
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword arity = (Keyword) Package.Keyword.Intern ("ARITY");
+        public static Keyword Arity
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return arity;
+            }
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static readonly Keyword back = (Keyword) Package.Keyword.Intern ("BACK");
         public static Keyword Back
@@ -182,6 +193,17 @@ namespace Lisp
             get
             {
                 return direction;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword dotnetType = (Keyword) Package.Keyword.Intern ("DOTNET-TYPE");
+        public static Keyword DotnetType
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return dotnetType;
             }
         }
 
