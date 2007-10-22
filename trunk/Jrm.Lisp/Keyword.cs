@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ namespace Lisp
 {
  
         [CLSCompliant (true)]
-        [System.Diagnostics.DebuggerDisplay (":{Name,nq}")]
+        [DebuggerDisplay (":{Name,nq}")]
         public class Keyword : Symbol
         {
             public Keyword (string name)
@@ -33,14 +34,17 @@ namespace Lisp
 
             public object Key
             {
+                [DebuggerStepThrough]
                 get
                 {
                     return this.key;
                 }
             }
 
+            
             public bool Supplied
             {
+                [DebuggerStepThrough]
                 get
                 {
                     return this.IsAssigned;

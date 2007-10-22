@@ -21,6 +21,17 @@ namespace Lisp
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        static readonly Keyword allocation = (Keyword) Package.Keyword.Intern ("ALLOCATION");
+        public static Keyword Allocation
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return allocation;
+            }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static readonly Keyword allowOtherKeys = (Keyword) Package.Keyword.Intern ("ALLOW-OTHER-KEYS");
         public static Keyword AllowOtherKeys
         {
@@ -373,6 +384,39 @@ namespace Lisp
         }
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword initargs = (Keyword) Package.Keyword.Intern ("INITARGS");
+        public static Keyword Initargs
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return initargs;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword initform = (Keyword) Package.Keyword.Intern ("INITFORM");
+        public static Keyword Initform
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return initform;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword initfunction = (Keyword) Package.Keyword.Intern ("INITFUNCTION");
+        public static Keyword Initfunction
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return initfunction;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static readonly Keyword initvalue = (Keyword) Package.Keyword.Intern ("INITVALUE");
         public static Keyword Initvalue
         {
@@ -391,6 +435,17 @@ namespace Lisp
             get
             {
                 return io;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword instance = (Keyword) Package.Keyword.Intern ("INSTANCE");
+        public static Keyword Instance
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return instance;
             }
         }
 
@@ -528,6 +583,17 @@ namespace Lisp
         }
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword precedenceList = (Keyword) Package.Keyword.Intern ("PRECEDENCE-LIST");
+        public static Keyword PrecedenceList
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return precedenceList;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static readonly Keyword primary = (Keyword) Package.Keyword.Intern ("PRIMARY");
         public static Keyword Primary
         {
@@ -568,6 +634,17 @@ namespace Lisp
             get
             {
                 return procedure;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword prototype = (Keyword) Package.Keyword.Intern ("PROTOTYPE");
+        public static Keyword Prototype
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return prototype;
             }
         }
 
@@ -614,6 +691,18 @@ namespace Lisp
                 return relative;
             }
         }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword slots = (Keyword) Package.Keyword.Intern ("SLOTS");
+        public static Keyword Slots
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slots;
+            }
+        }
+
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static readonly Keyword specializers = (Keyword) Package.Keyword.Intern ("SPECIALIZERS");
