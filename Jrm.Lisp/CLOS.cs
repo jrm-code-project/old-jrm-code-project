@@ -12,30 +12,31 @@ namespace Lisp
     {
         Cons table;
 
-        static bool Equal (Cons left, Cons right) {
+        static bool Equal (Cons left, Cons right)
+        {
             if ((left == null) && (right == null))
                 return true;
             if (left == null)
                 return false;
             if (right == null)
                 return false;
-            if (left.Car.Equals(right.Car))
+            if (left.Car.Equals (right.Car))
                 return Equal ((Cons) left.Cdr, (Cons) right.Cdr);
             else
                 return false;
         }
 
-        static Cons Assoc (Cons key, Cons table) {
+        static Cons Assoc (Cons key, Cons table)
+        {
             if (table == null)
                 return null;
             Cons entry = (Cons) table.Car;
             if (Equal (key, (Cons) entry.Car))
                 return entry;
-            else
-        {
+            else {
 
                 return Assoc (key, (Cons) table.Cdr);
-        }
+            }
         }
 
         static Cons standinForNull = new Cons (null, null);
@@ -55,7 +56,7 @@ namespace Lisp
         internal void Add (object key, NextMethodFunction value)
         {
             // will shadow
-                table = new Cons (new Cons (key, value), table);
+            table = new Cons (new Cons (key, value), table);
         }
 
         internal bool ContainsKey (object key)
@@ -181,7 +182,7 @@ namespace Lisp
         {
             object [] nextArgs = newargs.Length == 0 ? this.args : newargs;
             Delegate meth = (Delegate) CL.Cdar (this.primaries);
-            NextMethodFunction nmf = 
+            NextMethodFunction nmf =
                 (primaries.Cdr == null)
                 ? NoNextMethod.Create (this.generic, CL.Caar (this.primaries), nextArgs)
                 : outer.Step ((Cons) primaries.Cdr, nextArgs);
@@ -280,9 +281,13 @@ namespace Lisp
 
     public delegate object SlotReader (StandardObject obj);
     delegate T SlotReader<T> (StandardObject obj);
+    public delegate object SlotChangingFunction (object currentValue);
+    public delegate T SlotChangingFunction<T> (T currentValue);
+
 
     public static class CLOS
     {
+        // temporary to force initialization
         static object UnboundSlotValue = UnboundSlot.Value;
 
         public static object Init ()
@@ -290,18 +295,23 @@ namespace Lisp
             return UnboundSlotValue;
         }
 
+        #region StandardObjectExtensionMethods
+
+        // Extension methods for StandardObject
+        [DebuggerStepThrough]
         static StandardObject Class (this StandardObject obj)
         {
             return ((ManifestInstance) obj.Target).Class;
         }
 
-        // Extension methods for StandardObject
+        static void SetClass (this StandardObject obj, StandardObject closClass)
+        {
+            ((ManifestInstance) obj.Target).Class = closClass;
+        }
+
         static object InstanceRef (this StandardObject obj, int index)
         {
-            object result = ((ManifestInstance) obj.Target).Slots [index];
-            if (result == UnboundSlotValue)
-                throw new NotImplementedException ("UnboundSlot");
-            return result;
+            return ((ManifestInstance) obj.Target).Slots [index];
         }
 
         static T InstanceRef<T> (this StandardObject obj, int index)
@@ -329,141 +339,451 @@ namespace Lisp
             return newValue;
         }
 
+        static T InstanceChange<T> (this StandardObject obj, int index, SlotChangingFunction<T> change)
+        {
+            object [] slots = ((ManifestInstance) obj.Target).Slots;
+            T newValue = change.Invoke ((T) slots [index]);
+            slots [index] = newValue;
+            return newValue;
+        }
+
         static int SerialNumber (this StandardObject obj)
         {
             return ((ManifestInstance) obj.Target).SerialNumber;
         }
 
-        //// End of extension methods
-
         // Not an extension, but Instance-specific.
-        static void setFuncallableInstanceFunction (StandardObject funcallableInstance, FuncallHandler handler)
+        static void setFuncallableInstanceFunction (StandardObject funcallableInstance, MethodInfo handler)
         {
-            ((ManifestInstance) funcallableInstance.Target).OnFuncall = handler;
+            ((ManifestInstance) funcallableInstance.Target).OnFuncall =
+                FuncallHandlerWrapper.Create (handler);
         }
+
+        #endregion StandardObjectExtensionMethods
 
         static readonly Package closPackage = Package.Clos;
 
         #region Symbols
+
+        static readonly Symbol QuoteAccessorMethodSlotDefinition = closSymbol ("AccessorMethodSlotDefinition");
+        static readonly Symbol QuoteAddDependent = closSymbol ("AddDependent");
+        static readonly Symbol QuoteAddDirectMethod = closSymbol ("AddDirectMethod");
+        static readonly Symbol QuoteAddDirectSubclass = closSymbol ("AddDirectSubclass");
+        static readonly Symbol QuoteAddMethod = Package.CommonLisp.FindSymbol ("ADD-METHOD");
+        static readonly Symbol QuoteAllocateInstance = Package.CommonLisp.FindSymbol ("ALLOCATE-INSTANCE");
+        static readonly Symbol QuoteAllocation = closSymbol ("ALLOCATION");
         static readonly Symbol QuoteAndAllowOtherKeys = Package.CommonLisp.FindSymbol ("&ALLOW-OTHER-KEYS");
         static readonly Symbol QuoteAndKey = Package.CommonLisp.FindSymbol ("&KEY");
         static readonly Symbol QuoteAndRest = Package.CommonLisp.FindSymbol ("&REST");
         static readonly Symbol QuoteAnonymous = Package.CommonLisp.FindSymbol ("[unnamed]");
-        static readonly Symbol QuoteAddMethod = Package.CommonLisp.FindSymbol ("ADD-METHOD");
-        static readonly Symbol QuoteAllocateInstance = Package.CommonLisp.FindSymbol ("ALLOCATE-INSTANCE");
         static readonly Symbol QuoteApplicationCache = closSymbol ("APPLICATION-CACHE");
-        static readonly Symbol QuoteArguments = closSymbol ("ARGUMENTS");
         static readonly Symbol QuoteArgumentPrecedenceOrder = closSymbol ("ARGUMENT-PRECEDENCE-ORDER");
+        static readonly Symbol QuoteArguments = closSymbol ("ARGUMENTS");
         static readonly Symbol QuoteArity = closSymbol ("ARITY");
         static readonly Symbol QuoteBuiltInClass = closSymbol ("BUILT-IN-CLASS");
+        static readonly Symbol QuoteChangeClass = closSymbol ("ChangeClass");
+        static readonly Symbol QuoteClass = closSymbol ("CLASS");
+        static readonly Symbol QuoteClassDefaultInitargs = closSymbol ("ClassDefaultInitargs");
+        static readonly Symbol QuoteClassDirectDefaultInitargs = closSymbol ("ClassDirectDefaultInitargs");
+        static readonly Symbol QuoteClassDirectSlots = closSymbol ("CLASS-DIRECT-SLOTS");
+        static readonly Symbol QuoteClassDirectSubclasses = closSymbol ("ClassDirectSubclasses");
+        static readonly Symbol QuoteClassDirectSuperclasses = closSymbol ("ClassDirectSuperclasses");
+        static readonly Symbol QuoteClassInitializers = closSymbol ("CLASS-INITIALIZERS");
         static readonly Symbol QuoteClassPrecedenceList = closSymbol ("CLASS-PRECEDENCE-LIST");
         static readonly Symbol QuoteClassPrototype = closSymbol ("CLASS-PROTOTYPE");
-
-        static readonly Symbol QuoteClass = closSymbol ("CLASS");
-        static readonly Symbol QuoteClassInitializers = closSymbol ("CLASS-INITIALIZERS");
+        static readonly Symbol QuoteClassSlots = closSymbol ("ClassSlots");
         static readonly Symbol QuoteComputeApplicableMethods = closSymbol ("COMPUTE-APPLICABLE-METHODS");
+        static readonly Symbol QuoteComputeApplicableMethodsUsingClasses = closSymbol ("ComputeApplicableMethodsUsingClasses");
         static readonly Symbol QuoteComputeClassPrecedenceList = closSymbol ("COMPUTE-CLASS-PRECEDENCE-LIST");
+        static readonly Symbol QuoteComputeDefaultInitargs = closSymbol ("ComputeDefaultInitargs");
         static readonly Symbol QuoteComputeDiscriminatingFunction = closSymbol ("COMPUTE-DISCRIMINATING-FUNCTION");
         static readonly Symbol QuoteComputeEffectiveMethod = closSymbol ("COMPUTE-EFFECTIVE-METHOD");
+        static readonly Symbol QuoteComputeEffectiveSlotDefinition = closSymbol ("ComputeEffectiveSlotDefinition");
         static readonly Symbol QuoteComputeMethodMoreSpecific = closSymbol ("COMPUTE-METHOD-MORE-SPECIFIC");
         static readonly Symbol QuoteComputeSlots = closSymbol ("COMPUTE-SLOTS");
         static readonly Symbol QuoteDeclarations = closSymbol ("DECLARATIONS");
         static readonly Symbol QuoteDefaultInitargs = closSymbol ("DEFAULT-INITARGS");
         static readonly Symbol QuoteDirectDefaultInitargs = closSymbol ("DIRECT-DEFAULT-INITARGS");
+        static readonly Symbol QuoteDirectSlotDefinition = closSymbol ("DIRECT-SLOT-DEFINITION");
+        static readonly Symbol QuoteDirectSlotDefinitionClass = closSymbol ("DirectSlotDefinitionClass");
         static readonly Symbol QuoteDirectSlots = closSymbol ("DIRECT-SLOTS");
         static readonly Symbol QuoteDirectSubclasses = closSymbol ("DIRECT-SUBCLASSES");
         static readonly Symbol QuoteDirectSuperclasses = closSymbol ("DIRECT-SUPERCLASSES");
         static readonly Symbol QuoteDocumentation = closSymbol ("DOCUMENTATION");
         static readonly Symbol QuoteDotnetType = closSymbol ("DOTNET-TYPE");
+        static readonly Symbol QuoteEffectiveSlotDefinitionClass = closSymbol ("EffectiveSlotDefinitionClass");
         static readonly Symbol QuoteEffectiveSlots = closSymbol ("EFFECTIVE-SLOTS");
+        static readonly Symbol QuoteEnsureClass = Package.CommonLisp.FindSymbol ("ENSURE-CLASS");
+        static readonly Symbol QuoteEnsureClassUsingClass = closSymbol ("EnsureClassUsingClass");
         static readonly Symbol QuoteEnsureGenericFunction = Package.CommonLisp.FindSymbol ("ENSURE-GENERIC-FUNCTION");
+        static readonly Symbol QuoteEnsureGenericFunctionUsingClass = closSymbol ("EnsureGenericFunctionUsingClass");
+        static readonly Symbol QuoteEqlSpecializerObject = closSymbol ("EqlSpecializerObject");
+        static readonly Symbol QuoteExtractLambdaList = closSymbol ("ExtractLambdaList");
+        static readonly Symbol QuoteExtractSpecializerNames = closSymbol ("ExtractSpecializerNames");
+        static readonly Symbol QuoteFinalizeInheritance = closSymbol ("FinalizeInheritance");
         static readonly Symbol QuoteFinalizedP = closSymbol ("FINALIZEDP");
+        static readonly Symbol QuoteFindClass = closSymbol ("FindClass");
+        static readonly Symbol QuoteFindMethod = closSymbol ("FindMethod");
+        static readonly Symbol QuoteFindMethodCombination = closSymbol ("FindMethodCombination");
         static readonly Symbol QuoteFuncallableStandardClass = closSymbol ("FUNCALLABLE-STANDARD-CLASS");
         static readonly Symbol QuoteFuncallableStandardObject = closSymbol ("FUNCALLABLE-STANDARD-OBJECT");
         static readonly Symbol QuoteFunction = closSymbol ("FUNCTION");
+        static readonly Symbol QuoteFunctionKeywords = closSymbol ("FunctionKeywords");
         static readonly Symbol QuoteFunctionName = closSymbol ("FUNCTION-NAME");
         static readonly Symbol QuoteGenericFunction = closSymbol ("GENERIC-FUNCTION");
+        static readonly Symbol QuoteGenericFunctionArgumentPrecedenceOrder = closSymbol ("GenericFunctionArgumentPrecedenceOrder");
         static readonly Symbol QuoteGenericFunctionClass = closSymbol ("GENERIC-FUNCTION-CLASS");
+        static readonly Symbol QuoteGenericFunctionDeclarations = closSymbol ("GenericFunctionDeclarations");
+        static readonly Symbol QuoteGenericFunctionLambdaList = closSymbol ("GenericFunctionLambdaList");
         static readonly Symbol QuoteGenericFunctionMethodClass = closSymbol ("GENERIC-FUNCTION-METHOD-CLASS");
+        static readonly Symbol QuoteGenericFunctionMethodCombination = closSymbol ("GenericFunctionMethodCombination");
+        static readonly Symbol QuoteGenericFunctionMethods = closSymbol ("GenericFunctionMethods");
         static readonly Symbol QuoteGettersAndSetters = closSymbol ("GETTERS-AND-SETTERS");
-        static readonly Symbol QuoteInstance = closSymbol ("INSTANCE");
         static readonly Symbol QuoteInitargs = closSymbol ("INITARGS");
-        static readonly Symbol QuoteInitializers = closSymbol ("INITIALIZERS");
+        static readonly Symbol QuoteInitform = closSymbol ("INITFORM");
+        static readonly Symbol QuoteInitfunction = closSymbol ("INITFUNCTION");
         static readonly Symbol QuoteInitializeInstance = closSymbol ("INITIALIZE-INSTANCE");
+        static readonly Symbol QuoteInitializers = closSymbol ("INITIALIZERS");
+        static readonly Symbol QuoteInstance = closSymbol ("INSTANCE");
+        static readonly Symbol QuoteInternEqlSpecializer = closSymbol ("InternEqlSpecializer");
+        static readonly Symbol QuoteIsClassFinalized = closSymbol ("IsClassFinalized");
+        static readonly Symbol QuoteIsSlotBoundUsingClass = closSymbol ("IsSlotBoundUsingClass");
         static readonly Symbol QuoteLambdaList = closSymbol ("LAMBDA-LIST");
         static readonly Symbol QuoteList = Package.CommonLisp.FindSymbol ("LIST");
         static readonly Symbol QuoteLocation = closSymbol ("LOCATION");
         static readonly Symbol QuoteMakeInstance = Package.CommonLisp.FindSymbol ("MAKE-INSTANCE");
+        static readonly Symbol QuoteMakeInstancesObsolete = closSymbol ("MakeInstancesObsolete");
+        static readonly Symbol QuoteMakeLoadForm = closSymbol ("MakeLoadForm");
+        static readonly Symbol QuoteMakeMethodLambda = closSymbol ("MakeMethodLambda");
+        static readonly Symbol QuoteMapDependents = closSymbol ("MapDependents");
         static readonly Symbol QuoteMetaobject = closSymbol ("METAOBJECT");
         static readonly Symbol QuoteMethod = closSymbol ("METHOD");
         static readonly Symbol QuoteMethodAllocateInstance = closSymbol ("METHOD:allocate-instance");
-        static readonly Symbol QuoteMethodDefaultInitargs = closSymbol ("METHOD:default-initargs");
+        static readonly Symbol QuoteMethodClass = closSymbol ("METHOD-CLASS");
+        static readonly Symbol QuoteMethodCombination = closSymbol ("METHOD-COMBINATION");
         static readonly Symbol QuoteMethodComputeApplicableMethods = closSymbol ("METHOD:compute-applicable-methods");
         static readonly Symbol QuoteMethodComputeDiscriminatingFunction = closSymbol ("METHOD:compute-discriminating-function");
         static readonly Symbol QuoteMethodComputeEffectiveMethod = closSymbol ("METHOD:compute-effective-method");
         static readonly Symbol QuoteMethodComputeMethodMoreSpecific = closSymbol ("METHOD:compute-method-more-specific");
-        static readonly Symbol QuoteMethods = closSymbol ("METHODS");
-        static readonly Symbol QuoteMethodClass = closSymbol ("METHOD-CLASS");
-        static readonly Symbol QuoteMethodCombination = closSymbol ("METHOD-COMBINATION");
+        static readonly Symbol QuoteMethodDefaultInitargs = closSymbol ("METHOD:default-initargs");
         static readonly Symbol QuoteMethodEnsureGenericFunction = closSymbol ("METHOD:ensure-generic-function");
+        static readonly Symbol QuoteMethodFunction = closSymbol ("MethodFunction");
+        static readonly Symbol QuoteMethodGenericFunction = closSymbol ("MethodGenericFunction");
         static readonly Symbol QuoteMethodInitializeInstance = closSymbol ("METHOD:initialize-instance");
+        static readonly Symbol QuoteMethodLambdaList = closSymbol ("MethodLambdaList");
         static readonly Symbol QuoteMethodMethodQualifier = closSymbol ("METHOD:method-qualifier");
         static readonly Symbol QuoteMethodMethodSpecializers = closSymbol ("METHOD:method-specializers");
         static readonly Symbol QuoteMethodQualifier = closSymbol ("METHOD-QUALIFIER");
         static readonly Symbol QuoteMethodSpecializers = closSymbol ("METHOD-SPECIALIZERS");
+        static readonly Symbol QuoteMethods = closSymbol ("METHODS");
         static readonly Symbol QuoteName = closSymbol ("NAME");
         static readonly Symbol QuoteNewMakeInstance = closSymbol ("NEW-MAKE-INSTANCE");
         static readonly Symbol QuoteNewMakeInstanceMethod = closSymbol ("NEW-MAKE-INSTANCE-METHOD");
+        static readonly Symbol QuoteNoApplicableMethod = closSymbol ("NoApplicableMethod");
+        static readonly Symbol QuoteNoNextMethod = closSymbol ("NoNextMethod");
+        static readonly Symbol QuotePrecedenceList = closSymbol ("PRECEDENCE-LIST");
         static readonly Symbol QuoteProcedure = closSymbol ("PROCEDURE");
+        static readonly Symbol QuotePrototype = closSymbol ("PROTOTYPE");
         static readonly Symbol QuoteQualifier = closSymbol ("QUALIFIER");
+        static readonly Symbol QuoteReaderMethodClass = closSymbol ("ReaderMethodClass");
+        static readonly Symbol QuoteReinitializeInstance = closSymbol ("ReinitializeInstance");
+        static readonly Symbol QuoteRemoveDependents = closSymbol ("RemoveDependents");
+        static readonly Symbol QuoteRemoveDirectMethod = closSymbol ("RemoveDirectMethod");
+        static readonly Symbol QuoteRemoveDirectSubclass = closSymbol ("RemoveDirectSubclass");
+        static readonly Symbol QuoteRemoveMethod = closSymbol ("RemoveMethod");
+        static readonly Symbol QuoteSetClassName = closSymbol ("SetClassName");
+        static readonly Symbol QuoteSetGenericFunctionName = closSymbol ("SetGenericFunctionName");
+        static readonly Symbol QuoteSetSlotValue = closSymbol ("SetSlotValue");
+        static readonly Symbol QuoteSetSlotValueUsingClass = closSymbol ("SetSlotValueUsingClass");
         static readonly Symbol QuoteSingletonsList = closSymbol ("SINGLETONS-LIST");
+        static readonly Symbol QuoteSlotDefinition = closSymbol ("SLOT-DEFINITION");
+        static readonly Symbol QuoteSlotDefinitionAllocation = closSymbol ("SlotDefinitionAllocation");
+        static readonly Symbol QuoteSlotDefinitionInitargs = closSymbol ("SlotDefinitionInitargs");
+        static readonly Symbol QuoteSlotDefinitionInitform = closSymbol ("SlotDefinitionInitform");
+        static readonly Symbol QuoteSlotDefinitionInitfunction = closSymbol ("SlotDefinitionInitfunction");
+        static readonly Symbol QuoteSlotDefinitionLocation = closSymbol ("SlotDefinitionLocation");
+        static readonly Symbol QuoteSlotDefinitionName = closSymbol ("SlotDefinitionName");
+        static readonly Symbol QuoteSlotDefinitionReaders = closSymbol ("SlotDefinitionReaders");
+        static readonly Symbol QuoteSlotDefinitionType = closSymbol ("SlotDefinitionType");
+        static readonly Symbol QuoteSlotDefinitionWriters = closSymbol ("SlotDefinitionWriters");
         static readonly Symbol QuoteSlotInitializers = closSymbol ("SLOT-INITIALIZERS");
+        static readonly Symbol QuoteSlotMakunboundUsingClass = closSymbol ("SlotMakunboundUsingClass");
+        static readonly Symbol QuoteSlotMissing = closSymbol ("SlotMissing");
         static readonly Symbol QuoteSlotNames = closSymbol ("SLOT-NAMES");
+        static readonly Symbol QuoteSlotUnbound = closSymbol ("SlotUnbound");
+        static readonly Symbol QuoteSlotValueUsingClass = closSymbol ("SlotValueUsingClass");
+        static readonly Symbol QuoteSlots = closSymbol ("SLOTS");
         static readonly Symbol QuoteSpecializer = closSymbol ("SPECIALIZER");
+        static readonly Symbol QuoteSpecializerDirectGenericFunctions = closSymbol ("SpecializerDirectGenericFunctions");
+        static readonly Symbol QuoteSpecializerDirectMethods = closSymbol ("SpecializerDirectMethods");
         static readonly Symbol QuoteSpecializers = closSymbol ("SPECIALIZERS");
         static readonly Symbol QuoteStandardAccessorMethod = closSymbol ("STANDARD-ACCESSOR-METHOD");
-        static readonly Symbol QuoteStandardReaderMethod = closSymbol ("STANDARD-READER-METHOD");
-        static readonly Symbol QuoteStandardWriterMethod = closSymbol ("STANDARD-WRITER-METHOD");
-        static readonly Symbol QuoteStandardClass = closSymbol ("STANDARD-CLASS");   
+        static readonly Symbol QuoteStandardClass = closSymbol ("STANDARD-CLASS");
+        static readonly Symbol QuoteStandardDirectSlotDefinition = closSymbol ("STANDARD-DIRECT-SLOT-DEFINITION");
+        static readonly Symbol QuoteStandardEffectiveSlotDefinition = closSymbol ("STANDARD-EFFECTIVE-SLOT-DEFINITION");
         static readonly Symbol QuoteStandardGenericFunction = closSymbol ("STANDARD-GENERIC-FUNCTION");
         static readonly Symbol QuoteStandardMethod = Package.CommonLisp.FindSymbol ("STANDARD-METHOD");
         static readonly Symbol QuoteStandardObject = closSymbol ("STANDARD-OBJECT");
+        static readonly Symbol QuoteStandardReaderMethod = closSymbol ("STANDARD-READER-METHOD");
+        static readonly Symbol QuoteStandardWriterMethod = closSymbol ("STANDARD-WRITER-METHOD");
         static readonly Symbol QuoteStudlyName = closSymbol ("StudlyName");
         static readonly Symbol QuoteSuperclass = closSymbol ("SUPERCLASS");
         static readonly Symbol QuoteSuppliedInitargs = closSymbol ("SUPPLIED-INITARGS");
         static readonly Symbol QuoteTop = closSymbol ("TOP");
+        static readonly Symbol QuoteType = closSymbol ("TYPE");
+        static readonly Symbol QuoteUpdateDependent = closSymbol ("UpdateDependent");
+        static readonly Symbol QuoteUpdateInstanceForDifferentClass = closSymbol ("UpdateInstanceForDifferentClass");
+        static readonly Symbol QuoteUpdateInstanceForRedefinedClass = closSymbol ("UpdateInstanceForRedefinedClass");
         static readonly Symbol QuoteValidateSuperclass = closSymbol ("VALIDATE-SUPERCLASS");
+        static readonly Symbol QuoteWriterMethodClass = closSymbol ("WriterMethodClass");
+
         #endregion Symbols
-
-
-        delegate object SlotWriter (StandardObject obj, object newValue);
-        delegate T SlotWriter<T> (StandardObject obj, T newValue);
-        delegate object SlotChangingFunction (object currentValue);
-        delegate object SlotChanger (StandardObject obj, SlotChangingFunction func);
-
-        delegate T SlotChangingFunction<T> (T currentValue);
-        delegate T SlotChanger<T> (StandardObject obj, SlotChangingFunction<T> func);
-
-                                   
 
         // ClassOf
         delegate StandardObject ClassOfFunction (object obj);
 
-        static ClassOfFunction classOf =
-            new ClassOfFunction (delegate (object instance)
+        [DebuggerStepThroughAttribute] 
+        static StandardObject bootstrapClassOf (object obj)
         {
-            StandardObject probe = instance as StandardObject;
-            return (probe == null) ? Top : probe.Class();
-        });
-
-        static ClassOfFunction ClassOf
-        {
-            [System.Diagnostics.DebuggerStepThrough]
-            get
-            {
-                return classOf;
-            }
+            StandardObject probe = obj as StandardObject;
+            return (probe == null) ? Top : probe.Class ();
         }
+
+        static ClassOfFunction classOf =
+            new ClassOfFunction (bootstrapClassOf);
+
+        // Start with StandardClass
+        static Cons SLOTS_OF_CLOS_CLASS =
+          CL.List (CL.List (QuoteDefaultInitargs, KW.StudlyName, "DefaultInitargs"),
+                   CL.List (QuoteDirectDefaultInitargs, KW.StudlyName, "DirectDefaultInitargs"),
+                   CL.List (QuoteDirectSlots, KW.StudlyName, "DirectSlots"),
+                   CL.List (QuoteDirectSubclasses, KW.StudlyName, "DirectSubclasses"),
+                   CL.List (QuoteDirectSuperclasses, KW.StudlyName, "DirectSuperclasses"),
+                   CL.List (QuoteFinalizedP, KW.StudlyName, "IsFinalized"),
+                   CL.List (QuoteName, KW.StudlyName, "Name"),
+                   CL.List (QuoteStudlyName, KW.StudlyName, "StudlyName"),
+                   CL.List (QuotePrecedenceList, KW.StudlyName, "PrecedenceList"),
+                   CL.List (QuotePrototype, KW.StudlyName, "Prototype"),
+	               CL.List (QuoteSlots, KW.StudlyName, "Slots"));
+
+        static Cons SLOTS_OF_STANDARD_CLASS =
+           (Cons) CL.Append (SLOTS_OF_CLOS_CLASS, null);
+
+        static private StandardObject bootstrapAllocateStandardClass ()
+        {
+            StandardObject instance = ManifestInstance.CreateInstance (null, CL.Length (SLOTS_OF_STANDARD_CLASS));
+            instance.SetClass (instance);
+            return instance;
+        }
+
+        static readonly StandardObject standardClass =
+            bootstrapAllocateStandardClass ();
+
+        // Now fill in the slots of StandardClass.
+        // We need the effective slot definition class.
+        static readonly StandardObject standardEffectiveSlotDefinition =
+            ManifestInstance.CreateInstance (standardClass, CL.Length (SLOTS_OF_STANDARD_CLASS));
+
+        static Cons SLOTS_OF_STANDARD_SLOT_DEFINITION =
+           CL.List (CL.List (QuoteAllocation, KW.Initarg, KW.Allocation, KW.StudlyName, "Allocation"),
+                    CL.List (QuoteInitargs, KW.Initarg, KW.Initargs, KW.StudlyName, "Initargs"),
+                    CL.List (QuoteInitform, KW.StudlyName, "Initform"),
+                    CL.List (QuoteInitfunction, KW.StudlyName, "Initfunction"),
+                    CL.List (QuoteName, KW.Initarg, KW.Name, KW.StudlyName, "Name"),
+                    CL.List (QuoteStudlyName, KW.Initarg, KW.StudlyName, KW.StudlyName, "StudlyName"),
+                    CL.List (QuoteType, KW.Initarg, KW.Type, KW.StudlyName, "Type"));
+
+        static Cons SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION =
+           (Cons) CL.Append (SLOTS_OF_STANDARD_SLOT_DEFINITION,
+                             CL.List (CL.List (QuoteLocation, KW.StudlyName, "Location")));
+
+        static StandardObject bootstrapAllocateEffectiveSlotDefinition ()
+        {
+            return ManifestInstance.CreateInstance (standardEffectiveSlotDefinition, CL.Length (SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION));
+        }
+
+        static void bootstrapSetEffectiveSlotDefinitionSlot (StandardObject effectiveSlotDefinition, Symbol slotName, object value)
+        {
+            effectiveSlotDefinition.InstanceSet (CL.Position (slotName, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, new Function1 (CL.Car)), value);
+        }
+
+        static void bootstrapInitializeEffectiveSlot (Cons slotSpec, StandardObject effectiveSlot, int location)
+        {
+            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteAllocation, (Symbol) Utility.GetArg (CL.Cdr (slotSpec), KW.Allocation, KW.Instance));
+            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteInitargs, (Cons) Utility.GetArgs ((Cons) CL.Cdr (slotSpec), KW.Initargs));
+            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteInitform, null);
+            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteInitfunction, null);
+            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteLocation, location);
+            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteName, (Symbol) CL.Car (slotSpec));
+            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteStudlyName, (string) Utility.GetArg (CL.Cdr (slotSpec), KW.StudlyName, ""));
+            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteType, (string) Utility.GetArg (CL.Cdr (slotSpec), KW.Type, null));
+        }
+
+        static ConsList<StandardObject> bootstrapComputeSlots (Cons slotSpecs)
+        {
+            ConsList<StandardObject> effectiveSlots = null;
+            foreach (Cons slotSpec in slotSpecs) {
+                StandardObject effectiveSlot = bootstrapAllocateEffectiveSlotDefinition ();
+                bootstrapInitializeEffectiveSlot (slotSpec, effectiveSlot, (effectiveSlots == null) ? 0 : ((ICollection<StandardObject>) effectiveSlots).Count);
+                effectiveSlots = new ConsList<StandardObject> (effectiveSlot, effectiveSlots);
+            }
+            return CL.Reverse<StandardObject> (effectiveSlots);
+        }
+
+        static readonly ConsList<StandardObject> effectiveSlotsOfStandardEffectiveSlotDefinition = bootstrapComputeSlots (SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION);
+        static readonly ConsList<StandardObject> effectiveSlotsOfStandardClass = bootstrapComputeSlots (SLOTS_OF_STANDARD_CLASS);
+
+        // We need to search lists of effectiveSlots to find the name associated
+        // with them.  But we need to know where the name is.
+        static StandardObject bootstrapFindEffectiveSlotNameSlot ()
+        {
+            int probe = 0;
+            foreach (StandardObject effectiveSlot in effectiveSlotsOfStandardEffectiveSlotDefinition) {
+                Symbol item = effectiveSlot.InstanceRef (probe) as Symbol;
+                if (item == QuoteName)
+                    return effectiveSlot;
+                probe += 1;
+            }
+            throw new NotImplementedException ("Huh?");
+        }
+
+        // So where is the location of the location slot in an effective slot?
+        static int bootstrapFindEffectiveSlotLocationLocation ()
+        {
+            int probe = 0;
+            foreach (StandardObject effectiveSlot in effectiveSlotsOfStandardEffectiveSlotDefinition) {
+                object item = effectiveSlot.InstanceRef (probe);
+                if (item is int && (int) item == probe)
+                    return probe;
+                probe += 1;
+            }
+            throw new NotImplementedException ("Huh?");
+        }
+
+        static int bootstrapFindEffectiveSlotNameLocation () {
+            return bootstrapFindEffectiveSlotNameSlot().InstanceRef<int>(bootstrapFindEffectiveSlotLocationLocation());
+        }
+
+        static Symbol bootstrapStandardEffectiveSlotName (StandardObject effectiveSlot)
+        {
+            return effectiveSlot.InstanceRef<Symbol> (bootstrapFindEffectiveSlotNameLocation ());
+        }
+
+        static int bootstrapStandardEffectiveSlotLocation (StandardObject effectiveSlot)
+        {
+            return effectiveSlot.InstanceRef<int> (bootstrapFindEffectiveSlotLocationLocation ());
+        }
+
+        static StandardObject bootstrapFindEffectiveSlot (ConsList<StandardObject> effectiveSlots, Symbol name)
+        {
+            foreach (StandardObject effectiveSlot in effectiveSlots)
+                if (bootstrapStandardEffectiveSlotName (effectiveSlot) == name)
+                    return effectiveSlot;
+            return null;
+        }
+
+        //static int bootstrapEffectiveSlotNameLocation = bootstrapFindEffectiveSlotNameLocation ();
+        //static int bootstrapEffectiveSlotLocationLocation = bootstrapFindEffectiveSlotLocationLocation ();
+
+        //static StandardObject bootstrapClassSlotsSlot = bootstrapFindEffectiveSlot (effectiveSlotsOfStandardClass, QuoteSlots);
+
+
+        //static int bootstrapSlotPositionInList (ConsList<StandardObject> slots, Symbol name)
+        //{
+        //    return CL.PositionIf (delegate (StandardObject slot)
+        //    {
+        //        return bootstrapEffectiveSlotDefinitionSlot (slot, QuoteName) == QuoteSlots;
+        //    }, slots);
+        //}
+
+        static T bootstrapSlotRef<T> (StandardObject obj, Symbol slot)
+        {
+            return obj.InstanceRef<T> (bootstrapStandardEffectiveSlotLocation (bootstrapFindEffectiveSlot (effectiveSlotsOfStandardClass, slot)));
+        }
+
+        static void bootstrapSlotSet<T> (StandardObject obj, Symbol slot, T newValue)
+        {
+            obj.InstanceSet<T> (bootstrapStandardEffectiveSlotLocation (bootstrapFindEffectiveSlot (effectiveSlotsOfStandardClass, slot)), newValue);
+        }
+
+        static StandardObject lookupSlot (StandardObject obj, Symbol slotName)
+        {
+            StandardObject closClass = ClassOf (obj);
+            ConsList<StandardObject> slots =
+                (closClass == obj)
+                ? bootstrapSlotRef<ConsList<StandardObject>> (closClass, QuoteSlots)
+                : internalSlotRef<ConsList<StandardObject>> (closClass, QuoteSlots);
+            foreach (StandardObject slot in slots) {
+                Symbol name = (ClassOf (slot) == standardEffectiveSlotDefinition)
+                    ? bootstrapStandardEffectiveSlotName (slot)
+                    : internalSlotRef<Symbol> (slot, QuoteName);
+                if (name == slotName)
+                    return slot;
+            }
+            return null;
+        }
+
+        static int lookupSlotLocation (StandardObject obj, Symbol slotName)
+        {
+            StandardObject slot = lookupSlot (obj, slotName);
+            return (ClassOf (slot) == standardEffectiveSlotDefinition)
+                ? bootstrapStandardEffectiveSlotLocation (slot)
+                : internalSlotRef<int> (slot, QuoteLocation);
+        }
+
+        static object internalSlotRef (StandardObject obj, Symbol slotName)
+        {
+            return InstanceRef (obj, lookupSlotLocation (obj, slotName));
+        }
+
+        static T internalSlotRef<T> (StandardObject obj, Symbol slotName)
+        {
+            return InstanceRef<T> (obj, lookupSlotLocation(obj, slotName));
+        }
+
+        static object internalSlotSet (StandardObject obj, Symbol slotName, object value)
+        {
+            return InstanceSet (obj, lookupSlotLocation (obj, slotName), value);
+        }
+
+        static T internalSlotSet<T> (StandardObject obj, Symbol slotName, T value)
+        {
+             return  InstanceSet<T> (obj, lookupSlotLocation(obj, slotName), value);
+        }
+
+        static bool bootstrapInitializeStandardClass ()
+        {
+            // stuff the slots in place
+            bootstrapSlotSet<ConsList<StandardObject>> (standardClass, QuoteSlots, effectiveSlotsOfStandardClass);
+            bootstrapSlotSet<ConsList<StandardObject>> (standardEffectiveSlotDefinition, QuoteSlots, effectiveSlotsOfStandardEffectiveSlotDefinition);
+            // We should now be able to read and write slots by name.
+            // Put the names in first for debugging.
+            internalSlotSet<string> (standardClass, QuoteStudlyName, "StandardClass");
+            internalSlotSet<string> (standardEffectiveSlotDefinition, QuoteStudlyName, "StandardEffectiveSlotDefinition");
+
+            // bootstrapSetClassSlots (standardClass, effectiveSlotsOfStandardClass);
+            // standardClass.InstanceSet<ConsList<StandardObject>> (bootstrapStandardEffectiveSlotLocation (bootstrapFindEffectiveSlot (effectiveSlotsOfStandardClass, QuoteSlots)), effectiveSlotsOfStandardClass);
+            // standardEffectiveSlotDefinition.InstanceSet<ConsList<StandardObject>> (bootstrapStandardEffectiveSlotLocation (bootstrapFindEffectiveSlot (effectiveSlotsOfStandardClass, QuoteSlots)), effectiveSlotsOfStandardEffectiveSlotDefinition);
+            //internalSlotSet<string> (standardClass, QuoteStudlyName, "StandardClass");
+            //internalSlotSet<string> (standardEffectiveSlotDefinition, QuoteStudlyName, "StandardEffectiveSlotDefinition");
+            return true;
+        }
+
+        static bool bISC = bootstrapInitializeStandardClass();
+
+
+  
+ 
+
+
+        delegate object SlotWriter (StandardObject obj, object newValue);
+        delegate T SlotWriter<T> (StandardObject obj, T newValue);
+        delegate object SlotChanger (StandardObject obj, SlotChangingFunction func);
+
+        delegate T SlotChanger<T> (StandardObject obj, SlotChangingFunction<T> func);
+
+
+
 
         delegate object amf (Object obj);
         static ConsList<T> AppendMap<T> (amf del, Cons list)
@@ -472,7 +792,7 @@ namespace Lisp
             while (true) {
                 if (list == null)
                     break;
-                answer =  CL.Append<T> ((ConsList<T>) del (list.Car), answer);
+                answer = CL.Append<T> ((ConsList<T>) del (list.Car), answer);
                 list = (Cons) list.Cdr;
             }
 
@@ -517,24 +837,25 @@ namespace Lisp
             //    tail = (Cons) tail.Cdr;
             //    tail = (Cons) tail.Cdr;
             //}
-            return new SlotInitFunction(
-                delegate (Cons initargList) {
+            return new SlotInitFunction (
+                delegate (Cons initargList)
+                {
                     while (true) {
                         if (initargList == null)
                             break;
                         if (initkeys != null)
-                        foreach (Keyword initkey in initkeys) {
-                            if (initkey == initargList.Car)
-                                return CL.Cadr (initargList);
-                        }
+                            foreach (Keyword initkey in initkeys) {
+                                if (initkey == initargList.Car)
+                                    return CL.Cadr (initargList);
+                            }
                         initargList = (Cons) CL.Cdr (initargList);
                         initargList = (Cons) CL.Cdr (initargList);
                     }
                     return initvalue;
                 });
 
- 
-         }
+
+        }
 
         static StandardObject bootstrapProcessDirectSlot (object directSlotSpecs)
         {
@@ -578,7 +899,7 @@ namespace Lisp
                 StandardObject instance = ManifestInstance.CreateInstance (closClass, CL.Length (SLOTS_OF_STANDARD_CLASS));
 
                 Cons directSlotSpecs = (Cons) Utility.GetArg (initargs, KW.DirectSlots, null);
-                ConsList<StandardObject> directSlots = (ConsList<StandardObject>) CL.Map<Cons,StandardObject> (QuoteList, new MapFunction<Cons,StandardObject> (bootstrapProcessDirectSlot), directSlotSpecs);
+                ConsList<StandardObject> directSlots = (ConsList<StandardObject>) CL.Map<Cons, StandardObject> (QuoteList, new MapFunction<Cons, StandardObject> (bootstrapProcessDirectSlot), directSlotSpecs);
                 Cons directSuperclasses = (Cons) Utility.GetArg (initargs, KW.DirectSuperclasses, null);
                 Cons classPrecedenceList = bootstrapComputeClassPrecedenceList (directSuperclasses, CL.List (instance));
                 ConsList<StandardObject> inheritedSlots = AppendMap<StandardObject> (new amf (delegate (object superclass)
@@ -586,7 +907,7 @@ namespace Lisp
                     return internalClassDirectSlots ((StandardObject) superclass);
                 }), (Cons) CL.Cdr (classPrecedenceList));
                 ConsList<StandardObject> effectiveSlots =
-                    bootstrapComputeEffectiveSlots ((ConsList<StandardObject>) CL.Map<StandardObject,StandardObject> (QuoteList, new MapFunction<StandardObject, StandardObject> (bootstrapProcessEffectiveSlot), CL.Append<StandardObject> (directSlots, inheritedSlots)));
+                    bootstrapComputeEffectiveSlots ((ConsList<StandardObject>) CL.Map<StandardObject, StandardObject> (QuoteList, new MapFunction<StandardObject, StandardObject> (bootstrapProcessEffectiveSlot), CL.Append<StandardObject> (directSlots, inheritedSlots)));
                 // Put the slot descriptors in place first so that the rest of
                 // accessors work.
                 InstanceSet<ConsList<StandardObject>> (instance, effectiveSlotSlot, effectiveSlots);
@@ -629,10 +950,10 @@ namespace Lisp
 
 
                 ConsList<Cons> gettersAndSetters =
-                  (ConsList<Cons>) CL.Map<StandardObject,Cons> (QuoteList, new MapFunction<StandardObject, Cons> (
+                  (ConsList<Cons>) CL.Map<StandardObject, Cons> (QuoteList, new MapFunction<StandardObject, Cons> (
                                       delegate (StandardObject s)
                                       {
-                                          return CL.Cons (internalSlotDefinitionName(s), allocator.DynamicInvoke (s));
+                                          return CL.Cons (internalSlotDefinitionName (s), allocator.DynamicInvoke (s));
                                       }), effectiveSlots);
                 if (CL.Length (effectiveSlots) < CL.Length (directSlots))
                     throw new NotImplementedException ();
@@ -703,7 +1024,7 @@ namespace Lisp
         static object bootstrapGenericFunctionName (StandardObject gfn, object [] arguments)
         {
             return InternalGenericName ((StandardObject) arguments [0]);
-        }        
+        }
 
 
         static readonly StandardObject className = ManifestInstance.CreateFuncallableInstance (null, 0, bootstrapClassName);
@@ -713,30 +1034,20 @@ namespace Lisp
         {
             Symbol className = null;
             object [] classSlots;
-            ConsList<StandardObject> sng =  internalClassEffectiveSlots (closClass);
+            ConsList<StandardObject> sng = internalClassEffectiveSlots (closClass);
             StandardObject probe = null;
             foreach (StandardObject entry in sng) {
-                if (internalSlotDefinitionName(entry) == slotName) {
+                if (internalSlotDefinitionName (entry) == slotName) {
                     probe = entry;
                     break;
                 }
             }
             if (probe == null) {
-                className =  InternalClassName (closClass);
+                className = InternalClassName (closClass);
                 classSlots = ((ManifestInstance) closClass.Target).Slots;
                 throw new NotImplementedException ("Slot not found");
             }
             return probe;
-        }
-
-        static object internalSlotRef (StandardObject obj, Symbol slotName)
-        {
-            return InstanceRef (obj, internalSlotDefinitionLocation (lookupSlotInfo (ClassOf (obj), slotName)));
-        }
-
-        static T internalSlotRef<T> (StandardObject obj, Symbol slotName)
-        {
-            return InstanceRef<T> (obj, internalSlotDefinitionLocation (lookupSlotInfo (ClassOf (obj), slotName)));
         }
 
         static internal object StandardObjectName (StandardObject obj)
@@ -757,15 +1068,7 @@ namespace Lisp
             }
         }
 
-        static object internalSlotSet (StandardObject obj, Symbol slotName, object value)
-        {
-            return InstanceSet (obj, internalSlotDefinitionLocation(lookupSlotInfo (ClassOf (obj), slotName)), value);
-        }
-                
-        static T internalSlotSet<T> (StandardObject obj, Symbol slotName, T value)
-        {
-            return (T) InstanceSet (obj, internalSlotDefinitionLocation(lookupSlotInfo (ClassOf (obj), slotName)), value);
-        }
+
 
         static object internalSlotChange (StandardObject obj, Symbol slotName, SlotChangingFunction value)
         {
@@ -774,15 +1077,15 @@ namespace Lisp
 
         static T internalSlotChange<T> (StandardObject obj, Symbol slotName, SlotChangingFunction<T> change)
         {
-            return (T) ((SlotChanger) (CL.Cadddr (lookupSlotInfo (ClassOf (obj), slotName)))) (obj, (oldValue) => change((T) oldValue));
+            return (T) ((SlotChanger) (CL.Cadddr (lookupSlotInfo (ClassOf (obj), slotName)))) (obj, (oldValue) => change ((T) oldValue));
         }
 
         #region InternalClassAccessors
 
         static StandardObject GuaranteeClass (StandardObject putativeClass)
         {
-//   if (! IsInstanceOf (putativeClass, closClass))
-//                throw new NotImplementedException ("GuaranteeClass");
+            //   if (! IsInstanceOf (putativeClass, closClass))
+            //                throw new NotImplementedException ("GuaranteeClass");
             return putativeClass;
         }
 
@@ -862,16 +1165,16 @@ namespace Lisp
             return internalSlotSet (obj, QuoteStudlyName, newValue);
         });
 
-        static SlotReader<ConsList<StandardObject>> internalClassPrecedenceList =
-          new SlotReader<ConsList<StandardObject>> (delegate (StandardObject obj)
+        static SlotReader<Cons> internalClassPrecedenceList =
+          new SlotReader<Cons> (delegate (StandardObject obj)
         {
-            return internalSlotRef<ConsList<StandardObject>> (obj, QuoteClassPrecedenceList);
+            return internalSlotRef<Cons> (obj, QuoteClassPrecedenceList);
         });
 
-        static SlotWriter internalSetClassPrecedenceList =
-          new SlotWriter (delegate (StandardObject obj, object newValue)
+        static SlotWriter<Cons> internalSetClassPrecedenceList =
+          new SlotWriter<Cons> (delegate (StandardObject obj, Cons newValue)
         {
-            return internalSlotSet (obj, QuoteClassPrecedenceList, newValue);
+            return internalSlotSet<Cons> (obj, QuoteClassPrecedenceList, newValue);
         });
 
         static SlotWriter internalSetClassPrototype =
@@ -888,7 +1191,7 @@ namespace Lisp
             return internalSlotSet (obj, QuoteGettersAndSetters, newValue);
         });
 
-  
+
 
         static SlotWriter<ConsList<StandardObject>> internalSetClassEffectiveSlots =
           new SlotWriter<ConsList<StandardObject>> (delegate (StandardObject obj, ConsList<StandardObject> newValue)
@@ -926,7 +1229,7 @@ namespace Lisp
 
         static StandardObject GuaranteeGeneric (StandardObject putativeGeneric)
         {
-            if (putativeGeneric.Class() != StandardGenericFunction)
+            if (putativeGeneric.Class () != StandardGenericFunction)
                 throw new NotImplementedException ("GuaranteeGeneric");
             return putativeGeneric;
         }
@@ -957,7 +1260,7 @@ namespace Lisp
 
         static void InternalSetGenericApplicationCache (StandardObject generic, Cons newValue)
         {
-           internalSetGenericApplicationCache (GuaranteeGeneric (generic), newValue);
+            internalSetGenericApplicationCache (GuaranteeGeneric (generic), newValue);
         }
 
         static Cons InternalGenericApplicationCache (StandardObject generic)
@@ -1065,12 +1368,12 @@ namespace Lisp
 
         static Cons InternalGenericSingletonsList (StandardObject generic)
         {
-           return (Cons) internalGenericSingletonsList (GuaranteeGeneric (generic));
+            return (Cons) internalGenericSingletonsList (GuaranteeGeneric (generic));
         }
 
         static void InternalSetGenericSingletonsList (StandardObject generic, Cons newValue)
         {
-           internalSetGenericSingletonsList (GuaranteeGeneric (generic), newValue);
+            internalSetGenericSingletonsList (GuaranteeGeneric (generic), newValue);
         }
 
         #endregion InternalGenericAccessors
@@ -1098,7 +1401,7 @@ namespace Lisp
                 return internalSlotSet<Arity> (GuaranteeMethod (method), QuoteArity, rt);
             });
 
-        static SlotReader<Symbol> internalMethodName = 
+        static SlotReader<Symbol> internalMethodName =
             new SlotReader<Symbol> (delegate (StandardObject method)
         {
             return internalSlotRef<Symbol> (GuaranteeMethod (method), QuoteName);
@@ -1109,7 +1412,7 @@ namespace Lisp
             return (Symbol) internalMethodName (GuaranteeMethod (method));
         }
 
-        static SlotWriter internalSetMethodName = 
+        static SlotWriter internalSetMethodName =
             new SlotWriter (delegate (StandardObject method, object newValue)
         {
             return internalSlotSet (method, QuoteName, newValue);
@@ -1121,7 +1424,7 @@ namespace Lisp
             return internalSlotSet (GuaranteeMethod (method), QuoteStudlyName, newValue);
         });
 
-        static SlotReader internalMethodProcedure = 
+        static SlotReader internalMethodProcedure =
           new SlotReader (delegate (StandardObject method)
         {
             return internalSlotRef (method, QuoteProcedure);
@@ -1132,7 +1435,7 @@ namespace Lisp
             return (Delegate) internalMethodProcedure (GuaranteeMethod (method));
         }
 
-        static SlotWriter internalSetMethodProcedure = 
+        static SlotWriter internalSetMethodProcedure =
           new SlotWriter (delegate (StandardObject method, object newValue)
         {
             return internalSlotSet (method, QuoteProcedure, newValue);
@@ -1158,7 +1461,7 @@ namespace Lisp
 
         static Keyword InternalMethodQualifier (StandardObject method)
         {
-           return (Keyword) internalMethodQualifier (GuaranteeMethod (method));
+            return (Keyword) internalMethodQualifier (GuaranteeMethod (method));
         }
 
 
@@ -1170,7 +1473,7 @@ namespace Lisp
 
         static Cons InternalMethodSpecializers (StandardObject method)
         {
-           return (Cons) internalMethodSpecializers (GuaranteeMethod (method));
+            return (Cons) internalMethodSpecializers (GuaranteeMethod (method));
         }
 
         static SlotChanger<Cons> internalChangeMethodSpecializers =
@@ -1189,10 +1492,10 @@ namespace Lisp
 
         static bool IsInstanceOf (object item, object closClass)
         {
-            if (closClass.Equals(Top))
+            if (closClass.Equals (Top))
                 return true;
             StandardObject cx = ClassOf (item);
-            if (cx.Equals(closClass))
+            if (cx.Equals (closClass))
                 return true;
             else {
                 return CL.Memq (closClass, internalClassPrecedenceList (GuaranteeClass (cx))) != null;
@@ -1203,15 +1506,11 @@ namespace Lisp
         {
             if ((items == null) || (classes == null))
                 return true;
-            return IsInstanceOf (items.Car, classes.Car) && InstancesOf ((Cons)items.Cdr, (Cons)classes.Cdr);
+            return IsInstanceOf (items.Car, classes.Car) && InstancesOf ((Cons) items.Cdr, (Cons) classes.Cdr);
         }
 
         static Cons SLOTS_OF_STANDARD_DIRECT_SLOT_DEFINITION =
             CL.List (QuoteLocation, QuoteName);
-
-        static Cons SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION =
-           (Cons) CL.Append (SLOTS_OF_STANDARD_DIRECT_SLOT_DEFINITION,
-                       CL.List ());
 
         static SlotReader<int> internalSlotDefinitionLocation =
     new SlotReader<int> (delegate (StandardObject slotDef)
@@ -1237,45 +1536,16 @@ namespace Lisp
         return InstanceSet<Symbol> (slotDef, CL.Position (QuoteName, SLOTS_OF_STANDARD_DIRECT_SLOT_DEFINITION), name);
     });
 
-        static StandardObject StandardDirectSlotDefinition =
-            ManifestInstance.CreateInstance (null, CL.Length (SLOTS_OF_STANDARD_CLASS));
 
-        static StandardObject StandardEffectiveSlotDefinition =
-            ManifestInstance.CreateInstance (null, CL.Length (SLOTS_OF_STANDARD_CLASS));
 
-        static Cons SLOTS_OF_STANDARD_CLASS =
-              CL.List (CL.List (QuoteDefaultInitargs),
-                       CL.List (QuoteDirectDefaultInitargs),
-                       CL.List (QuoteDirectSlots),
-                       CL.List (QuoteDirectSubclasses),
-                       CL.List (QuoteDirectSuperclasses),
-                       CL.List (QuoteEffectiveSlots),
-                       CL.List (QuoteSlotInitializers),
-                       CL.List (QuoteFinalizedP),
-                       CL.List (QuoteInitializers),
-                       CL.List (QuoteName),
-                       CL.List (QuoteStudlyName),
-                       CL.List (QuoteClassPrecedenceList),
-                       CL.List (QuoteClassPrototype),
-                       CL.List (QuoteGettersAndSetters));
-
-        static private StandardObject bootstrapMakeStandardClass ()
-        {
-            StandardObject instance = ManifestInstance.CreateInstance (null, CL.Length (SLOTS_OF_STANDARD_CLASS));
-            ((ManifestInstance) instance.Target).Class = instance;
-            return instance;
-        }
-
-        static readonly StandardObject standardClass =
-            bootstrapMakeStandardClass();
 
         //// Bootstrap step
         delegate object MapFunction (Cons arguments);
         delegate O MapFunction<I, O> (I argument);
 
         static readonly ConsList<Cons> GettersAndSettersForClass =
-            (ConsList<Cons>) CL.Map<Cons,Cons> (QuoteList,
-                           new MapFunction<Cons,Cons> (delegate (Cons slotInfo)
+            (ConsList<Cons>) CL.Map<Cons, Cons> (QuoteList,
+                           new MapFunction<Cons, Cons> (delegate (Cons slotInfo)
         {
             Symbol name = (Symbol) CL.Car (slotInfo);
             Cons slotNames = (Cons) CL.Map (QuoteList, new MapFunction (CL.Car), SLOTS_OF_STANDARD_CLASS);
@@ -1304,18 +1574,18 @@ namespace Lisp
 
         static StandardObject bootstrapMakeClassEffectiveSlot (StandardObject directSlot)
         {
-            return (StandardObject) CL.MakeInstance(StandardEffectiveSlotDefinition, directSlot);
+            return (StandardObject) CL.MakeInstance (StandardEffectiveSlotDefinition, directSlot);
         }
 
-        static ConsList<StandardObject> classDirectSlots =
-            (ConsList < StandardObject >) CL.Map<Cons, StandardObject> (QuoteList,
+        static ConsList<StandardObject> xxxclassDirectSlots =
+            (ConsList<StandardObject>) CL.Map<Cons, StandardObject> (QuoteList,
                                                                    new MapFunction<Cons, StandardObject> (bootstrapMakeClassDirectSlot),
                                                                    SLOTS_OF_STANDARD_CLASS);
 
         static ConsList<StandardObject> classEffectiveSlots =
             (ConsList<StandardObject>) CL.Map<StandardObject, StandardObject> (QuoteList,
             new MapFunction<StandardObject, StandardObject> (bootstrapMakeClassEffectiveSlot),
-            classDirectSlots);
+            xxxclassDirectSlots);
 
         static bool isEffectiveSlotSlot (StandardObject slot)
         {
@@ -1323,7 +1593,7 @@ namespace Lisp
         }
 
         static int effectiveSlotSlot =
-            CL.PositionIf<StandardObject> (new Predicate<StandardObject>(isEffectiveSlotSlot), classEffectiveSlots);
+            CL.PositionIf<StandardObject> (new Predicate<StandardObject> (isEffectiveSlotSlot), classEffectiveSlots);
 
         static ConsList<StandardObject> bootstrapStep0 =
             InstanceSet<ConsList<StandardObject>> (StandardClass, effectiveSlotSlot, classEffectiveSlots);
@@ -1337,14 +1607,14 @@ namespace Lisp
         {
             foreach (StandardObject effectiveSlot in classEffectiveSlots)
                 internalSetSlotDefinitionLocation (effectiveSlot, CL.PositionIf<StandardObject> (((slot) => slot == effectiveSlot), classEffectiveSlots));
-            internalSetClassDirectSlots (StandardClass, classDirectSlots);
+            internalSetClassDirectSlots (StandardClass, xxxclassDirectSlots);
             internalSetClassName (standardClass, QuoteStandardClass);
             internalSetClassStudlyName (standardClass, "StandardClass");
             return true;
         }
 
         static bool bootstrapStep0a = bootstrapStep0aFunction ();
-           
+
 
         //static object bootstrapStep0aa =
 
@@ -1433,8 +1703,52 @@ namespace Lisp
 
         static int foo = bootstrapFixupStandardClass ();
         //static object bootstrapStep1 =
-        //    ((SlotWriter) (CL.Caddr (CL.Assq (QuoteGettersAndSetters, GettersAndSettersForClass)))) 
+        //    ((SlotWriter) (CL.Caddr (CL.Assq (QuoteGettersAndSetters, GettersAndSettersForClass))))
         //       (funcallableStandardClass, GettersAndSettersForClass);
+
+        static readonly StandardObject slotDefinition =
+            (StandardObject) CL.MakeInstance (StandardClass,
+                                              KW.DirectSuperclasses, CL.List (metaobject),
+                                              KW.Name, QuoteSlotDefinition,
+                                              KW.StudlyName, "SlotDefinition");
+
+        static readonly StandardObject directSlotDefinition =
+            (StandardObject) CL.MakeInstance (StandardClass,
+                                              KW.DirectSuperclasses, CL.List (slotDefinition),
+                                              KW.Name, QuoteDirectSlotDefinition,
+                                              KW.StudlyName, "DirectSlotDefinition");
+
+        static readonly StandardObject effectiveSlotDefinition =
+            (StandardObject) CL.MakeInstance (StandardClass,
+                                              KW.DirectSuperclasses, CL.List (slotDefinition),
+                                              KW.Name, QuoteSlotDefinition,
+                                              KW.StudlyName, "EffectiveSlotDefinition");
+
+        static readonly StandardObject standardSlotDefinition =
+            (StandardObject) CL.MakeInstance (StandardClass,
+                                              KW.DirectSuperclasses, CL.List (slotDefinition),
+                                              KW.Name, QuoteSlotDefinition,
+                                              KW.StudlyName, "SlotDefinition");
+        static bool bootstrapSlotClasses ()
+        {
+
+
+            return true;
+        }
+
+        static readonly bool bSC = bootstrapSlotClasses ();
+
+        //static readonly StandardObject standardDirectSlotDefinition =
+        //    (StandardObject) CL.MakeInstance (StandardClass,
+        //                                      KW.DirectSuperclasses, CL.List (standardSlotDefinition, directSlotDefinition),
+        //                                      KW.Name, QuoteStandardDirectSlotDefinition,
+        //                                      KW.StudlyName, "StandardDirectSlotDefinition");
+
+        //static readonly StandardObject standardEffectiveSlotDefinition =
+        //    (StandardObject) CL.MakeInstance (StandardClass,
+        //                                      KW.DirectSuperclasses, CL.List (standardSlotDefinition, effectiveSlotDefinition),
+        //                                      KW.Name, QuoteStandardEffectiveSlotDefinition,
+        //                                      KW.StudlyName, "StandardEffectiveSlotDefinition");
 
         static readonly StandardObject funcallableStandardClass
     = (StandardObject) CL.MakeInstance (StandardClass,
@@ -1454,15 +1768,15 @@ namespace Lisp
 
         static readonly Dictionary<Type, StandardObject> BuiltInClassDictionary = new Dictionary<Type, StandardObject> ();
 
- 
+
         static readonly StandardObject funcallableStandardObject =
            (StandardObject) CL.MakeInstance (StandardClass,
                             KW.DirectSuperclasses, CL.List (StandardObjectClass), // Function),
                             KW.Name, QuoteFuncallableStandardObject,
                             KW.StudlyName, "FuncallableStandardObject");
 
- 
- 
+
+
         static readonly StandardObject method =
             (StandardObject) CL.MakeInstance (FuncallableStandardClass,
                                               KW.DirectSuperclasses, CL.List (Metaobject, FuncallableStandardObject),
@@ -1505,21 +1819,21 @@ namespace Lisp
                                 KW.StudlyName, "StandardGenericFunction");
 
 
-        static readonly StandardObject StandardAccessorMethod =
+        static readonly StandardObject standardAccessorMethod =
             (StandardObject) CL.MakeInstance (StandardClass,
                                        KW.DirectSlots, CL.List (),
                                        KW.DirectSuperclasses, CL.List (StandardMethod),
                                        KW.Name, QuoteStandardAccessorMethod,
                                        KW.StudlyName, "StandardAccessorMethod");
 
-        static readonly StandardObject StandardReaderMethod =
+        static readonly StandardObject standardReaderMethod =
             (StandardObject) CL.MakeInstance (StandardClass,
                                KW.DirectSlots, CL.List (),
                                KW.DirectSuperclasses, CL.List (StandardAccessorMethod),
                                KW.Name, QuoteStandardReaderMethod,
                                KW.StudlyName, "StandardReaderMethod");
 
-        static readonly StandardObject StandardWriterMethod =
+        static readonly StandardObject standardWriterMethod =
             (StandardObject) CL.MakeInstance (StandardClass,
                                KW.DirectSlots, CL.List (),
                                KW.DirectSuperclasses, CL.List (StandardAccessorMethod),
@@ -1532,7 +1846,7 @@ namespace Lisp
                                               KW.Name, QuoteGenericFunctionMethodClass,
                                               KW.StudlyName, "GenericFunctionMethodClass",
                                               KW.LambdaList, CL.List (QuoteGenericFunction));
-        
+
         static readonly StandardObject allocateInstance =
             (StandardObject) CL.MakeInstance (StandardGenericFunction,
                                               KW.Name, QuoteAllocateInstance,
@@ -1570,7 +1884,7 @@ namespace Lisp
                                               KW.StudlyName, "AddMethod",
                                               KW.LambdaList, CL.List (QuoteGenericFunction, QuoteMethod));
 
-        static readonly List<StandardObject> GenericInvocationGenerics = 
+        static readonly List<StandardObject> GenericInvocationGenerics =
             new List<StandardObject> {computeDiscriminatingFunction,
                                       computeApplicableMethods,
                                       computeEffectiveMethod,
@@ -1591,19 +1905,19 @@ namespace Lisp
         static bool IsShorter (Cons left, Cons right)
         {
             return (right != null)
-                && ((left == null) || IsShorter ((Cons) left.Cdr,(Cons) right.Cdr));
+                && ((left == null) || IsShorter ((Cons) left.Cdr, (Cons) right.Cdr));
         }
 
         static bool SameMethodSignatureLoop (Cons leftSpecs, Cons rightSpecs)
         {
             if (leftSpecs != null)
-                return (rightSpecs != null) 
+                return (rightSpecs != null)
                      && Object.ReferenceEquals (leftSpecs, rightSpecs)
-                     && SameMethodSignatureLoop ((Cons)leftSpecs.Cdr, (Cons)rightSpecs.Cdr);
-             else 
+                     && SameMethodSignatureLoop ((Cons) leftSpecs.Cdr, (Cons) rightSpecs.Cdr);
+            else
                 return rightSpecs == null;
 
-       }
+        }
 
         static bool SameMethodSignature (StandardObject left, StandardObject right)
         {
@@ -1623,7 +1937,7 @@ namespace Lisp
         {
             Cons tables = InternalGenericSingletonsList (generic);
             Cons specs = InternalMethodSpecializers (method);
-            Symbol qualifier =  InternalMethodQualifier (method);
+            Symbol qualifier = InternalMethodQualifier (method);
             if (IsShorter (tables, specs)) {
                 tables = (Cons) CL.Append (tables, nFalses (CL.Length (specs) - CL.Length (tables)));
                 InternalSetGenericSingletonsList (generic, tables);
@@ -1631,13 +1945,13 @@ namespace Lisp
             extendSingletonsList (specs, tables);
             if (GenericInvocationGenerics.Contains (generic)) {
                 GenericApplicationCacheTag = new Cons (null, null);
-                InternalSetGenericApplicationCache (generic, new Cons (GenericApplicationCacheTag, new MethodCache()));
+                InternalSetGenericApplicationCache (generic, new Cons (GenericApplicationCacheTag, new MethodCache ()));
             }
             InternalChangeGenericMethods (generic, (existingMethods) => new Cons (method, CL.RemoveIf (new Predicate (delegate (object existingMethod)
             {
                 return SameMethodSignature ((StandardObject) existingMethod, method);
             }), existingMethods)));
-            FuncallHandler df =(FuncallHandler) ComputeDiscriminatingFunction (generic);
+            MethodInfo df = (MethodInfo) ComputeDiscriminatingFunction (generic);
             setFuncallableInstanceFunction (generic, df);
             return null;
         }
@@ -1646,7 +1960,7 @@ namespace Lisp
         {
             if (arguments.Length != 2)
                 throw new ArgumentException ("Wrong number of arguments to bootstrapAddMethod");
-            return bootstrapAddMethodImpl (GuaranteeGeneric ((StandardObject) arguments[0]), GuaranteeMethod ((StandardObject) arguments[1]));
+            return bootstrapAddMethodImpl (GuaranteeGeneric ((StandardObject) arguments [0]), GuaranteeMethod ((StandardObject) arguments [1]));
         }
 
         static object bootstrapGenericFunctionMethodClass (StandardObject self, object [] arguments)
@@ -1658,7 +1972,7 @@ namespace Lisp
         {
             StandardObject firstMethod = (StandardObject) CL.Car (InternalGenericMethods (generic));
             Delegate procedure = InternalMethodProcedure (firstMethod);
-            FuncallHandler answer = (FuncallHandler) procedure.DynamicInvoke (null, new object [] {generic});
+            FuncallHandler answer = (FuncallHandler) procedure.DynamicInvoke (null, new object [] { generic });
             return answer;
         }
 
@@ -1716,7 +2030,7 @@ namespace Lisp
             if (thisTable1 != null && thisTable1.ContainsKey (thisArg))
                 thisKey = thisArg;
             else
-                thisKey = ClassOf (thisArg).SerialNumber();
+                thisKey = ClassOf (thisArg).SerialNumber ();
             return getKeysLoop (arguments, argindex + 1, CL.Cdr (tables), new Cons (thisKey, keys));
         }
 
@@ -1731,7 +2045,7 @@ namespace Lisp
         {
             Cons appCache = InternalGenericApplicationCache (generic);
             Cons lambdaList = InternalGenericLambdaList (generic);
-            Cons singletons =  InternalGenericSingletonsList (generic);
+            Cons singletons = InternalGenericSingletonsList (generic);
             Cons keys = getKeys (arguments, singletons);
             bool isGroundCase = GenericInvocationGenerics.Contains (generic)
                 && arguments.Length > 0
@@ -1740,7 +2054,7 @@ namespace Lisp
 
             // check if we need to flush the cache
             if (!object.ReferenceEquals (appCache.Car, GenericApplicationCacheTag)) {
-                appCache = new Cons (GenericApplicationCacheTag, new MethodCache());
+                appCache = new Cons (GenericApplicationCacheTag, new MethodCache ());
                 InternalSetGenericApplicationCache (generic, appCache);
             }
 
@@ -1793,7 +2107,7 @@ namespace Lisp
 
             return CL.Reverse (result);
         }
-        
+
         static Cons SortMethods (Cons methodList, MethodCompare2 comp)
         {
             if (methodList == null)
@@ -1908,7 +2222,7 @@ namespace Lisp
             throw new NotImplementedException ();
         }
 
-        
+
 
         static object ListRef (Cons args, int n)
         {
@@ -1977,10 +2291,10 @@ namespace Lisp
         }
 
         static StandardObject initializeInstance =
-	         (StandardObject) CL.MakeInstance (StandardGenericFunction,
-					   KW.Name, QuoteInitializeInstance,
-					   KW.StudlyName, "InitializeInstance",
-					   KW.LambdaList, CL.List (QuoteInstance, QuoteAndRest, QuoteInitargs));
+             (StandardObject) CL.MakeInstance (StandardGenericFunction,
+                       KW.Name, QuoteInitializeInstance,
+                       KW.StudlyName, "InitializeInstance",
+                       KW.LambdaList, CL.List (QuoteInstance, QuoteAndRest, QuoteInitargs));
 
         delegate object InitializeInstanceMethodSignature (NextMethodFunction callNextMethod, StandardObject instance, params object [] initargs);
         static object methodInitializeInstanceAll (NextMethodFunction callNextMethod, StandardObject instance, params object [] initargs)
@@ -1988,7 +2302,12 @@ namespace Lisp
             throw new NotImplementedException ("methodInitializeInstanceAll");
         }
 
-
+        static void InitializeSlot (StandardObject instance, StandardObject effectiveSlot, int index, Cons initargList)
+        {
+            string slotName = internalSlotDefinitionName (effectiveSlot).Name;
+            internalSetSlotDefinitionLocation (effectiveSlot, index);
+            return;
+        }
 
         static object methodInitializeInstanceStdObj (NextMethodFunction callNextMethod, StandardObject instance, params object [] initargs)
         {
@@ -2001,8 +2320,8 @@ namespace Lisp
                 }
             }
             int index = 0;
-            foreach (SlotInitializer init in (ConsList<SlotInitializer>) internalClassSlotInitializers (closClass)) {
-                init.Initialize (instance, index, initargList);
+            foreach (StandardObject effectiveSlot in (ConsList<StandardObject>) internalClassEffectiveSlots (closClass)) {
+                InitializeSlot (instance, effectiveSlot, index, initargList);
                 index += 1;
             }
             return null;
@@ -2054,7 +2373,7 @@ namespace Lisp
             StandardObject candidate = SelectCplCandidate (cpls);
             return MergeCpls ((Cons) CL.Map (QuoteList, new MapFunction ((cpList) => (cpList == null)
                                                                     ? null
-                                                                    : ((StandardObject)((Cons) cpList).Car == candidate)
+                                                                    : ((StandardObject) ((Cons) cpList).Car == candidate)
                                                                     ? ((Cons) cpList).Cdr
                                                                     : cpList),
                                                         cpls),
@@ -2063,7 +2382,7 @@ namespace Lisp
         }
 
         delegate Cons computeClassPrecedenceListMethodSignature (NextMethodFunction callNextMethod, StandardObject closClass);
-        static Cons computeClassPrecedenceListMethod  (NextMethodFunction callNextMethod, StandardObject closClass)
+        static Cons computeClassPrecedenceListMethod (NextMethodFunction callNextMethod, StandardObject closClass)
         {
             Cons superclasses = internalClassDirectSuperclasses (closClass);
             Cons cpls = (Cons) CL.Map (QuoteList, internalClassPrecedenceList, superclasses);
@@ -2077,24 +2396,26 @@ namespace Lisp
                                               KW.LambdaList, CL.List (QuoteClass));
 
         delegate Cons computeSlotsMethodSignature (NextMethodFunction callNextMethod, StandardObject closClass);
-        static Cons computeSlotsMethod  (NextMethodFunction callNextMethod, StandardObject closClass)
+        static Cons computeSlotsMethod (NextMethodFunction callNextMethod, StandardObject closClass)
         {
             Dictionary<Symbol, ConsList<StandardObject>> allDirectSlots = new Dictionary<Symbol, ConsList<StandardObject>> ();
-            foreach (StandardObject super in CL.Reverse < StandardObject> (internalClassPrecedenceList (closClass))) {
-                foreach (StandardObject directSlot in internalClassDirectSlots (super)) {
-                    ConsList<StandardObject> probe;
-                    Symbol name = internalSlotDefinitionName (directSlot);
-                    if (allDirectSlots.TryGetValue (name, out probe) == true) {
-                        probe = new ConsList<StandardObject> (directSlot, probe);
-                        allDirectSlots.Remove (name);
-                        allDirectSlots.Add (name, probe);
-                    }
-                    else {
-                        probe = new ConsList<StandardObject> (directSlot, null);
-                        allDirectSlots.Add (name, probe);
+            foreach (StandardObject super in (Cons) CL.Reverse (internalClassPrecedenceList (closClass))) {
+                ConsList<StandardObject> directSlots = internalClassDirectSlots (super);
+                if (directSlots != null) {
+                    foreach (StandardObject directSlot in directSlots) {
+                        ConsList<StandardObject> probe;
+                        Symbol name = internalSlotDefinitionName (directSlot);
+                        if (allDirectSlots.TryGetValue (name, out probe) == true) {
+                            probe = new ConsList<StandardObject> (directSlot, probe);
+                            allDirectSlots.Remove (name);
+                            allDirectSlots.Add (name, probe);
+                        }
+                        else {
+                            probe = new ConsList<StandardObject> (directSlot, null);
+                            allDirectSlots.Add (name, probe);
+                        }
                     }
                 }
-
                 throw new NotImplementedException ();
             }
             throw new NotImplementedException ();
@@ -2125,7 +2446,7 @@ namespace Lisp
             internalSetClassDirectSuperclasses (instance, supers);
 
             Cons directSlotSpecs = (Cons) Utility.GetArg (initargList, KW.DirectSlots, null);
-            ConsList<StandardObject> directSlots = (ConsList<StandardObject>) CL.Map<Cons, StandardObject> (QuoteList, new MapFunction<Cons,StandardObject> (makeDirectSlot), directSlotSpecs);
+            ConsList<StandardObject> directSlots = (ConsList<StandardObject>) CL.Map<Cons, StandardObject> (QuoteList, new MapFunction<Cons, StandardObject> (makeDirectSlot), directSlotSpecs);
             internalSetClassDirectSlots (instance, directSlots);
 
             Cons cpl = (Cons) ComputeClassPrecedenceList (instance);
@@ -2171,7 +2492,7 @@ namespace Lisp
         }
 
 
-        
+
         static StandardObject methodQualifier =
             (StandardObject) CL.MakeInstance (StandardGenericFunction,
                                               KW.MethodClass, StandardReaderMethod,
@@ -2185,7 +2506,7 @@ namespace Lisp
             return internalMethodQualifier (GuaranteeMethod (method));
         }
 
-        static StandardObject methodSpecializers =
+        static readonly StandardObject methodSpecializers =
             (StandardObject) CL.MakeInstance (StandardGenericFunction,
                                       KW.MethodClass, StandardReaderMethod,
                                       KW.Name, QuoteMethodSpecializers,
@@ -2201,19 +2522,19 @@ namespace Lisp
         delegate object AllocateInstanceMethodSignature (NextMethodFunction callNextMethod, StandardObject closClass, params object [] initargs);
         static object methodAllocateStandardInstance (NextMethodFunction callNextMethod, StandardObject closClass, params object [] initargs)
         {
-            return ManifestInstance.CreateInstance (closClass, CL.Length (internalClassSlotInitializers (closClass)));
+            return ManifestInstance.CreateInstance (closClass, ((ICollection<StandardObject>) internalClassEffectiveSlots (closClass)).Count);
         }
 
         static object methodAllocateFuncallableInstance (NextMethodFunction callNextMethod, StandardObject closClass, params object [] initargs)
         {
-            return ManifestInstance.CreateFuncallableInstance (closClass, ((ICollection<SlotInitializer>)internalClassSlotInitializers (closClass)).Count);
+            return ManifestInstance.CreateFuncallableInstance (closClass, ((ICollection<StandardObject>) internalClassEffectiveSlots (closClass)).Count);
         }
 
         static bool bootstrapStep2Function ()
         {
-            setFuncallableInstanceFunction (addMethod, bootstrapAddMethod);
-            setFuncallableInstanceFunction (genericFunctionMethodClass, bootstrapGenericFunctionMethodClass);
-            setFuncallableInstanceFunction (computeDiscriminatingFunction, bootstrapComputeDiscriminatingFunction);
+            setFuncallableInstanceFunction (addMethod, Function ("bootstrapAddMethod"));
+            setFuncallableInstanceFunction (genericFunctionMethodClass, Function ("bootstrapGenericFunctionMethodClass"));
+            setFuncallableInstanceFunction (computeDiscriminatingFunction, Function ("bootstrapComputeDiscriminatingFunction"));
 
             // Now we can a method to ComputeDiscriminatingFunction.
             CL.AddMethod (ComputeDiscriminatingFunction,
@@ -2222,7 +2543,7 @@ namespace Lisp
                                            KW.StudlyName, "Method:ComputeDiscriminatingFunction",
                                            KW.Procedure, new ComputeDiscriminatingFunctionMethodSignature (realMethodComputeDiscriminatingFunction),
                                            KW.Specializers, CL.List (StandardGenericFunction)));
-     
+
             CL.AddMethod (ComputeApplicableMethods,
                           CL.MakeInstance (GenericFunctionMethodClass (ComputeApplicableMethods),
                                            KW.Name, QuoteMethodComputeApplicableMethods,
@@ -2250,7 +2571,7 @@ namespace Lisp
                                            KW.Name, QuoteMethodDefaultInitargs,
                                            KW.StudlyName, "Method:DefaultInitargs",
                                            KW.Procedure, new DefaultInitargsMethodSignature (methodDefaultInitargs),
-                                           KW.Specializers, CL.List (ClosClass)));  
+                                           KW.Specializers, CL.List (ClosClass)));
 
             // Make sure we can inspect methods for duplicates when adding.
             CL.AddMethod (MethodQualifier,
@@ -2446,7 +2767,7 @@ namespace Lisp
 
                 Symbol name = internalMethodName (method);
                 if (name == null || name == QuoteAnonymous)
-                    internalSetMethodName (method, 
+                    internalSetMethodName (method,
                         ComputeMethodName (internalMethodSpecializers (method),
                                            internalGenericName (generic)));
                 return oldAdder (generic, method);
@@ -2470,11 +2791,11 @@ namespace Lisp
                                                            KW.StudlyName, "AddMethod",
                                                            KW.LambdaList, CL.List (QuoteGenericFunction, QuoteMethod));
 
-             oldAddMethod (addMethod,
-                CL.MakeInstance (GenericFunctionMethodClass (addMethod),
-                                 KW.StudlyName, "METHOD:add-method",
-                                 KW.Specializers, CL.List (StandardGenericFunction, StandardMethod),
-                                 KW.Procedure, MethodAdder.Create (oldAddMethod)));
+            oldAddMethod (addMethod,
+               CL.MakeInstance (GenericFunctionMethodClass (addMethod),
+                                KW.StudlyName, "METHOD:add-method",
+                                KW.Specializers, CL.List (StandardGenericFunction, StandardMethod),
+                                KW.Procedure, MethodAdder.Create (oldAddMethod)));
             return true;
         }
 
@@ -2484,7 +2805,7 @@ namespace Lisp
         delegate StandardObject EnsureGenericFunctionSignatureSymbol (Symbol name, params object [] keyargs);
         static StandardObject ensureGenericFunctionMethodSymbol (Symbol name, params object [] keyargs)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException ();
         }
 
         delegate StandardObject EnsureGenericFunctionSignatureList (Cons name, params object [] keyargs);
@@ -2498,7 +2819,7 @@ namespace Lisp
                  (StandardObject) CL.MakeInstance (StandardGenericFunction,
                                                     KW.Name, QuoteEnsureGenericFunction,
                                                     KW.StudlyName, "EnsureGenericFunction",
-                                                    KW.LambdaList,               
+                                                    KW.LambdaList,
                                                     CL.List (
                                                           QuoteFunctionName,
                                                           QuoteAndKey,
@@ -2520,10 +2841,10 @@ namespace Lisp
                                                                                  KW.Name, QuoteMethodEnsureGenericFunction,
                                                                                  KW.StudlyName, "METHOD:ensure-generic-function",
                                                                                  KW.Specializers, CL.List (typeof (Lisp.Cons)),
- 
-                                                                                 
-                                                                                KW.Procedure, new EnsureGenericFunctionSignatureList(ensureGenericFunctionMethodList)));
- 
+
+
+                                                                                KW.Procedure, new EnsureGenericFunctionSignatureList (ensureGenericFunctionMethodList)));
+
         delegate bool ValidateSuperclassMethodSignature (NextMethodFunction callNextMethod, StandardObject closClass, StandardObject superclass);
         static bool validateSuperclassMethod (NextMethodFunction callNextMethod, StandardObject closClass, StandardObject superclass)
         {
@@ -2539,18 +2860,361 @@ namespace Lisp
                                                                           KW.Specializers, CL.List (closClass, closClass),
                                                                           KW.Procedure, new ValidateSuperclassMethodSignature (validateSuperclassMethod)));
 
+
+        static readonly StandardObject ensureClass = (StandardObject) EnsureGenericFunction (QuoteEnsureClass, KW.LambdaList, CL.List ());
+
+        // How we would *really* like to define these.
+
+        // static readonly StandardObject closClass = (StandardObject) ensureClass ();
+        // static readonly StandardObject builtInClass = (StandardObject) ensureClass ();
+        // static readonly StandardObject directSlotDefinition = (StandardObject) ensureClass ();
+        // static readonly StandardObject effectiveSlotDefinition = (StandardObject) ensureClass ();
+        static readonly StandardObject eqlSpecializer = (StandardObject) ensureClass ();
+        static readonly StandardObject forwardReferencedClass = (StandardObject) ensureClass ();
+        // static readonly StandardObject funcallableStandardClass = (StandardObject) ensureClass ();
+        // static readonly StandardObject funcallableStandardObject = (StandardObject) ensureClass ();
+        // static readonly StandardObject genericFunction = (StandardObject) ensureClass ();
+        // static readonly StandardObject metaobject = (StandardObject) ensureClass ();
+        // static readonly StandardObject method = (StandardObject) ensureClass ();
+        // static readonly StandardObject slotDefinition = (StandardObject) ensureClass ();
+        // static readonly StandardObject specializer = (StandardObject) ensureClass ();
+        // static readonly StandardObject standardClass = (StandardObject) ensureClass ();
+        static readonly StandardObject standardDirectSlotDefinition = (StandardObject) ensureClass ();
+        // static readonly StandardObject standardEffectiveSlotDefinition = (StandardObject) ensureClass ();
+        // static readonly StandardObject standardGenericFunction = (StandardObject) ensureClass ();
+        // static readonly StandardObject standardMethod = (StandardObject) ensureClass ();
+        // static readonly StandardObject standardObjectClass = (StandardObject) ensureClass ();
+        // static readonly StandardObject standardReaderMethod = (StandardObject) ensureClass ();
+        // static readonly StandardObject standardSlotDefinition = (StandardObject) ensureClass ();
+        // static readonly StandardObject standardWriterMethod = (StandardObject) ensureClass ();
+        // static readonly StandardObject top = (StandardObject) ensureClass ();
+
+        static readonly StandardObject accessorMethodSlotDefinition =
+            (StandardObject) ensureGenericFunction (QuoteAccessorMethodSlotDefinition, KW.LambdaList, CL.List (QuoteMethod));
+
+        static readonly StandardObject addDependent =
+            (StandardObject) ensureGenericFunction (QuoteAddDependent, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject addDirectMethod =
+            (StandardObject) ensureGenericFunction (QuoteAddDirectMethod, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject addDirectSubclass =
+            (StandardObject) ensureGenericFunction (QuoteAddDirectSubclass, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject addMethod = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject allocateInstance = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject changeClass =
+            (StandardObject) ensureGenericFunction (QuoteChangeClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject classDefaultInitargs =
+            (StandardObject) ensureGenericFunction (QuoteClassDefaultInitargs, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject classDirectDefaultInitargs =
+            (StandardObject) ensureGenericFunction (QuoteClassDirectDefaultInitargs, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject classDirectSlots =
+            (StandardObject) ensureGenericFunction (QuoteClassDirectSlots, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject classDirectSubclasses =
+            (StandardObject) ensureGenericFunction (QuoteClassDirectSubclasses, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject classDirectSuperclasses =
+            (StandardObject) ensureGenericFunction (QuoteClassDirectSuperclasses, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject className = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject classPrecedenceList =
+            (StandardObject) ensureGenericFunction (QuoteClassPrecedenceList, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject classPrototype =
+            (StandardObject) ensureGenericFunction (QuoteClassPrototype, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject classSlots =
+            (StandardObject) ensureGenericFunction (QuoteClassSlots, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject computeApplicableMethods = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject computeApplicableMethodsUsingClasses =
+            (StandardObject) ensureGenericFunction (QuoteComputeApplicableMethodsUsingClasses, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject computeClassPrecedenceList = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject computeDefaultInitargs =
+            (StandardObject) ensureGenericFunction (QuoteComputeDefaultInitargs, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject computeDiscriminatingFunction = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject computeEffectiveMethod = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject computeEffectiveSlotDefinition =
+            (StandardObject) ensureGenericFunction (QuoteComputeEffectiveSlotDefinition, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject computeSlots = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject computeMethodMoreSpecific = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject defaultInitargs = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject directSlotDefinitionClass =
+            (StandardObject) ensureGenericFunction (QuoteDirectSlotDefinitionClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject effectiveSlotDefinitionClass =
+            (StandardObject) ensureGenericFunction (QuoteEffectiveSlotDefinitionClass, KW.LambdaList, CL.List ());
+
+        // Needed to define the metaclasses
+        // static readonly StandardObject ensureClass = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject ensureClassUsingClass =
+            (StandardObject) ensureGenericFunction (QuoteEnsureClassUsingClass, KW.LambdaList, CL.List ());
+
+        // Needed to define the generic functions (including itself!)
+        // static readonly StandardObject ensureGenericFunction = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject ensureGenericFunctionUsingClass =
+            (StandardObject) ensureGenericFunction (QuoteEnsureGenericFunctionUsingClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject eqlSpecializerObject =
+            (StandardObject) ensureGenericFunction (QuoteEqlSpecializerObject, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject extractLambdaList =
+            (StandardObject) ensureGenericFunction (QuoteExtractLambdaList, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject extractSpecializerNames =
+            (StandardObject) ensureGenericFunction (QuoteExtractSpecializerNames, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject finalizeInheritance =
+            (StandardObject) ensureGenericFunction (QuoteFinalizeInheritance, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject findClass =
+            (StandardObject) ensureGenericFunction (QuoteFindClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject findMethod =
+            (StandardObject) ensureGenericFunction (QuoteFindMethod, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject findMethodCombination =
+            (StandardObject) ensureGenericFunction (QuoteFindMethodCombination, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject functionKeywords =
+            (StandardObject) ensureGenericFunction (QuoteFunctionKeywords, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject genericFunctionArgumentPrecedenceOrder =
+            (StandardObject) ensureGenericFunction (QuoteGenericFunctionArgumentPrecedenceOrder, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject genericFunctionDeclarations =
+            (StandardObject) ensureGenericFunction (QuoteGenericFunctionDeclarations, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject genericFunctionLambdaList =
+            (StandardObject) ensureGenericFunction (QuoteGenericFunctionLambdaList, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject genericFunctionMethodClass = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject genericFunctionMethodCombination =
+            (StandardObject) ensureGenericFunction (QuoteGenericFunctionMethodCombination, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject genericFunctionMethods =
+            (StandardObject) ensureGenericFunction (QuoteGenericFunctionMethods, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject genericFunctionName = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject initializeInstance = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject internEqlSpecializer =
+            (StandardObject) ensureGenericFunction (QuoteInternEqlSpecializer, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject isClassFinalized =
+            (StandardObject) ensureGenericFunction (QuoteIsClassFinalized, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject makeInstance = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject makeInstancesObsolete =
+            (StandardObject) ensureGenericFunction (QuoteMakeInstancesObsolete, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject makeLoadForm =
+            (StandardObject) ensureGenericFunction (QuoteMakeLoadForm, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject makeMethodLambda =
+            (StandardObject) ensureGenericFunction (QuoteMakeMethodLambda, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject mapDependents =
+            (StandardObject) ensureGenericFunction (QuoteMapDependents, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject methodCombination =
+            (StandardObject) ensureGenericFunction (QuoteMethodCombination, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject methodFunction =
+            (StandardObject) ensureGenericFunction (QuoteMethodFunction, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject methodGenericFunction =
+            (StandardObject) ensureGenericFunction (QuoteMethodGenericFunction, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject methodLambdaList =
+            (StandardObject) ensureGenericFunction (QuoteMethodLambdaList, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject methodSpecializers = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject methodQualifier = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject noApplicableMethod =
+            (StandardObject) ensureGenericFunction (QuoteNoApplicableMethod, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject noNextMethod =
+            (StandardObject) ensureGenericFunction (QuoteNoNextMethod, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject readerMethodClass =
+            (StandardObject) ensureGenericFunction (QuoteReaderMethodClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject reinitializeInstance =
+            (StandardObject) ensureGenericFunction (QuoteReinitializeInstance, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject removeDependents =
+            (StandardObject) ensureGenericFunction (QuoteRemoveDependents, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject removeDirectMethod =
+            (StandardObject) ensureGenericFunction (QuoteRemoveDirectMethod, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject removeDirectSubclass =
+            (StandardObject) ensureGenericFunction (QuoteRemoveDirectSubclass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject removeMethod =
+            (StandardObject) ensureGenericFunction (QuoteRemoveMethod, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject sharedInitialize = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject setClassName =
+            (StandardObject) ensureGenericFunction (QuoteSetClassName, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject setGenericFunctionName =
+            (StandardObject) ensureGenericFunction (QuoteSetGenericFunctionName, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject setSlotValue =
+            (StandardObject) ensureGenericFunction (QuoteSetSlotValue, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject setSlotValueUsingClass =
+            (StandardObject) ensureGenericFunction (QuoteSetSlotValueUsingClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject isSlotBoundUsingClass =
+            (StandardObject) ensureGenericFunction (QuoteIsSlotBoundUsingClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotDefinitionAllocation =
+            (StandardObject) ensureGenericFunction (QuoteSlotDefinitionAllocation, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotDefinitionInitargs =
+            (StandardObject) ensureGenericFunction (QuoteSlotDefinitionInitargs, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotDefinitionInitform =
+            (StandardObject) ensureGenericFunction (QuoteSlotDefinitionInitform, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotDefinitionInitfunction =
+            (StandardObject) ensureGenericFunction (QuoteSlotDefinitionInitfunction, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotDefinitionLocation =
+            (StandardObject) ensureGenericFunction (QuoteSlotDefinitionLocation, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotDefinitionName =
+            (StandardObject) ensureGenericFunction (QuoteSlotDefinitionName, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotDefinitionType =
+            (StandardObject) ensureGenericFunction (QuoteSlotDefinitionType, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotDefinitionReaders =
+            (StandardObject) ensureGenericFunction (QuoteSlotDefinitionReaders, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotDefinitionWriters =
+            (StandardObject) ensureGenericFunction (QuoteSlotDefinitionWriters, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotMakunboundUsingClass =
+            (StandardObject) ensureGenericFunction (QuoteSlotMakunboundUsingClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotMissing =
+            (StandardObject) ensureGenericFunction (QuoteSlotMissing, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotUnbound =
+            (StandardObject) ensureGenericFunction (QuoteSlotUnbound, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject slotValueUsingClass =
+            (StandardObject) ensureGenericFunction (QuoteSlotValueUsingClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject specializerDirectGenericFunctions =
+            (StandardObject) ensureGenericFunction (QuoteSpecializerDirectGenericFunctions, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject specializerDirectMethods =
+            (StandardObject) ensureGenericFunction (QuoteSpecializerDirectMethods, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject standardAccessorMethod = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject updateDependent =
+            (StandardObject) ensureGenericFunction (QuoteUpdateDependent, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject updateInstanceForDifferentClass =
+            (StandardObject) ensureGenericFunction (QuoteUpdateInstanceForDifferentClass, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject updateInstanceForRedefinedClass =
+            (StandardObject) ensureGenericFunction (QuoteUpdateInstanceForRedefinedClass, KW.LambdaList, CL.List ());
+
+        // static readonly StandardObject validateSuperclass = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
+
+        static readonly StandardObject writerMethodClass =
+            (StandardObject) ensureGenericFunction (QuoteWriterMethodClass, KW.LambdaList, CL.List ());
+
         #region ExportedGenerics
 
-        static public StandardObject AddMethod
+        static ClassOfFunction ClassOf
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return classOf;
+            }
+        }
+
+        public static StandardObject AccessorMethodSlotDefinition
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return accessorMethodSlotDefinition;
+            }
+        }
+
+        public static StandardObject AddDependent
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return addDependent;
+            }
+        }
+
+        public static StandardObject AddDirectMethod
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return addDirectMethod;
+            }
+        }
+
+        public static StandardObject AddDirectSubclass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return addDirectSubclass;
+            }
+        }
+
+        public static StandardObject AddMethod
+        {
+            [DebuggerStepThrough]
             get
             {
                 return addMethod;
             }
         }
 
-        static public StandardObject AllocateInstance
+        public static StandardObject AllocateInstance
         {
             [DebuggerStepThrough]
             get
@@ -2559,27 +3223,115 @@ namespace Lisp
             }
         }
 
-        static public StandardObject ClassName
+        public static StandardObject BuiltInClass
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return builtInClass;
+            }
+        }
+
+        public static StandardObject ChangeClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return changeClass;
+            }
+        }
+
+        public static StandardObject ClassDefaultInitargs
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return classDefaultInitargs;
+            }
+        }
+
+        public static StandardObject ClassDirectDefaultInitargs
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return classDirectDefaultInitargs;
+            }
+        }
+
+        public static StandardObject ClassDirectSlots
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return classDirectSlots;
+            }
+        }
+
+        public static StandardObject ClassDirectSubclasses
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return classDirectSubclasses;
+            }
+        }
+
+        public static StandardObject ClassDirectSuperclasses
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return classDirectSuperclasses;
+            }
+        }
+
+        public static StandardObject ClassName
+        {
+            [DebuggerStepThrough]
             get
             {
                 return className;
             }
         }
 
-        static public StandardObject ClosClass
+        public static StandardObject ClassPrecedenceList
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return classPrecedenceList;
+            }
+        }
+
+        public static StandardObject ClassPrototype
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return classPrototype;
+            }
+        }
+
+        public static StandardObject ClassSlots
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return classSlots;
+            }
+        }
+
+        public static StandardObject ClosClass
+        {
+            [DebuggerStepThrough]
             get
             {
                 return closClass;
             }
         }
 
- 
-
-        static public StandardObject ComputeApplicableMethods
+        public static StandardObject ComputeApplicableMethods
         {
             [DebuggerStepThrough]
             get
@@ -2588,7 +3340,16 @@ namespace Lisp
             }
         }
 
-        static public StandardObject ComputeClassPrecedenceList
+        public static StandardObject ComputeApplicableMethodsUsingClasses
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return computeApplicableMethodsUsingClasses;
+            }
+        }
+
+        public static StandardObject ComputeClassPrecedenceList
         {
             [DebuggerStepThrough]
             get
@@ -2597,16 +3358,25 @@ namespace Lisp
             }
         }
 
-        static public StandardObject ComputeDiscriminatingFunction
+        public static StandardObject ComputeDefaultInitargs
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return computeDefaultInitargs;
+            }
+        }
+
+        public static StandardObject ComputeDiscriminatingFunction
+        {
+            [DebuggerStepThrough]
             get
             {
                 return computeDiscriminatingFunction;
             }
         }
 
-        static public StandardObject ComputeEffectiveMethod
+        public static StandardObject ComputeEffectiveMethod
         {
             [DebuggerStepThrough]
             get
@@ -2615,17 +3385,16 @@ namespace Lisp
             }
         }
 
-
-        static public StandardObject ComputeMethodMoreSpecific
+        public static StandardObject ComputeEffectiveSlotDefinition
         {
             [DebuggerStepThrough]
             get
             {
-                return computeMethodMoreSpecific;
+                return computeEffectiveSlotDefinition;
             }
         }
 
-        static public StandardObject ComputeSlots
+        public static StandardObject ComputeSlots
         {
             [DebuggerStepThrough]
             get
@@ -2634,8 +3403,16 @@ namespace Lisp
             }
         }
 
+        public static StandardObject ComputeMethodMoreSpecific
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return computeMethodMoreSpecific;
+            }
+        }
 
-        static public StandardObject DefaultInitargs
+        public static StandardObject DefaultInitargs
         {
             [DebuggerStepThrough]
             get
@@ -2644,70 +3421,259 @@ namespace Lisp
             }
         }
 
-        static public StandardObject EnsureGenericFunction
+        public static StandardObject DirectSlotDefinition
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return directSlotDefinition;
+            }
+        }
+
+        public static StandardObject DirectSlotDefinitionClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return directSlotDefinitionClass;
+            }
+        }
+
+        public static StandardObject EffectiveSlotDefinition
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return effectiveSlotDefinition;
+            }
+        }
+
+        public static StandardObject EffectiveSlotDefinitionClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return effectiveSlotDefinitionClass;
+            }
+        }
+
+        public static StandardObject EnsureClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return ensureClass;
+            }
+        }
+
+        public static StandardObject EnsureClassUsingClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return ensureClassUsingClass;
+            }
+        }
+
+        public static StandardObject EnsureGenericFunction
+        {
+            [DebuggerStepThrough]
             get
             {
                 return ensureGenericFunction;
             }
         }
 
-        static public StandardObject FuncallableStandardClass
+        public static StandardObject EnsureGenericFunctionUsingClass
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return ensureGenericFunctionUsingClass;
+            }
+        }
+
+        public static StandardObject EqlSpecializer
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return eqlSpecializer;
+            }
+        }
+
+        public static StandardObject EqlSpecializerObject
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return eqlSpecializerObject;
+            }
+        }
+
+        public static StandardObject ExtractLambdaList
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return extractLambdaList;
+            }
+        }
+
+        public static StandardObject ExtractSpecializerNames
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return extractSpecializerNames;
+            }
+        }
+
+        public static StandardObject FinalizeInheritance
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return finalizeInheritance;
+            }
+        }
+
+        public static StandardObject FindClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return findClass;
+            }
+        }
+
+        public static StandardObject FindMethod
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return findMethod;
+            }
+        }
+
+        public static StandardObject FindMethodCombination
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return findMethodCombination;
+            }
+        }
+
+        public static StandardObject ForwardReferencedClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return forwardReferencedClass;
+            }
+        }
+
+        public static StandardObject FuncallableStandardClass
+        {
+            [DebuggerStepThrough]
             get
             {
                 return funcallableStandardClass;
             }
         }
 
-        static public StandardObject FuncallableStandardObject
+        public static StandardObject FuncallableStandardObject
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return funcallableStandardObject;
             }
         }
 
-        static public StandardObject Function
+        public static StandardObject FunctionKeywords
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
-                return function;
+                return functionKeywords;
             }
         }
 
-        static public StandardObject GenericFunction
+        public static StandardObject GenericFunction
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return genericFunction;
             }
         }
 
-        static public StandardObject GenericFunctionName
+        public static StandardObject GenericFunctionArgumentPrecedenceOrder
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
-                return genericFunctionName;
+                return genericFunctionArgumentPrecedenceOrder;
             }
         }
 
-        static public StandardObject GenericFunctionMethodClass
+        public static StandardObject GenericFunctionDeclarations
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return genericFunctionDeclarations;
+            }
+        }
+
+        public static StandardObject GenericFunctionLambdaList
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return genericFunctionLambdaList;
+            }
+        }
+
+        public static StandardObject GenericFunctionMethodClass
+        {
+            [DebuggerStepThrough]
             get
             {
                 return genericFunctionMethodClass;
             }
         }
 
-        static public StandardObject InitializeInstance
+        public static StandardObject GenericFunctionMethodCombination
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return genericFunctionMethodCombination;
+            }
+        }
+
+        public static StandardObject GenericFunctionMethods
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return genericFunctionMethods;
+            }
+        }
+
+        public static StandardObject GenericFunctionName
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return genericFunctionName;
+            }
+        }
+
+        public static StandardObject InitializeInstance
         {
             [DebuggerStepThrough]
             get
@@ -2716,52 +3682,214 @@ namespace Lisp
             }
         }
 
-        static public StandardObject MakeInstance
+        public static StandardObject InternEqlSpecializer
         {
-//            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return internEqlSpecializer;
+            }
+        }
+
+        public static StandardObject IsClassFinalized
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return isClassFinalized;
+            }
+        }
+
+        public static StandardObject MakeInstance
+        {
+            [DebuggerStepThrough]
             get
             {
                 return makeInstance;
             }
         }
 
-        static public StandardObject Metaobject
+        public static StandardObject MakeInstancesObsolete
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return makeInstancesObsolete;
+            }
+        }
+
+        public static StandardObject MakeLoadForm
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return makeLoadForm;
+            }
+        }
+
+        public static StandardObject MakeMethodLambda
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return makeMethodLambda;
+            }
+        }
+
+        public static StandardObject MapDependents
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return mapDependents;
+            }
+        }
+
+        public static StandardObject Metaobject
+        {
+            [DebuggerStepThrough]
             get
             {
                 return metaobject;
             }
         }
 
-        static public StandardObject Method
+        public static StandardObject Method
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return method;
             }
         }
 
-        static public StandardObject MethodQualifier
+        public static StandardObject MethodCombination
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
-                return methodQualifier;
+                return methodCombination;
             }
         }
 
-        static public StandardObject MethodSpecializers
+        public static StandardObject MethodFunction
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return methodFunction;
+            }
+        }
+
+        public static StandardObject MethodGenericFunction
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return methodGenericFunction;
+            }
+        }
+
+        public static StandardObject MethodLambdaList
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return methodLambdaList;
+            }
+        }
+
+        public static StandardObject MethodSpecializers
+        {
+            [DebuggerStepThrough]
             get
             {
                 return methodSpecializers;
             }
         }
 
-        static public StandardObject SharedInitialize
+        public static StandardObject MethodQualifier
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return methodQualifier;
+            }
+        }
+
+        public static StandardObject NoApplicableMethod
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return noApplicableMethod;
+            }
+        }
+
+        public static StandardObject NoNextMethod
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return noNextMethod;
+            }
+        }
+
+        public static StandardObject ReaderMethodClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return readerMethodClass;
+            }
+        }
+
+        public static StandardObject ReinitializeInstance
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return reinitializeInstance;
+            }
+        }
+
+        public static StandardObject RemoveDependents
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return removeDependents;
+            }
+        }
+
+        public static StandardObject RemoveDirectMethod
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return removeDirectMethod;
+            }
+        }
+
+        public static StandardObject RemoveDirectSubclass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return removeDirectSubclass;
+            }
+        }
+
+        public static StandardObject RemoveMethod
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return removeMethod;
+            }
+        }
+
+        public static StandardObject SharedInitialize
         {
             [DebuggerStepThrough]
             get
@@ -2770,76 +3898,331 @@ namespace Lisp
             }
         }
 
-        static public StandardObject Specializer
+        public static StandardObject SetClassName
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return setClassName;
+            }
+        }
+
+        public static StandardObject SetGenericFunctionName
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return setGenericFunctionName;
+            }
+        }
+
+        public static StandardObject SetSlotValue
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return setSlotValue;
+            }
+        }
+
+        public static StandardObject SetSlotValueUsingClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return setSlotValueUsingClass;
+            }
+        }
+
+        public static StandardObject IsSlotBoundUsingClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return isSlotBoundUsingClass;
+            }
+        }
+
+        public static StandardObject SlotDefinition
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinition;
+            }
+        }
+
+        public static StandardObject SlotDefinitionAllocation
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinitionAllocation;
+            }
+        }
+
+        public static StandardObject SlotDefinitionInitargs
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinitionInitargs;
+            }
+        }
+
+        public static StandardObject SlotDefinitionInitform
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinitionInitform;
+            }
+        }
+
+        public static StandardObject SlotDefinitionInitfunction
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinitionInitfunction;
+            }
+        }
+
+        public static StandardObject SlotDefinitionLocation
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinitionLocation;
+            }
+        }
+
+        public static StandardObject SlotDefinitionName
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinitionName;
+            }
+        }
+
+        public static StandardObject SlotDefinitionType
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinitionType;
+            }
+        }
+
+        public static StandardObject SlotDefinitionReaders
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinitionReaders;
+            }
+        }
+
+        public static StandardObject SlotDefinitionWriters
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotDefinitionWriters;
+            }
+        }
+
+        public static StandardObject SlotMakunboundUsingClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotMakunboundUsingClass;
+            }
+        }
+
+        public static StandardObject SlotMissing
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotMissing;
+            }
+        }
+
+        public static StandardObject SlotUnbound
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotUnbound;
+            }
+        }
+
+        public static StandardObject SlotValueUsingClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotValueUsingClass;
+            }
+        }
+
+        public static StandardObject Specializer
+        {
+            [DebuggerStepThrough]
             get
             {
                 return specializer;
             }
         }
 
-        static public StandardObject StandardClass
+        public static StandardObject SpecializerDirectGenericFunctions
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return specializerDirectGenericFunctions;
+            }
+        }
+
+        public static StandardObject SpecializerDirectMethods
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return specializerDirectMethods;
+            }
+        }
+
+        public static StandardObject StandardAccessorMethod
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return standardAccessorMethod;
+            }
+        }
+
+        public static StandardObject StandardClass
+        {
+            [DebuggerStepThrough]
             get
             {
                 return standardClass;
             }
         }
 
-        static public StandardObject StandardGenericFunction
+        public static StandardObject StandardDirectSlotDefinition
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return standardDirectSlotDefinition;
+            }
+        }
+
+        public static StandardObject StandardEffectiveSlotDefinition
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return standardEffectiveSlotDefinition;
+            }
+        }
+
+        public static StandardObject StandardGenericFunction
+        {
+            [DebuggerStepThrough]
             get
             {
                 return standardGenericFunction;
             }
         }
 
-        static public StandardObject StandardMethod
+        public static StandardObject StandardMethod
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return standardMethod;
             }
         }
 
-        static object StandardInstanceAccess (StandardObject instance, int location)
+        public static StandardObject StandardObjectClass
         {
-            return instance.InstanceRef (location);
-        }
-
-        static object SetStandardInstanceAccess (StandardObject instance, int location, object newValue)
-        {
-            return instance.InstanceSet (location, newValue);
-        }
-
-        static object StandardInstanceChange (StandardObject instance, int location, SlotChangingFunction change)
-        {
-            return instance.InstanceChange (location, change);
-        }
-
-        static public StandardObject StandardObjectClass
-        {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return standardObjectClass;
             }
         }
 
-        static public StandardObject Top
+        public static StandardObject StandardReaderMethod
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
+            get
+            {
+                return standardReaderMethod;
+            }
+        }
+
+        public static StandardObject StandardSlotDefinition
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return standardSlotDefinition;
+            }
+        }
+
+        public static StandardObject StandardWriterMethod
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return standardWriterMethod;
+            }
+        }
+
+        public static StandardObject Top
+        {
+            [DebuggerStepThrough]
             get
             {
                 return top;
             }
         }
 
-        static public StandardObject ValidateSuperclass
+        public static StandardObject UpdateDependent
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return updateDependent;
+            }
+        }
+
+        public static StandardObject UpdateInstanceForDifferentClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return updateInstanceForDifferentClass;
+            }
+        }
+
+        public static StandardObject UpdateInstanceForRedefinedClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return updateInstanceForRedefinedClass;
+            }
+        }
+
+        public static StandardObject ValidateSuperclass
         {
             [DebuggerStepThrough]
             get
@@ -2848,7 +4231,79 @@ namespace Lisp
             }
         }
 
+        public static StandardObject WriterMethodClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return writerMethodClass;
+            }
+        }
+
+
+        public static bool IsSlotBound (StandardObject instance, Symbol slotName)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public static bool IsSlotExists (StandardObject instance, Symbol slotName)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public static StandardObject SlotMakunbound (StandardObject instance, Symbol slotName)
+        {
+            throw new NotImplementedException ();
+            return instance;
+        }
+
+        public static object SlotValue (StandardObject instance, Symbol slotName)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public static T SlotValue<T> (StandardObject instance, Symbol slotName)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public static object StandardInstanceAccess (StandardObject instance, int location)
+        {
+            return instance.InstanceRef (location);
+        }
+
+        public static T StandardInstanceAccess<T> (StandardObject instance, int location)
+        {
+            return instance.InstanceRef<T> (location);
+        }
+
+        public static object SetStandardInstanceAccess (StandardObject instance, int location, object newValue)
+        {
+            return instance.InstanceSet (location, newValue);
+        }
+
+        public static T SetStandardInstanceAccess<T> (StandardObject instance, int location, T newValue)
+        {
+            return instance.InstanceSet<T> (location, newValue);
+        }
+
+        public static object StandardInstanceChange (StandardObject instance, int location, SlotChangingFunction change)
+        {
+            return instance.InstanceChange (location, change);
+        }
+
+        public static T StandardInstanceChange<T> (StandardObject instance, int location, SlotChangingFunction<T> change)
+        {
+            return instance.InstanceChange<T> (location, change);
+        }
+
+
         #endregion ExportedGenerics
+
+        static MethodInfo Function (string name)
+        {
+            return typeof (CLOS).GetMethod (name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        }
 
         static public string PrintStandardObject (object thing)
         {

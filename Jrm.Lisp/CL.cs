@@ -250,7 +250,7 @@ namespace Lisp
             Cons pair = thing as Cons;
             if (pair != null)
                 return pair.Car;
-            throw new NotFiniteNumberException ();
+            throw new NotImplementedException ("wrong type argument");
         }
 
         // CDAR
@@ -321,6 +321,8 @@ namespace Lisp
         {
             if (left.Equals (right))
                 return true;
+            if (left is Symbol || right is Symbol)
+                return false;
             throw new NotImplementedException ();
         }
 
@@ -555,6 +557,15 @@ namespace Lisp
                 throw new NotImplementedException ();
         }
 
+        static T ResolveFunctionSpecifier<T> (object functionSpecifier) where T : class
+        {
+            T answer = functionSpecifier as T;
+            if (answer != null)
+                return answer;
+            else
+                throw new NotImplementedException ();
+        }
+
         static public object Map (object sequenceTypeSpecifier, object functionSpecifier, params object [] sequences)
         {
             if (functionSpecifier == null)
@@ -579,7 +590,7 @@ namespace Lisp
                 throw new NotImplementedException ();
         }
 
-        delegate bool EqualityTest (object left, object right);
+
         delegate object KeySelector (object item);
 
         static int Position (object item, Cons list)
@@ -611,10 +622,40 @@ namespace Lisp
             }
             return Position (item, sequence,
                              KW.FromEnd, false,
-                             KW.Key, new KeySelector (CL.Identity),
+                             KW.Key, new Function1 (CL.Identity),
                              KW.Test, new EqualityTest (CL.Eql),
                              KW.Start, 0,
                              KW.End, CL.Length (sequence));
+        }
+
+        static public int Position (object item, object sequence,
+                            object key0, object val0)
+        {
+            return Position (item, sequence, new object [] { key0, val0 });
+        }
+
+        static public int Position (object item, object sequence,
+                            object key0, object val0,
+                            object key1, object val1)
+        {
+            throw new NotImplementedException ();
+        }
+
+        static public int Position (object item, object sequence,
+                            object key0, object val0,
+                            object key1, object val1,
+                            object key2, object val2)
+        {
+            throw new NotImplementedException ();
+        }
+
+        static public int Position (object item, object sequence,
+                            object key0, object val0,
+                            object key1, object val1,
+                            object key2, object val2,
+                            object key3, object val3)
+        {
+            throw new NotImplementedException ();
         }
 
         static public int Position (object item, object sequence,
@@ -627,18 +668,97 @@ namespace Lisp
             throw new NotImplementedException ();
         }
 
+        static int Position (object item, object sequence, object [] arguments)
+        {
+            KeywordArgument<bool> fromEnd = new KeywordArgument<bool> (KW.FromEnd);
+            KeywordArgument<object> test = new KeywordArgument<object> (KW.Test);
+            KeywordArgument<int> start = new KeywordArgument<int> (KW.Start);
+            KeywordArgument<int> end = new KeywordArgument<int> (KW.End);
+            KeywordArgument<object> key = new KeywordArgument<object> (KW.Key);
+
+            KeywordArgumentBase.ProcessKeywordArguments (
+                new KeywordArgumentBase [] { fromEnd, test, start, end, key },
+                arguments,
+                false);
+
+            return Position (item, sequence,
+                fromEnd.Supplied ? fromEnd.Value : false,
+                test.Supplied ? ResolveFunctionSpecifier<EqualityTest> (test.Value) : new EqualityTest (CL.Eql),
+                start.Supplied ? start.Value : 0,
+                end.Supplied ? end.Value : CL.Length (sequence),
+                key.Supplied ? ResolveFunctionSpecifier<Function1> (key.Value) : new Function1 (CL.Identity));
+        }
+
+        static int Position (object item, object sequence, bool fromEnd, EqualityTest test, int start, int end, Function1 key)
+        {
+            if (sequence == null)
+                return -1;
+            Cons list = sequence as Cons;
+            if (list != null)
+                return Position (item, list, fromEnd, test, start, end, key);
+            else
+                throw new NotImplementedException ();
+        }
+
+        static int Position (object item, Cons sequence, bool fromEnd, EqualityTest test, int start, int end, Function1 key)
+        {
+            if (fromEnd)
+                throw new NotImplementedException();
+
+            int answer = 0;
+            while (true) {
+                if (answer >= end)
+                    return -1;
+                if (answer >= start
+                    && test (item, key(sequence.Car)))
+                    break;
+            
+                answer += 1;
+                sequence = (Cons) sequence.Cdr;
+            }
+            return answer;
+        }
+ 
+
+        static public int PositionIf (object predicate, object sequence)
+        {
+            if (sequence == null)
+                return -1;
+            Cons list = sequence as Cons;
+            if (list != null) {
+               return PositionIf (predicate, list);
+            }
+            throw new NotImplementedException("PositionIf on non-list");
+        }
+
         static public int PositionIf<T> (Predicate<T> pred, object sequence)
         {
             if (sequence == null)
                 return -1;
             ConsList<T> cl = sequence as ConsList<T>;
             if (cl != null)
-                return PositionIf<T> ((Predicate < T >) pred, cl);
-            else
-                throw new NotImplementedException ();
+                return PositionIf<T> ((Predicate<T>) pred, cl);
+            else {
+                Cons list = sequence as Cons;
+                if (list != null)
+                    return PositionIf (pred, list);
+                else
+                    throw new NotImplementedException ();
+            }
         }
 
         static public int PositionIf<T> (Predicate<T> pred, ConsList<T> sequence)
+        {
+            int pos = 0;
+            foreach (T element in sequence) {
+                if (pred (element))
+                    return pos;
+                pos += 1;
+            }
+            return -1;
+        }
+
+        static public int PositionIf<T> (Predicate<T> pred, Cons sequence)
         {
             int pos = 0;
             foreach (T element in sequence) {

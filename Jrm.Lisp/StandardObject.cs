@@ -18,6 +18,11 @@ namespace Lisp
             this.del = del;
         }
 
+        static bool IsRestArg (ParameterInfo parameter)
+        {
+            return parameter.GetCustomAttributes (typeof (System.ParamArrayAttribute), false).Length > 0;
+        }
+
         object [] PrePend (object element, object [] arguments)
         {
             object [] answer = new object [arguments.Length + 1];
@@ -42,6 +47,16 @@ namespace Lisp
                                             new FuncallHandlerWrapper (del),
                                             FuncallMethod
                                             );
+        }
+
+        public static FuncallHandler Create (MethodInfo method)
+        {
+            ParameterInfo [] parameters = method.GetParameters ();
+            if (parameters.Length == 2
+                && parameters [0].ParameterType == typeof (StandardObject)
+                && IsRestArg (parameters[1]))
+                throw new NotImplementedException ("Working create");
+            throw new NotImplementedException ("failing create");
         }
 
     }
@@ -198,7 +213,7 @@ namespace Lisp
         {
             get
             {
-                return "{ManifestInstance " + this.serialNumber + " of " + ((Symbol) CLOS.ClassName (this.closClass)).Name + "}";
+                return "{ManifestInstance " + this.ObjectDebuggerDisplay +  "}";
             }
         }
 

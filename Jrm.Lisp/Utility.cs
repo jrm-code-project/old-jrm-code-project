@@ -26,6 +26,18 @@ namespace Lisp
             return CL.Reverse (reversedAnswer);
         }
 
+        static public Cons GetArgs (Cons list, object key)
+        {
+            if (list == null)
+                return null;
+            Cons firstPair = (Cons) list;
+            Cons secondPair = (Cons) (firstPair.Cdr);
+            if (firstPair.Car == key)
+                return new Cons (secondPair.Car, GetArgs ((Cons) secondPair.Cdr, key));
+            else
+                return GetArgs ((Cons) secondPair.Cdr, key);
+        }
+
         static public object GetArg (object list, object key, object defaultValue)
         {
             if (list == null)
