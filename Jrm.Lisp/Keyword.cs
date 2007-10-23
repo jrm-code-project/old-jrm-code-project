@@ -98,6 +98,7 @@ namespace Lisp
 
             public T Value
             {
+                [DebuggerStepThrough]
                 get
                 {
                     return this.value;

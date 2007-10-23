@@ -80,6 +80,48 @@ namespace Lisp
         }
     }
 
+    class BootstrapReader
+    {
+        int index;
+        BootstrapReader (int index)
+        {
+            this.index = index;
+        }
+
+        object Funcall (StandardObject generic, object [] arguments)
+        {
+            return ((ManifestInstance) ((StandardObject) arguments [0]).Target).Slots [index];
+        }
+
+        static public StandardObject Create (int index)
+        {
+            return ManifestInstance.CreateFuncallableInstance ((FuncallHandler) (new BootstrapReader (index).Funcall));
+        }
+    }
+
+
+    class BootstrapWriter<T>
+    {
+        int index;
+        BootstrapWriter (int index)
+        {
+            this.index = index;
+        }
+
+        object Funcall (StandardObject generic, object [] arguments)
+        {
+            object newValue = arguments[1];
+            ((ManifestInstance) ((StandardObject) arguments[0]).Target).Slots [index] = (T) newValue;
+            return newValue;
+        }
+
+        static public StandardObject Create (int index)
+        {
+            return ManifestInstance.CreateFuncallableInstance ((FuncallHandler) (new BootstrapWriter<T> (index).Funcall));
+        }
+    }
+
+
     class GroundMethodFunction
     {
         Delegate del;
@@ -486,6 +528,7 @@ namespace Lisp
         static readonly Symbol QuotePrototype = closSymbol ("PROTOTYPE");
         static readonly Symbol QuoteQualifier = closSymbol ("QUALIFIER");
         static readonly Symbol QuoteReaderMethodClass = closSymbol ("ReaderMethodClass");
+        static readonly Symbol QuoteReaders = closSymbol ("READERS");
         static readonly Symbol QuoteReinitializeInstance = closSymbol ("ReinitializeInstance");
         static readonly Symbol QuoteRemoveDependents = closSymbol ("RemoveDependents");
         static readonly Symbol QuoteRemoveDirectMethod = closSymbol ("RemoveDirectMethod");
@@ -536,13 +579,14 @@ namespace Lisp
         static readonly Symbol QuoteUpdateInstanceForRedefinedClass = closSymbol ("UpdateInstanceForRedefinedClass");
         static readonly Symbol QuoteValidateSuperclass = closSymbol ("VALIDATE-SUPERCLASS");
         static readonly Symbol QuoteWriterMethodClass = closSymbol ("WriterMethodClass");
+        static readonly Symbol QuoteWriters = closSymbol ("WRITERS");
 
         #endregion Symbols
 
         // ClassOf
         delegate StandardObject ClassOfFunction (object obj);
 
-        [DebuggerStepThroughAttribute] 
+        [DebuggerStepThroughAttribute]
         static StandardObject bootstrapClassOf (object obj)
         {
             StandardObject probe = obj as StandardObject;
@@ -564,7 +608,7 @@ namespace Lisp
                    CL.List (QuoteStudlyName, KW.StudlyName, "StudlyName"),
                    CL.List (QuotePrecedenceList, KW.StudlyName, "PrecedenceList"),
                    CL.List (QuotePrototype, KW.StudlyName, "Prototype"),
-	               CL.List (QuoteSlots, KW.StudlyName, "Slots"));
+                   CL.List (QuoteSlots, KW.StudlyName, "Slots"));
 
         static Cons SLOTS_OF_STANDARD_CLASS =
            (Cons) CL.Append (SLOTS_OF_CLOS_CLASS, null);
@@ -579,8 +623,54 @@ namespace Lisp
         static readonly StandardObject standardClass =
             bootstrapAllocateStandardClass ();
 
-        // Now fill in the slots of StandardClass.
-        // We need the effective slot definition class.
+        static readonly StandardObject setClassDefaultInitargs =
+            BootstrapWriter<Cons>.Create (CL.Position<Symbol> (QuoteDefaultInitargs, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassDirectDefaultInitargs =
+            BootstrapWriter<Cons>.Create (CL.Position<Symbol> (QuoteDirectDefaultInitargs, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassDirectSlots =
+            BootstrapWriter<Cons>.Create (CL.Position<Symbol> (QuoteDirectSlots, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassDirectSubclasses =
+            BootstrapWriter<Cons>.Create (CL.Position<Symbol> (QuoteDirectSubclasses, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassDirectSuperclasses =
+            BootstrapWriter<Cons>.Create (CL.Position<Symbol> (QuoteDirectSuperclasses, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassIsFinalized =
+            BootstrapWriter<bool>.Create (CL.Position<Symbol> (QuoteFinalizedP, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassName =
+            BootstrapWriter<Symbol>.Create (CL.Position<Symbol> (QuoteName, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassStudlyName =
+            BootstrapWriter<string>.Create (CL.Position<Symbol> (QuoteStudlyName, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassPrecedenceList =
+            BootstrapWriter<Cons>.Create (CL.Position<Symbol> (QuotePrecedenceList, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassPrototype =
+            BootstrapWriter<Cons>.Create (CL.Position<Symbol> (QuotePrototype, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setClassSlots =
+            BootstrapWriter<ConsList<StandardObject>>.Create (CL.Position<Symbol> (QuoteSlots, SLOTS_OF_STANDARD_CLASS, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly Cons standardClassAccessors =
+            CL.List (CL.List (QuoteDefaultInitargs, new ConsList<StandardObject> (setClassDefaultInitargs, null)),
+                     CL.List (QuoteDirectDefaultInitargs, new ConsList<StandardObject> (setClassDirectDefaultInitargs, null)),
+                     CL.List (QuoteDirectSlots, new ConsList<StandardObject> (setClassDirectSlots, null)),
+                     CL.List (QuoteDirectSubclasses, new ConsList<StandardObject> (setClassDirectSubclasses, null)),
+                     CL.List (QuoteDirectSuperclasses, new ConsList<StandardObject> (setClassDirectSuperclasses, null)),
+                     CL.List (QuoteFinalizedP, new ConsList<StandardObject> (setClassIsFinalized, null)),
+                     CL.List (QuoteName, new ConsList<StandardObject> (setClassName, null)),
+                     CL.List (QuoteStudlyName, new ConsList<StandardObject> (setClassStudlyName, null)),
+                     CL.List (QuotePrecedenceList, new ConsList<StandardObject> (setClassPrecedenceList, null)),
+                     CL.List (QuotePrototype, new ConsList<StandardObject> (setClassPrototype, null)),
+                     CL.List (QuoteSlots, new ConsList<StandardObject> (setClassSlots, null)));
+
+        // To fill in the slots of StandardClass
+        // we need the effective slot definition class.
         static readonly StandardObject standardEffectiveSlotDefinition =
             ManifestInstance.CreateInstance (standardClass, CL.Length (SLOTS_OF_STANDARD_CLASS));
 
@@ -591,7 +681,9 @@ namespace Lisp
                     CL.List (QuoteInitfunction, KW.StudlyName, "Initfunction"),
                     CL.List (QuoteName, KW.Initarg, KW.Name, KW.StudlyName, "Name"),
                     CL.List (QuoteStudlyName, KW.Initarg, KW.StudlyName, KW.StudlyName, "StudlyName"),
-                    CL.List (QuoteType, KW.Initarg, KW.Type, KW.StudlyName, "Type"));
+                    CL.List (QuoteReaders, KW.StudlyName, "Readers"),
+                    CL.List (QuoteType, KW.Initarg, KW.Type, KW.StudlyName, "Type"),
+                    CL.List (QuoteWriters, KW.StudlyName, "Writers"));
 
         static Cons SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION =
            (Cons) CL.Append (SLOTS_OF_STANDARD_SLOT_DEFINITION,
@@ -602,21 +694,49 @@ namespace Lisp
             return ManifestInstance.CreateInstance (standardEffectiveSlotDefinition, CL.Length (SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION));
         }
 
-        static void bootstrapSetEffectiveSlotDefinitionSlot (StandardObject effectiveSlotDefinition, Symbol slotName, object value)
-        {
-            effectiveSlotDefinition.InstanceSet (CL.Position (slotName, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, new Function1 (CL.Car)), value);
-        }
+        static readonly StandardObject setSlotDefinitionAllocation =
+            BootstrapWriter<Symbol>.Create (CL.Position<Symbol> (QuoteAllocation, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
 
-        static void bootstrapInitializeEffectiveSlot (Cons slotSpec, StandardObject effectiveSlot, int location)
+        static readonly StandardObject setSlotDefinitionInitargs =
+            BootstrapWriter<Cons>.Create (CL.Position<Symbol> (QuoteInitargs, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setSlotDefinitionInitform =
+            BootstrapWriter<object>.Create (CL.Position<Symbol> (QuoteInitform, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setSlotDefinitionInitfunction =
+            BootstrapWriter<object>.Create (CL.Position<Symbol> (QuoteInitfunction, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setSlotDefinitionLocation =
+            BootstrapWriter<int>.Create (CL.Position<Symbol> (QuoteLocation, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setSlotDefinitionName =
+            BootstrapWriter<Symbol>.Create (CL.Position<Symbol> (QuoteName, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setSlotDefinitionReaders =
+            BootstrapWriter<ConsList<StandardObject>>.Create (CL.Position<Symbol> (QuoteReaders, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setSlotDefinitionStudlyName =
+            BootstrapWriter<string>.Create (CL.Position<Symbol> (QuoteStudlyName, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setSlotDefinitionType =
+            BootstrapWriter<object>.Create (CL.Position<Symbol> (QuoteType, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+        static readonly StandardObject setSlotDefinitionWriters =
+            BootstrapWriter<ConsList<StandardObject>>.Create (CL.Position<Symbol> (QuoteWriters, SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
+
+
+        static void bootstrapInitializeEffectiveSlot (StandardObject effectiveSlot, Cons slotSpec, int location)
         {
-            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteAllocation, (Symbol) Utility.GetArg (CL.Cdr (slotSpec), KW.Allocation, KW.Instance));
-            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteInitargs, (Cons) Utility.GetArgs ((Cons) CL.Cdr (slotSpec), KW.Initargs));
-            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteInitform, null);
-            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteInitfunction, null);
-            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteLocation, location);
-            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteName, (Symbol) CL.Car (slotSpec));
-            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteStudlyName, (string) Utility.GetArg (CL.Cdr (slotSpec), KW.StudlyName, ""));
-            bootstrapSetEffectiveSlotDefinitionSlot (effectiveSlot, QuoteType, (string) Utility.GetArg (CL.Cdr (slotSpec), KW.Type, null));
+            setSlotDefinitionAllocation (effectiveSlot, (Symbol) Utility.GetArg (CL.Cdr (slotSpec), KW.Allocation, KW.Instance));
+            setSlotDefinitionInitargs (effectiveSlot, (Cons) Utility.GetArgs ((Cons) CL.Cdr (slotSpec), KW.Initargs));
+            setSlotDefinitionInitform (effectiveSlot, null);
+            setSlotDefinitionInitfunction (effectiveSlot, null);
+            setSlotDefinitionLocation (effectiveSlot, location);
+            setSlotDefinitionName (effectiveSlot, (Symbol) CL.Car (slotSpec));
+            setSlotDefinitionReaders (effectiveSlot, null);
+            setSlotDefinitionStudlyName (effectiveSlot, (string) Utility.GetArg (CL.Cdr (slotSpec), KW.StudlyName, ""));
+            setSlotDefinitionType (effectiveSlot, (string) Utility.GetArg (CL.Cdr (slotSpec), KW.Type, null));
+            setSlotDefinitionWriters (effectiveSlot, null);
         }
 
         static ConsList<StandardObject> bootstrapComputeSlots (Cons slotSpecs)
@@ -624,7 +744,7 @@ namespace Lisp
             ConsList<StandardObject> effectiveSlots = null;
             foreach (Cons slotSpec in slotSpecs) {
                 StandardObject effectiveSlot = bootstrapAllocateEffectiveSlotDefinition ();
-                bootstrapInitializeEffectiveSlot (slotSpec, effectiveSlot, (effectiveSlots == null) ? 0 : ((ICollection<StandardObject>) effectiveSlots).Count);
+                bootstrapInitializeEffectiveSlot (effectiveSlot, slotSpec, CL.Position<Symbol> ((Symbol) CL.Car (slotSpec), slotSpecs, KW.Key, (Function1<Symbol>) CL.Car<Symbol>));
                 effectiveSlots = new ConsList<StandardObject> (effectiveSlot, effectiveSlots);
             }
             return CL.Reverse<StandardObject> (effectiveSlots);
@@ -632,6 +752,31 @@ namespace Lisp
 
         static readonly ConsList<StandardObject> effectiveSlotsOfStandardEffectiveSlotDefinition = bootstrapComputeSlots (SLOTS_OF_STANDARD_EFFECTIVE_SLOT_DEFINITION);
         static readonly ConsList<StandardObject> effectiveSlotsOfStandardClass = bootstrapComputeSlots (SLOTS_OF_STANDARD_CLASS);
+
+        static bool bootstrapInitializeStandardClass ()
+        {
+            // stuff the slots in place
+            setClassSlots (standardClass, effectiveSlotsOfStandardClass);
+            setClassSlots (standardEffectiveSlotDefinition, effectiveSlotsOfStandardEffectiveSlotDefinition);
+            // Put the studly names in first for debugging.
+
+            setClassStudlyName (standardClass, "StandardClass");
+            setClassStudlyName (standardEffectiveSlotDefinition, "StandardEffectiveSlotDefinition");
+
+            // fixup standard class
+            setClassName (standardClass, QuoteStandardClass);
+
+            // fixup standard effective slot definition
+            setClassName (standardEffectiveSlotDefinition, QuoteStandardEffectiveSlotDefinition);
+
+            StandardObject lsc = standardClass;
+
+            throw new NotImplementedException ();
+            return true;
+        }
+
+        static bool bISC = bootstrapInitializeStandardClass ();
+
 
         // We need to search lists of effectiveSlots to find the name associated
         // with them.  But we need to know where the name is.
@@ -660,13 +805,13 @@ namespace Lisp
             throw new NotImplementedException ("Huh?");
         }
 
-        static int bootstrapFindEffectiveSlotNameLocation () {
-            return bootstrapFindEffectiveSlotNameSlot().InstanceRef<int>(bootstrapFindEffectiveSlotLocationLocation());
-        }
+        //static int bootstrapFindEffectiveSlotNameLocation () {
+        //    return bootstrapFindEffectiveSlotNameSlot().InstanceRef<int>(bootstrapFindEffectiveSlotLocationLocation());
+        //}
 
         static Symbol bootstrapStandardEffectiveSlotName (StandardObject effectiveSlot)
         {
-            return effectiveSlot.InstanceRef<Symbol> (bootstrapFindEffectiveSlotNameLocation ());
+            return effectiveSlot.InstanceRef<Symbol> (bootstrapFindEffectiveSlotNameSlot ().InstanceRef<int> (bootstrapFindEffectiveSlotLocationLocation ()));
         }
 
         static int bootstrapStandardEffectiveSlotLocation (StandardObject effectiveSlot)
@@ -674,27 +819,10 @@ namespace Lisp
             return effectiveSlot.InstanceRef<int> (bootstrapFindEffectiveSlotLocationLocation ());
         }
 
-        static StandardObject bootstrapFindEffectiveSlot (ConsList<StandardObject> effectiveSlots, Symbol name)
+        static StandardObject bootstrapFindEffectiveSlot (ICollection<StandardObject> effectiveSlots, Symbol name)
         {
-            foreach (StandardObject effectiveSlot in effectiveSlots)
-                if (bootstrapStandardEffectiveSlotName (effectiveSlot) == name)
-                    return effectiveSlot;
-            return null;
+            return CL.Find<StandardObject, Symbol> (name, effectiveSlots, KW.Key, new Function1<Symbol, StandardObject> (bootstrapStandardEffectiveSlotName));
         }
-
-        //static int bootstrapEffectiveSlotNameLocation = bootstrapFindEffectiveSlotNameLocation ();
-        //static int bootstrapEffectiveSlotLocationLocation = bootstrapFindEffectiveSlotLocationLocation ();
-
-        //static StandardObject bootstrapClassSlotsSlot = bootstrapFindEffectiveSlot (effectiveSlotsOfStandardClass, QuoteSlots);
-
-
-        //static int bootstrapSlotPositionInList (ConsList<StandardObject> slots, Symbol name)
-        //{
-        //    return CL.PositionIf (delegate (StandardObject slot)
-        //    {
-        //        return bootstrapEffectiveSlotDefinitionSlot (slot, QuoteName) == QuoteSlots;
-        //    }, slots);
-        //}
 
         static T bootstrapSlotRef<T> (StandardObject obj, Symbol slot)
         {
@@ -705,6 +833,58 @@ namespace Lisp
         {
             obj.InstanceSet<T> (bootstrapStandardEffectiveSlotLocation (bootstrapFindEffectiveSlot (effectiveSlotsOfStandardClass, slot)), newValue);
         }
+
+        static ConsList<StandardObject> xxxClassSlots (StandardObject closClass)
+        {
+            return (closClass == standardClass)
+                ? effectiveSlotsOfStandardClass
+                : xxxInternalSlotRef<ConsList<StandardObject>> (closClass, QuoteSlots);
+        }
+
+        static StandardObject xxxLookupSlot (StandardObject closClass, Symbol name)
+        {
+            return CL.Find<StandardObject, Symbol> (name, xxxClassSlots (closClass), KW.Key, new Function1<Symbol, StandardObject> (xxxSlotName));
+        }
+
+        static Symbol xxxSlotName (StandardObject slot)
+        {
+            if (classOf (slot) == standardEffectiveSlotDefinition)
+                return bootstrapSlotRef<Symbol> (slot, QuoteName);
+            else
+                return xxxInternalSlotRef<Symbol> (slot, QuoteName);
+        }
+
+        static int xxxSlotLocation (StandardObject slot)
+        {
+            if (classOf (slot) == standardEffectiveSlotDefinition)
+                return bootstrapSlotRef<int> (slot, QuoteLocation);
+            else
+                return xxxInternalSlotRef<int> (slot, QuoteLocation);
+        }
+
+        static T xxxInternalSlotRef<T> (StandardObject obj, Symbol name)
+        {
+            return obj.InstanceRef<T> (xxxSlotLocation (xxxLookupSlot (ClassOf (obj), name)));
+        }
+
+        //static StandardObject lookupSlot (StandardObject obj, Symbol name)
+        //{
+        //    return lookupSlotUsingClass (classOf(obj), name);
+        //}
+
+        //static Symbol xxxName (StandardObject slot)
+        //{
+        //    if (classOf (slot) == standardEffectiveSlotDefinition)
+        //        return bootstrapSlotRef<Symbol> (slot, QuoteName);
+        //    else
+        //        return internalSlotRef<Symbol> (slot, QuoteName);
+        //}
+
+        //static StandardObject lookupSlotUsingClass (StandardObject closClass, Symbol name)
+        //{
+        //    return CL.Find<StandardObject, Symbol> (name, closClass == standardClass ? effectiveSlotsOfStandardClass : internalSlotRef<ConsList<StandardObject>> (closClass, QuoteSlots),
+        //                                            KW.Key, new Function1<Symbol, StandardObject> (xxxName));
+        //}
 
         static StandardObject lookupSlot (StandardObject obj, Symbol slotName)
         {
@@ -738,7 +918,7 @@ namespace Lisp
 
         static T internalSlotRef<T> (StandardObject obj, Symbol slotName)
         {
-            return InstanceRef<T> (obj, lookupSlotLocation(obj, slotName));
+            return InstanceRef<T> (obj, lookupSlotLocation (obj, slotName));
         }
 
         static object internalSlotSet (StandardObject obj, Symbol slotName, object value)
@@ -748,32 +928,13 @@ namespace Lisp
 
         static T internalSlotSet<T> (StandardObject obj, Symbol slotName, T value)
         {
-             return  InstanceSet<T> (obj, lookupSlotLocation(obj, slotName), value);
+            return InstanceSet<T> (obj, lookupSlotLocation (obj, slotName), value);
         }
 
-        static bool bootstrapInitializeStandardClass ()
-        {
-            // stuff the slots in place
-            bootstrapSlotSet<ConsList<StandardObject>> (standardClass, QuoteSlots, effectiveSlotsOfStandardClass);
-            bootstrapSlotSet<ConsList<StandardObject>> (standardEffectiveSlotDefinition, QuoteSlots, effectiveSlotsOfStandardEffectiveSlotDefinition);
-            // We should now be able to read and write slots by name.
-            // Put the names in first for debugging.
-            internalSlotSet<string> (standardClass, QuoteStudlyName, "StandardClass");
-            internalSlotSet<string> (standardEffectiveSlotDefinition, QuoteStudlyName, "StandardEffectiveSlotDefinition");
-
-            // bootstrapSetClassSlots (standardClass, effectiveSlotsOfStandardClass);
-            // standardClass.InstanceSet<ConsList<StandardObject>> (bootstrapStandardEffectiveSlotLocation (bootstrapFindEffectiveSlot (effectiveSlotsOfStandardClass, QuoteSlots)), effectiveSlotsOfStandardClass);
-            // standardEffectiveSlotDefinition.InstanceSet<ConsList<StandardObject>> (bootstrapStandardEffectiveSlotLocation (bootstrapFindEffectiveSlot (effectiveSlotsOfStandardClass, QuoteSlots)), effectiveSlotsOfStandardEffectiveSlotDefinition);
-            //internalSlotSet<string> (standardClass, QuoteStudlyName, "StandardClass");
-            //internalSlotSet<string> (standardEffectiveSlotDefinition, QuoteStudlyName, "StandardEffectiveSlotDefinition");
-            return true;
-        }
-
-        static bool bISC = bootstrapInitializeStandardClass();
 
 
-  
- 
+
+
 
 
         delegate object SlotWriter (StandardObject obj, object newValue);
@@ -3082,8 +3243,8 @@ namespace Lisp
 
         // static readonly StandardObject sharedInitialize = (StandardObject) ensureGenericFunction (Quote, KW.LambdaList, CL.List ());
 
-        static readonly StandardObject setClassName =
-            (StandardObject) ensureGenericFunction (QuoteSetClassName, KW.LambdaList, CL.List ());
+        //static readonly StandardObject setClassName =
+        //    (StandardObject) ensureGenericFunction (QuoteSetClassName, KW.LambdaList, CL.List ());
 
         static readonly StandardObject setGenericFunctionName =
             (StandardObject) ensureGenericFunction (QuoteSetGenericFunctionName, KW.LambdaList, CL.List ());

@@ -6,7 +6,7 @@ namespace Lisp
 {
     public delegate object Thunk ();
 
-    [CLSCompliant(true)]
+    [CLSCompliant (true)]
     public sealed class CL
     {
         // Static holder.
@@ -132,10 +132,10 @@ namespace Lisp
             }
         }
 
-	// Append
+        // Append
         public static object Append (object left, object right)
         {
-             return CL.Reconc (CL.Reverse (left), right);
+            return CL.Reconc (CL.Reverse (left), right);
         }
 
         public static ConsList<T> Append<T> (ConsList<T> left, ConsList<T> right)
@@ -147,10 +147,10 @@ namespace Lisp
         public static object Apply (object op, params object [] rands)
         {
             if (rands.Length == 0)
-               return ResolveFunctionSpecifier (op).DynamicInvoke ();
-              Cons arglist = (Cons) rands [rands.Length - 1];
+                return ResolveFunctionSpecifier (op).DynamicInvoke ();
+            Cons arglist = (Cons) rands [rands.Length - 1];
             for (int i = rands.Length - 2; i > -1; i--)
-               arglist = CL.Cons (rands [i], arglist);
+                arglist = CL.Cons (rands [i], arglist);
             int limit = CL.Length (arglist);
             object [] argarray = new object [limit];
 
@@ -158,7 +158,7 @@ namespace Lisp
                 argarray [i] = arglist.Car;
                 arglist = (Cons) arglist.Cdr;
             }
-            return ResolveFunctionSpecifier (op).DynamicInvoke ((object)argarray);
+            return ResolveFunctionSpecifier (op).DynamicInvoke ((object) argarray);
 
         }
 
@@ -167,25 +167,30 @@ namespace Lisp
         {
             Cons ec = null;
             while (alist != null) {
-              object entry = alist.Car;
-              ec = entry as Cons;
-              if (ec == null) throw new NotImplementedException();
-              if (ec.Car == element) break;
-              object tail = alist.Cdr;
-              if (tail == null)
-                  return null;
-              Cons ttail = tail as Cons;
-              if (ttail == null) throw new NotImplementedException();
-              alist = ttail;
-              }
+                object entry = alist.Car;
+                ec = entry as Cons;
+                if (ec == null)
+                    throw new NotImplementedException ();
+                if (ec.Car == element)
+                    break;
+                object tail = alist.Cdr;
+                if (tail == null)
+                    return null;
+                Cons ttail = tail as Cons;
+                if (ttail == null)
+                    throw new NotImplementedException ();
+                alist = ttail;
+            }
             return ec;
         }
 
         public static Cons Assq (object element, object alist)
         {
-            if (alist == null) return null;
+            if (alist == null)
+                return null;
             Cons ac = alist as Cons;
-            if (ac == null) throw new NotImplementedException();
+            if (ac == null)
+                throw new NotImplementedException ();
             return Assq (element, ac);
         }
 
@@ -196,7 +201,7 @@ namespace Lisp
 
         public static object Caar (object thing)
         {
-            return (thing == null) ? null : CL.Car (CL.Car(thing));
+            return (thing == null) ? null : CL.Car (CL.Car (thing));
         }
 
 
@@ -243,6 +248,14 @@ namespace Lisp
             return (thing == null) ? null : thing.Car;
         }
 
+        public static T Car<T> (Cons obj)
+        {
+            if (obj == null)
+                throw new ArgumentNullException ("obj");
+            return (T) obj.Car;
+        }
+
+
         public static object Car (object thing)
         {
             if (thing == null)
@@ -250,6 +263,16 @@ namespace Lisp
             Cons pair = thing as Cons;
             if (pair != null)
                 return pair.Car;
+            throw new NotImplementedException ("wrong type argument");
+        }
+
+        public static T Car<T> (object thing)
+        {
+            if (thing == null)
+                return default(T);
+            Cons pair = thing as Cons;
+            if (pair != null)
+                return (T) pair.Car;
             throw new NotImplementedException ("wrong type argument");
         }
 
@@ -261,7 +284,7 @@ namespace Lisp
 
         public static object Cdar (object thing)
         {
-            return (thing == null) ? null : CL.Cdr (CL.Car(thing));
+            return (thing == null) ? null : CL.Cdr (CL.Car (thing));
         }
 
 
@@ -326,12 +349,70 @@ namespace Lisp
             throw new NotImplementedException ();
         }
 
+        static public bool Eql<T> (T left, T right)
+        {
+            return Object.ReferenceEquals (left, right);
+        }
+
+        static public TItem Find<TItem, TKey> (TKey item, System.Collections.Generic.ICollection<TItem> elements, object key0, object arg0)
+        {
+            return Find<TItem, TKey> (item, elements, new object [] { key0, arg0 });
+        }
+
+        static TItem Find<TItem, Tkey> (Tkey item, System.Collections.Generic.ICollection<TItem> sequence, object [] arguments)
+        {
+            KeywordArgument<bool> fromEnd = new KeywordArgument<bool> (KW.FromEnd);
+            KeywordArgument<object> test = new KeywordArgument<object> (KW.Test);
+            KeywordArgument<int> start = new KeywordArgument<int> (KW.Start);
+            KeywordArgument<int> end = new KeywordArgument<int> (KW.End);
+            KeywordArgument<object> key = new KeywordArgument<object> (KW.Key);
+
+            KeywordArgumentBase.ProcessKeywordArguments (
+                new KeywordArgumentBase [] { fromEnd, test, start, end, key },
+                arguments,
+                false);
+            if (!key.Supplied)
+                throw new NotImplementedException ();
+            return Find<TItem, Tkey> (item, sequence,
+                                     fromEnd.Supplied ? fromEnd.Value : false,
+                                     test.Supplied ? ResolveFunctionSpecifier<EqualityTest<Tkey>> (test.Value) : new EqualityTest<Tkey> (CL.Eql<Tkey>),
+                                     start.Supplied ? start.Value : 0,
+                                     end.Supplied ? end.Value : CL.Length (sequence),
+                                     ResolveFunctionSpecifier<Function1<Tkey, TItem>> (key.Value));
+        }
+
+        static TItem Find<TItem, Tkey> (Tkey item, System.Collections.Generic.ICollection<TItem> sequence, bool fromEnd, EqualityTest<Tkey> test, int start, int end, Function1<Tkey, TItem> key)
+        {
+            if (fromEnd)
+                throw new NotImplementedException ();
+            int count = 0;
+            foreach (TItem element in sequence) {
+                if (count < start) {
+                    count += 1;
+                    continue;
+                }
+                if (count >= end)
+                    break;
+                Tkey ekey = key (element);
+                if (test (item, ekey))
+                    return element;
+                count += 1;
+            }
+            return default (TItem);
+        }
+
+
         static public Package FindPackage (string name)
         {
             throw new NotImplementedException ();
         }
 
         static public object Identity (object item)
+        {
+            return item;
+        }
+
+        static public T Identity<T> (T item)
         {
             return item;
         }
@@ -353,12 +434,14 @@ namespace Lisp
             return package.Intern (s);
         }
 
-        static public Cons List () {
+        static public Cons List ()
+        {
             return null;
         }
 
-        static public Cons List (object arg0, params object [] restArguments) {
-                   return new Cons (arg0, Lisp.Cons.SubvectorToList (restArguments, 0, restArguments.Length));
+        static public Cons List (object arg0, params object [] restArguments)
+        {
+            return new Cons (arg0, Lisp.Cons.SubvectorToList (restArguments, 0, restArguments.Length));
         }
 
         static public int Length (object obj)
@@ -400,7 +483,7 @@ namespace Lisp
         {
             if (s == null)
                 throw new ArgumentNullException ("s");
-            return new StringReader (s.Substring(start,end - start));
+            return new StringReader (s.Substring (start, end - start));
         }
 
         static object MapForEffect (object functionSpecifier, object [] sequences)
@@ -408,7 +491,7 @@ namespace Lisp
             throw new NotImplementedException ();
         }
 
-        static O MapForEffect<I,O> (object functionSpecifier, object [] sequences)
+        static O MapForEffect<I, O> (object functionSpecifier, object [] sequences)
         {
             throw new NotImplementedException ();
         }
@@ -423,11 +506,11 @@ namespace Lisp
             }
         }
 
-        static ConsList<T> MapToList<I,T> (object functionSpecifier, object [] sequences)
+        static ConsList<T> MapToList<I, T> (object functionSpecifier, object [] sequences)
         {
             switch (sequences.Length) {
                 case 1:
-                    return MapToList1<I,T> (functionSpecifier, sequences [0]);
+                    return MapToList1<I, T> (functionSpecifier, sequences [0]);
                 default:
                     throw new NotImplementedException ();
             }
@@ -451,7 +534,7 @@ namespace Lisp
             }
         }
 
-        static ConsList<T> MapToList1<I,T> (object functionSpecifier, object sequence)
+        static ConsList<T> MapToList1<I, T> (object functionSpecifier, object sequence)
         {
             if (sequence == null)
                 return null;
@@ -461,14 +544,14 @@ namespace Lisp
             else {
                 ConsList<I> sc = sequence as ConsList<I>;
                 if (sc != null)
-                    return MapListToList1<I,T> (functionSpecifier, sc);
+                    return MapListToList1<I, T> (functionSpecifier, sc);
                 else {
                     ICollection si = sequence as ICollection;
                     if (si != null)
                         return MapCollectionToList1<T> (functionSpecifier, si);
                     else
                         throw new NotImplementedException ();
-                
+
                 }
             }
         }
@@ -481,7 +564,7 @@ namespace Lisp
                 T item = (T) function.DynamicInvoke (element);
                 reverseAnswer = new ConsList<T> (item, reverseAnswer);
             }
-            return CL.Reverse < T > (reverseAnswer);
+            return CL.Reverse<T> (reverseAnswer);
         }
 
 
@@ -502,7 +585,7 @@ namespace Lisp
             return (Cons) CL.Reverse (answer);
         }
 
-        static ConsList<T> MapListToList1<I,T> (object functionSpecifier, ConsList<I> sequence)
+        static ConsList<T> MapListToList1<I, T> (object functionSpecifier, ConsList<I> sequence)
         {
             Delegate function = ResolveFunctionSpecifier (functionSpecifier);
             ConsList<T> answer = null;
@@ -519,7 +602,7 @@ namespace Lisp
             return CL.Reverse<T> (answer);
         }
 
-        static ConsList<T> MapVectorToList1<I,T> (object functionSpecifier, I [] sequence)
+        static ConsList<T> MapVectorToList1<I, T> (object functionSpecifier, I [] sequence)
         {
             Delegate function = ResolveFunctionSpecifier (functionSpecifier);
             ConsList<T> answer = null;
@@ -539,9 +622,11 @@ namespace Lisp
 
         static public Cons Memq (object item, object list)
         {
-            if (list == null) return null;
+            if (list == null)
+                return null;
             Cons pair = list as Cons;
-            if (pair == null) throw new NotImplementedException();
+            if (pair == null)
+                throw new NotImplementedException ();
             if (item == pair.Car)
                 return pair;
             else
@@ -578,14 +663,14 @@ namespace Lisp
                 throw new NotImplementedException ();
         }
 
-        static public object Map<I,O> (object sequenceTypeSpecifier, object functionSpecifier, params object [] sequences)
+        static public object Map<I, O> (object sequenceTypeSpecifier, object functionSpecifier, params object [] sequences)
         {
             if (functionSpecifier == null)
                 throw new ArgumentNullException ("functionSpecifier");
             else if (sequenceTypeSpecifier == null)
-                return MapForEffect<I,O> (functionSpecifier, sequences);
+                return MapForEffect<I, O> (functionSpecifier, sequences);
             else if (sequenceTypeSpecifier == QuoteList)
-                return MapToList<I,O> (functionSpecifier, sequences);
+                return MapToList<I, O> (functionSpecifier, sequences);
             else
                 throw new NotImplementedException ();
         }
@@ -703,22 +788,123 @@ namespace Lisp
         static int Position (object item, Cons sequence, bool fromEnd, EqualityTest test, int start, int end, Function1 key)
         {
             if (fromEnd)
-                throw new NotImplementedException();
+                throw new NotImplementedException ();
 
             int answer = 0;
             while (true) {
                 if (answer >= end)
                     return -1;
                 if (answer >= start
-                    && test (item, key(sequence.Car)))
+                    && test (item, key (sequence.Car)))
                     break;
-            
+
                 answer += 1;
                 sequence = (Cons) sequence.Cdr;
             }
             return answer;
         }
- 
+
+        static public int Position<TKey> (TKey item, IList sequence,
+            object key0, object val0)
+        {
+            return Position<TKey> (item, sequence, new object [] { key0, val0 });
+        }
+
+        static int Position<TKey> (TKey item, IList sequence, object [] arguments)
+        {
+            KeywordArgument<bool> fromEnd = new KeywordArgument<bool> (KW.FromEnd);
+            KeywordArgument<object> test = new KeywordArgument<object> (KW.Test);
+            KeywordArgument<int> start = new KeywordArgument<int> (KW.Start);
+            KeywordArgument<int> end = new KeywordArgument<int> (KW.End);
+            KeywordArgument<Function1<TKey>> key = new KeywordArgument<Function1<TKey>> (KW.Key);
+
+            KeywordArgumentBase.ProcessKeywordArguments (
+                new KeywordArgumentBase [] { fromEnd, test, start, end, key },
+                arguments,
+                false);
+            if (!key.Supplied)
+                throw new NotImplementedException ();
+
+            return Position<TKey> (item, sequence,
+                fromEnd.Supplied ? fromEnd.Value : false,
+                test.Supplied ? ResolveFunctionSpecifier<EqualityTest<TKey>> (test.Value) : new EqualityTest<TKey> (CL.Eql),
+                start.Supplied ? start.Value : 0,
+                end.Supplied ? end.Value : CL.Length (sequence),
+                ResolveFunctionSpecifier<Function1<TKey>> (key.Value));
+        }
+
+        static int Position<TKey> (TKey item, IList sequence, bool fromEnd, EqualityTest<TKey> test, int start, int end, Function1<TKey> key)
+        {
+            if (fromEnd)
+                throw new NotImplementedException ();
+            int count = 0;
+            foreach (object element in sequence) {
+                if (count < start) {
+                    count += 1;
+                    continue;
+                }
+                if (count >= end)
+                    break;
+                TKey ekey = key (element);
+                if (test (item, ekey))
+                    return count;
+                count += 1;
+            }
+            return -1;
+        }
+
+
+        static public int Position<TItem, TKey> (TKey item, System.Collections.Generic.IList<TItem> sequence,
+                    object key0, object val0)
+        {
+            return Position<TItem, TKey> (item, sequence, new object [] { key0, val0 });
+        }
+
+        static int Position<TItem, TKey> (TKey item, System.Collections.Generic.IList<TItem> sequence, object [] arguments)
+        {
+            KeywordArgument<bool> fromEnd = new KeywordArgument<bool> (KW.FromEnd);
+            KeywordArgument<object> test = new KeywordArgument<object> (KW.Test);
+            KeywordArgument<int> start = new KeywordArgument<int> (KW.Start);
+            KeywordArgument<int> end = new KeywordArgument<int> (KW.End);
+            KeywordArgument<Function1<TKey, TItem>> key = new KeywordArgument<Function1<TKey, TItem>> (KW.Key);
+
+            KeywordArgumentBase.ProcessKeywordArguments (
+                new KeywordArgumentBase [] { fromEnd, test, start, end, key },
+                arguments,
+                false);
+            if (!key.Supplied)
+                throw new NotImplementedException ();
+
+            return Position<TItem, TKey> (item, sequence,
+                fromEnd.Supplied ? fromEnd.Value : false,
+                test.Supplied ? ResolveFunctionSpecifier<EqualityTest<TKey>> (test.Value) : new EqualityTest<TKey>(CL.Eql),
+                start.Supplied ? start.Value : 0,
+                end.Supplied ? end.Value : CL.Length (sequence),
+                ResolveFunctionSpecifier<Function1<TKey,TItem>> (key.Value));
+        }
+
+        static int Position<TItem, TKey> (TKey item, System.Collections.Generic.IList<TItem> sequence, bool fromEnd, EqualityTest<TKey> test, int start, int end, Function1<TKey, TItem> key)
+        {
+            if (fromEnd)
+                throw new NotImplementedException ();
+            int count = 0;
+            foreach (TItem element in sequence) {
+                if (count < start) {
+                    count += 1;
+                    continue;
+                }
+                if (count >= end)
+                    break;
+                TKey ekey = key (element);
+                if (test (item, ekey))
+                    return count;
+                count += 1;
+            }
+            return -1;
+        }
+
+
+
 
         static public int PositionIf (object predicate, object sequence)
         {
@@ -726,9 +912,9 @@ namespace Lisp
                 return -1;
             Cons list = sequence as Cons;
             if (list != null) {
-               return PositionIf (predicate, list);
+                return PositionIf (predicate, list);
             }
-            throw new NotImplementedException("PositionIf on non-list");
+            throw new NotImplementedException ("PositionIf on non-list");
         }
 
         static public int PositionIf<T> (Predicate<T> pred, object sequence)
@@ -839,11 +1025,11 @@ namespace Lisp
         static object ReadFromString1 (string source, bool isEofError, object eofValue, int start, int end, bool preserveWhitespace)
         {
             TextReader stream = MakeStringInputStream (source, start, end);
-            return preserveWhitespace 
+            return preserveWhitespace
                 ? ReadPreservingWhitespace (stream, isEofError, eofValue)
                 : Read (stream, isEofError, eofValue);
-	    }
- 
+        }
+
         static public object ReadPreservingWhitespace ()
         {
             throw new NotImplementedException ("Read");
@@ -888,7 +1074,7 @@ namespace Lisp
             if (ctail != null)
                 // yeah I'll fix it...
                 return Reconc (ctail.Cdr, new Cons (ctail.Car, head));
-            else 
+            else
                 throw new NotImplementedException ();
         }
 
@@ -896,8 +1082,8 @@ namespace Lisp
         {
             if (tail == null)
                 return head;
-                // yeah I'll fix it...
-                return Reconc<T> (tail.Cdr, new ConsList<T> (tail.Car, head));
+            // yeah I'll fix it...
+            return Reconc<T> (tail.Cdr, new ConsList<T> (tail.Car, head));
         }
 
         static public Cons Reverse (Cons list)
@@ -933,7 +1119,7 @@ namespace Lisp
             if (seq != null)
                 return RemoveIf (ResolveFunctionSpecifier (predicate), seq);
             else
-            throw new NotImplementedException ("RemoveIf");
+                throw new NotImplementedException ("RemoveIf");
         }
 
         // SYMBOL-FUNCTION

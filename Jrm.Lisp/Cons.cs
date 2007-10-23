@@ -49,7 +49,7 @@ namespace Lisp
     }
 
     [CLSCompliant(true)]
-    public sealed class Cons : ICollection, IEnumerable
+    public sealed class Cons : ICollection, IEnumerable, IList
     {
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
         readonly object car;
@@ -81,32 +81,7 @@ namespace Lisp
             }
         }
 
-        public IEnumerator GetEnumerator ()
-        {
-            return new ConsEnumerator (this);
-        }
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
-        public int Count 
-        {
-            get
-            {
-                int length = 1;
-                Cons tail = this;
-                while (true) {
-                    Cons next = tail.cdr as Cons;
-                    if (next == null) {
-                        if (tail.cdr == null)
-                            break;
-                        else
-                            throw new NotImplementedException ("dotted list");
-                    }
-                    length += 1;
-                    tail = next;
-                }
-                return length;
-            }
-        }
 
         public void CopyTo (Array array)
         {
@@ -123,6 +98,8 @@ namespace Lisp
         {
             throw new NotImplementedException ("CopyTo");
         }
+
+
 
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
         public bool IsSynchronized
@@ -163,6 +140,128 @@ namespace Lisp
         {
             return SubvectorToList (vector, 0, vector.Length);
         }
+
+        #region IList Members
+
+        int IList.Add (object value)
+        {
+            throw new NotImplementedException ();
+        }
+
+        void IList.Clear ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        bool IList.Contains (object value)
+        {
+            throw new NotImplementedException ();
+        }
+
+        int IList.IndexOf (object value)
+        {
+            throw new NotImplementedException ();
+        }
+
+        void IList.Insert (int index, object value)
+        {
+            throw new NotImplementedException ();
+        }
+
+        bool IList.IsFixedSize
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        bool IList.IsReadOnly
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        void IList.Remove (object value)
+        {
+            throw new NotImplementedException ();
+        }
+
+        void IList.RemoveAt (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        object IList.this [int index]
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
+
+        #region ICollection Members
+
+        void ICollection.CopyTo (Array array, int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        int ICollection.Count
+        {
+            get
+            {
+                int length = 1;
+                Cons tail = this;
+                while (true) {
+                    Cons next = tail.cdr as Cons;
+                    if (next == null) {
+                        if (tail.cdr == null)
+                            break;
+                        else
+                            throw new NotImplementedException ("dotted list");
+                    }
+                    length += 1;
+                    tail = next;
+                }
+                return length;
+            }
+        }
+
+        bool ICollection.IsSynchronized
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        object ICollection.SyncRoot
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator ()
+        {
+            return new ConsEnumerator (this);
+        }
+
+        #endregion
     }
 
     public struct ConsListEnumerator<T> : IEnumerator<T>
@@ -343,7 +442,7 @@ namespace Lisp
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator ()
         {
-            throw new NotImplementedException();
+            return new ConsListEnumerator<T> (this);
         }
 
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
