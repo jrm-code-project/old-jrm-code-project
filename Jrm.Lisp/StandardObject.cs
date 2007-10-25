@@ -227,17 +227,12 @@ namespace Lisp
             throw new NotImplementedException (self.ToString () + ": Attempt to apply uninitialized " + ((Symbol) CL.ClassName (((ManifestInstance) self.Target).Class)).Name + " to " + arguments.ToString ());
         }
 
-        static StandardObject CreateInstance (StandardObject closClass, int nSlots, FuncallHandler method)
+        static StandardObject CreateInstance (StandardObject closClass, object [] slots, FuncallHandler method)
         {
-            object [] slotVector = null;
-            if (nSlots > 0) {
-                slotVector = new object [nSlots];
-            for (int i = 0; i < nSlots; i++)
-                slotVector [i] = UnboundSlotValue;
-            }
+
             StandardObject answer =
                 (StandardObject) Delegate.CreateDelegate (typeof (StandardObject),
-                new ManifestInstance (closClass, nSlots == 0 ? null : slotVector, method),
+                                                          new ManifestInstance (closClass, slots, method),
                                                           typeof (ManifestInstance)
                                                              .GetMethod ("DefaultInstanceMethod",
                                                                          System.Reflection.BindingFlags.Instance
@@ -246,9 +241,25 @@ namespace Lisp
             return answer;
         }
 
+        static StandardObject CreateInstance (StandardObject closClass, int nSlots, FuncallHandler method)
+        {
+            object [] slotVector = null;
+            if (nSlots > 0) {
+                slotVector = new object [nSlots];
+            for (int i = 0; i < nSlots; i++)
+                slotVector [i] = UnboundSlotValue;
+            }
+            return CreateInstance (closClass, nSlots == 0 ? null : slotVector, method);
+        }
+
         public static StandardObject CreateInstance (StandardObject closClass, int nSlots)
         {
             return CreateInstance (closClass, nSlots, funcallStandardObject);
+        }
+
+        public static StandardObject CreateInstance (StandardObject closClass, object [] slots)
+        {
+            return CreateInstance (closClass, slots, funcallStandardObject);
         }
 
         public static StandardObject CreateFuncallableInstance (StandardObject closClass, int nSlots)
@@ -264,6 +275,11 @@ namespace Lisp
         public static StandardObject CreateFuncallableInstance (StandardObject closClass, int nSlots, FuncallHandler funcallHandler)
         {
             return CreateInstance (closClass, nSlots, funcallHandler);
+        }
+
+        public static StandardObject CreateFuncallableInstance (StandardObject closClass, object [] slots, FuncallHandler funcallHandler)
+        {
+            return CreateInstance (closClass, slots, funcallHandler);
         }
     }
 }

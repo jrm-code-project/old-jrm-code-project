@@ -75,6 +75,18 @@ namespace Lisp
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword bootstrapMethod = (Keyword) Package.Keyword.Intern ("BOOTSTRAP-METHOD");
+        public static Keyword BootstrapMethod
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return bootstrapMethod;
+            }
+        }
+
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static readonly Keyword kase = (Keyword) Package.Keyword.Intern ("CASE");
         public static Keyword Case
@@ -503,6 +515,18 @@ namespace Lisp
                 return local;
             }
         }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword metaclass = (Keyword) Package.Keyword.Intern ("METACLASS");
+        public static Keyword Metaclass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return metaclass;
+            }
+        }
+
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static readonly Keyword method = (Keyword) Package.Keyword.Intern ("METHOD");
