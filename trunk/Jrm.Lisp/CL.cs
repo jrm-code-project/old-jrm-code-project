@@ -288,11 +288,30 @@ namespace Lisp
         }
 
 
+        // CDDR
+        public static object Cddr (Cons thing)
+        {
+            return (thing == null) ? null : CL.Cdr (thing.Cdr);
+        }
+
+        public static object Cddr (object thing)
+        {
+            return (thing == null) ? null : CL.Cdr (CL.Cdr (thing));
+        }
+
         // CDR
         public static object Cdr (Cons thing)
         {
             return (thing == null) ? null : thing.Cdr;
         }
+
+        public static T Cdr<T> (Cons obj)
+        {
+            if (obj == null)
+                throw new ArgumentNullException ("obj");
+            return (T) obj.Cdr;
+        }
+
 
         public static object Cdr (object thing)
         {
@@ -301,8 +320,20 @@ namespace Lisp
             Cons pair = thing as Cons;
             if (pair != null)
                 return pair.Cdr;
-            throw new NotImplementedException ("CDR of non-list");
+            throw new NotImplementedException ("wrong type argument");
         }
+
+        public static T Cdr<T> (object thing)
+        {
+            if (thing == null)
+                return default (T);
+            Cons pair = thing as Cons;
+            if (pair != null)
+                return (T) pair.Cdr;
+            throw new NotImplementedException ("wrong type argument");
+        }
+
+
 
         // CLASS-NAME
         public static StandardObject ClassName
@@ -442,6 +473,16 @@ namespace Lisp
         static public Cons List (object arg0, params object [] restArguments)
         {
             return new Cons (arg0, Lisp.Cons.SubvectorToList (restArguments, 0, restArguments.Length));
+        }
+
+        static public ConsList<T> List<T> ()
+        {
+            return null;
+        }
+
+        static public ConsList<T> List<T> (object arg0, params object [] restArguments)
+        {
+            return new ConsList<T> ((T) arg0, Lisp.ConsList<T>.SubvectorToList (restArguments, 0, restArguments.Length));
         }
 
         static public int Length (object obj)
@@ -663,14 +704,14 @@ namespace Lisp
                 throw new NotImplementedException ();
         }
 
-        static public object Map<I, O> (object sequenceTypeSpecifier, object functionSpecifier, params object [] sequences)
+        static public object Map<TOut, TIn> (object sequenceTypeSpecifier, object functionSpecifier, params object [] sequences)
         {
             if (functionSpecifier == null)
                 throw new ArgumentNullException ("functionSpecifier");
             else if (sequenceTypeSpecifier == null)
-                return MapForEffect<I, O> (functionSpecifier, sequences);
+                return MapForEffect<TOut, TIn> (functionSpecifier, sequences);
             else if (sequenceTypeSpecifier == QuoteList)
-                return MapToList<I, O> (functionSpecifier, sequences);
+                return MapToList<TOut, TIn> (functionSpecifier, sequences);
             else
                 throw new NotImplementedException ();
         }

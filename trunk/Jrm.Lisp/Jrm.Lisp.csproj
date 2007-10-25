@@ -49,7 +49,9 @@
   <ItemGroup>
     <Compile Include="Arity.cs" />
     <Compile Include="CL.cs" />
-    <Compile Include="CLOS.cs" />
+    <Compile Include="CLOS.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Cons.cs" />
     <Compile Include="DotNet.cs" />
     <Compile Include="Environment.cs" />

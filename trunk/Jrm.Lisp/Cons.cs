@@ -352,6 +352,29 @@ namespace Lisp
             }
         }
 
+        public static ConsList<T> SubvectorToList (object [] vector, int start, int limit)
+        {
+            if (vector == null) {
+                if (start == limit)
+                    return null;
+                throw new ArgumentNullException ("vector");
+            }
+
+            ConsList<T> answer = null;
+            int count = 1;
+            for (int i = start; i < limit; i++) {
+                answer = new ConsList<T> ((T) vector [limit - count], answer);
+                count += 1;
+            }
+            return answer;
+        }
+
+        public static ConsList<T> VectorToList (object [] vector)
+        {
+            return SubvectorToList (vector, 0, vector.Length);
+        }
+
+
         void ICollection<T>.Add (T thing)
         {
             throw new NotSupportedException ();
@@ -364,7 +387,9 @@ namespace Lisp
 
         bool ICollection<T>.Contains (T thing)
         {
-            throw new NotSupportedException ();
+            return object.ReferenceEquals (this.car,thing)
+                 || (this.Cdr != null 
+                     && ((ICollection<T>) this.Cdr).Contains (thing));
         }
 
         void ICollection<T>.CopyTo (T[] array, int arrayIndex)
