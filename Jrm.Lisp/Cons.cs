@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -51,10 +52,10 @@ namespace Lisp
     [CLSCompliant(true)]
     public sealed class Cons : ICollection, IEnumerable, IList
     {
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object car;
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object cdr;
 
         public Cons (object car, object cdr)
@@ -65,7 +66,7 @@ namespace Lisp
 
         public object Car
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return this.car;
@@ -74,7 +75,7 @@ namespace Lisp
 
         public object Cdr
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return this.cdr;
@@ -93,15 +94,12 @@ namespace Lisp
             throw new NotImplementedException ("CopyTo");
         }
 
-
         public void CopyTo (int index, Array array, int arrayIndex, int count)
         {
             throw new NotImplementedException ("CopyTo");
         }
 
-
-
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public bool IsSynchronized
         {
             get
@@ -110,7 +108,7 @@ namespace Lisp
             }
         }
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SyncRoot
         {
             get
@@ -168,19 +166,21 @@ namespace Lisp
             throw new NotImplementedException ();
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         bool IList.IsFixedSize
         {
             get
             {
-                throw new NotImplementedException ();
+                return true;
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         bool IList.IsReadOnly
         {
             get
             {
-                throw new NotImplementedException ();
+                return true;
             }
         }
 
@@ -214,7 +214,7 @@ namespace Lisp
         {
             throw new NotImplementedException ();
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         int ICollection.Count
         {
             get
@@ -235,7 +235,7 @@ namespace Lisp
                 return length;
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         bool ICollection.IsSynchronized
         {
             get
@@ -244,6 +244,7 @@ namespace Lisp
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object ICollection.SyncRoot
         {
             get
@@ -322,10 +323,10 @@ namespace Lisp
     // A linked list of cons cells.
     public sealed class ConsList<T> : ICollection<T>, ICollection, IEnumerable<T>, IEnumerable
     {
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly T car;
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly ConsList<T> cdr;
 
         public ConsList (T car, ConsList<T> cdr)
@@ -336,7 +337,7 @@ namespace Lisp
 
         public T Car
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return this.car;
@@ -345,7 +346,7 @@ namespace Lisp
 
         public ConsList<T> Cdr
         {
-            [System.Diagnostics.DebuggerStepThrough]
+            [DebuggerStepThrough]
             get
             {
                 return this.cdr;
@@ -406,6 +407,8 @@ namespace Lisp
         {
             throw new NotSupportedException ();
         }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         int ICollection<T>.Count
         {
             get
@@ -426,7 +429,7 @@ namespace Lisp
                 return length;
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         int ICollection.Count
         {
             get
@@ -447,6 +450,8 @@ namespace Lisp
                 return length;
             }
         }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         bool ICollection<T>.IsReadOnly 
         {
             get
@@ -470,7 +475,7 @@ namespace Lisp
             return new ConsListEnumerator<T> (this);
         }
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public bool IsSynchronized
         {
             get
@@ -479,7 +484,7 @@ namespace Lisp
             }
         }
 
-        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SyncRoot
         {
             get

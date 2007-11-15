@@ -186,6 +186,17 @@ namespace Lisp
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword directSlot = (Keyword) Package.Keyword.Intern ("DIRECT-SLOT");
+        public static Keyword DirectSlot
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return directSlot;
+            }
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static readonly Keyword directSuperclasses = (Keyword) Package.Keyword.Intern ("DIRECT-SUPERCLASSES");
         public static Keyword DirectSuperclasses
@@ -216,6 +227,17 @@ namespace Lisp
             get
             {
                 return direction;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword documentation = (Keyword) Package.Keyword.Intern ("DOCUMENTATION");
+        public static Keyword Documentation
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return documentation;
             }
         }
 
@@ -328,6 +350,30 @@ namespace Lisp
                 return fromEnd;
             }
         }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword function = (Keyword) Package.Keyword.Intern ("FUNCTION");
+        public static Keyword Function
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return function;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword genericFunctionClass = (Keyword) Package.Keyword.Intern ("GENERIC-FUNCTION-CLASS");
+        public static Keyword GenericFunctionClass
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return genericFunctionClass;
+            }
+        }
+
+
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static readonly Keyword host = (Keyword) Package.Keyword.Intern ("HOST");
@@ -506,6 +552,17 @@ namespace Lisp
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        static readonly Keyword location = (Keyword) Package.Keyword.Intern ("LOCATION");
+        public static Keyword Location
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return location;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static readonly Keyword local = (Keyword) Package.Keyword.Intern ("LOCAL");
         public static Keyword Local
         {
@@ -515,6 +572,7 @@ namespace Lisp
                 return local;
             }
         }
+
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static readonly Keyword metaclass = (Keyword) Package.Keyword.Intern ("METACLASS");
@@ -726,6 +784,18 @@ namespace Lisp
                 return slots;
             }
         }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static readonly Keyword slotSpecification = (Keyword) Package.Keyword.Intern ("SLOT-SPECIFICATION");
+        public static Keyword SlotSpecification
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return slotSpecification;
+            }
+        }
+
 
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
