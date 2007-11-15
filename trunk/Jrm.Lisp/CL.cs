@@ -472,7 +472,9 @@ namespace Lisp
 
         static public Cons List (object arg0, params object [] restArguments)
         {
-            return new Cons (arg0, Lisp.Cons.SubvectorToList (restArguments, 0, restArguments.Length));
+            return new Cons (arg0, (restArguments == null)
+                                   ? new Cons (null, null)
+                                   : Lisp.Cons.SubvectorToList (restArguments, 0, restArguments.Length));
         }
 
         static public ConsList<T> List<T> ()
@@ -480,9 +482,11 @@ namespace Lisp
             return null;
         }
 
-        static public ConsList<T> List<T> (object arg0, params object [] restArguments)
+        static public ConsList<T> List<T> (object arg0, params object [] restArguments) where T : class
         {
-            return new ConsList<T> ((T) arg0, Lisp.ConsList<T>.SubvectorToList (restArguments, 0, restArguments.Length));
+            return new ConsList<T> ((T) arg0, (restArguments == null)
+                                               ? new ConsList<T> ((T) null, null)
+                                               : Lisp.ConsList<T>.SubvectorToList (restArguments, 0, restArguments.Length));
         }
 
         static public int Length (object obj)
@@ -668,10 +672,17 @@ namespace Lisp
             Cons pair = list as Cons;
             if (pair == null)
                 throw new NotImplementedException ();
-            if (item == pair.Car)
-                return pair;
-            else
-                return Memq (item, pair.Cdr);
+            return (item == pair.Car)
+                ? pair
+                : Memq (item, pair.Cdr);
+        }
+
+        static public ConsList<T> Memq<T> (T item, ConsList<T> list)
+        {
+            return
+                (list == null) ? null
+                : object.ReferenceEquals (item, list.Car) ? list
+                : Memq (item, list.Cdr);
         }
 
         static Delegate ResolveFunctionSpecifier (object functionSpecifier)

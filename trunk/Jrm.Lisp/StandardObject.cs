@@ -224,7 +224,8 @@ namespace Lisp
 
         static object funcallUninitializedObject (StandardObject self, object [] arguments)
         {
-            throw new NotImplementedException (self.ToString () + ": Attempt to apply uninitialized " + ((Symbol) CL.ClassName (((ManifestInstance) self.Target).Class)).Name + " to " + arguments.ToString ());
+            // throw new NotImplementedException (self.ToString () + ": Attempt to apply uninitialized " + ((Symbol) CL.ClassName (((ManifestInstance) self.Target).Class)).Name + " to " + arguments.ToString ());
+            throw new NotImplementedException ();
         }
 
         static StandardObject CreateInstance (StandardObject closClass, object [] slots, FuncallHandler method)
@@ -270,6 +271,16 @@ namespace Lisp
         public static StandardObject CreateFuncallableInstance (FuncallHandler funcallHandler)
         {
             return CreateInstance (null, 0, funcallHandler);
+        }
+
+        public static StandardObject CreateFuncallableInstance ()
+        {
+            return CreateInstance (null, 0, funcallUninitializedObject);
+        }
+
+        public static StandardObject CreateInstance ()
+        {
+            return CreateInstance (null, 0, funcallStandardObject);
         }
 
         public static StandardObject CreateFuncallableInstance (StandardObject closClass, int nSlots, FuncallHandler funcallHandler)
