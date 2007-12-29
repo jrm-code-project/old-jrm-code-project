@@ -71,121 +71,6 @@
          </Type>
          <Type Name="CL">
           <Members>
-           <Member Name="Apply(System.Object,System.Object[]):System.Object">
-            <Messages>
-             <Message Id="1#rands" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-14 16:47:26Z">
-              <Issue Name="Parameter">
-               <Item>CL.Apply(Object, Object[]):Object</Item>
-               <Item>rands</Item>
-               <Item>rands</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2007-10-14 16:47:26Z">
-              <Issue>
-               <Item>'rands'</Item>
-               <Item>CL.Apply(Object, Object[]):Object</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Assq(System.Object,Lisp.Cons):Lisp.Cons">
-            <Messages>
-             <Message Id="1#alist" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="Parameter">
-               <Item>CL.Assq(Object, Cons):Cons</Item>
-               <Item>alist</Item>
-               <Item>alist</Item>
-              </Issue>
-             </Message>
-             <Message Id="Assq" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="Member">
-               <Item>Assq</Item>
-               <Item>CL.Assq(Object, Cons):Cons</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Assq(System.Object,System.Object):Lisp.Cons">
-            <Messages>
-             <Message Id="1#alist" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="Parameter">
-               <Item>CL.Assq(Object, Object):Cons</Item>
-               <Item>alist</Item>
-               <Item>alist</Item>
-              </Issue>
-             </Message>
-             <Message Id="Assq" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="Member">
-               <Item>Assq</Item>
-               <Item>CL.Assq(Object, Object):Cons</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Caar(Lisp.Cons):System.Object">
-            <Messages>
-             <Message Id="Caar" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-18 02:40:46Z">
-              <Issue Name="Member">
-               <Item>Caar</Item>
-               <Item>CL.Caar(Cons):Object</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Caar(System.Object):System.Object">
-            <Messages>
-             <Message Id="Caar" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-18 02:40:46Z">
-              <Issue Name="Member">
-               <Item>Caar</Item>
-               <Item>CL.Caar(Object):Object</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Cadddr(Lisp.Cons):System.Object">
-            <Messages>
-             <Message Id="Cadddr" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-07 23:38:40Z">
-              <Issue Name="Member">
-               <Item>Cadddr</Item>
-               <Item>CL.Cadddr(Cons):Object</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Cadddr(System.Object):System.Object">
-            <Messages>
-             <Message Id="Cadddr" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-07 23:38:40Z">
-              <Issue Name="Member">
-               <Item>Cadddr</Item>
-               <Item>CL.Cadddr(Object):Object</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Car(Lisp.Cons):System.Object">
-            <Messages>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.Car(Lisp.Cons)</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Car(Lisp.Cons):T">
-            <Messages>
-             <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CL.Car(Cons):T</Item>
-               <Item>T</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.Car(Lisp.Cons)</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
            <Member Name="Car(System.Object):System.Object">
             <Messages>
              <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-31 03:51:56Z">
@@ -194,70 +79,6 @@
                <Item>1</Item>
                <Item>NotImplementedException.NotImplementedException(String)</Item>
                <Item>wrong type argument</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.Car(System.Object)</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Car(System.Object):T">
-            <Messages>
-             <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CL.Car(Object):T</Item>
-               <Item>T</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.Car(System.Object)</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Cdar(Lisp.Cons):System.Object">
-            <Messages>
-             <Message Id="Cdar" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-14 16:47:26Z">
-              <Issue Name="Member">
-               <Item>Cdar</Item>
-               <Item>CL.Cdar(Cons):Object</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Cdar(System.Object):System.Object">
-            <Messages>
-             <Message Id="Cdar" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-14 16:47:26Z">
-              <Issue Name="Member">
-               <Item>Cdar</Item>
-               <Item>CL.Cdar(Object):Object</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Cdr(Lisp.Cons):System.Object">
-            <Messages>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.Cdr(Lisp.Cons)</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Cdr(Lisp.Cons):T">
-            <Messages>
-             <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CL.Cdr(Cons):T</Item>
-               <Item>T</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.Cdr(Lisp.Cons)</Item>
               </Issue>
              </Message>
             </Messages>
@@ -270,26 +91,6 @@
                <Item>1</Item>
                <Item>NotImplementedException.NotImplementedException(String)</Item>
                <Item>wrong type argument</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.Cdr(System.Object)</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Cdr(System.Object):T">
-            <Messages>
-             <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CL.Cdr(Object):T</Item>
-               <Item>T</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.Cdr(System.Object)</Item>
               </Issue>
              </Message>
             </Messages>
@@ -307,106 +108,12 @@
              </Accessor>
             </Accessors>
            </Member>
-           <Member Name="Eq(System.Object,System.Object):System.Boolean">
-            <Messages>
-             <Message Id="Member" TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706" Created="2007-10-14 16:47:26Z">
-              <Issue Name="Member">
-               <Item>Eq</Item>
-               <Item>CL.Eq(Object, Object):Boolean</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Eql(System.Object,System.Object):System.Boolean">
-            <Messages>
-             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2007-10-05 18:09:46Z">
-              <Issue>
-               <Item>'left'</Item>
-               <Item>CL.Eql(Object, Object):Boolean</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
            <Member Name="FindPackage(System.String):Lisp.Package">
             <Messages>
              <Message Id="name" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-05 18:09:46Z" FixCategory="Breaking">
               <Issue>
                <Item>name</Item>
                <Item>CL.FindPackage(String):Package</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Intern(System.String):Lisp.Symbol">
-            <Messages>
-             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="ParameterOneLetter">
-               <Item>CL.Intern(String):Symbol</Item>
-               <Item>s</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Intern(System.String,Lisp.Package):Lisp.Symbol">
-            <Messages>
-             <Message Id="0#s" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="ParameterOneLetter">
-               <Item>CL.Intern(String, Package):Symbol</Item>
-               <Item>s</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="List():Lisp.Cons">
-            <Messages>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.List</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="List():Lisp.ConsList`1&lt;T&gt;">
-            <Messages>
-             <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CL.List():ConsList`1&lt;T&gt;</Item>
-               <Item>T</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.List</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="List(System.Object,System.Object[]):Lisp.Cons">
-            <Messages>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.List(System.Object,System.Object[])</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2007-10-05 18:09:46Z">
-              <Issue>
-               <Item>'restArguments'</Item>
-               <Item>CL.List(Object, Object[]):Cons</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="List(System.Object,System.Object[]):Lisp.ConsList`1&lt;T&gt;">
-            <Messages>
-             <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CL.List(Object, Object[]):ConsList`1&lt;T&gt;</Item>
-               <Item>T</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CL.List(System.Object,System.Object[])</Item>
               </Issue>
              </Message>
             </Messages>
@@ -441,22 +148,22 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="Map(System.Object,System.Object,System.Object[]):System.Object">
+           <Member Name="MapCollectionToList1(System.Object,System.Collections.ICollection):Lisp.ConsList`1&lt;T&gt;">
             <Messages>
-             <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Created="2007-10-31 03:51:56Z">
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>CL.Map(Object, Object, Object[]):Object</Item>
-               <Item>TIn</Item>
-              </Issue>
-              <Issue>
-               <Item>CL.Map(Object, Object, Object[]):Object</Item>
-               <Item>TOut</Item>
+               <Item>CL.MapCollectionToList1(Object, ICollection):ConsList`1&lt;T&gt;</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
            <Member Name="MapForEffect(System.Object,System.Object[]):O">
             <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>CL.MapForEffect(Object, Object[]):O</Item>
+              </Issue>
+             </Message>
              <Message Id="functionSpecifier" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="NonBreaking">
               <Issue>
                <Item>functionSpecifier</Item>
@@ -487,12 +194,38 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="Memq(System.Object,System.Object):Lisp.Cons">
+           <Member Name="MapListToList1(System.Object,Lisp.ConsList`1&lt;I&gt;):Lisp.ConsList`1&lt;T&gt;">
             <Messages>
-             <Message Id="Memq" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-14 16:47:26Z">
-              <Issue Name="Member">
-               <Item>Memq</Item>
-               <Item>CL.Memq(Object, Object):Cons</Item>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>CL.MapListToList1(Object, ConsList`1&lt;I&gt;):ConsList`1&lt;T&gt;</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="MapToList(System.Object,System.Object[]):Lisp.ConsList`1&lt;T&gt;">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>CL.MapToList(Object, Object[]):ConsList`1&lt;T&gt;</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="MapToList1(System.Object,System.Object):Lisp.ConsList`1&lt;T&gt;">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>CL.MapToList1(Object, Object):ConsList`1&lt;T&gt;</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="MapVectorToList1(System.Object,I[]):Lisp.ConsList`1&lt;T&gt;">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>CL.MapVectorToList1(Object, I[]):ConsList`1&lt;T&gt;</Item>
               </Issue>
              </Message>
             </Messages>
@@ -741,39 +474,6 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="PositionIf(System.Predicate`1&lt;T&gt;,Lisp.Cons):System.Int32">
-            <Messages>
-             <Message Id="0#pred" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Parameter">
-               <Item>CL.PositionIf(Predicate`1&lt;T&gt;, Cons):Int32</Item>
-               <Item>pred</Item>
-               <Item>pred</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="PositionIf(System.Predicate`1&lt;T&gt;,Lisp.ConsList`1&lt;T&gt;):System.Int32">
-            <Messages>
-             <Message Id="0#pred" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Parameter">
-               <Item>CL.PositionIf(Predicate`1&lt;T&gt;, ConsList`1&lt;T&gt;):Int32</Item>
-               <Item>pred</Item>
-               <Item>pred</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="PositionIf(System.Predicate`1&lt;T&gt;,System.Object):System.Int32">
-            <Messages>
-             <Message Id="0#pred" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Parameter">
-               <Item>CL.PositionIf(Predicate`1&lt;T&gt;, Object):Int32</Item>
-               <Item>pred</Item>
-               <Item>pred</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
            <Member Name="Read():System.Object">
             <Messages>
              <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-05 18:09:46Z">
@@ -908,16 +608,6 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="RemoveIf(System.Delegate,Lisp.Cons):Lisp.Cons">
-            <Messages>
-             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2007-10-14 16:47:26Z">
-              <Issue>
-               <Item>'predicate'</Item>
-               <Item>CL.RemoveIf(Delegate, Cons):Cons</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
            <Member Name="RemoveIf(System.Object,System.Object):System.Object">
             <Messages>
              <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-07 23:38:40Z">
@@ -945,632 +635,163 @@
           </Members>
          </Type>
          <Type Name="CLOS">
-          <Messages>
-           <Message TypeName="LongAcronymsShouldBePascalCased" Category="Microsoft.Naming" CheckId="CA1705" Created="2007-10-05 18:09:46Z">
-            <Issue Name="Type">
-             <Item>CLOS</Item>
-            </Issue>
-           </Message>
-          </Messages>
           <Members>
-           <Member Name=".cctor()">
+           <Member Name="bootstrapClassSlots(Lisp.StandardInstance,System.Object[]):System.Object">
             <Messages>
-             <Message TypeName="DoNotInitializeUnnecessarily" Category="Microsoft.Performance" CheckId="CA1805" Created="2007-10-31 03:51:56Z">
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>CLOS.CLOS()</Item>
-               <Item>bootstrapPhase</Item>
-               <Item>System.Int32</Item>
-               <Item>0</Item>
+               <Item>CLOS.bootstrapClassSlots(StandardInstance, Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>classSlots</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="bootstrapInitialClass">
+           <Member Name="computeMethodMoreSpecificLoop(Lisp.StandardInstance,Lisp.StandardInstance,Lisp.StandardInstance,Lisp.Cons):System.Boolean">
             <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
+             <Message Id="generic" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
-               <Item>CLOS.bootstrapInitialClass</Item>
+               <Item>generic</Item>
+               <Item>CLOS.computeMethodMoreSpecificLoop(StandardInstance, StandardInstance, StandardInstance, Cons):Boolean</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="bootstrapInitialDirectSlots(Lisp.StandardObject,Lisp.Cons):Lisp.ConsList`1&lt;Lisp.StandardObject&gt;">
+           <Member Name="genericFunctionApplicationCache">
             <Messages>
-             <Message Id="closClass" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="NonBreaking">
+             <Message TypeName="DoNotDeclareReadOnlyMutableReferenceTypes" Category="Microsoft.Security" CheckId="CA2104" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>closClass</Item>
-               <Item>CLOS.bootstrapInitialDirectSlots(StandardObject, Cons):ConsList`1&lt;Lisp.StandardObject&gt;</Item>
+               <Item>CLOS.genericFunctionApplicationCache</Item>
+               <Item>Lisp.StandardInstance</Item>
               </Issue>
              </Message>
-            </Messages>
-           </Member>
-           <Member Name="ClassDefaultInitargs">
-            <Messages>
-             <Message Id="Initargs" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
+             <Message Id="Member" TypeName="IdentifiersShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1709" Created="2007-12-18 00:34:45Z">
               <Issue Name="Member">
-               <Item>Initargs</Item>
-               <Item>CLOS.ClassDefaultInitargs:StandardObject</Item>
+               <Item>genericFunctionApplicationCache</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="ClassDirectDefaultInitargs">
+           <Member Name="genericFunctionSingletonsList">
             <Messages>
-             <Message Id="Initargs" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Initargs</Item>
-               <Item>CLOS.ClassDirectDefaultInitargs:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="ComputeDefaultInitargs">
-            <Messages>
-             <Message Id="Initargs" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Initargs</Item>
-               <Item>CLOS.ComputeDefaultInitargs:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="DefaultInitargs">
-            <Messages>
-             <Message Id="Initargs" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-14 16:47:26Z">
-              <Issue Name="Member">
-               <Item>Initargs</Item>
-               <Item>CLOS.DefaultInitargs:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="EqlSpecializer">
-            <Messages>
-             <Message Id="Specializer" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Specializer</Item>
-               <Item>CLOS.EqlSpecializer:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="EqlSpecializerObject">
-            <Messages>
-             <Message Id="Specializer" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Specializer</Item>
-               <Item>CLOS.EqlSpecializerObject:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="ExtractSpecializerNames">
-            <Messages>
-             <Message Id="Specializer" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Specializer</Item>
-               <Item>CLOS.ExtractSpecializerNames:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="genericSingletonsList">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
+             <Message TypeName="DoNotDeclareReadOnlyMutableReferenceTypes" Category="Microsoft.Security" CheckId="CA2104" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>CLOS.genericSingletonsList</Item>
+               <Item>CLOS.genericFunctionSingletonsList</Item>
+               <Item>Lisp.StandardInstance</Item>
               </Issue>
              </Message>
-            </Messages>
-           </Member>
-           <Member Name="InternEqlSpecializer">
-            <Messages>
-             <Message Id="Specializer" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
+             <Message Id="Member" TypeName="IdentifiersShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1709" Created="2007-12-18 00:34:45Z">
               <Issue Name="Member">
-               <Item>Specializer</Item>
-               <Item>CLOS.InternEqlSpecializer:StandardObject</Item>
+               <Item>genericFunctionSingletonsList</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="IsSlotBound(Lisp.StandardObject,Lisp.Symbol):System.Boolean">
+           <Member Name="initializeClos():System.Boolean">
             <Messages>
-             <Message Id="instance" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="Breaking">
+             <Message Id="Member" TypeName="IdentifiersShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1709" Created="2007-12-18 00:34:45Z">
+              <Issue Name="Member">
+               <Item>initializeClos</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="IsSlotBound(Lisp.StandardInstance,Lisp.Symbol):System.Boolean">
+            <Messages>
+             <Message Id="instance" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="Breaking">
               <Issue>
                <Item>instance</Item>
-               <Item>CLOS.IsSlotBound(StandardObject, Symbol):Boolean</Item>
+               <Item>CLOS.IsSlotBound(StandardInstance, Symbol):Boolean</Item>
               </Issue>
              </Message>
-             <Message Id="slotName" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="Breaking">
+             <Message Id="slotName" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="Breaking">
               <Issue>
                <Item>slotName</Item>
-               <Item>CLOS.IsSlotBound(StandardObject, Symbol):Boolean</Item>
+               <Item>CLOS.IsSlotBound(StandardInstance, Symbol):Boolean</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="IsSlotExists(Lisp.StandardObject,Lisp.Symbol):System.Boolean">
+           <Member Name="IsSlotExists(Lisp.StandardInstance,Lisp.Symbol):System.Boolean">
             <Messages>
-             <Message Id="instance" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="Breaking">
+             <Message Id="instance" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="Breaking">
               <Issue>
                <Item>instance</Item>
-               <Item>CLOS.IsSlotExists(StandardObject, Symbol):Boolean</Item>
+               <Item>CLOS.IsSlotExists(StandardInstance, Symbol):Boolean</Item>
               </Issue>
              </Message>
-             <Message Id="slotName" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="Breaking">
+             <Message Id="slotName" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="Breaking">
               <Issue>
                <Item>slotName</Item>
-               <Item>CLOS.IsSlotExists(StandardObject, Symbol):Boolean</Item>
+               <Item>CLOS.IsSlotExists(StandardInstance, Symbol):Boolean</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="Metaobject">
+           <Member Name="lookupSlot(Lisp.StandardInstance,Lisp.Symbol):Lisp.StandardInstance">
             <Messages>
-             <Message Id="Metaobject" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="Member">
-               <Item>Metaobject</Item>
-               <Item>CLOS.Metaobject:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="methodCombinationClass">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>CLOS.methodCombinationClass</Item>
+               <Item>CLOS.lookupSlot(StandardInstance, Symbol):StandardInstance</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>Slot lookup failed for __</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="MethodSpecializers">
+           <Member Name="methodImplForComputeApplicableMethods(Lisp.NextMethodFunction,Lisp.StandardInstance,System.Object[]):Lisp.ConsList`1&lt;Lisp.StandardInstance&gt;">
             <Messages>
-             <Message Id="Specializers" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-14 16:47:26Z">
-              <Issue Name="Member">
-               <Item>Specializers</Item>
-               <Item>CLOS.MethodSpecializers:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteAllocation">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
+             <Message Id="callNextMethod" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
-               <Item>CLOS.QuoteAllocation</Item>
+               <Item>callNextMethod</Item>
+               <Item>CLOS.methodImplForComputeApplicableMethods(NextMethodFunction, StandardInstance, Object[]):ConsList`1&lt;Lisp.StandardInstance&gt;</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="QuoteAndRest">
+           <Member Name="methodImplForComputeEffectiveMethod(Lisp.NextMethodFunction,Lisp.StandardInstance,Lisp.ConsList`1&lt;Lisp.StandardInstance&gt;):Lisp.NextMethodFunction">
             <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
+             <Message Id="callNextMethod" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
-               <Item>CLOS.QuoteAndRest</Item>
+               <Item>callNextMethod</Item>
+               <Item>CLOS.methodImplForComputeEffectiveMethod(NextMethodFunction, StandardInstance, ConsList`1&lt;Lisp.StandardInstance&gt;):NextMethodFunction</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="QuoteAnonymous">
+           <Member Name="methodImplForComputeMethodMoreSpecific(Lisp.NextMethodFunction,Lisp.StandardInstance):Lisp.CLOS+MethodCompare3">
             <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
+             <Message Id="callNextMethod" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
-               <Item>CLOS.QuoteAnonymous</Item>
+               <Item>callNextMethod</Item>
+               <Item>CLOS.methodImplForComputeMethodMoreSpecific(NextMethodFunction, StandardInstance):MethodCompare3</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="QuoteApplicationCache">
+           <Member Name="oneAroundStep(Lisp.Cons,Lisp.Cons):Lisp.NextMethodFunction">
             <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
+             <Message Id="args" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
-               <Item>CLOS.QuoteApplicationCache</Item>
+               <Item>args</Item>
+               <Item>CLOS.oneAroundStep(Cons, Cons):NextMethodFunction</Item>
+              </Issue>
+             </Message>
+             <Message Id="methods" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>methods</Item>
+               <Item>CLOS.oneAroundStep(Cons, Cons):NextMethodFunction</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="QuoteArgumentPrecedenceOrder">
+           <Member Name="QuoteSlot">
             <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>CLOS.QuoteArgumentPrecedenceOrder</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteArguments">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteArguments</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteArity">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteArity</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteClassInitializers">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-14 16:47:26Z">
-              <Issue>
-               <Item>CLOS.QuoteClassInitializers</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteDeclarations">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteDeclarations</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteDirectDefaultInitargs">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteDirectDefaultInitargs</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteDirectMethods">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteDirectMethods</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteDotnetType">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteDotnetType</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteFinalizedP">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteFinalizedP</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteFunctionName">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteFunctionName</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteGenericFunctionClass">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteGenericFunctionClass</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteGettersAndSetters">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteGettersAndSetters</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteInitform">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteInitform</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteInitializers">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteInitializers</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteInstance">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteInstance</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteLambdaList">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteLambdaList</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteList">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteList</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodAllocateInstance">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodAllocateInstance</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodComputeApplicableMethods">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodComputeApplicableMethods</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodComputeDiscriminatingFunction">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodComputeDiscriminatingFunction</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodComputeEffectiveMethod">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodComputeEffectiveMethod</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodComputeMethodMoreSpecific">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodComputeMethodMoreSpecific</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodDefaultInitargs">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodDefaultInitargs</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodEnsureGenericFunction">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodEnsureGenericFunction</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodInitializeInstance">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodInitializeInstance</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodMethodQualifier">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodMethodQualifier</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethodMethodSpecializers">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethodMethodSpecializers</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteMethods">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteMethods</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteNewMakeInstance">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-14 16:47:26Z">
-              <Issue>
-               <Item>CLOS.QuoteNewMakeInstance</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteNewMakeInstanceMethod">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteNewMakeInstanceMethod</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuotePrecedenceList">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuotePrecedenceList</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteProcedure">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteProcedure</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuotePrototype">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuotePrototype</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteQualifier">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteQualifier</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteReaders">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteReaders</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteSetSlotValue">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteSetSlotValue</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteSlotInitializers">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteSlotInitializers</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteSlotNames">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteSlotNames</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteSlotValue">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteSlotValue</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteSpecializers">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteSpecializers</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteSuperclass">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteSuperclass</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteSuppliedInitargs">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteSuppliedInitargs</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteType">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteType</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="QuoteWriters">
-            <Messages>
-             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.QuoteWriters</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SerialNumber(Lisp.StandardObject):System.Int32">
-            <Messages>
-             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.SerialNumber(StandardObject):Int32</Item>
+               <Item>CLOS.QuoteSlot</Item>
               </Issue>
              </Message>
             </Messages>
@@ -1602,194 +823,40 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="setFuncallableInstanceFunction(Lisp.StandardObject,System.Reflection.MethodInfo):System.Void">
+           <Member Name="SetSlotValue(T,Lisp.StandardInstance,Lisp.Symbol):T">
             <Messages>
-             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.setFuncallableInstanceFunction(StandardObject, MethodInfo):Void</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SlotDefinitionInitargs">
-            <Messages>
-             <Message Id="Initargs" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Initargs</Item>
-               <Item>CLOS.SlotDefinitionInitargs:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SlotDefinitionInitform">
-            <Messages>
-             <Message Id="Initform" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Initform</Item>
-               <Item>CLOS.SlotDefinitionInitform:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SlotDefinitionInitfunction">
-            <Messages>
-             <Message Id="Initfunction" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Initfunction</Item>
-               <Item>CLOS.SlotDefinitionInitfunction:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SlotMakunbound(Lisp.StandardObject,Lisp.Symbol):Lisp.StandardObject">
-            <Messages>
-             <Message Id="Makunbound" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Makunbound</Item>
-               <Item>CLOS.SlotMakunbound(StandardObject, Symbol):StandardObject</Item>
-              </Issue>
-             </Message>
-             <Message Id="instance" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="Breaking">
+             <Message Id="instance" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="Breaking">
               <Issue>
                <Item>instance</Item>
-               <Item>CLOS.SlotMakunbound(StandardObject, Symbol):StandardObject</Item>
+               <Item>CLOS.SetSlotValue(T, StandardInstance, Symbol):T</Item>
               </Issue>
              </Message>
-             <Message Id="slotName" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="Breaking">
-              <Issue>
-               <Item>slotName</Item>
-               <Item>CLOS.SlotMakunbound(StandardObject, Symbol):StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SlotMakunboundUsingClass">
-            <Messages>
-             <Message Id="Makunbound" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Makunbound</Item>
-               <Item>CLOS.SlotMakunboundUsingClass:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SlotValue(Lisp.StandardObject,Lisp.Symbol):System.Object">
-            <Messages>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CLOS.SlotValue(Lisp.StandardObject,Lisp.Symbol)</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SlotValue(Lisp.StandardObject,Lisp.Symbol):T">
-            <Messages>
-             <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>CLOS.SlotValue(StandardObject, Symbol):T</Item>
-               <Item>T</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CLOS.SlotValue(Lisp.StandardObject,Lisp.Symbol)</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SlotValue(T,Lisp.StandardObject,Lisp.Symbol):T">
-            <Messages>
-             <Message Id="instance" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="Breaking">
-              <Issue>
-               <Item>instance</Item>
-               <Item>CLOS.SlotValue(T, StandardObject, Symbol):T</Item>
-              </Issue>
-             </Message>
-             <Message Id="newValue" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="Breaking">
+             <Message Id="newValue" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="Breaking">
               <Issue>
                <Item>newValue</Item>
-               <Item>CLOS.SlotValue(T, StandardObject, Symbol):T</Item>
+               <Item>CLOS.SetSlotValue(T, StandardInstance, Symbol):T</Item>
               </Issue>
              </Message>
-             <Message Id="slotName" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-31 03:51:56Z" FixCategory="Breaking">
+             <Message Id="slotName" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="Breaking">
               <Issue>
                <Item>slotName</Item>
-               <Item>CLOS.SlotValue(T, StandardObject, Symbol):T</Item>
+               <Item>CLOS.SetSlotValue(T, StandardInstance, Symbol):T</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="Specializer">
+           <Member Name="SlotMakunbound(Lisp.StandardInstance,Lisp.Symbol):Lisp.StandardInstance">
             <Messages>
-             <Message Id="Specializer" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="Member">
-               <Item>Specializer</Item>
-               <Item>CLOS.Specializer:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SpecializerDirectGenericFunctions">
-            <Messages>
-             <Message Id="Specializer" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Specializer</Item>
-               <Item>CLOS.SpecializerDirectGenericFunctions:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="SpecializerDirectMethods">
-            <Messages>
-             <Message Id="Specializer" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Specializer</Item>
-               <Item>CLOS.SpecializerDirectMethods:StandardObject</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="StandardInstanceAccess(Lisp.StandardObject,System.Int32):System.Object">
-            <Messages>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
+             <Message Id="instance" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="Breaking">
               <Issue>
-               <Item>Lisp.CLOS.StandardInstanceAccess(Lisp.StandardObject,System.Int32)</Item>
+               <Item>instance</Item>
+               <Item>CLOS.SlotMakunbound(StandardInstance, Symbol):StandardInstance</Item>
               </Issue>
              </Message>
-            </Messages>
-           </Member>
-           <Member Name="StandardInstanceAccess(Lisp.StandardObject,System.Int32):T">
-            <Messages>
-             <Message TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004" Created="2007-10-31 03:51:56Z">
+             <Message Id="slotName" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="Breaking">
               <Issue>
-               <Item>CLOS.StandardInstanceAccess(StandardObject, Int32):T</Item>
-               <Item>T</Item>
-              </Issue>
-             </Message>
-             <Message TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>Lisp.CLOS.StandardInstanceAccess(Lisp.StandardObject,System.Int32)</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Subvector(System.Object[],System.Int32,System.Int32):System.Object[]">
-            <Messages>
-             <Message Id="0#src" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Parameter">
-               <Item>CLOS.Subvector(Object[], Int32, Int32):Object[]</Item>
-               <Item>src</Item>
-               <Item>src</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="ValidateSuperclass">
-            <Messages>
-             <Message Id="Superclass" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Superclass</Item>
-               <Item>CLOS.ValidateSuperclass:StandardObject</Item>
+               <Item>slotName</Item>
+               <Item>CLOS.SlotMakunbound(StandardInstance, Symbol):StandardInstance</Item>
               </Issue>
              </Message>
             </Messages>
@@ -1955,16 +1022,6 @@
              </Accessor>
             </Accessors>
            </Member>
-           <Member Name="VectorToList(System.Object[]):Lisp.Cons">
-            <Messages>
-             <Message TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062" Created="2007-10-31 03:51:56Z">
-              <Issue>
-               <Item>'vector'</Item>
-               <Item>Cons.VectorToList(Object[]):Cons</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
           </Members>
          </Type>
          <Type Name="ConsEnumerator">
@@ -1994,11 +1051,11 @@
            </Message>
           </Messages>
           <Members>
-           <Member Name="SubvectorToList(System.Object[],System.Int32,System.Int32):Lisp.ConsList`1&lt;T&gt;">
+           <Member Name="SubvectorToList(T[],System.Int32,System.Int32):Lisp.ConsList`1&lt;T&gt;">
             <Messages>
-             <Message TypeName="DoNotDeclareStaticMembersOnGenericTypes" Category="Microsoft.Design" CheckId="CA1000" Created="2007-10-31 03:51:56Z">
+             <Message TypeName="DoNotDeclareStaticMembersOnGenericTypes" Category="Microsoft.Design" CheckId="CA1000" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>ConsList`1.SubvectorToList(Object[], Int32, Int32):ConsList`1&lt;T&gt;</Item>
+               <Item>ConsList`1.SubvectorToList(T[], Int32, Int32):ConsList`1&lt;T&gt;</Item>
                <Item>Lisp.ConsList`1</Item>
               </Issue>
              </Message>
@@ -2016,11 +1073,11 @@
              </Message>
             </Messages>
            </Member>
-           <Member Name="VectorToList(System.Object[]):Lisp.ConsList`1&lt;T&gt;">
+           <Member Name="VectorToList(T[]):Lisp.ConsList`1&lt;T&gt;">
             <Messages>
-             <Message TypeName="DoNotDeclareStaticMembersOnGenericTypes" Category="Microsoft.Design" CheckId="CA1000" Created="2007-10-31 03:51:56Z">
+             <Message TypeName="DoNotDeclareStaticMembersOnGenericTypes" Category="Microsoft.Design" CheckId="CA1000" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>ConsList`1.VectorToList(Object[]):ConsList`1&lt;T&gt;</Item>
+               <Item>ConsList`1.VectorToList(T[]):ConsList`1&lt;T&gt;</Item>
                <Item>Lisp.ConsList`1</Item>
               </Issue>
              </Message>
@@ -2039,6 +1096,38 @@
             </Issue>
            </Message>
           </Messages>
+         </Type>
+         <Type Name="EffectiveMethodCache">
+          <Members>
+           <Member Name="ContainsKey(System.Object):System.Boolean">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>EffectiveMethodCache.ContainsKey(Object):Boolean</Item>
+              </Issue>
+             </Message>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>EffectiveMethodCache.ContainsKey(Object):Boolean</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>MethodCache::ContainsKey</Item>
+              </Issue>
+             </Message>
+             <Message TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>EffectiveMethodCache.ContainsKey(Object):Boolean</Item>
+              </Issue>
+             </Message>
+             <Message Id="key" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>key</Item>
+               <Item>EffectiveMethodCache.ContainsKey(Object):Boolean</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
          </Type>
          <Type Name="Environment">
           <Members>
@@ -2096,68 +1185,68 @@
          </Type>
          <Type Name="FuncallableWrapper">
           <Members>
-           <Member Name="Funcall(Lisp.StandardObject,System.Object[]):System.Object">
+           <Member Name="Funcall(Lisp.StandardInstance,System.Object[]):System.Object">
             <Messages>
-             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-14 16:47:26Z" FixCategory="NonBreaking">
+             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
                <Item>self</Item>
-               <Item>FuncallableWrapper.Funcall(StandardObject, Object[]):Object</Item>
+               <Item>FuncallableWrapper.Funcall(StandardInstance, Object[]):Object</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="Funcall1r(Lisp.StandardObject,System.Object[]):System.Object">
+           <Member Name="Funcall1r(Lisp.StandardInstance,System.Object[]):System.Object">
             <Messages>
-             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-14 16:47:26Z" FixCategory="NonBreaking">
+             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
                <Item>self</Item>
-               <Item>FuncallableWrapper.Funcall1r(StandardObject, Object[]):Object</Item>
+               <Item>FuncallableWrapper.Funcall1r(StandardInstance, Object[]):Object</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="Funcall2(Lisp.StandardObject,System.Object[]):System.Object">
+           <Member Name="Funcall2(Lisp.StandardInstance,System.Object[]):System.Object">
             <Messages>
-             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-14 16:47:26Z">
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>FuncallableWrapper.Funcall2(StandardObject, Object[]):Object</Item>
+               <Item>FuncallableWrapper.Funcall2(StandardInstance, Object[]):Object</Item>
                <Item>1</Item>
                <Item>NotImplementedException.NotImplementedException(String)</Item>
                <Item>funcall2</Item>
               </Issue>
              </Message>
-             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-14 16:47:26Z" FixCategory="NonBreaking">
+             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
                <Item>self</Item>
-               <Item>FuncallableWrapper.Funcall2(StandardObject, Object[]):Object</Item>
+               <Item>FuncallableWrapper.Funcall2(StandardInstance, Object[]):Object</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="Funcall2r(Lisp.StandardObject,System.Object[]):System.Object">
+           <Member Name="Funcall2r(Lisp.StandardInstance,System.Object[]):System.Object">
             <Messages>
-             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-14 16:47:26Z" FixCategory="NonBreaking">
+             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
                <Item>self</Item>
-               <Item>FuncallableWrapper.Funcall2r(StandardObject, Object[]):Object</Item>
+               <Item>FuncallableWrapper.Funcall2r(StandardInstance, Object[]):Object</Item>
               </Issue>
              </Message>
             </Messages>
            </Member>
-           <Member Name="Funcall3(Lisp.StandardObject,System.Object[]):System.Object">
+           <Member Name="Funcall3(Lisp.StandardInstance,System.Object[]):System.Object">
             <Messages>
-             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-14 16:47:26Z">
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>FuncallableWrapper.Funcall3(StandardObject, Object[]):Object</Item>
+               <Item>FuncallableWrapper.Funcall3(StandardInstance, Object[]):Object</Item>
                <Item>1</Item>
                <Item>NotImplementedException.NotImplementedException(String)</Item>
                <Item>funcall3</Item>
               </Issue>
              </Message>
-             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-10-14 16:47:26Z" FixCategory="NonBreaking">
+             <Message Id="self" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
               <Issue>
                <Item>self</Item>
-               <Item>FuncallableWrapper.Funcall3(StandardObject, Object[]):Object</Item>
+               <Item>FuncallableWrapper.Funcall3(StandardInstance, Object[]):Object</Item>
               </Issue>
              </Message>
             </Messages>
@@ -2206,104 +1295,15 @@
            </Member>
           </Members>
          </Type>
-         <Type Name="KW">
+         <Type Name="GroundMethodFunction">
           <Members>
-           <Member Name="Arity">
+           <Member Name="GetFuncallMethod(System.Delegate):System.Reflection.MethodInfo">
             <Messages>
-             <Message Id="Arity" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Arity</Item>
-               <Item>KW.Arity:Keyword</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="DirectDefaultInitargs">
-            <Messages>
-             <Message Id="Initargs" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="Member">
-               <Item>Initargs</Item>
-               <Item>KW.DirectDefaultInitargs:Keyword</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="DotnetType">
-            <Messages>
-             <Message Id="Dotnet" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Dotnet</Item>
-               <Item>KW.DotnetType:Keyword</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Initarg">
-            <Messages>
-             <Message Id="Initarg" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-14 19:33:04Z">
-              <Issue Name="Member">
-               <Item>Initarg</Item>
-               <Item>KW.Initarg:Keyword</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Initargs">
-            <Messages>
-             <Message Id="Initargs" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Initargs</Item>
-               <Item>KW.Initargs:Keyword</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Initform">
-            <Messages>
-             <Message Id="Initform" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Initform</Item>
-               <Item>KW.Initform:Keyword</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Initfunction">
-            <Messages>
-             <Message Id="Initfunction" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Initfunction</Item>
-               <Item>KW.Initfunction:Keyword</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Initvalue">
-            <Messages>
-             <Message Id="Initvalue" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-14 19:33:04Z">
-              <Issue Name="Member">
-               <Item>Initvalue</Item>
-               <Item>KW.Initvalue:Keyword</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Metaclass">
-            <Messages>
-             <Message Id="Metaclass" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-31 03:51:56Z">
-              <Issue Name="Member">
-               <Item>Metaclass</Item>
-               <Item>KW.Metaclass:Keyword</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-           <Member Name="Specializers">
-            <Messages>
-             <Message Id="Specializers" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-07 23:38:40Z">
-              <Issue Name="Member">
-               <Item>Specializers</Item>
-               <Item>KW.Specializers:Keyword</Item>
+             <Message Id="System.Int32.ToString" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>GroundMethodFunction.GetFuncallMethod(Delegate):MethodInfo</Item>
+               <Item>System.Int32.ToString</Item>
+               <Item>System.Int32.ToString(System.IFormatProvider)</Item>
               </Issue>
              </Message>
             </Messages>
@@ -2312,11 +1312,11 @@
          </Type>
          <Type Name="ManifestInstance">
           <Members>
-           <Member Name="funcallStandardObject(Lisp.StandardObject,System.Object[]):System.Object">
+           <Member Name="funcallStandardObject(Lisp.StandardInstance,System.Object[]):System.Object">
             <Messages>
-             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-10-14 16:47:26Z">
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-12-18 00:34:45Z">
               <Issue>
-               <Item>ManifestInstance.funcallStandardObject(StandardObject, Object[]):Object</Item>
+               <Item>ManifestInstance.funcallStandardObject(StandardInstance, Object[]):Object</Item>
                <Item>1</Item>
                <Item>NotImplementedException.NotImplementedException(String)</Item>
                <Item>Attempt to apply non function ____ to __</Item>
@@ -2364,6 +1364,78 @@
               </Messages>
              </Accessor>
             </Accessors>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="MethodStepWrapper">
+          <Members>
+           <Member Name="Funcall3(Lisp.NextMethodFunction,System.Object[]):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>MethodStepWrapper.Funcall3(NextMethodFunction, Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>wrong number of arguments</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetFuncallMethod(System.Delegate):System.Reflection.MethodInfo">
+            <Messages>
+             <Message Id="System.Int32.ToString" TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>MethodStepWrapper.GetFuncallMethod(Delegate):MethodInfo</Item>
+               <Item>System.Int32.ToString</Item>
+               <Item>System.Int32.ToString(System.IFormatProvider)</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+          </Members>
+         </Type>
+         <Type Name="NoNextMethod">
+          <Members>
+           <Member Name="Funcall(System.Object[]):System.Object">
+            <Messages>
+             <Message Id="System.NotImplementedException.#ctor(System.String)" TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>NoNextMethod.Funcall(Object[]):Object</Item>
+               <Item>1</Item>
+               <Item>NotImplementedException.NotImplementedException(String)</Item>
+               <Item>No Next Method</Item>
+              </Issue>
+             </Message>
+             <Message TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>NoNextMethod.Funcall(Object[]):Object</Item>
+              </Issue>
+             </Message>
+             <Message Id="args" TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801" Created="2007-12-18 00:34:45Z" FixCategory="NonBreaking">
+              <Issue>
+               <Item>args</Item>
+               <Item>NoNextMethod.Funcall(Object[]):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="generic">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>NoNextMethod.generic</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="info">
+            <Messages>
+             <Message TypeName="AvoidUnusedPrivateFields" Category="Microsoft.Performance" CheckId="CA1823" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>NoNextMethod.info</Item>
+              </Issue>
+             </Message>
+            </Messages>
            </Member>
           </Members>
          </Type>
@@ -2432,20 +1504,6 @@
            </Member>
           </Members>
          </Type>
-         <Type Name="ReaderMacroStep">
-          <Members>
-           <Member Name="Result(System.Int32):System.Object">
-            <Messages>
-             <Message Id="0#i" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="ParameterOneLetter">
-               <Item>ReaderMacroStep.Result(Int32):Object</Item>
-               <Item>i</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-          </Members>
-         </Type>
          <Type Name="Readtable">
           <Members>
            <Member Name="IsWhitespaceSyntax(System.Char):System.Boolean">
@@ -2491,20 +1549,6 @@
              <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-05 18:09:46Z">
               <Issue>
                <Item>StringMatcher.MatchesPackage(Package):Boolean</Item>
-              </Issue>
-             </Message>
-            </Messages>
-           </Member>
-          </Members>
-         </Type>
-         <Type Name="Symbol">
-          <Members>
-           <Member Name="NamesDotnetMethod():System.Boolean">
-            <Messages>
-             <Message Id="Dotnet" TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704" Created="2007-10-05 18:09:46Z">
-              <Issue Name="Member">
-               <Item>Dotnet</Item>
-               <Item>Symbol.NamesDotnetMethod():Boolean</Item>
               </Issue>
              </Message>
             </Messages>
@@ -2562,6 +1606,33 @@
          </Type>
          <Type Name="Utility">
           <Members>
+           <Member Name="GetArg(System.Object,System.Object,System.Object):System.Object">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>Utility.GetArg(Object, Object, Object):Object</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetArgs(Lisp.Cons,System.Object):Lisp.Cons">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>Utility.GetArgs(Cons, Object):Cons</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
+           <Member Name="GetArgs(Lisp.Cons,System.Object):Lisp.ConsList`1&lt;T&gt;">
+            <Messages>
+             <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-12-18 00:34:45Z">
+              <Issue>
+               <Item>Utility.GetArgs(Cons, Object):ConsList`1&lt;T&gt;</Item>
+              </Issue>
+             </Message>
+            </Messages>
+           </Member>
            <Member Name="GetArgs(System.Object[],System.Object):Lisp.Cons">
             <Messages>
              <Message TypeName="AvoidUncalledPrivateCode" Category="Microsoft.Performance" CheckId="CA1811" Created="2007-10-31 03:51:56Z">
@@ -2606,11 +1677,11 @@
    <Rule TypeName="DoNotCastUnnecessarily" Category="Microsoft.Performance" CheckId="CA1800">
     <Resolution Name="Local">'{0}', a local, is cast to type '{1}' multiple times in method {2}. Cache the result of the 'as' operator or direct cast in order to eliminate the redundant {3} instruction.</Resolution>
    </Rule>
+   <Rule TypeName="DoNotDeclareReadOnlyMutableReferenceTypes" Category="Microsoft.Security" CheckId="CA2104">
+    <Resolution Name="Default">Remove the readonly declaration from '{0}' or change the field to one that is an immutable reference type. If the reference type '{1}' is, in fact, immutable, exclude this message.</Resolution>
+   </Rule>
    <Rule TypeName="DoNotDeclareStaticMembersOnGenericTypes" Category="Microsoft.Design" CheckId="CA1000">
     <Resolution Name="Default">Remove {0} from '{1}' or make it an instance member.</Resolution>
-   </Rule>
-   <Rule TypeName="DoNotInitializeUnnecessarily" Category="Microsoft.Performance" CheckId="CA1805">
-    <Resolution Name="Default">{0} initializes field {1} of type {2} to {3}. Remove this initialization as it will be done automatically by the runtime.</Resolution>
    </Rule>
    <Rule TypeName="DoNotPassLiteralsAsLocalizedParameters" Category="Microsoft.Globalization" CheckId="CA1303">
     <Resolution Name="Default">{0} passes a literal as parameter {1} of a call to {2}. Retrieve the following string argument from a resource table instead: '{3}'</Resolution>
@@ -2618,15 +1689,13 @@
    <Rule TypeName="EnumeratorsShouldBeStronglyTyped" Category="Microsoft.Design" CheckId="CA1038">
     <Resolution Name="Default">'{0}' should provide a strongly typed implementation of IEnumerator.Current.</Resolution>
    </Rule>
-   <Rule TypeName="GenericMethodsShouldProvideTypeParameter" Category="Microsoft.Design" CheckId="CA1004">
-    <Resolution Name="Default">Consider a design where {0} doesn't require explicit type parameter '{1}' in any call to it.</Resolution>
-   </Rule>
    <Rule TypeName="ICollectionImplementationsHaveStronglyTypedMembers" Category="Microsoft.Design" CheckId="CA1035">
     <Resolution Name="Default">'{0}' should provide a strongly typed implementation of ICollection.CopyTo.</Resolution>
    </Rule>
+   <Rule TypeName="IdentifiersShouldBeCasedCorrectly" Category="Microsoft.Naming" CheckId="CA1709">
+    <Resolution Name="Member">Correct the casing of member name '{0}'.</Resolution>
+   </Rule>
    <Rule TypeName="IdentifiersShouldBeSpelledCorrectly" Category="Microsoft.Naming" CheckId="CA1704">
-    <Resolution Name="Member">Correct the spelling of the unrecognized token '{0}' in member name '{1}'.</Resolution>
-    <Resolution Name="Parameter">In method {0}, correct the spelling of the unrecognized token '{1}' in parameter name '{2}' or strip it entirely if it represents any sort of hungarian notation.</Resolution>
     <Resolution Name="ParameterOneLetter">In method {0}, consider providing a more meaningful name than the one-letter parameter name '{1}'.</Resolution>
    </Rule>
    <Rule TypeName="IdentifiersShouldHaveCorrectSuffix" Category="Microsoft.Naming" CheckId="CA1710">
@@ -2638,14 +1707,8 @@
    <Rule TypeName="ListsAreStronglyTyped" Category="Microsoft.Design" CheckId="CA1039">
     <Resolution Name="Default">'{0}' should provide a strongly typed implementation of IList.{1}.</Resolution>
    </Rule>
-   <Rule TypeName="LongAcronymsShouldBePascalCased" Category="Microsoft.Naming" CheckId="CA1705">
-    <Resolution Name="Type">Correct the capitalization of type name '{0}'.</Resolution>
-   </Rule>
    <Rule TypeName="MarkMembersAsStatic" Category="Microsoft.Performance" CheckId="CA1822">
     <Resolution Name="Default">The 'this' parameter (or 'Me' in VB) of {0} is never used. Mark the member as static (or Shared in VB) or use 'this'/'Me' in the method body or at least one property accessor, if appropriate.</Resolution>
-   </Rule>
-   <Rule TypeName="MembersShouldDifferByMoreThanReturnType" Category="Microsoft.Usage" CheckId="CA2223">
-    <Resolution Name="Default">'{0}' should differ from other members by more than its return type.</Resolution>
    </Rule>
    <Rule TypeName="OverrideEqualsAndOperatorEqualsOnValueTypes" Category="Microsoft.Performance" CheckId="CA1815">
     <Resolution Name="Equals">'{0}' should override Equals.</Resolution>
@@ -2660,14 +1723,8 @@
    <Rule TypeName="ReviewUnusedParameters" Category="Microsoft.Usage" CheckId="CA1801">
     <Resolution Name="Default">Parameter '{0}' of {1} is never used. Remove the parameter or use it in the method body.</Resolution>
    </Rule>
-   <Rule TypeName="ShortAcronymsShouldBeUppercase" Category="Microsoft.Naming" CheckId="CA1706">
-    <Resolution Name="Member">Correct the capitalization of '{0}' in member name '{1}'.</Resolution>
-   </Rule>
    <Rule TypeName="SpecifyIFormatProvider" Category="Microsoft.Globalization" CheckId="CA1305">
     <Resolution Name="Default">{0} makes a call to {1} that does not explicitly provide an IFormatProvider. This should be replaced with a call to {2}.</Resolution>
-   </Rule>
-   <Rule TypeName="ValidateArgumentsOfPublicMethods" Category="Microsoft.Design" CheckId="CA1062">
-    <Resolution Name="Default">Validate parameter {0} passed to externally visible method {1}.</Resolution>
    </Rule>
   </Rules>
  </FxCopReport>

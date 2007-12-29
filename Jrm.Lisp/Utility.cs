@@ -26,6 +26,16 @@ namespace Lisp
             return CL.Reverse (reversedAnswer);
         }
 
+        static public Cons RemArgs (object [] ra, object key)
+        {
+            Cons reversedAnswer = null;
+            for (int i = 0; i < ra.Length; i += 2) {
+                if (ra [i] != key)
+                    reversedAnswer = new Cons (ra [i + 1], new Cons (ra [i], reversedAnswer));
+            }
+            return CL.Reverse (reversedAnswer);
+        }
+
         static public Cons GetArgs (Cons list, object key)
         {
             if (list == null)
@@ -60,6 +70,18 @@ namespace Lisp
                 return secondPair.Car;
             else
                 return GetArg (secondPair.Cdr, key, defaultValue);
+        }
+
+        static public object GetArgStar (object list, ConsList<Symbol> keys, object defaultValue)
+        {
+            if (list == null)
+                return defaultValue;
+            Cons firstPair = (Cons) list;
+            Cons secondPair = (Cons) (firstPair.Cdr);
+            if (CL.Memq<Symbol> ((Symbol) firstPair.Car, keys) != null)
+                return secondPair.Car;
+            else
+                return GetArgStar (secondPair.Cdr, keys, defaultValue);
         }
     }
 }

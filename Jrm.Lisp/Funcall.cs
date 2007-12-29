@@ -15,33 +15,33 @@ namespace Lisp
             this.del = del;
         }
 
-        object Funcall1r (StandardObject self, object [] arguments)
+        object Funcall1r (StandardInstance self, object [] arguments)
         {
             return del.DynamicInvoke (null, arguments);
         }
 
-        object Funcall2 (StandardObject self, object [] arguments)
+        object Funcall2 (StandardInstance self, object [] arguments)
         {
             if (arguments.Length != 1)
                 throw new NotImplementedException ("funcall2");
             return del.DynamicInvoke (null, arguments [0]);
         }
 
-        object Funcall2r (StandardObject self, object [] arguments)
+        object Funcall2r (StandardInstance self, object [] arguments)
         {
             object [] remaining = new object [arguments.Length - 1];
             Array.Copy (arguments, 1, remaining, 0, arguments.Length - 1);
             return del.DynamicInvoke (null, arguments [0], remaining);
         }
 
-        object Funcall3 (StandardObject self, object [] arguments)
+        object Funcall3 (StandardInstance self, object [] arguments)
         {
             if (arguments.Length != 2)
                 throw new NotImplementedException ("funcall3");
             return del.DynamicInvoke (null, arguments [0], arguments[1]);
         }
 
-        object Funcall (StandardObject self, object [] arguments)
+        object Funcall (StandardInstance self, object [] arguments)
         {
             ParameterInfo [] parameters = del.Method.GetParameters ();
             ParameterInfo lastParameter = parameters [parameters.Length - 1];
