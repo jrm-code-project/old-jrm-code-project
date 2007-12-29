@@ -123,7 +123,7 @@ namespace Lisp
             }
         }
 
-        public static StandardObject AddMethod
+        public static StandardInstance AddMethod
         {
             [System.Diagnostics.DebuggerStepThrough]
             get
@@ -144,13 +144,15 @@ namespace Lisp
         }
 
         // APPLY
-        public static object Apply (object op, params object [] rands)
+        public static object Apply (object op, params object [] operands)
         {
-            if (rands.Length == 0)
+            if (operands == null)
                 return ResolveFunctionSpecifier (op).DynamicInvoke ();
-            Cons arglist = (Cons) rands [rands.Length - 1];
-            for (int i = rands.Length - 2; i > -1; i--)
-                arglist = CL.Cons (rands [i], arglist);
+            else if (operands.Length == 0)
+                return ResolveFunctionSpecifier (op).DynamicInvoke ();
+            Cons arglist = (Cons) operands [operands.Length - 1];
+            for (int i = operands.Length - 2; i > -1; i--)
+                arglist = CL.Cons (operands [i], arglist);
             int limit = CL.Length (arglist);
             object [] argarray = new object [limit];
 
@@ -248,14 +250,6 @@ namespace Lisp
             return (thing == null) ? null : thing.Car;
         }
 
-        public static T Car<T> (Cons obj)
-        {
-            if (obj == null)
-                throw new ArgumentNullException ("obj");
-            return (T) obj.Car;
-        }
-
-
         public static object Car (object thing)
         {
             if (thing == null)
@@ -263,16 +257,6 @@ namespace Lisp
             Cons pair = thing as Cons;
             if (pair != null)
                 return pair.Car;
-            throw new NotImplementedException ("wrong type argument");
-        }
-
-        public static T Car<T> (object thing)
-        {
-            if (thing == null)
-                return default(T);
-            Cons pair = thing as Cons;
-            if (pair != null)
-                return (T) pair.Car;
             throw new NotImplementedException ("wrong type argument");
         }
 
@@ -305,14 +289,6 @@ namespace Lisp
             return (thing == null) ? null : thing.Cdr;
         }
 
-        public static T Cdr<T> (Cons obj)
-        {
-            if (obj == null)
-                throw new ArgumentNullException ("obj");
-            return (T) obj.Cdr;
-        }
-
-
         public static object Cdr (object thing)
         {
             if (thing == null)
@@ -323,20 +299,8 @@ namespace Lisp
             throw new NotImplementedException ("wrong type argument");
         }
 
-        public static T Cdr<T> (object thing)
-        {
-            if (thing == null)
-                return default (T);
-            Cons pair = thing as Cons;
-            if (pair != null)
-                return (T) pair.Cdr;
-            throw new NotImplementedException ("wrong type argument");
-        }
-
-
-
         // CLASS-NAME
-        public static StandardObject ClassName
+        public static StandardInstance ClassName
         {
             get
             {
@@ -350,7 +314,7 @@ namespace Lisp
             return new Cons (car, cdr);
         }
 
-        public static StandardObject EnsureGenericFunction
+        public static StandardInstance EnsureGenericFunction
         {
             get
             {
@@ -373,9 +337,11 @@ namespace Lisp
 
         static public bool Eql (object left, object right)
         {
-            if (left.Equals (right))
+            if (left == null) return right == null;
+            else if (right == null) return false;
+            else if (left.Equals (right))
                 return true;
-            if (left is Symbol || right is Symbol)
+            else if (left is Symbol || right is Symbol)
                 return false;
             throw new NotImplementedException ();
         }
@@ -449,20 +415,20 @@ namespace Lisp
         }
 
         // INTERN
-        static public Symbol Intern (string s)
+        static public Symbol Intern (string symbolName)
         {
-            if (s == null)
-                throw new ArgumentNullException ("s");
-            return Intern (s, CL.Package);
+            if (symbolName == null)
+                throw new ArgumentNullException ("symbolName");
+            return Intern (symbolName, CL.Package);
         }
 
-        static public Symbol Intern (string s, Package package)
+        static public Symbol Intern (string symbolName, Package package)
         {
-            if (s == null)
-                throw new ArgumentNullException ("s");
+            if (symbolName == null)
+                throw new ArgumentNullException ("symbolName");
             if (package == null)
                 throw new ArgumentNullException ("package");
-            return package.Intern (s);
+            return package.Intern (symbolName);
         }
 
         static public Cons List ()
@@ -477,14 +443,9 @@ namespace Lisp
                                    : Lisp.Cons.SubvectorToList (restArguments, 0, restArguments.Length));
         }
 
-        static public ConsList<T> List<T> ()
+        static public ConsList<T> List<T> (T arg0, params T [] restArguments) where T : class
         {
-            return null;
-        }
-
-        static public ConsList<T> List<T> (object arg0, params object [] restArguments) where T : class
-        {
-            return new ConsList<T> ((T) arg0, (restArguments == null)
+            return new ConsList<T> (arg0, (restArguments == null)
                                                ? new ConsList<T> ((T) null, null)
                                                : Lisp.ConsList<T>.SubvectorToList (restArguments, 0, restArguments.Length));
         }
@@ -501,7 +462,7 @@ namespace Lisp
             }
         }
 
-        public static StandardObject MakeInstance
+        public static StandardInstance MakeInstance
         {
             get
             {
@@ -715,17 +676,17 @@ namespace Lisp
                 throw new NotImplementedException ();
         }
 
-        static public object Map<TOut, TIn> (object sequenceTypeSpecifier, object functionSpecifier, params object [] sequences)
-        {
-            if (functionSpecifier == null)
-                throw new ArgumentNullException ("functionSpecifier");
-            else if (sequenceTypeSpecifier == null)
-                return MapForEffect<TOut, TIn> (functionSpecifier, sequences);
-            else if (sequenceTypeSpecifier == QuoteList)
-                return MapToList<TOut, TIn> (functionSpecifier, sequences);
-            else
-                throw new NotImplementedException ();
-        }
+        //static public object Map<TOut, TIn> (object sequenceTypeSpecifier, object functionSpecifier, params object [] sequences)
+        //{
+        //    if (functionSpecifier == null)
+        //        throw new ArgumentNullException ("functionSpecifier");
+        //    else if (sequenceTypeSpecifier == null)
+        //        return MapForEffect<TOut, TIn> (functionSpecifier, sequences);
+        //    else if (sequenceTypeSpecifier == QuoteList)
+        //        return MapToList<TOut, TIn> (functionSpecifier, sequences);
+        //    else
+        //        throw new NotImplementedException ();
+        //}
 
 
         delegate object KeySelector (object item);
@@ -969,38 +930,38 @@ namespace Lisp
             throw new NotImplementedException ("PositionIf on non-list");
         }
 
-        static public int PositionIf<T> (Predicate<T> pred, object sequence)
+        static public int PositionIf<T> (Predicate<T> predicate, object sequence)
         {
             if (sequence == null)
                 return -1;
             ConsList<T> cl = sequence as ConsList<T>;
             if (cl != null)
-                return PositionIf<T> ((Predicate<T>) pred, cl);
+                return PositionIf<T> ((Predicate<T>) predicate, cl);
             else {
                 Cons list = sequence as Cons;
                 if (list != null)
-                    return PositionIf (pred, list);
+                    return PositionIf (predicate, list);
                 else
                     throw new NotImplementedException ();
             }
         }
 
-        static public int PositionIf<T> (Predicate<T> pred, ConsList<T> sequence)
+        static public int PositionIf<T> (Predicate<T> predicate, ConsList<T> sequence)
         {
             int pos = 0;
             foreach (T element in sequence) {
-                if (pred (element))
+                if (predicate (element))
                     return pos;
                 pos += 1;
             }
             return -1;
         }
 
-        static public int PositionIf<T> (Predicate<T> pred, Cons sequence)
+        static public int PositionIf<T> (Predicate<T> predicate, Cons sequence)
         {
             int pos = 0;
             foreach (T element in sequence) {
-                if (pred (element))
+                if (predicate (element))
                     return pos;
                 pos += 1;
             }
@@ -1155,6 +1116,8 @@ namespace Lisp
 
         static public Cons RemoveIf (Delegate predicate, Cons sequence)
         {
+            if (predicate == null)
+                throw new ArgumentNullException ("predicate");
             if (sequence == null)
                 return null;
             else if ((bool) predicate.DynamicInvoke (sequence.Car))
@@ -1165,6 +1128,8 @@ namespace Lisp
 
         static public object RemoveIf (object predicate, object sequence)
         {
+            if (predicate == null)
+                throw new ArgumentNullException ("predicate");
             if (sequence == null)
                 return null;
             Cons seq = sequence as Cons;

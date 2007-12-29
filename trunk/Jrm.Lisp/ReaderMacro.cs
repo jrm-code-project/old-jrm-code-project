@@ -27,7 +27,7 @@ namespace Lisp
 
         public abstract int ResultCount{get;}
  
-        public abstract object Result (int i);
+        public abstract object Result (int index);
     }
 
     abstract class NonFinalReaderMacroStep : ReaderMacroStep
@@ -47,7 +47,7 @@ namespace Lisp
             }
         }
 
-        public override object Result (int i)
+        public override object Result (int index)
         {
                 throw new ImplementationBugException ("Result of NonFinalReaderMacroStep");
         }
@@ -83,9 +83,9 @@ namespace Lisp
             }
         }
 
-        public override object Result (int i)
+        public override object Result (int index)
         {
-                return this.results[i];
+                return this.results[index];
         }
     }
 

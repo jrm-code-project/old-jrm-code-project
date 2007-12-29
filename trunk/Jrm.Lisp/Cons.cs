@@ -82,8 +82,6 @@ namespace Lisp
             }
         }
 
-
-
         public void CopyTo (Array array)
         {
             throw new NotImplementedException ("CopyTo");
@@ -136,7 +134,7 @@ namespace Lisp
 
         public static Cons VectorToList (object [] vector)
         {
-            return SubvectorToList (vector, 0, vector.Length);
+            return vector == null ? null : SubvectorToList (vector, 0, vector.Length);
         }
 
         #region IList Members
@@ -353,7 +351,7 @@ namespace Lisp
             }
         }
 
-        public static ConsList<T> SubvectorToList (object [] vector, int start, int limit)
+        public static ConsList<T> SubvectorToList (T [] vector, int start, int limit)
         {
             if (vector == null) {
                 if (start == limit)
@@ -364,13 +362,13 @@ namespace Lisp
             ConsList<T> answer = null;
             int count = 1;
             for (int i = start; i < limit; i++) {
-                answer = new ConsList<T> ((T) vector [limit - count], answer);
+                answer = new ConsList<T> (vector [limit - count], answer);
                 count += 1;
             }
             return answer;
         }
 
-        public static ConsList<T> VectorToList (object [] vector)
+        public static ConsList<T> VectorToList (T [] vector)
         {
             return SubvectorToList (vector, 0, vector.Length);
         }

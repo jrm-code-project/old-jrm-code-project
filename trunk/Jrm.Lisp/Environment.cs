@@ -71,7 +71,9 @@ namespace Lisp
             if (functions.TryGetValue (id, out binding))
                 return binding.Value;
             if (id.NamesDotnetMethod ()) {
-                Delegate gf = (Delegate) CL.EnsureGenericFunction (id, KW.Environment, this);
+                Delegate gf = (Delegate) CL.EnsureGenericFunction (id, KW.GenericFunctionClass, CLOS.DotnetGenericFunction, 
+                                                                       KW.Environment, this,
+                                                                       KW.StudlyName, id.Name);
                 binding = new ValueCell<Delegate> (gf);
                 return binding.Value;
             }

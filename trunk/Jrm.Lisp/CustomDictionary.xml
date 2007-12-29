@@ -1,12 +1,36 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Dictionary>
  <Words>
+ <Recognized><Word>Alist</Word></Recognized>
+ <Recognized><Word>Arity</Word></Recognized>
+ <Recognized><Word>Assq</Word></Recognized>
  <Recognized><Word>Car</Word></Recognized>
+ <Recognized><Word>Caar</Word></Recognized>
+ <Recognized><Word>Cadr</Word></Recognized>
+ <Recognized><Word>Caddr</Word></Recognized>
+ <Recognized><Word>Cadddr</Word></Recognized>
+ <Recognized><Word>Cdar</Word></Recognized>
  <Recognized><Word>Cdr</Word></Recognized>
  <Recognized><Word>Clos</Word></Recognized>
+ <Recognized><Word>Dotnet</Word></Recognized>
+ <Recognized><Word>Eq</Word></Recognized>
+ <Recognized><Word>Eql</Word></Recognized>
  <Recognized><Word>Funcallable</Word></Recognized>
+ <Recognized><Word>Initarg</Word></Recognized>
+ <Recognized><Word>Initargs</Word></Recognized>
+ <Recognized><Word>Initform</Word></Recognized>
+ <Recognized><Word>Initfunction</Word></Recognized>
+ <Recognized><Word>Initvalue</Word></Recognized>
+ <Recognized><Word>Macro</Word></Recognized>
+ <Recognized><Word>Makunbound</Word></Recognized>
+ <Recognized><Word>Memq</Word></Recognized>
+ <Recognized><Word>Metaclass</Word></Recognized>
+ <Recognized><Word>Metaobject</Word></Recognized>
+ <Recognized><Word>Specializer</Word></Recognized>
+ <Recognized><Word>Specializers</Word></Recognized>
  <Recognized><Word>Subclasses</Word></Recognized>
  <Recognized><Word>Subvector</Word></Recognized>
+ <Recognized><Word>Superclass</Word></Recognized>
  <Recognized><Word>Superclasses</Word></Recognized>
  <Recognized><Word>Whitespace</Word></Recognized>
  <Deprecated></Deprecated>
@@ -14,6 +38,7 @@
  </Words>
 <Acronyms>
   <CasingExceptions>
+    <Acronym>CLOS</Acronym>
   </CasingExceptions>
 </Acronyms>
 </Dictionary>
