@@ -138,9 +138,15 @@ namespace Lisp
             return CL.Reconc (CL.Reverse (left), right);
         }
 
-        public static ConsList<T> Append<T> (ConsList<T> left, ConsList<T> right)
+        public static ConsCollection<T> Append<T> (System.Collections.Generic.IList<T> left, ConsCollection<T> right)
         {
             return CL.Reconc<T> (CL.Reverse<T> (left), right);
+        }
+
+        public static T Append<T> (params object [] arglist) where T : class
+        {
+            if (arglist.Length == 0) return null ;
+            throw new NotImplementedException ();
         }
 
         // APPLY
@@ -401,6 +407,7 @@ namespace Lisp
 
         static public Package FindPackage (string name)
         {
+            Utility.Ignore (name);
             throw new NotImplementedException ();
         }
 
@@ -443,11 +450,11 @@ namespace Lisp
                                    : Lisp.Cons.SubvectorToList (restArguments, 0, restArguments.Length));
         }
 
-        static public ConsList<T> List<T> (T arg0, params T [] restArguments) where T : class
+        static public System.Collections.Generic.IList<T> List<T> (T arg0, params T [] restArguments) where T : class
         {
-            return new ConsList<T> (arg0, (restArguments == null)
-                                               ? new ConsList<T> ((T) null, null)
-                                               : Lisp.ConsList<T>.SubvectorToList (restArguments, 0, restArguments.Length));
+            return (System.Collections.Generic.IList<T>) new ConsCollection<T> (arg0, (restArguments == null) || (restArguments.Length == 0)
+                                               ? null
+                                               : new ConsCollection<T> (restArguments, 0, restArguments.Length));
         }
 
         static public int Length (object obj)
@@ -494,11 +501,15 @@ namespace Lisp
 
         static object MapForEffect (object functionSpecifier, object [] sequences)
         {
+            Utility.Ignore(functionSpecifier);
+            Utility.Ignore(sequences);
             throw new NotImplementedException ();
         }
 
         static O MapForEffect<I, O> (object functionSpecifier, object [] sequences)
         {
+            Utility.Ignore(functionSpecifier);
+            Utility.Ignore(sequences);
             throw new NotImplementedException ();
         }
 
@@ -512,7 +523,7 @@ namespace Lisp
             }
         }
 
-        static ConsList<T> MapToList<I, T> (object functionSpecifier, object [] sequences)
+        static System.Collections.Generic.IList<T> MapToList<I, T> (object functionSpecifier, object [] sequences)
         {
             switch (sequences.Length) {
                 case 1:
@@ -540,7 +551,7 @@ namespace Lisp
             }
         }
 
-        static ConsList<T> MapToList1<I, T> (object functionSpecifier, object sequence)
+        static System.Collections.Generic.IList<T> MapToList1<I, T> (object functionSpecifier, object sequence)
         {
             if (sequence == null)
                 return null;
@@ -548,7 +559,7 @@ namespace Lisp
             if (sa != null)
                 return MapVectorToList1<I, T> (functionSpecifier, sa);
             else {
-                ConsList<I> sc = sequence as ConsList<I>;
+                ConsCollection<I> sc = sequence as ConsCollection<I>;
                 if (sc != null)
                     return MapListToList1<I, T> (functionSpecifier, sc);
                 else {
@@ -562,13 +573,13 @@ namespace Lisp
             }
         }
 
-        static ConsList<T> MapCollectionToList1<T> (object functionSpecifier, ICollection sequence)
+        static System.Collections.Generic.IList<T> MapCollectionToList1<T> (object functionSpecifier, ICollection sequence)
         {
             Delegate function = ResolveFunctionSpecifier (functionSpecifier);
-            ConsList<T> reverseAnswer = null;
+            ConsCollection<T> reverseAnswer = null;
             foreach (object element in sequence) {
                 T item = (T) function.DynamicInvoke (element);
-                reverseAnswer = new ConsList<T> (item, reverseAnswer);
+                reverseAnswer = new ConsCollection<T> (item, reverseAnswer);
             }
             return CL.Reverse<T> (reverseAnswer);
         }
@@ -591,16 +602,16 @@ namespace Lisp
             return (Cons) CL.Reverse (answer);
         }
 
-        static ConsList<T> MapListToList1<I, T> (object functionSpecifier, ConsList<I> sequence)
+        static System.Collections.Generic.IList<T> MapListToList1<I, T> (object functionSpecifier, ConsCollection<I> sequence)
         {
             Delegate function = ResolveFunctionSpecifier (functionSpecifier);
-            ConsList<T> answer = null;
+            ConsCollection<T> answer = null;
             while (sequence != null) {
-                answer = new ConsList<T> ((T) function.DynamicInvoke (sequence.Car), answer);
+                answer = new ConsCollection<T> ((T) function.DynamicInvoke (sequence.Car), answer);
                 object temp = sequence.Cdr;
                 if (temp == null)
                     break;
-                ConsList<I> next = temp as ConsList<I>;
+                ConsCollection<I> next = temp as ConsCollection<I>;
                 if (next == null)
                     throw new NotImplementedException ();
                 sequence = next;
@@ -608,12 +619,12 @@ namespace Lisp
             return CL.Reverse<T> (answer);
         }
 
-        static ConsList<T> MapVectorToList1<I, T> (object functionSpecifier, I [] sequence)
+        static System.Collections.Generic.IList<T> MapVectorToList1<I, T> (object functionSpecifier, I [] sequence)
         {
             Delegate function = ResolveFunctionSpecifier (functionSpecifier);
-            ConsList<T> answer = null;
+            ConsCollection<T> answer = null;
             foreach (I element in sequence)
-                answer = new ConsList<T> ((T) function.DynamicInvoke (element), answer);
+                answer = new ConsCollection<T> ((T) function.DynamicInvoke (element), answer);
             return CL.Reverse<T> (answer);
         }
 
@@ -624,6 +635,16 @@ namespace Lisp
             foreach (object element in sequence)
                 answer = Cons (function.DynamicInvoke (element), answer);
             return (Cons) CL.Reverse (answer);
+        }
+
+        static public ConsCollection<O> Mapcar<O, I> (object functionSpecifier, System.Collections.Generic.ICollection<I> input)
+        {
+            if (input == null) return null;
+            Function1<O,I> function = ResolveFunctionSpecifier<Function1<O,I>> (functionSpecifier);
+            ConsCollection<O> answer = null;
+            foreach (I element in input)
+                answer = new ConsCollection<O> (function(element), answer);
+            return CL.Reverse (answer);
         }
 
         static public Cons Memq (object item, object list)
@@ -638,7 +659,7 @@ namespace Lisp
                 : Memq (item, pair.Cdr);
         }
 
-        static public ConsList<T> Memq<T> (T item, ConsList<T> list)
+        static public ConsCollection<T> Memq<T> (T item, ConsCollection<T> list)
         {
             return
                 (list == null) ? null
@@ -736,6 +757,12 @@ namespace Lisp
                             object key0, object val0,
                             object key1, object val1)
         {
+	    Utility.Ignore(item);
+	    Utility.Ignore(sequence);
+	    Utility.Ignore(key0);
+	    Utility.Ignore(val0);
+	    Utility.Ignore(key1);
+	    Utility.Ignore(val1);
             throw new NotImplementedException ();
         }
 
@@ -744,6 +771,14 @@ namespace Lisp
                             object key1, object val1,
                             object key2, object val2)
         {
+	    Utility.Ignore(item);
+	    Utility.Ignore(sequence);
+	    Utility.Ignore(key0);
+	    Utility.Ignore(val0);
+	    Utility.Ignore(key1);
+	    Utility.Ignore(val1);
+	    Utility.Ignore(key2);
+	    Utility.Ignore(val2);
             throw new NotImplementedException ();
         }
 
@@ -753,6 +788,16 @@ namespace Lisp
                             object key2, object val2,
                             object key3, object val3)
         {
+	    Utility.Ignore(item);
+	    Utility.Ignore(sequence);
+	    Utility.Ignore(key0);
+	    Utility.Ignore(val0);
+	    Utility.Ignore(key1);
+	    Utility.Ignore(val1);
+	    Utility.Ignore(key2);
+	    Utility.Ignore(val2);
+	    Utility.Ignore(key3);
+	    Utility.Ignore(val3);
             throw new NotImplementedException ();
         }
 
@@ -763,6 +808,18 @@ namespace Lisp
                                     object key3, object val3,
                                     object key4, object val4)
         {
+	    Utility.Ignore(item);
+	    Utility.Ignore(sequence);
+	    Utility.Ignore(key0);
+	    Utility.Ignore(val0);
+	    Utility.Ignore(key1);
+	    Utility.Ignore(val1);
+	    Utility.Ignore(key2);
+	    Utility.Ignore(val2);
+	    Utility.Ignore(key3);
+	    Utility.Ignore(val3);
+	    Utility.Ignore(key4);
+	    Utility.Ignore(val4);
             throw new NotImplementedException ();
         }
 
@@ -934,7 +991,7 @@ namespace Lisp
         {
             if (sequence == null)
                 return -1;
-            ConsList<T> cl = sequence as ConsList<T>;
+            ConsCollection<T> cl = sequence as ConsCollection<T>;
             if (cl != null)
                 return PositionIf<T> ((Predicate<T>) predicate, cl);
             else {
@@ -946,7 +1003,7 @@ namespace Lisp
             }
         }
 
-        static public int PositionIf<T> (Predicate<T> predicate, ConsList<T> sequence)
+        static public int PositionIf<T> (Predicate<T> predicate, ConsCollection<T> sequence)
         {
             int pos = 0;
             foreach (T element in sequence) {
@@ -998,6 +1055,7 @@ namespace Lisp
         {
             if (inputStream == null)
                 throw new ArgumentNullException ("inputStream");
+            Utility.Ignore (isRecursive); // FIX!
             ReaderStep step = new InitialReaderStep (inputStream, isEofError, eofValue);
             while (!step.isFinal) {
                 step = step.NextStep ();
@@ -1091,28 +1149,27 @@ namespace Lisp
                 throw new NotImplementedException ();
         }
 
-        static public ConsList<T> Reconc<T> (ConsList<T> tail, ConsList<T> head)
+        static public ConsCollection<T> Reconc<T> (System.Collections.Generic.IList<T> tail, ConsCollection<T> head)
         {
             if (tail == null)
                 return head;
-            // yeah I'll fix it...
-            return Reconc<T> (tail.Cdr, new ConsList<T> (tail.Car, head));
+            ConsCollection<T> answer = (ConsCollection<T>) head;
+            foreach (T element in tail)
+                answer = new ConsCollection<T> (element, answer);
+            return answer;
         }
 
-        static public Cons Reverse (Cons list)
+        static public ConsCollection<T> RemoveDuplicates<T> (System.Collections.Generic.IList<T> list)
         {
-            return (Cons) CL.Reconc (list, null);
+            if (list == null) return null;
+            ConsCollection<T> answer = null;
+            foreach (T element in list)
+                if ((answer == null) || !((System.Collections.Generic.IList<T>) answer).Contains (element))
+                    answer = new ConsCollection<T> (element, answer);
+            return CL.Reverse (answer);
+            
         }
 
-        static public ConsList<T> Reverse<T> (ConsList<T> list)
-        {
-            return CL.Reconc<T> (list, null);
-        }
-
-        static public object Reverse (object list)
-        {
-            return CL.Reconc (list, null);
-        }
 
         static public Cons RemoveIf (Delegate predicate, Cons sequence)
         {
@@ -1138,6 +1195,22 @@ namespace Lisp
             else
                 throw new NotImplementedException ("RemoveIf");
         }
+
+        static public Cons Reverse (Cons list)
+        {
+            return (Cons) CL.Reconc (list, null);
+        }
+
+        static public ConsCollection<T> Reverse<T> (System.Collections.Generic.IList<T> list)
+        {
+            return CL.Reconc<T> (list, null);
+        }
+
+        static public object Reverse (object list)
+        {
+            return CL.Reconc (list, null);
+        }
+
 
         // SYMBOL-FUNCTION
         static public Delegate SymbolFunction (object sym)

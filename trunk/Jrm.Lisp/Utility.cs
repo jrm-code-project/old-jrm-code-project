@@ -48,14 +48,14 @@ namespace Lisp
                 return GetArgs ((Cons) secondPair.Cdr, key);
         }
 
-        static public ConsList<T> GetArgs<T> (Cons list, object key)
+        static public ConsCollection<T> GetArgs<T> (Cons list, object key)
         {
             if (list == null)
                 return null;
             Cons firstPair = (Cons) list;
             Cons secondPair = (Cons) (firstPair.Cdr);
             if (firstPair.Car == key)
-                return new ConsList<T> ((T) secondPair.Car, GetArgs<T> ((Cons) secondPair.Cdr, key));
+                return new ConsCollection<T> ((T) secondPair.Car, GetArgs<T> ((Cons) secondPair.Cdr, key));
             else
                 return GetArgs<T> ((Cons) secondPair.Cdr, key);
         }
@@ -72,7 +72,7 @@ namespace Lisp
                 return GetArg (secondPair.Cdr, key, defaultValue);
         }
 
-        static public object GetArgStar (object list, ConsList<Symbol> keys, object defaultValue)
+        static public object GetArgStar (object list, ConsCollection<Symbol> keys, object defaultValue)
         {
             if (list == null)
                 return defaultValue;

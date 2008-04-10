@@ -26,13 +26,13 @@
  <Recognized><Word>Memq</Word></Recognized>
  <Recognized><Word>Metaclass</Word></Recognized>
  <Recognized><Word>Metaobject</Word></Recognized>
+ <Recognized><Word>s</Word></Recognized>
  <Recognized><Word>Specializer</Word></Recognized>
  <Recognized><Word>Specializers</Word></Recognized>
  <Recognized><Word>Subclasses</Word></Recognized>
  <Recognized><Word>Subvector</Word></Recognized>
  <Recognized><Word>Superclass</Word></Recognized>
  <Recognized><Word>Superclasses</Word></Recognized>
- <Recognized><Word>Whitespace</Word></Recognized>
  <Deprecated></Deprecated>
  <Inappropriate/>
  </Words>

@@ -23,7 +23,7 @@ namespace Lisp
             return parameter.GetCustomAttributes (typeof (System.ParamArrayAttribute), false).Length > 0;
         }
 
-        object [] PrePend (object element, object [] arguments)
+        static object [] PrePend (object element, object [] arguments)
         {
             object [] answer = new object [arguments.Length + 1];
             arguments.CopyTo (answer, 1);
@@ -191,19 +191,17 @@ namespace Lisp
             get
             {
                 object className = CLOS.StandardObjectName (this.closClass);
-                string classNameString = (className is string)
-                    ? (string) className
-                    : (className is Symbol)
-                    ? ((Symbol) className).Name
+                string classNameString = 
+                    (className is string) ? (string) className
+                    : (className is Symbol) ? ((Symbol) className).Name
                     : "StandardInstance";
                 object instanceName = CLOS.StandardObjectName (this.self);
-                string instanceNameString = (instanceName is string)
-            ? (string) instanceName
-            : (instanceName is Symbol)
-                ? ((Symbol) instanceName).Name
-                : "";
+                string instanceNameString = 
+                    (instanceName is string) ? (string) instanceName
+                    : (instanceName is Symbol) ? ((Symbol) instanceName).Name
+                    : "";
 
-                return "{" + classNameString + " " + this.serialNumber + " " + instanceName + "}";
+                return "{" + classNameString + " " + this.serialNumber + " " + instanceNameString + "}";
             }
         }
 
@@ -217,12 +215,12 @@ namespace Lisp
             }
         }
 
-        static object funcallStandardObject (StandardInstance self, object [] arguments)
+        static object funcallStandardInstance (StandardInstance self, object [] arguments)
         {
             throw new NotImplementedException ("Attempt to apply non function " + self + " to " + arguments.ToString ());
         }
             
-        static object funcallUninitializedObject (StandardInstance self, object [] arguments)
+        static object funcallUninitializedInstance (StandardInstance self, object [] arguments)
         {
             // throw new NotImplementedException (self.ToString () + ": Attempt to apply uninitialized " + ((Symbol) CL.ClassName (((ManifestInstance) self.Target).Class)).Name + " to " + arguments.ToString ());
             throw new NotImplementedException ();
@@ -255,17 +253,17 @@ namespace Lisp
 
         public static StandardInstance CreateInstance (StandardInstance closClass, int nSlots)
         {
-            return CreateInstance (closClass, nSlots, funcallStandardObject);
+            return CreateInstance (closClass, nSlots, funcallStandardInstance);
         }
 
         public static StandardInstance CreateInstance (StandardInstance closClass, object [] slots)
         {
-            return CreateInstance (closClass, slots, funcallStandardObject);
+            return CreateInstance (closClass, slots, funcallStandardInstance);
         }
 
         public static StandardInstance CreateFuncallableInstance (StandardInstance closClass, int nSlots)
         {
-            return CreateInstance (closClass, nSlots, funcallUninitializedObject);
+            return CreateInstance (closClass, nSlots, funcallUninitializedInstance);
         }
 
         public static StandardInstance CreateFuncallableInstance (FuncallHandler funcallHandler)
@@ -275,12 +273,12 @@ namespace Lisp
 
         public static StandardInstance CreateFuncallableInstance ()
         {
-            return CreateInstance (null, 0, funcallUninitializedObject);
+            return CreateInstance (null, 0, funcallUninitializedInstance);
         }
 
         public static StandardInstance CreateInstance ()
         {
-            return CreateInstance (null, 0, funcallStandardObject);
+            return CreateInstance (null, 0, funcallStandardInstance);
         }
 
         public static StandardInstance CreateFuncallableInstance (StandardInstance closClass, int nSlots, FuncallHandler funcallHandler)

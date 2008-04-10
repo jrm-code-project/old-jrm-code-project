@@ -17,11 +17,13 @@ namespace Lisp
 
         object Funcall1r (StandardInstance self, object [] arguments)
         {
+	    Utility.Ignore(self);
             return del.DynamicInvoke (null, arguments);
         }
 
         object Funcall2 (StandardInstance self, object [] arguments)
         {
+	    Utility.Ignore(self);
             if (arguments.Length != 1)
                 throw new NotImplementedException ("funcall2");
             return del.DynamicInvoke (null, arguments [0]);
@@ -29,6 +31,7 @@ namespace Lisp
 
         object Funcall2r (StandardInstance self, object [] arguments)
         {
+	    Utility.Ignore(self);
             object [] remaining = new object [arguments.Length - 1];
             Array.Copy (arguments, 1, remaining, 0, arguments.Length - 1);
             return del.DynamicInvoke (null, arguments [0], remaining);
@@ -36,6 +39,7 @@ namespace Lisp
 
         object Funcall3 (StandardInstance self, object [] arguments)
         {
+	    Utility.Ignore(self);
             if (arguments.Length != 2)
                 throw new NotImplementedException ("funcall3");
             return del.DynamicInvoke (null, arguments [0], arguments[1]);
@@ -43,6 +47,7 @@ namespace Lisp
 
         object Funcall (StandardInstance self, object [] arguments)
         {
+	    Utility.Ignore(self);
             ParameterInfo [] parameters = del.Method.GetParameters ();
             ParameterInfo lastParameter = parameters [parameters.Length - 1];
             object [] attr = lastParameter.GetCustomAttributes (typeof (System.ParamArrayAttribute), false);
@@ -67,7 +72,7 @@ namespace Lisp
             ParameterInfo [] parameters = del.Method.GetParameters ();
             ParameterInfo lastParameter = parameters [parameters.Length - 1];
             object [] attr = lastParameter.GetCustomAttributes (typeof (System.ParamArrayAttribute), false);
-            string funcall = "Funcall" + (parameters.Length - ((attr.Length > 0) ? 1 : 0)).ToString() + ((attr.Length > 0) ? "r" : "");
+            string funcall = "Funcall" + (parameters.Length - ((attr.Length > 0) ? 1 : 0)).ToString(System.Globalization.CultureInfo.InvariantCulture) + ((attr.Length > 0) ? "r" : "");
             MethodInfo mi = 
             typeof (FuncallableWrapper)
                 .GetMethod (funcall, BindingFlags.NonPublic | BindingFlags.Instance);
