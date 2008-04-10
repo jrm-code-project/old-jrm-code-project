@@ -67,7 +67,7 @@
     <Compile Include="ReaderMacro.cs" />
     <Compile Include="Readtable.cs" />
     <Compile Include="SimpleEvaluator.cs" />
-    <Compile Include="StandardObject.cs" />
+    <Compile Include="StandardInstance.cs" />
     <Compile Include="StringMatcher.cs" />
     <Compile Include="Symbol.cs" />
     <Compile Include="Trampoline.cs" />
