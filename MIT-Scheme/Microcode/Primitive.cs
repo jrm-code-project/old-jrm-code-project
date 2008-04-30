@@ -91,6 +91,9 @@ namespace Microcode
                 else
                     throw new NotImplementedException ();
             }
+	// If we don't have the primitive in the table, fake one up with an
+        // implementation that simply throws an error.  Saves time while
+        // developing, but puts time bombs in the code!
             else if (arity == 0) {
                 AddPrimitive (name, (PrimitiveMethod0) MissingPrimitive0);
                 return Find (name, arity);
@@ -139,7 +142,7 @@ namespace Microcode
         }
     }
 
-    class Primitive0 : Primitive
+    sealed class Primitive0 : Primitive
     {
         PrimitiveMethod0 code;
 
@@ -150,7 +153,7 @@ namespace Microcode
         }
     }
 
-    class Primitive1 : Primitive
+    sealed class Primitive1 : Primitive
     {
         PrimitiveMethod1 code;
 
@@ -161,7 +164,7 @@ namespace Microcode
         }
     }
 
-    class Primitive2 : Primitive
+    sealed class Primitive2 : Primitive
     {
         PrimitiveMethod2 code;
 
@@ -172,7 +175,7 @@ namespace Microcode
         }
     }
 
-    class Primitive3 : Primitive
+    sealed class Primitive3 : Primitive
     {
         PrimitiveMethod3 code;
 

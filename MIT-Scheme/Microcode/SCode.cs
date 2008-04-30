@@ -18,6 +18,8 @@ namespace Microcode
 
         public Assignment (string target, SCode value)
         {
+            if (target == null) throw new ArgumentNullException ("target");
+            if (value == null) throw new ArgumentNullException ("value");
             this.target = target;
             this.value = value;
         }
@@ -57,6 +59,10 @@ namespace Microcode
 
         public Combination1 (SCode rator, SCode rand)
         {
+            if (rator == null)
+                throw new ArgumentNullException ("rator");
+            if (rand == null)
+                throw new ArgumentNullException ("rand");
             this.rator = rator;
             this.rand = rand;
         }
@@ -83,6 +89,12 @@ namespace Microcode
 
         public Combination2 (SCode rator, SCode rand0, SCode rand1)
         {
+            if (rator == null)
+                throw new ArgumentNullException ("rator");
+            if (rand0 == null)
+                throw new ArgumentNullException ("rand0");
+            if (rand1 == null)
+                throw new ArgumentNullException ("rand1");
             this.rator = rator;
             this.rand0 = rand0;
             this.rand1 = rand1;
@@ -120,6 +132,8 @@ namespace Microcode
 
         public Comment (SCode code, object text)
         {
+            if (code == null) throw new ArgumentNullException ("code");
+	    // comment text can be null
             this.code = code;
             this.text = text;
         }
@@ -138,6 +152,9 @@ namespace Microcode
 
         Conditional (SCode predicate, SCode consequent, SCode alternative)
         {
+            if (predicate == null) throw new ArgumentNullException ("predicate");
+            if (consequent == null) throw new ArgumentNullException ("consequent");
+            if (alternative == null) throw new ArgumentNullException ("alternative");
             this.predicate = predicate;
             this.consequent = consequent;
             this.alternative = alternative;
@@ -183,6 +200,8 @@ namespace Microcode
 
         public Definition (string name, SCode value)
         {
+            if (name == null) throw new ArgumentNullException ("name");
+            if (value == null) throw new ArgumentNullException ("value");
             this.name = name;
             this.value = value;
         }
@@ -206,6 +225,8 @@ namespace Microcode
 
         public Disjunction (SCode predicate, SCode alternative)
         {
+            if (predicate == null) throw new ArgumentNullException ("predicate");
+            if (alternative == null) throw new ArgumentNullException ("alternative");
             this.predicate = predicate;
             this.alternative = alternative;
         }
@@ -297,6 +318,7 @@ namespace Microcode
 
         public PrimitiveCombination0 (Primitive procedure)
         {
+            if (procedure == null) throw new ArgumentNullException ("procedure");
             this.procedure = procedure;
         }
     }
@@ -305,6 +327,7 @@ namespace Microcode
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Primitive1 procedure;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         SCode arg0;
 
@@ -316,9 +339,10 @@ namespace Microcode
 
         public static SCode Make (Primitive1 rator, SCode rand)
         {
+            if (rator == null) throw new ArgumentNullException ("rator");
+            if (rand == null) throw new ArgumentNullException ("rand");
             return new PrimitiveCombination1 (rator, rand);
         }
-
     }
 
     class PrimitiveCombination2 : SCode
@@ -334,12 +358,6 @@ namespace Microcode
 
         protected PrimitiveCombination2 (Primitive2 rator, SCode rand0, SCode rand1)
         {
-            if (rator == null)
-                throw new ArgumentNullException ("rator");
-            if (rand0 == null)
-                throw new ArgumentNullException ("rand0");
-            if (rand1 == null)
-                throw new ArgumentNullException ("rand1");
             this.rator = rator;
             this.rand0 = rand0;
             this.rand1 = rand1;
@@ -372,7 +390,13 @@ namespace Microcode
 
         public static SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
-                return new PrimitiveCombination2 (rator, rand0, rand1);
+            if (rator == null)
+                throw new ArgumentNullException ("rator");
+            if (rand0 == null)
+                throw new ArgumentNullException ("rand0");
+            if (rand1 == null)
+                throw new ArgumentNullException ("rand1");
+            return new PrimitiveCombination2 (rator, rand0, rand1);
         }
     }
 
@@ -380,15 +404,22 @@ namespace Microcode
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Primitive procedure;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         SCode arg0;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         SCode arg1;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         SCode arg2;
 
         public PrimitiveCombination3 (Primitive procedure, SCode arg0, SCode arg1, SCode arg2)
         {
+            if (procedure == null) throw new ArgumentNullException ("procedure");
+            if (arg0 == null) throw new ArgumentNullException ("arg0");
+            if (arg1 == null) throw new ArgumentNullException ("arg1");
+            if (arg2 == null) throw new ArgumentNullException ("arg2");
             this.procedure = procedure;
             this.arg0 = arg0;
             this.arg1 = arg1;
@@ -417,9 +448,9 @@ namespace Microcode
                 || (item is char)
                 || (item is int)
                 || (item is string)
-                //|| (item is Constant)
+                || (item is Constant)
                 || (item is Primitive)
-                //|| (item is ReferenceTrap)
+                || (item is ReferenceTrap)
                 ;
         }
 
@@ -465,6 +496,7 @@ namespace Microcode
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode first;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode second;
 
@@ -477,15 +509,16 @@ namespace Microcode
             this.first = first;
             this.second = second;
         }
-
     }
 
     sealed class Sequence3 : SCode
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode first;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode second;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode third;
 
@@ -509,6 +542,8 @@ namespace Microcode
 
         public Variable (string name)
         {
+            if (name == null)
+                throw new ArgumentNullException ("name");
             this.name = name;
         }
     }
