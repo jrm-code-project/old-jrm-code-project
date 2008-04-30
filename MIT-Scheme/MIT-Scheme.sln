@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Listener", "Listener\Listener.csproj", "{69604624-F383-46FE-8FE9-224459B9B2AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microcode", "Microcode\Microcode.csproj", "{8657DC36-3E41-401B-8FB8-190C1B881C05}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{69604624-F383-46FE-8FE9-224459B9B2AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69604624-F383-46FE-8FE9-224459B9B2AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69604624-F383-46FE-8FE9-224459B9B2AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69604624-F383-46FE-8FE9-224459B9B2AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8657DC36-3E41-401B-8FB8-190C1B881C05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8657DC36-3E41-401B-8FB8-190C1B881C05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8657DC36-3E41-401B-8FB8-190C1B881C05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8657DC36-3E41-401B-8FB8-190C1B881C05}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
