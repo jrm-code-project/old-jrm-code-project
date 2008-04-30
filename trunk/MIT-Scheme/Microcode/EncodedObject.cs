@@ -83,7 +83,7 @@ namespace Microcode
         public const int DATUM_LENGTH = 26;
         public const int DATUM_MASK = 0x03FFFFFF;
 
-         public EncodedObject (UInt32 encodedValue)
+        public EncodedObject (UInt32 encodedValue)
         {
             this.representation = encodedValue;
         }
@@ -114,17 +114,6 @@ namespace Microcode
                     throw new NotImplementedException ();
             }
         }
-
-        public static bool operator == (EncodedObject left, EncodedObject right)
-        {
-            return left.representation == right.representation;
-        }
-
-        public static bool operator != (EncodedObject left, EncodedObject right)
-        {
-            return left.representation != right.representation;
-        }
-
 
         public override string ToString ()
         {

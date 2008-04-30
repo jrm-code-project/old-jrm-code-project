@@ -151,6 +151,7 @@ namespace Microcode
     class FaslHeader
     {
         const UInt32 FASL_FILE_MARKER = 0xfafafafa;
+        const int FASL_HEADER_SIZE = 50;
 
         public UInt32 heapCount;
         public UInt32 heapBase;
@@ -224,22 +225,22 @@ namespace Microcode
             UInt32 cSize = binaryReader.ReadUInt32 () & DATUM_MASK;     /* Size of C code primitiveTable in SCHEME_OBJECTs */
             UInt32 memBase = binaryReader.ReadUInt32 ();
             FaslHeader header = new FaslHeader (
-            heapCount,
-            heapBase,
-            dumpedObj,
-            constCount,
-            constBase,
-            version,
-            stackTop,
-            primLength,
-            primSize,
-            ciVersion,
-            utBase,
-            checkSum,
-            cLength,
-            cSize,
-            memBase);
-            for (int i = 16; i < 50; i++)
+						heapCount,
+						heapBase,
+						dumpedObj,
+						constCount,
+						constBase,
+						version,
+						stackTop,
+						primLength,
+						primSize,
+						ciVersion,
+						utBase,
+						checkSum,
+						cLength,
+						cSize,
+						memBase);
+            for (int i = 16; i < FASL_HEADER_SIZE; i++)
             {
                 UInt32 discard = binaryReader.ReadUInt32 ();
                 Debug.Assert (discard == 0);
@@ -302,7 +303,6 @@ namespace Microcode
 
                 offset += (sectionContents [offset / 4].Datum) * 4;
                 offset += 4;
-                Debug.WriteLine ("Primitive " + name);
                 primitives [i] = Primitive.Find (name, arity.Datum == 0x03ffffff ? -1 : (int) arity.Datum);
             }
             return primitives;

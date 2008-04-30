@@ -20,7 +20,6 @@ namespace Listener
             }
         }
 
-
         static void Main (string [] args)
         {
             string appName = AppDomain.CurrentDomain.FriendlyName;
