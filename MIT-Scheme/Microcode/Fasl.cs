@@ -69,6 +69,7 @@ namespace Microcode
 
         internal EncodedObject this [uint offset]
         {
+            [DebuggerStepThrough]
             get
             {
                 return this.contents [(offset - this.sectionBase) / 4];
@@ -77,29 +78,74 @@ namespace Microcode
 
         public byte ReadByte (uint offset)
         {
-            EncodedObject encoded = this.contents [(offset - this.sectionBase) / 4];
+            EncodedObject encoded = this [offset];
             return encoded.GetByte ((byte) (offset % 4));
         }
 
-        //public object ReadBignum (FaslFile file, int offset)
-        //{
-        //    EncodedObject header = this  [offset];
-        //    EncodedObject h1 = this [offset + 4];
-        //    if (h1.Datum == 1)
-        //    {
-        //        EncodedObject w0 = this [offset + 8);
-        //        long total = w0.ToLong ();
-        //        return total;
-        //    }
-        //    if (h1.Datum == 2)
-        //    {
-        //        EncodedObject w0 = this [offset + 8];
-        //        EncodedObject w1 = this [offset + 12];
-        //        long total = (w1.ToLong () << 30) + w0.ToLong ();
-        //        return total;
-        //    }
-        //    throw new NotImplementedException ();
-        //}
+        public object ReadBignum (FaslFile file, uint offset)
+        {
+            EncodedObject header = this [offset];
+            EncodedObject h1 = this [offset + 4];
+            if (h1.Datum == 1)
+            {
+                EncodedObject w0 = this [offset + 8];
+                long total = w0.ToLong ();
+                return total;
+            }
+            if (h1.Datum == 2)
+            {
+                EncodedObject w0 = this [offset + 8];
+                EncodedObject w1 = this [offset + 12];
+                long total = (w1.ToLong () << 30) + w0.ToLong ();
+                return total;
+            }
+            throw new NotImplementedException ();
+        }
+
+        public double ReadFlonum (FaslFile file, uint offset)
+        {
+            EncodedObject header = this [offset];
+            byte b0 = ReadByte (offset + 4);
+            byte b1 = ReadByte (offset + 5);
+            byte b2 = ReadByte (offset + 6);
+            byte b3 = ReadByte (offset + 7);
+            byte b4 = ReadByte (offset + 8);
+            byte b5 = ReadByte (offset + 9);
+            byte b6 = ReadByte (offset + 10);
+            byte b7 = ReadByte (offset + 11);
+            if ((b0 == 0) &&
+                (b1 == 0) &&
+                (b2 == 0) &&
+                (b3 == 0) &&
+                (b4 == 0) &&
+                (b5 == 0) &&
+                (b6 == 0) &&
+                (b7 == 0))
+                return 0.0;
+            int encodedExponent = (b7 & 0x7F) << 4;
+            encodedExponent += (b6 & 0xF0) >> 4;
+            long mantissa = (encodedExponent == 0) ? 0 : 1;
+            mantissa *= 16;
+            mantissa += b6 & 0x0F;
+            mantissa *= 256;
+            mantissa += b5;
+            mantissa *= 256;
+            mantissa += b4;
+            mantissa *= 256;
+            mantissa += b3;
+            mantissa *= 256;
+            mantissa += b2;
+            mantissa *= 256;
+            mantissa += b1;
+            mantissa *= 256;
+            mantissa += b0;
+            int exponent = -(1024 + 51);
+            exponent += encodedExponent;
+            int sign = ((b7 & 0x80) == 0) ? 1 : -1;
+            double answer = FloatArithmetic.EncodeFloat (sign, exponent, mantissa);
+            return answer;
+        }
+
 
         public char [] ReadString (uint offset)
         {
@@ -308,19 +354,19 @@ namespace Microcode
             return primitives;
         }
 
-        //public object ReadBignum (int location)
-        //{
-        //    return heapSection.Contains (location) ? heapSection.ReadBignum (this, location)
-        //        : constSection.Contains (location) ? constSection.ReadBignum (this, location)
-        //        : 0;
-        //}
+        public object ReadBignum (uint location)
+        {
+            return heapSection.Contains (location) ? heapSection.ReadBignum (this, location)
+                : constSection.Contains (location) ? constSection.ReadBignum (this, location)
+                : 0;
+        }
 
-        //public double ReadBigFlonum (int location)
-        //{
-        //    return heapSection.Contains (location) ? heapSection.ReadFlonum (this, location)
-        //        : constSection.Contains (location) ? constSection.ReadFlonum (this, location)
-        //        : 0.0;
-        //}
+        public double ReadBigFlonum (uint location)
+        {
+            return heapSection.Contains (location) ? heapSection.ReadFlonum (this, location)
+                : constSection.Contains (location) ? constSection.ReadFlonum (this, location)
+                : 0.0;
+        }
 
         public object ReadVector (uint location)
         {
@@ -345,12 +391,6 @@ namespace Microcode
             return result;
         }
 
-        //public Access ReadAccess (int location)
-        //{
-        //    return new Access (SCode.Convert (ReadObject (location)),
-        //                       (string) ReadObject (location + 4));
-        //}
-
         public Assignment ReadAssignment (uint location)
         {
             return new Assignment (((Variable) ReadObject (location)).name,
@@ -361,18 +401,12 @@ namespace Microcode
         {
             string [] second = (string []) ReadFormals (location + 4);
             object third = ReadObject (location + 8);
-            EncodedObject argcount = new EncodedObject ((uint) third);
+            EncodedObject argcount = new EncodedObject ((uint) (int) third);
             uint optional = (argcount.Datum & 0x00FF);
             uint required = (argcount.Datum & 0xFF00) >> 8;
             bool rest = ((argcount.Datum & 0x10000) == 0x10000);
             return new ExtendedLambda (ReadSCode (location), second, required, optional, rest);
         }
-
-        //public Sequence3 ReadSequence3 (int location)
-        //{
-        //    return new Sequence3 (SCode.Convert (ReadObject (location)), SCode.Convert (ReadObject (location + 4)), SCode.Convert (ReadObject (location + 8)));
-        //}
-
 
         internal SCode ReadSCode (uint location)
         {
@@ -382,7 +416,10 @@ namespace Microcode
             SCode sobj = obj as SCode;
             if (sobj == null)
                 return Quotation.Make (obj);
-            return sobj;
+            Primitive p = sobj as Primitive;
+            if (p == null)
+                return sobj;
+            return Quotation.Make (p);
         }
 
         internal object ReadObject (uint location)
@@ -399,20 +436,21 @@ namespace Microcode
             object first = null;
             switch (encoded.TypeCode)
             {
-                //case TC.ACCESS:
-                //    return ReadAccess (encoded.Datum);
+                case TC.ACCESS:
+                    return new Access (ReadSCode (encoded.Datum),
+                       (string) ReadObject (encoded.Datum + 4));
 
                 case TC.ASSIGNMENT:
                     return ReadAssignment (encoded.Datum);
 
-                //case TC.BIG_FIXNUM:
-                //    return ReadBignum (encoded.Datum);
+                case TC.BIG_FIXNUM:
+                    return ReadBignum (encoded.Datum);
 
-                //case TC.BIG_FLONUM:
-                //    return ReadBigFlonum (encoded.Datum);
+                case TC.BIG_FLONUM:
+                    return ReadBigFlonum (encoded.Datum);
 
-                //case TC.CHARACTER:
-                //    return (char) (encoded.Datum);
+                case TC.CHARACTER:
+                    return (char) (encoded.Datum);
 
                 case TC.CHARACTER_STRING:
                     return heapSection.ReadString (encoded.Datum);
@@ -466,8 +504,8 @@ namespace Microcode
 
                 case TC.FIXNUM:
                     return encoded.Datum > 0x02000000
-                           ? encoded.Datum - 0x04000000
-                           : encoded.Datum;
+                           ? (int) (encoded.Datum - 0x04000000)
+                           : (int) encoded.Datum;
 
                 case TC.INTERNED_SYMBOL:
                     return String.Intern (new String ((char []) ReadObject (encoded.Datum)));
@@ -520,8 +558,8 @@ namespace Microcode
                 //case TC.RETURN_CODE:
                 //    return (ReturnCode) (encoded.Datum);
 
-                //case TC.THE_ENVIRONMENT:
-                //    return new TheEnvironment ();
+                case TC.THE_ENVIRONMENT:
+                    return new TheEnvironment ();
 
                 case TC.UNINTERNED_SYMBOL:
                     // KLUDGE!!  Make sure that all uninterned symbols within a file
@@ -579,6 +617,12 @@ namespace Microcode
                 if (faslStream != null)
                     faslStream.Close ();
             }
+        }
+
+        [SchemePrimitive ("BINARY-FASLOAD", 1)]
+        public static object BinaryFasload (Interpreter interpreter, object arg)
+        {
+            return interpreter.Return (Fasload (new String ((char []) (arg))));
         }
     }
 }

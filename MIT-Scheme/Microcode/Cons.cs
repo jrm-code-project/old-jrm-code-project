@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace Microcode
 {
@@ -18,6 +19,7 @@ namespace Microcode
 
         public object Car
         {
+            [DebuggerStepThrough]
             get
             {
                 return this.car;
@@ -30,6 +32,7 @@ namespace Microcode
 
         public object Cdr
         {
+            [DebuggerStepThrough]
             get
             {
                 return this.cdr;
@@ -38,6 +41,90 @@ namespace Microcode
             {
                 this.cdr = value;
             }
+        }
+
+        public int Length ()
+        {
+            Cons ptr = this;
+            int len = 0;
+            while (ptr != null)
+            {
+                len += 1;
+                ptr = (Cons) ptr.cdr;
+            }
+            return len;
+        }
+
+        public object [] ToVector ()
+        {
+            object [] result = new object [this.Length ()];
+            Cons ptr = this;
+            int idx = 0;
+            while (ptr != null)
+            {
+                result [idx++] = ptr.car;
+                ptr = (Cons) ptr.cdr;
+            }
+            return result;
+        }
+
+        [SchemePrimitive ("CAR", 1)]
+        public static object PrimitiveCar (Interpreter interpreter, object arg0)
+        {
+            return interpreter.Return (((Cons) arg0).Car);
+        }
+
+        [SchemePrimitive ("CDR", 1)]
+        public static object PrimitiveCdr (Interpreter interpreter, object arg0)
+        {
+            return interpreter.Return (((Cons) arg0).Cdr);
+        }
+
+        [SchemePrimitive ("GENERAL-CAR-CDR", 2)]
+        public static object GeneralCarCdr (Interpreter interpreter, object arg0, object arg1)
+        {
+            object result = arg0;
+            int pattern = (int) arg1;
+            while (pattern > 1)
+            {
+                Cons pair = result as Cons;
+                if (pair == null)
+                    throw new NotImplementedException ();
+                if ((pattern & 0x01) == 0x01)
+                    result = pair.Car;
+                else
+                    result = pair.Cdr;
+                pattern >>= 1;
+            }
+            return interpreter.Return (result);
+        }
+
+        [SchemePrimitive ("CONS", 2)]
+        public static object PrimitiveCons (Interpreter interpreter, object car, object cdr)
+        {
+            return interpreter.Return (new Cons (car, cdr));
+        }
+
+        [SchemePrimitive ("PAIR?", 1)]
+        public static object IsPair (Interpreter interpreter, object arg0)
+        {
+            return interpreter.Return (arg0 is Cons);
+        }
+
+        [SchemePrimitive ("SET-CAR!", 2)]
+        public static object SetCar (Interpreter interpreter, object pair, object value)
+        {
+            object old = ((Cons) pair).Car;
+            ((Cons) pair).Car = value;
+            return interpreter.Return (old);
+        }
+
+        [SchemePrimitive ("SET-CDR!", 2)]
+        public static object SetCdr (Interpreter interpreter, object pair, object value)
+        {
+            object old = ((Cons) pair).Cdr;
+            ((Cons) pair).Cdr = value;
+            return interpreter.Return (old);
         }
     }
 }
