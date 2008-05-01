@@ -12,7 +12,9 @@ namespace Listener
             try {
                 System.Environment.CurrentDirectory = System.Environment.CurrentDirectory + "\\..\\..\\..\\Runtime\\";
                 SCode bootstrap = Fasl.Fasload ("make.bin") as SCode;
-                Debug.WriteLine ("Initial form " + bootstrap.ToString ());
+                Interpreter interpreter = new Interpreter ();
+                Termination term = interpreter.Start (bootstrap);
+                Console.WriteLine (term.Message);
             }
             finally
             {
@@ -27,6 +29,8 @@ namespace Listener
             Debug.Listeners.Add (new TextWriterTraceListener (Console.Out));
             Debug.WriteLine ("DEBUG build");
 
+            Primitive.Initialize ();
+            FixedObjectsVector.Initialize ();
             ColdLoad ();
 
             Console.WriteLine ();

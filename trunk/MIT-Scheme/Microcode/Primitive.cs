@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
+using System.Reflection;
 
 namespace Microcode
 {
@@ -13,24 +13,23 @@ namespace Microcode
     delegate object PrimitiveMethod2 (Interpreter interpreter, object argument0, object argument1);
     delegate object PrimitiveMethod3 (Interpreter interpreter, object argument0, object argument1, object argument2);
 
-    class Primitive
+    public abstract class Primitive : SCode
     {
         // Global table mapping names to primitive procedures.
         static Dictionary<String, Primitive> primitiveTable = new Dictionary<String, Primitive> ();
 
         readonly string name;
         readonly int arity;
-        readonly PrimitiveMethod method;
 
-        public Primitive (string name, int arity, PrimitiveMethod method)
+        internal Primitive (string name, int arity)
         {
             this.name = name.ToUpperInvariant();
             this.arity = arity;
-            this.method = method;
         }
 
         public int Arity
         {
+            [DebuggerStepThrough]
             get
             {
                 return this.arity;
@@ -47,29 +46,92 @@ namespace Microcode
             return String.Intern (name.ToUpperInvariant());
         }
 
-        public static void AddPrimitive (string name, int arity, PrimitiveMethod method)
+        static void AddPrimitive (string name, int arity, PrimitiveMethod method)
         {
-            primitiveTable.Add (CanonicalizeName (name), new Primitive (String.Intern (name), arity, method));
+            primitiveTable.Add (CanonicalizeName (name), new PrimitiveN (String.Intern (name), arity, method));
         }
 
-        public static void AddPrimitive (string name, PrimitiveMethod0 method)
+        static void AddPrimitive (string name, PrimitiveMethod0 method)
         {
             primitiveTable.Add (CanonicalizeName (name), new Primitive0 (String.Intern (name), method));
         }
 
-        public static void AddPrimitive (string name, PrimitiveMethod1 method)
+        static void AddPrimitive (string name, PrimitiveMethod1 method)
         {
             primitiveTable.Add (CanonicalizeName (name), new Primitive1 (String.Intern (name), method));
         }
 
-        public static void AddPrimitive (string name, PrimitiveMethod2 method)
+        static void AddPrimitive (string name, PrimitiveMethod2 method)
         {
             primitiveTable.Add (CanonicalizeName (name), new Primitive2 (String.Intern (name), method));
         }
 
-        public static void AddPrimitive (string name, PrimitiveMethod3 method)
+        static void AddPrimitive (string name, PrimitiveMethod3 method)
         {
             primitiveTable.Add (CanonicalizeName (name), new Primitive3 (String.Intern (name), method));
+        }
+
+        static void AddPrimitives (Type type)
+        {
+            MemberInfo [] minfos = type.FindMembers (MemberTypes.Method, BindingFlags.Public | BindingFlags.Static, null, null);
+            foreach (MemberInfo minfo in minfos)
+            {
+                object [] attributes = minfo.GetCustomAttributes (typeof (SchemePrimitiveAttribute), false);
+                if (attributes.Length == 1)
+                {
+                    string name = ((SchemePrimitiveAttribute) (attributes [0])).Name;
+                    int arity = ((SchemePrimitiveAttribute) (attributes [0])).Arity;
+                    MethodInfo mtdinfo = (MethodInfo) minfo;
+                    // Console.WriteLine ("Add Primitive {0}", ((PrimitiveAttribute) (attributes [0])).Name);
+                    if (arity == 0)
+                    {
+                        PrimitiveMethod0 del = (PrimitiveMethod0) System.Delegate.CreateDelegate (typeof (PrimitiveMethod0), mtdinfo);
+                        AddPrimitive (name, del);
+                    }
+                    else if (arity == 1)
+                    {
+                        PrimitiveMethod1 del = (PrimitiveMethod1) System.Delegate.CreateDelegate (typeof (PrimitiveMethod1), mtdinfo);
+                        AddPrimitive (name, del);
+                    }
+                    else if (arity == 2)
+                    {
+                        PrimitiveMethod2 del = (PrimitiveMethod2) System.Delegate.CreateDelegate (typeof (PrimitiveMethod2), mtdinfo);
+                        AddPrimitive (name, del);
+                    }
+                    else if (arity == 3)
+                    {
+                        PrimitiveMethod3 del = (PrimitiveMethod3) System.Delegate.CreateDelegate (typeof (PrimitiveMethod3), mtdinfo);
+                        AddPrimitive (name, del);
+                    }
+                    else
+                    {
+                        PrimitiveMethod del = (PrimitiveMethod) System.Delegate.CreateDelegate (typeof (PrimitiveMethod), mtdinfo);
+                        AddPrimitive (name, arity, del);
+                    }
+                }
+            }
+        }
+
+        public static void Initialize ()
+        {
+            AddPrimitives (typeof (Bignum));
+            AddPrimitives (typeof (Channel));
+            AddPrimitives (typeof (Cons));
+            AddPrimitives (typeof (Environment));
+            AddPrimitives (typeof (Fasl));
+            AddPrimitives (typeof (FixedObjectsVector));
+            AddPrimitives (typeof (FixnumArithmetic));
+            AddPrimitives (typeof (FloatArithmetic));
+            AddPrimitives (typeof (FloatingVector));
+            AddPrimitives (typeof (GenericArithmetic));
+            AddPrimitives (typeof (IntegerArithmetic));
+            AddPrimitives (typeof (Interpreter));
+            AddPrimitives (typeof (Misc));
+            AddPrimitives (typeof (ObjectModel));
+            AddPrimitives (typeof (Primitive));
+            AddPrimitives (typeof (Record));
+            AddPrimitives (typeof (SchemeString));
+            AddPrimitives (typeof (Vector));
         }
 
         internal static Primitive Find (string name)
@@ -91,7 +153,7 @@ namespace Microcode
                 else
                     throw new NotImplementedException ();
             }
-	// If we don't have the primitive in the table, fake one up with an
+        // If we don't have the primitive in the table, fake one up with an
         // implementation that simply throws an error.  Saves time while
         // developing, but puts time bombs in the code!
             else if (arity == 0) {
@@ -140,49 +202,102 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
+
+        [SchemePrimitive ("GET-PRIMITIVE-ADDRESS", 2)]
+        public static object GetPrimitiveAddress (Interpreter interpreter, object arg0, object arg1)
+        {
+            if (arg1 is int)
+                return interpreter.Return (Find ((string) (arg0), (int) (arg1)));
+            return interpreter.Return (Find ((string) (arg0)));
+        }
+
+        [SchemePrimitive ("GET-PRIMITIVE-NAME", 1)]
+        public static object GetPrimitiveName (Interpreter interpreter, object arg)
+        {
+            return interpreter.Return (((Primitive) (arg)).name.ToCharArray ());
+        }
     }
 
     sealed class Primitive0 : Primitive
     {
-        PrimitiveMethod0 code;
-
-        public Primitive0 (String name, PrimitiveMethod0 code)
-            : base (name, 0, null)
+        PrimitiveMethod0 method;
+        public Primitive0 (String name, PrimitiveMethod0 method)
+            : base (name, 0)
         {
-            this.code = code;
+            this.method = method;
+        }
+
+        [DebuggerStepThrough]
+        internal override object EvalStep (Interpreter interpreter, object etc)
+        {
+           return this.method (interpreter);
         }
     }
 
     sealed class Primitive1 : Primitive
     {
-        PrimitiveMethod1 code;
+        PrimitiveMethod1 method;
 
-        public Primitive1 (String name, PrimitiveMethod1 code)
-            : base (name, 1, null)
+        public Primitive1 (String name, PrimitiveMethod1 method)
+            : base (name, 1)
         {
-            this.code = code;
+            this.method = method;
         }
+
+        internal override object EvalStep (Interpreter interpreter, object etc)
+        {
+            return this.method (interpreter, interpreter.PrimitiveArgument0);
+        }
+
     }
 
     sealed class Primitive2 : Primitive
     {
-        PrimitiveMethod2 code;
+        PrimitiveMethod2 method;
 
-        public Primitive2 (String name, PrimitiveMethod2 code)
-            : base (name, 2, null)
+        public Primitive2 (String name, PrimitiveMethod2 method)
+            : base (name, 2)
         {
-            this.code = code;
+            this.method = method;
         }
+
+        internal override object EvalStep (Interpreter interpreter, object etc)
+        {
+            return this.method (interpreter, interpreter.PrimitiveArgument0, interpreter.PrimitiveArgument1);
+        }
+
     }
 
     sealed class Primitive3 : Primitive
     {
-        PrimitiveMethod3 code;
+        PrimitiveMethod3 method;
 
-        public Primitive3 (String name, PrimitiveMethod3 code)
-            : base (name, 3, null)
+        public Primitive3 (String name, PrimitiveMethod3 method)
+            : base (name, 3)
         {
-            this.code = code;
+            this.method = method;
+        }
+
+        internal override object EvalStep (Interpreter interpreter, object etc)
+        {
+            return this.method (interpreter, interpreter.PrimitiveArgument0, interpreter.PrimitiveArgument1, interpreter.PrimitiveArgument2);
+        }
+
+    }
+
+    sealed class PrimitiveN : Primitive
+    {
+        PrimitiveMethod method;
+
+        public PrimitiveN (String name, int arity, PrimitiveMethod method)
+            : base (name, arity)
+        {
+            this.method = method;
+        }
+
+        internal override object EvalStep (Interpreter interpreter, object etc)
+        {
+            return this.method (interpreter, interpreter.Arguments);
         }
     }
 }
