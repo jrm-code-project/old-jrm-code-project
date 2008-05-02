@@ -4,6 +4,14 @@ using System.Diagnostics;
 
 namespace Microcode
 {
+    enum ReferenceType
+    {
+        Unbound,
+        Unassigned,
+        Normal,
+        Macro
+    };
+
     abstract class Environment
     {
         static Environment global;
@@ -23,6 +31,7 @@ namespace Microcode
         public abstract object Assign (string name, object value);
         public abstract object LocalAssign (string name, object value);
         public abstract object Lookup (string name);
+        public abstract object LookupType (string name);
         public abstract object Argument (int offset);
         public abstract ValueCell LexicalLoop (string name, int frame, int offset);
         public abstract object Lexical (string name, int frame, int offset);
@@ -75,6 +84,12 @@ namespace Microcode
         public static object LexicalReference (Interpreter interpreter, object env, object name)
         {
             return interpreter.Return (((Environment) env).Lookup ((string) name));
+        }
+
+        [SchemePrimitive ("LEXICAL-REFERENCE-TYPE", 2)]
+        public static object LexicalReferenceType (Interpreter interpreter, object env, object name)
+        {
+            return interpreter.Return (((Environment) env).LookupType ((string) name));
         }
 
         [SchemePrimitive ("LINK-VARIABLES", 4)]
@@ -159,6 +174,21 @@ namespace Microcode
             if (this.bindings.TryGetValue (name, out cell) == true)
                 return cell.Value;
             throw new NotImplementedException ();
+        }
+
+        public override object LookupType (string name)
+        {
+            ValueCell cell = null;
+            if (this.bindings.TryGetValue (name, out cell) == true)
+            {
+                if (cell.isAssigned)
+                    return ReferenceType.Normal;
+                else
+                    return ReferenceType.Unassigned;
+            }
+            else
+                return ReferenceType.Unbound;
+
         }
 
         public override object Argument (int offset)
@@ -299,6 +329,26 @@ namespace Microcode
                 return framevector [offset].Value;
         }
 
+        public override object LookupType (string name)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1)
+            {
+                ValueCell vcell = null;
+                if (incrementals != null && incrementals.TryGetValue (name, out vcell))
+                {
+                    if (vcell.isAssigned)
+                        return (int) ReferenceType.Normal;
+                    else
+                        return (int) ReferenceType.Unassigned;
+                }
+                else
+                    return this.Parent.LookupType (name);
+            }
+            else
+                return (int) ReferenceType.Normal;
+        }
+
         // Variant of Lookup.  If variable is bound in the nearest environment,
         // it cannot be shadowed.  Just grab it.
         public override object Argument (int offset)
@@ -335,5 +385,4 @@ namespace Microcode
             }
         }
     }
-
 }

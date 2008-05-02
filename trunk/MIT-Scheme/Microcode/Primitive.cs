@@ -115,8 +115,14 @@ namespace Microcode
         public static void Initialize ()
         {
             AddPrimitives (typeof (Bignum));
+            AddPrimitives (typeof (BitString));
+            AddPrimitives (typeof (Cell));
             AddPrimitives (typeof (Channel));
+            AddPrimitives (typeof (Character));
+            AddPrimitives (typeof (Complex));
+            AddPrimitives (typeof (ControlPoint));
             AddPrimitives (typeof (Cons));
+            AddPrimitives (typeof (Entity));
             AddPrimitives (typeof (Environment));
             AddPrimitives (typeof (Fasl));
             AddPrimitives (typeof (FixedObjectsVector));
@@ -124,14 +130,19 @@ namespace Microcode
             AddPrimitives (typeof (FloatArithmetic));
             AddPrimitives (typeof (FloatingVector));
             AddPrimitives (typeof (GenericArithmetic));
+            AddPrimitives (typeof (Hunk3));
             AddPrimitives (typeof (IntegerArithmetic));
             AddPrimitives (typeof (Interpreter));
             AddPrimitives (typeof (Misc));
             AddPrimitives (typeof (ObjectModel));
             AddPrimitives (typeof (Primitive));
+            AddPrimitives (typeof (Promise));
+            AddPrimitives (typeof (Ratnum));
             AddPrimitives (typeof (Record));
+            AddPrimitives (typeof (ReturnAddress));
             AddPrimitives (typeof (SchemeString));
             AddPrimitives (typeof (Vector));
+            AddPrimitives (typeof (Vector8b));
         }
 
         internal static Primitive Find (string name)
@@ -216,6 +227,14 @@ namespace Microcode
         {
             return interpreter.Return (((Primitive) (arg)).name.ToCharArray ());
         }
+
+        [SchemePrimitive ("PRIMITIVE-PROCEDURE-ARITY", 1)]
+        public static object PrimitiveProcedureArity (Interpreter interpreter, object arg)
+        {
+            return interpreter.Return (((Primitive) (arg)).Arity);
+        }
+
+
     }
 
     sealed class Primitive0 : Primitive
@@ -227,7 +246,6 @@ namespace Microcode
             this.method = method;
         }
 
-        [DebuggerStepThrough]
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
            return this.method (interpreter);

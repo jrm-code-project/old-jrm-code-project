@@ -26,7 +26,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.env, new AccessLookup (interpreter.Continuation, this.var));
+            return interpreter.EvalNewSubproblem (this.env, new AccessLookup (interpreter.Continuation, this.var));
         }
 
      }
@@ -47,7 +47,12 @@ namespace Microcode
             Environment env = value as Environment;
             if (env == null)
                 env = InterpreterEnvironment.Global;
-            return this.Parent.Invoke (interpreter, env.Lookup (this.name));
+            return interpreter.Return (env.Lookup (this.name));
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -84,7 +89,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.value, new AssignContinue (interpreter.Continuation, this, interpreter.Environment));
+            return interpreter.EvalNewSubproblem (this.value, new AssignContinue (interpreter.Continuation, this, interpreter.Environment));
         }
     }
 
@@ -100,10 +105,23 @@ namespace Microcode
             return interpreter.Return (this.Environment.Assign (this.Expression.Name, value));
         }
 
-     }
+        public override int FrameSize
+        {
+            get { return 3; }
+        }
+
+        public override object FrameRef (int offset)
+        {
+            if (offset == 0)
+                return ReturnCode.EXECUTE_ASSIGNMENT_FINISH;
+            else
+                throw new NotImplementedException ();
+        }
+
+    }
 
 
-    sealed class Combination : SCode
+    sealed class Combination : SCode, ISystemVector
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode [] components;
@@ -118,15 +136,34 @@ namespace Microcode
             Environment environment = interpreter.Environment;
             if (components.Length == 1)
             {
-                return interpreter.EvalSubproblem (components [0], new CombinationApply (interpreter.Continuation, new object [] { }));
+                return interpreter.EvalNewSubproblem (components [0], new CombinationApply (interpreter.Continuation, new object [] { }));
             }
             else
-                return interpreter.EvalSubproblem (components [components.Length - 1],
+                return interpreter.EvalNewSubproblem (components [components.Length - 1],
                                                    new CombinationAccumulate (interpreter.Continuation, components,
                                                                               null,
                                                                               components.Length - 1,
                                                                               environment));
         }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            return this.components [index];
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
     }
 
     sealed class CombinationAccumulate : Continuation
@@ -165,15 +202,20 @@ namespace Microcode
                     valuevector [scan++] = tail.Car;
                     tail = (Cons) tail.Cdr;
                 }
-                return interpreter.EvalSubproblem (this.components [0], this.environment, new CombinationApply (this.Parent, valuevector));
+                return interpreter.EvalReuseSubproblem (this.components [0], this.environment, new CombinationApply (this.Parent, valuevector));
             }
             else
-                return interpreter.EvalSubproblem (this.components [this.index - 1], this.environment,
+                return interpreter.EvalReuseSubproblem (this.components [this.index - 1], this.environment,
                                                    new CombinationAccumulate (this.Parent,
                                                                               this.components,
                                                                               new Cons (value, this.values),
                                                                               this.index - 1,
                                                                               this.environment));
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -191,6 +233,11 @@ namespace Microcode
         internal override object Invoke (Interpreter interpreter, object value)
         {
             return interpreter.Apply (value, arguments);
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -224,7 +271,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.rand, new Combination1First (interpreter.Continuation, this, interpreter.Environment));
+            return interpreter.EvalNewSubproblem (this.rand, new Combination1First (interpreter.Continuation, this, interpreter.Environment));
         }
 
         #region ISystemPair Members
@@ -233,7 +280,7 @@ namespace Microcode
         {
             get
             {
-                throw new NotImplementedException ();
+                return this.rator;
             }
             set
             {
@@ -245,7 +292,7 @@ namespace Microcode
         {
             get
             {
-                throw new NotImplementedException ();
+                return this.rand;
             }
             set
             {
@@ -265,7 +312,27 @@ namespace Microcode
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            return interpreter.EvalSubproblem (this.Expression.Operator, this.Environment, new Combination1Apply (this.Parent, value));
+            return interpreter.EvalReuseSubproblem (this.Expression.Operator, this.Environment, new Combination1Apply (this.Parent, value));
+        }
+
+        public override int FrameSize
+        {
+            get { return 3; }
+        }
+
+        public override object FrameRef (int offset)
+        {
+            switch (offset)
+            {
+                case 0:
+                    return ReturnCode.COMB_1_PROCEDURE;
+                case 1:
+                    return this.Expression;
+                case 2:
+                    return this.Environment;
+                default:
+                    throw new NotImplementedException ();
+            }
         }
     }
 
@@ -284,10 +351,15 @@ namespace Microcode
         {
             return interpreter.CallProcedure ((SCode) value, this.rand);
         }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
+        }
     }
 
 
-    class Combination2 : SCode
+    class Combination2 : SCode, ISystemHunk3
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode rator;
@@ -309,6 +381,15 @@ namespace Microcode
             this.rator = rator;
             this.rand0 = rand0;
             this.rand1 = rand1;
+        }
+
+        public Combination2 (Hunk3 init)
+        {
+            this.rator = (SCode) init.Cxr0;
+            SCode cxr1 = init.Cxr1 as SCode;
+            this.rand0 = cxr1 == null ? Quotation.Make (init.Cxr1) : cxr1;
+            SCode cxr2 = init.Cxr2 as SCode;
+            this.rand1 = cxr2 == null ? Quotation.Make (init.Cxr2) : cxr2;
         }
 
         public static SCode Make (SCode rator, SCode rand0, SCode rand1)
@@ -336,8 +417,48 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.rand0, new Combination2First (interpreter.Continuation, this, interpreter.Environment));
+            return interpreter.EvalNewSubproblem (this.rand0, new Combination2First (interpreter.Continuation, this, interpreter.Environment));
         }
+
+        #region ISystemHunk3 Members
+
+        public object SystemHunk3Cxr0
+        {
+            get
+            {
+                return rator;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr1
+        {
+            get
+            {
+                return rand0;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr2
+        {
+            get
+            {
+                return rand1;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 
     sealed class Combination2First : Subproblem<Combination2>
@@ -349,7 +470,12 @@ namespace Microcode
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            return interpreter.EvalSubproblem (this.Expression.Rand1, this.Environment, new Combination2Second (this.Parent, this.Expression, value, this.Environment));
+            return interpreter.EvalReuseSubproblem (this.Expression.Rand1, this.Environment, new Combination2Second (this.Parent, this.Expression, value, this.Environment));
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -367,7 +493,20 @@ namespace Microcode
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            return interpreter.EvalSubproblem (this.Expression.Rator, this.Environment, new Combination2Apply (this.Parent, this.rand0, value));
+            return interpreter.EvalReuseSubproblem (this.Expression.Rator, this.Environment, new Combination2Apply (this.Parent, this.rand0, value));
+        }
+
+        public object Evaluated
+        {
+            get
+            {
+                return new object [] { rand0 };
+            }
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -390,9 +529,22 @@ namespace Microcode
         {
             return interpreter.CallProcedure ((SCode) value, this.rand0, this.rand1);
         }
+
+        public object Evaluated
+        {
+            get
+            {
+                return new object [] { rand0, rand1 };
+            }
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
+        }
     }
 
-    sealed class Comment : SCode
+    sealed class Comment : SCode, ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object text;
@@ -412,6 +564,34 @@ namespace Microcode
         {
             return interpreter.EvalReduction (this.code);
         }
+
+        #region ISystemPair Members
+
+        public object SystemPairCar
+        {
+            get
+            {
+                return this.text;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemPairCdr
+        {
+            get
+            {
+                return this.code;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 
     sealed class Conditional : SCode
@@ -469,7 +649,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.predicate, new ConditionalDecide (interpreter.Continuation, this, interpreter.Environment));
+            return interpreter.EvalNewSubproblem (this.predicate, new ConditionalDecide (interpreter.Continuation, this, interpreter.Environment));
         }
     }
 
@@ -485,6 +665,11 @@ namespace Microcode
             return interpreter.EvalReduction (value == null || value is bool && (bool) value == false
                                                   ? this.Expression.Alternative
                                                   : this.Expression.Consequent, this.Environment);
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -516,7 +701,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.value, new DefineContinue (interpreter.Continuation, this, interpreter.Environment));
+            return interpreter.EvalNewSubproblem (this.value, new DefineContinue (interpreter.Continuation, this, interpreter.Environment));
         }
     }
 
@@ -533,6 +718,27 @@ namespace Microcode
             this.Environment.Assign (this.Expression.Name, value);
             // like MIT Scheme, discard old value and return name.
             return interpreter.Return (this.Expression.Name);
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+    }
+
+    sealed class Delay : SCode
+    {
+        [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
+        readonly SCode body;
+
+        public Delay (SCode body)
+        {
+            this.body = body;
+        }
+
+        internal override object EvalStep (Interpreter interpreter, object etc)
+        {
+            return interpreter.Return (new Promise (this.body, interpreter.Environment));
         }
     }
 
@@ -563,7 +769,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.predicate, new DisjunctionDecide (interpreter.Continuation, this, interpreter.Environment));
+            return interpreter.EvalNewSubproblem (this.predicate, new DisjunctionDecide (interpreter.Continuation, this, interpreter.Environment));
         }
     }
 
@@ -583,7 +789,48 @@ namespace Microcode
             else
                 return interpreter.Return (value);
         }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
+        }
     }
+
+    sealed class ExitInterpreter : Continuation
+    {
+        public ExitInterpreter ()
+            : base (null)
+        {
+        }
+
+ 
+        internal override object Invoke (Interpreter interpreter, object value)
+        {
+            throw new ExitInterpreterException (Termination.RETURN_FROM_INTERPRETER);
+        }
+
+        public override int FrameSize
+        {
+            get { return 2; }
+        }
+
+        public override object FrameRef (int offset)
+        {
+            if (offset == 0)
+                return new ReturnAddress (ReturnCode.HALT);
+            else
+                throw new NotImplementedException ();
+        }
+
+        public override int SystemVectorSize
+        {
+            get
+            {
+                return FrameSize;
+            }
+        }
+    }
+
 
 
     class Lambda : SCode, ISystemPair
@@ -659,11 +906,12 @@ namespace Microcode
 
         #region ISystemPair Members
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
             get
             {
-                throw new NotImplementedException ();
+                return this.body;
             }
             set
             {
@@ -671,11 +919,12 @@ namespace Microcode
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCdr
         {
             get
             {
-                throw new NotImplementedException ();
+                return this.formals;
             }
             set
             {
@@ -751,7 +1000,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.arg0, new PrimitiveCombination1Apply (interpreter.Continuation, this.procedure));
+            return interpreter.EvalNewSubproblem (this.arg0, new PrimitiveCombination1Apply (interpreter.Continuation, this.procedure));
         }
     }
 
@@ -779,10 +1028,15 @@ namespace Microcode
                 return this.rator;
             }
         }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
+        }
     }
 
 
-    class PrimitiveCombination2 : SCode
+    class PrimitiveCombination2 : SCode, ISystemHunk3
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly Primitive2 rator;
@@ -840,9 +1094,49 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.rand0, new PrimitiveCombination2First (interpreter.Continuation, this, interpreter.Environment));
+            return interpreter.EvalNewSubproblem (this.rand0, new PrimitiveCombination2First (interpreter.Continuation, this, interpreter.Environment));
 
         }
+
+        #region ISystemHunk3 Members
+
+        public object SystemHunk3Cxr0
+        {
+            get
+            {
+                return this.rator;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr1
+        {
+            get
+            {
+                return this.rand0;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr2
+        {
+            get
+            {
+                return this.rand1;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 
     sealed class PrimitiveCombination2First : Subproblem<PrimitiveCombination2>
@@ -854,7 +1148,12 @@ namespace Microcode
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            return interpreter.EvalSubproblem (this.Expression.Rand1, this.Environment, new PrimitiveCombination2Apply (this.Parent, this.Expression.Rator, value));
+            return interpreter.EvalReuseSubproblem (this.Expression.Rand1, this.Environment, new PrimitiveCombination2Apply (this.Parent, this.Expression.Rator, value));
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -876,6 +1175,11 @@ namespace Microcode
         internal override object Invoke (Interpreter interpreter, object value)
         {
             return interpreter.CallPrimitive (this.rator, this.rand0, value);
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -907,7 +1211,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.arg0, new PrimitiveCombination3First (interpreter.Continuation, this, interpreter.Environment));
+            return interpreter.EvalNewSubproblem (this.arg0, new PrimitiveCombination3First (interpreter.Continuation, this, interpreter.Environment));
         }
 
         public Primitive3 Operator
@@ -963,7 +1267,12 @@ namespace Microcode
  
         internal override object Invoke (Interpreter interpreter, object value)
         {
-             return interpreter.EvalSubproblem (this.Expression.Operand1, this.Environment, new PrimitiveCombination3Second (this.Parent, this.Expression, this.Environment, value));
+             return interpreter.EvalReuseSubproblem (this.Expression.Operand1, this.Environment, new PrimitiveCombination3Second (this.Parent, this.Expression, this.Environment, value));
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -979,7 +1288,12 @@ namespace Microcode
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            return interpreter.EvalSubproblem (this.Expression.Operand2, this.Environment, new PrimitiveCombination3Apply (this.Parent, this.Expression.Operator, this.rand0, value));
+            return interpreter.EvalReuseSubproblem (this.Expression.Operand2, this.Environment, new PrimitiveCombination3Apply (this.Parent, this.Expression.Operator, this.rand0, value));
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -1006,6 +1320,11 @@ namespace Microcode
         internal override object Invoke (Interpreter interpreter, object value)
         {
             return interpreter.CallPrimitive (this.rator, this.rand0, this.rand1, value);
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -1097,6 +1416,11 @@ namespace Microcode
             interpreter.InterruptMask = this.old_mask;
             return interpreter.Return (value);
         }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
+        }
     }
 
 
@@ -1129,7 +1453,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.first, new Sequence2Second (interpreter.Continuation, this, interpreter.Environment));
+            return interpreter.EvalNewSubproblem (this.first, new Sequence2Second (interpreter.Continuation, this, interpreter.Environment));
         }
 
         #region ISystemPair Members
@@ -1138,7 +1462,7 @@ namespace Microcode
         {
             get
             {
-                throw new NotImplementedException ();
+                return this.first ;
             }
             set
             {
@@ -1150,7 +1474,7 @@ namespace Microcode
         {
             get
             {
-                throw new NotImplementedException ();
+                return this.second;
             }
             set
             {
@@ -1172,10 +1496,15 @@ namespace Microcode
         {
             return interpreter.EvalReduction (this.Expression.Second, this.Environment);
         }
+
+        public override int FrameSize
+        {
+            get { return 3; }
+        }
     }
 
 
-    sealed class Sequence3 : SCode
+    sealed class Sequence3 : SCode, ISystemHunk3
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode first;
@@ -1228,9 +1557,49 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.EvalSubproblem (this.first, 
+            return interpreter.EvalNewSubproblem (this.first, 
                 new Sequence3Second (interpreter.Continuation, this, interpreter.Environment)); 
         }
+
+        #region ISystemHunk3 Members
+
+        public object SystemHunk3Cxr0
+        {
+            get
+            {
+                return this.first;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr1
+        {
+            get
+            {
+                return this.second;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr2
+        {
+            get
+            {
+                return this.third;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 
     class Sequence3Second : Subproblem<Sequence3>
@@ -1242,7 +1611,12 @@ namespace Microcode
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            return interpreter.EvalSubproblem (this.Expression.Second, this.Environment, new Sequence3Third (this.parent, this.Expression, this.Environment));
+            return interpreter.EvalReuseSubproblem (this.Expression.Second, this.Environment, new Sequence3Third (this.parent, this.Expression, this.Environment));
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
         }
     }
 
@@ -1257,7 +1631,37 @@ namespace Microcode
         {
             return interpreter.EvalReduction (this.Expression.Third, this.Environment);
         }
+
+        public override int FrameSize
+        {
+            get { return 3; }
+        }
     }
+
+    sealed class StackMarker : Continuation
+    {
+        readonly object mark1;
+        readonly object mark2;
+
+        public StackMarker (Continuation next, object mark1, object mark2)
+            : base (next)
+        {
+            this.mark1 = mark1;
+            this.mark2 = mark2;
+        }
+
+ 
+        internal override object Invoke (Interpreter interpreter, object value)
+        {
+            return interpreter.Return (value);
+        }
+
+        public override int FrameSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+    }
+
 
     sealed class TheEnvironment : SCode
     {
@@ -1271,7 +1675,7 @@ namespace Microcode
         }
     }
 
-    class Variable : SCode
+    class Variable : SCode, ISystemHunk3
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public readonly string name;
@@ -1283,6 +1687,11 @@ namespace Microcode
             this.name = name;
         }
 
+        public Variable (Hunk3 init)
+        {
+            this.name = (string) init.Cxr0;
+        }
+
         string Name
         {
             get
@@ -1291,9 +1700,54 @@ namespace Microcode
             }
         }
 
+        public override string ToString ()
+        {
+            return "#<VARIABLE " + this.Name + ">";
+        }
+
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
             return interpreter.Return (interpreter.Environment.Lookup (this.name));
         }
+
+        #region ISystemHunk3 Members
+
+        public object SystemHunk3Cxr0
+        {
+            get
+            {
+                return this.name;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr1
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr2
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 }

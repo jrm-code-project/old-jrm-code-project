@@ -70,6 +70,25 @@ namespace Microcode
         RECORD = 0x3E
     }
 
+    interface ISystemHunk3
+    {
+        object SystemHunk3Cxr0
+        {
+            get;
+            set;
+        }
+        object SystemHunk3Cxr1
+        {
+            get;
+            set;
+        }
+        object SystemHunk3Cxr2
+        {
+            get;
+            set;
+        }
+    }
+    
     interface ISystemPair
     {
         object SystemPairCar
@@ -83,6 +102,17 @@ namespace Microcode
             get;
             set;
         }
+    }
+
+    interface ISystemVector
+    {
+        int SystemVectorSize
+        {
+            get;
+        }
+
+        object SystemVectorRef (int index);
+        object SystemVectorSet (int index, object newValue);
     }
 
     sealed class ObjectModel
@@ -106,11 +136,23 @@ namespace Microcode
                 return interpreter.Return (false);
         }
 
+        [SchemePrimitive ("MAKE-NON-POINTER-OBJECT", 1)]
+        public static object MakeNonPointerObject (Interpreter interpreter, object arg)
+        {
+            return interpreter.Return (arg);
+        }
+
+        [SchemePrimitive ("NOT", 1)]
+        public static object Not (Interpreter interpreter, object arg)
+        {
+            return interpreter.Return ((arg == null || (arg is bool && (bool) (arg) == false))
+                                      );
+        }
+
         [SchemePrimitive ("NULL?", 1)]
         public static object IsNull (Interpreter interpreter, object arg)
         {
             return interpreter.Return (arg == null);
-            // return interpreter.Return (arg == null || (arg is bool && (bool) (arg) == false));
         }
 
         [SchemePrimitive ("OBJECT-DATUM", 1)]
@@ -123,12 +165,42 @@ namespace Microcode
             return interpreter.Return (arg);
         }
 
+        [SchemePrimitive ("OBJECT-TYPE", 1)]
+        public static object ObjectType (Interpreter interpreter, object arg)
+        {
+            if (arg is char)
+                return interpreter.Return (TC.CHARACTER);
+            else if (arg is char [])
+                return interpreter.Return (TC.CHARACTER_STRING);
+            else if (arg is Closure)
+                return interpreter.Return (TC.PROCEDURE);
+            else if (arg is Combination2)
+                return interpreter.Return (TC.COMBINATION_2);
+            else if (arg is Cons)
+                return interpreter.Return (TC.LIST);
+            else if (arg is int)
+                return interpreter.Return (TC.FIXNUM);
+            else if (arg is Quotation)
+                return interpreter.Return (TC.SCODE_QUOTE);
+            else if (arg is string)
+                //return interpreter.Return (Misc.IsGensym ((string) arg) ? TC.UNINTERNED_SYMBOL : TC.INTERNED_SYMBOL);
+                return interpreter.Return (TC.INTERNED_SYMBOL);
+            else if (arg is Variable)
+                return interpreter.Return (TC.VARIABLE);
+
+            else
+                throw new NotImplementedException ();
+        }
+
+
         [SchemePrimitive ("OBJECT-TYPE?", 2)]
         public static object IsObjectType (Interpreter interpreter, object arg0, object arg1)
         {
             TC targetType = (TC) arg0;
             switch (targetType)
             {
+                case TC.ACCESS:
+                    return interpreter.Return (arg1 is Access);
                 case TC.BIG_FIXNUM:
                     return interpreter.Return (arg1 is Int64);
                 case TC.BIG_FLONUM:
@@ -147,12 +219,12 @@ namespace Microcode
                     return interpreter.Return (arg1 is Comment);
                 case TC.COMPILED_ENTRY:
                     return interpreter.Return (false);
-                //case TC.COMPLEX:
-                //    return interpreter.Return (arg1 is Complex);
-                //case TC.DELAYED:
-                //    return interpreter.Return (arg1 is Promise);
-                //case TC.ENTITY:
-                //    return interpreter.Return (arg1 is Entity);
+                case TC.COMPLEX:
+                    return interpreter.Return (arg1 is Complex);
+                case TC.DELAYED:
+                    return interpreter.Return (arg1 is Promise);
+                case TC.ENTITY:
+                    return interpreter.Return (arg1 is Entity);
                 case TC.ENVIRONMENT:
                     return interpreter.Return (arg1 is Environment);
                 case TC.EXTENDED_PROCEDURE:
@@ -183,10 +255,10 @@ namespace Microcode
                     return interpreter.Return (arg1 is Primitive);
                 case TC.PROCEDURE:
                     return interpreter.Return (arg1 is Closure);
-                //case TC.RATNUM:
-                //    return interpreter.Return (arg1 is Ratnum);
-                //case TC.RETURN_CODE:
-                //    return interpreter.Return (arg1 is ReturnCode);
+                case TC.RATNUM:
+                    return interpreter.Return (arg1 is Ratnum);
+                case TC.RETURN_CODE:
+                    return interpreter.Return (arg1 is ReturnCode);
                 case TC.SEQUENCE_2:
                     return interpreter.Return (arg1 is Sequence2);
                 case TC.SEQUENCE_3:
@@ -210,6 +282,9 @@ namespace Microcode
                 return interpreter.Return (new TopLevelEnvironment ());
             switch (newType)
             {
+                case TC.COMBINATION_2:
+                    return interpreter.Return (new Combination2 ((Hunk3) arg1));
+
                 case TC.CONSTANT:
                     switch ((int) arg1)
                     {
@@ -226,10 +301,60 @@ namespace Microcode
                     return interpreter.Return (new InterpreterEnvironment ((object []) arg1));
                 case TC.RECORD:
                     return interpreter.Return (new Record ((object []) arg1));
+                case TC.VARIABLE:
+                    return interpreter.Return (new Variable ((Hunk3) arg1));
                 default:
                     throw new NotImplementedException ();
             }
         }
+
+        [SchemePrimitive ("PRIMITIVE-OBJECT-EQ?", 2)]
+        public static object PrimitiveObjectEq (Interpreter interpreter, object arg0, object arg1)
+        {
+            return interpreter.Return (Object.ReferenceEquals (arg0, arg1));
+        }
+
+        [SchemePrimitive ("PRIMITIVE-OBJECT-TYPE", 1)]
+        public static object PrimitiveObjectType (Interpreter interpreter, object arg)
+        {
+            if (arg is char)
+                return interpreter.Return (TC.CHARACTER);
+            else if (arg is char [])
+                return interpreter.Return (TC.CHARACTER_STRING);
+            else if (arg is double)
+                return interpreter.Return (TC.BIG_FLONUM);
+            else if (arg is Closure)
+                return interpreter.Return (TC.PROCEDURE);
+            else if (arg is Cons)
+                return interpreter.Return (TC.LIST);
+            else if (arg is int)
+                return interpreter.Return (TC.FIXNUM);
+            else if (arg == null)
+                return interpreter.Return (TC.NULL);
+            else if (arg == Constant.Unspecific)
+                return interpreter.Return (TC.CONSTANT);
+            else if (arg is string)
+                return interpreter.Return (Misc.IsGensym ((string) arg) ? TC.UNINTERNED_SYMBOL : TC.INTERNED_SYMBOL);
+            else
+                throw new NotImplementedException ();
+        }
+
+
+        [SchemePrimitive ("PRIMITIVE-OBJECT-TYPE?", 2)]
+        public static object IsPrimitiveObjectType (Interpreter interpreter, object arg0, object arg1)
+        {
+            TC targetType = (TC) arg0;
+            switch (targetType)
+            {
+                case TC.MANIFEST_NM_VECTOR:
+                    return interpreter.Return (false);
+                case TC.REFERENCE_TRAP:
+                    return interpreter.Return (arg0 is string []);
+                default:
+                    throw new NotImplementedException ();
+            }
+        }
+
 
         [SchemePrimitive ("PRIMITIVE-OBJECT-SET-TYPE", 2)]
         public static object PrimitiveObjectSetType (Interpreter interpreter, object arg0, object arg1)
@@ -252,6 +377,46 @@ namespace Microcode
                     throw new NotImplementedException ();
             }
         }
+
+        [SchemePrimitive ("SYSTEM-HUNK3-CXR0", 1)]
+        public static object SystemHunk3Cxr0 (Interpreter interpreter, object arg)
+        {
+            ISystemHunk3 hunk = arg as ISystemHunk3;
+            if (hunk != null)
+                return interpreter.Return (hunk.SystemHunk3Cxr0);
+            else
+
+                throw new NotImplementedException ();
+
+
+        }
+
+        [SchemePrimitive ("SYSTEM-HUNK3-CXR1", 1)]
+        public static object SystemHunk3Cxr1 (Interpreter interpreter, object arg)
+        {
+            ISystemHunk3 hunk = arg as ISystemHunk3;
+            if (hunk != null)
+                return interpreter.Return (hunk.SystemHunk3Cxr1);
+            else
+
+                throw new NotImplementedException ();
+
+
+        }
+
+        [SchemePrimitive ("SYSTEM-HUNK3-CXR2", 1)]
+        public static object SystemHunk3Cxr2 (Interpreter interpreter, object arg)
+        {
+            ISystemHunk3 hunk = arg as ISystemHunk3;
+            if (hunk != null)
+                return interpreter.Return (hunk.SystemHunk3Cxr2);
+            else
+
+                throw new NotImplementedException ();
+
+
+        }
+
 
         [SchemePrimitive ("SYSTEM-LIST-TO-VECTOR", 2)]
         public static object SystemListToVector (Interpreter interpreter, object arg0, object arg1)
@@ -293,6 +458,24 @@ namespace Microcode
                 interpreter.Return (systemPair.SystemPairCdr);
         }
 
+        [SchemePrimitive ("SYSTEM-PAIR-SET-CAR!", 2)]
+        public static object SystemPairSetCar (Interpreter interpreter, object arg, object newValue)
+        {
+            ISystemPair systemPair = arg as ISystemPair;
+            object oldValue = systemPair.SystemPairCar;
+            systemPair.SystemPairCar = newValue;
+            return interpreter.Return (oldValue);
+        }
+
+        [SchemePrimitive ("SYSTEM-PAIR-SET-CDR!", 2)]
+        public static object SystemPairSetCdr (Interpreter interpreter, object arg, object newValue)
+        {
+            ISystemPair systemPair = arg as ISystemPair;
+            object oldValue = systemPair.SystemPairCdr;
+            systemPair.SystemPairCdr = newValue;
+            return interpreter.Return (oldValue);
+        }
+
         [SchemePrimitive ("SYSTEM-PAIR-CONS", 3)]
         public static object SystemPairCons (Interpreter interpreter, object acode, object car, object cdr)
         {
@@ -300,21 +483,43 @@ namespace Microcode
             TC code = (TC) acode;
             switch (code)
             {
-                //case TC.ENTITY:
-                //    return interpreter.Return (new Entity (car, cdr));
+                case TC.ENTITY:
+                    return interpreter.Return (new Entity (car, cdr));
                 case TC.LAMBDA:
                     return interpreter.Return (new Lambda (car, cdr));
                 case TC.PROCEDURE:
                     return interpreter.Return (new Closure ((Lambda) car, cdr == null ? Environment.Global : (Environment) cdr));
-                //case TC.RATNUM:
-                //    return interpreter.Return (new Ratnum (car, cdr));
+                case TC.RATNUM:
+                    return interpreter.Return (new Ratnum (car, cdr));
                 case TC.UNINTERNED_SYMBOL:
                     return interpreter.Return (new String ((char []) car));
-                //case TC.WEAK_CONS:
-                //    return interpreter.Return (new WeakCons (car, cdr));
+                case TC.WEAK_CONS:
+                    return interpreter.Return (new WeakCons (car, cdr));
                 default:
                     throw new NotImplementedException ();
             }
+        }
+
+        [SchemePrimitive ("SYSTEM-VECTOR-REF", 2)]
+        public static object SystemVectorRef (Interpreter interpreter, object arg, object offset)
+        {
+            ISystemVector sysVec = arg as ISystemVector;
+            if (sysVec != null)
+                return interpreter.Return (sysVec.SystemVectorRef ((int) offset));
+            else
+                throw new NotImplementedException ();
+        }
+
+        [SchemePrimitive ("SYSTEM-VECTOR-SIZE", 1)]
+        public static object SystemVectorSize (Interpreter interpreter, object arg)
+        {
+            ISystemVector sysVec = arg as ISystemVector;
+            if (sysVec != null)
+                return interpreter.Return (sysVec.SystemVectorSize);
+            else if (arg is bool [])
+                return interpreter.Return ((((bool []) arg).Length / 32) + 1);
+            else
+                throw new NotImplementedException ();
         }
     }
 }

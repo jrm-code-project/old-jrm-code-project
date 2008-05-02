@@ -118,13 +118,13 @@ namespace Microcode
         [SchemePrimitive ("FIXNUM-ANDC", 2)]
         public static object AndC (Interpreter interpreter, object left, object right)
         {
-            throw new NotImplementedException ();
+            return interpreter.Return ((int) left & ~((int) right));
         }
 
         [SchemePrimitive ("FIXNUM-AND", 2)]
         public static object And (Interpreter interpreter, object left, object right)
         {
-            throw new NotImplementedException ();
+            return interpreter.Return ((int) left & (int) right);
         }
 
         [SchemePrimitive ("FIXNUM-OR", 2)]
@@ -142,7 +142,7 @@ namespace Microcode
         [SchemePrimitive ("FIXNUM-NOT", 1)]
         public static object Not (Interpreter interpreter, object arg)
         {
-            throw new NotImplementedException ();
+            return interpreter.Return (~((int) arg));
         }
 
         [SchemePrimitive ("FIXNUM-LSH", 2)]

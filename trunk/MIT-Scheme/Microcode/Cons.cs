@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    sealed class Cons
+    sealed class Cons: ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object car;
@@ -42,6 +42,40 @@ namespace Microcode
                 this.cdr = value;
             }
         }
+
+        #region ISystemPair Members
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public object SystemPairCar
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.car;
+            }
+
+            set
+            {
+                this.car = value;
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public object SystemPairCdr
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.cdr;
+            }
+
+            set
+            {
+                this.cdr = value ;
+            }
+        }
+
+        #endregion
 
         public int Length ()
         {
@@ -103,6 +137,12 @@ namespace Microcode
         public static object PrimitiveCons (Interpreter interpreter, object car, object cdr)
         {
             return interpreter.Return (new Cons (car, cdr));
+        }
+
+        [SchemePrimitive ("LIST->VECTOR", 1)]
+        public static object ToVector (Interpreter interpreter, Object arg0)
+        {
+            return interpreter.Return (((Cons) arg0).ToVector ());
         }
 
         [SchemePrimitive ("PAIR?", 1)]

@@ -271,21 +271,21 @@ namespace Microcode
             UInt32 cSize = binaryReader.ReadUInt32 () & DATUM_MASK;     /* Size of C code primitiveTable in SCHEME_OBJECTs */
             UInt32 memBase = binaryReader.ReadUInt32 ();
             FaslHeader header = new FaslHeader (
-						heapCount,
-						heapBase,
-						dumpedObj,
-						constCount,
-						constBase,
-						version,
-						stackTop,
-						primLength,
-						primSize,
-						ciVersion,
-						utBase,
-						checkSum,
-						cLength,
-						cSize,
-						memBase);
+                                                heapCount,
+                                                heapBase,
+                                                dumpedObj,
+                                                constCount,
+                                                constBase,
+                                                version,
+                                                stackTop,
+                                                primLength,
+                                                primSize,
+                                                ciVersion,
+                                                utBase,
+                                                checkSum,
+                                                cLength,
+                                                cSize,
+                                                memBase);
             for (int i = 16; i < FASL_HEADER_SIZE; i++)
             {
                 UInt32 discard = binaryReader.ReadUInt32 ();
@@ -471,9 +471,9 @@ namespace Microcode
                     return new Comment (ReadSCode (encoded.Datum),
                                         ReadObject (encoded.Datum + 4));
 
-                //case TC.COMPLEX:
-                //    return new Complex (ReadObject (encoded.Datum),
-                //                        ReadObject (encoded.Datum + 4));
+                case TC.COMPLEX:
+                    return new Complex (ReadObject (encoded.Datum),
+                                        ReadObject (encoded.Datum + 4));
 
                 case TC.CONDITIONAL:
                     return Conditional.Make (ReadSCode (encoded.Datum),
@@ -485,15 +485,19 @@ namespace Microcode
                         return sharpT;
                     else if (encoded.Datum == 1)
                         return Constant.Unspecific;
+                    else if (encoded.Datum == 3)
+                        return Constant.LambdaOptionalTag;
+                    else if (encoded.Datum == 9)
+                        return null;
                     else
-                        throw new NotImplementedException();
+                        throw new NotImplementedException ();
 
                 case TC.DEFINITION:
                     return new Definition ((string) ReadObject (encoded.Datum),
                                             ReadSCode (encoded.Datum + 4));
 
-                //case TC.DELAY:
-                //    return new Delay (SCode.Convert (ReadObject (encoded.Datum)));
+                case TC.DELAY:
+                    return new Delay (ReadSCode (encoded.Datum));
 
                 case TC.DISJUNCTION:
                     return new Disjunction (ReadSCode (encoded.Datum),
@@ -555,8 +559,8 @@ namespace Microcode
                 case TC.REFERENCE_TRAP:
                     return ReferenceTrap.Make (encoded.Datum);
 
-                //case TC.RETURN_CODE:
-                //    return (ReturnCode) (encoded.Datum);
+                case TC.RETURN_CODE:
+                    return (ReturnCode) (encoded.Datum);
 
                 case TC.THE_ENVIRONMENT:
                     return new TheEnvironment ();

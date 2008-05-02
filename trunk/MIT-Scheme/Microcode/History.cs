@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    class History
+    class History: ISystemHunk3
     {
         HistoryElement element;
 
@@ -18,33 +18,6 @@ namespace Microcode
             get
             {
                 return this.element;
-            }
-        }
-
-        public object SystemHunk3Cxr0
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return element.SystemHunk3Cxr0;
-            }
-        }
-
-        public object SystemHunk3Cxr1
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return element.SystemHunk3Cxr1;
-            }
-        }
-
-        public object SystemHunk3Cxr2
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return element.SystemHunk3Cxr2;
             }
         }
 
@@ -143,6 +116,56 @@ namespace Microcode
             vertebra.PreviousSubproblem = vertebra;
             return vertebra;
         }
+
+        internal void NewReduction (SCode expression, Environment env)
+        {
+        }
+        internal void NewSubproblem (SCode expression, Environment env)
+        {
+        }
+        internal void ReuseSubproblem (SCode expression, Environment env)
+        {
+        }
+
+        #region ISystemHunk3 Members
+
+        public object SystemHunk3Cxr0
+        {
+            get
+            {
+                return element.SystemHunk3Cxr0;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr1
+        {
+            get
+            {
+                return element.SystemHunk3Cxr1;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemHunk3Cxr2
+        {
+            get
+            {
+                return element.SystemHunk3Cxr2;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 
     class MarkedHistory : History
@@ -168,23 +191,9 @@ namespace Microcode
         }
     }
 
-    abstract class HistoryElement
+    abstract class HistoryElement : ISystemHunk3
     {
-        public abstract object SystemHunk3Cxr0
-        {
-            get;
-            //set;
-        }
-        public abstract object SystemHunk3Cxr1
-        {
-            get;
-            ///set;
-        }
-        public abstract object SystemHunk3Cxr2
-        {
-            get;
-            //set;
-        }
+
         public abstract SCode Expression
         {
             get;
@@ -220,6 +229,22 @@ namespace Microcode
             get;
             set;
         }
+        public abstract object SystemHunk3Cxr0
+        {
+            get;
+            set;
+        }
+        public abstract object SystemHunk3Cxr1
+        {
+            get;
+            set;
+        }
+        public abstract object SystemHunk3Cxr2
+        {
+            get;
+            set;
+        }
+
     }
 
     class HistoryRib : HistoryElement
@@ -235,6 +260,10 @@ namespace Microcode
             {
                 return this.expression;
             }
+            set
+            {
+                throw new NotImplementedException ();
+            }
         }
 
         public override object SystemHunk3Cxr1
@@ -244,6 +273,10 @@ namespace Microcode
             {
                 return this.environment;
             }
+            set
+            {
+                throw new NotImplementedException ();
+            }
         }
 
         public override object SystemHunk3Cxr2
@@ -252,6 +285,10 @@ namespace Microcode
             get
             {
                 return this.nextReduction;
+            }
+            set
+            {
+                throw new NotImplementedException ();
             }
         }
         public override SCode Expression
@@ -350,6 +387,10 @@ namespace Microcode
             {
                 return this.rib;
             }
+            set
+            {
+                throw new NotImplementedException ();
+            }
         }
 
         public override object SystemHunk3Cxr1
@@ -359,6 +400,10 @@ namespace Microcode
             {
                 return this.nextSubproblem;
             }
+            set
+            {
+                throw new NotImplementedException ();
+            }
         }
 
         public override object SystemHunk3Cxr2
@@ -367,6 +412,10 @@ namespace Microcode
             get
             {
                 return this.previousSubproblem;
+            }
+            set
+            {
+                throw new NotImplementedException ();
             }
         }
         public override SCode Expression

@@ -10,6 +10,7 @@ namespace Microcode
     {
         string message;
 
+        static Termination returnFromInterpreter;
         static Termination unexpectedExit;
 
         Termination (string message)
@@ -23,6 +24,16 @@ namespace Microcode
             get
             {
                 return this.message;
+            }
+        }
+
+        static public Termination RETURN_FROM_INTERPRETER
+        {
+            get
+            {
+                if (returnFromInterpreter == null)
+                    returnFromInterpreter = new Termination ("The interpreter returned.");
+                return returnFromInterpreter;
             }
         }
 

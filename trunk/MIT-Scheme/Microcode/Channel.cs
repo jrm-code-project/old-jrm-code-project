@@ -7,6 +7,35 @@ namespace Microcode
 {
     static class Channel
     {
+        // Crude kludge to get initial prompt to work.
+        static bool blocking = true;
+
+        [SchemePrimitive ("CHANNEL-BLOCKING?", 1)]
+        public static object IsChannelBlocking (Interpreter interpreter, object arg)
+        {
+            return interpreter.Return (blocking);
+        }
+
+        [SchemePrimitive ("CHANNEL-DESCRIPTOR", 1)]
+        public static object PrimitiveChannelDescriptor (Interpreter interpreter, object arg)
+        {
+            return interpreter.Return (arg);
+        }
+
+        [SchemePrimitive ("CHANNEL-BLOCKING", 1)]
+        public static object ChannelBlocking (Interpreter interpreter, object arg)
+        {
+            blocking = true;
+            return interpreter.Return (true);
+        }
+
+        [SchemePrimitive ("CHANNEL-NONBLOCKING", 1)]
+        public static object ChannelNonBlocking (Interpreter interpreter, object arg)
+        {
+            blocking = false;
+            return interpreter.Return (true);
+        }
+
         [SchemePrimitive ("CHANNEL-TYPE-NAME", 1)]
         public static object ChannelTypeName (Interpreter interpreter, object arg)
         {
@@ -16,6 +45,24 @@ namespace Microcode
                 return interpreter.Return ("terminal".ToCharArray ());
             else
                 throw new NotImplementedException ();
+        }
+
+        [SchemePrimitive ("CHANNEL-READ", 4)]
+        public static object ChannelRead (Interpreter interpreter, object [] arglist)
+        {
+           System.IO.TextReader reader = (System.IO.TextReader) arglist [0];
+            char [] buffer = (char []) arglist [1];
+            int start = (int) arglist [2];
+            int limit = (int) arglist [3];
+            if (blocking == true)
+            {
+                int filled = reader.Read (buffer, start, limit - start);
+                return interpreter.Return (filled);
+            }
+            else
+            {
+                return interpreter.Return (0);
+            }
         }
 
         [SchemePrimitive ("CHANNEL-WRITE", 4)]
