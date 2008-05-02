@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    abstract class Continuation
+    abstract class Continuation : ISystemVector
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly Continuation parent;
@@ -22,7 +22,42 @@ namespace Microcode
             }
         }
 
+        public abstract int FrameSize
+        {
+            get;
+        }
+
+
+        public virtual object FrameRef (int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
         internal abstract object Invoke (Interpreter interpreter, object value);
+
+        #region ISystemVector Members
+        public virtual int SystemVectorSize
+        {
+            get
+            {
+                return FrameSize + Parent.SystemVectorSize;
+            }
+        }
+
+        public object SystemVectorRef (int offset)
+        {
+            if (offset < FrameSize)
+                return FrameRef (offset);
+            else
+                return Parent.SystemVectorRef (offset - FrameSize);
+        }
+
+        public object SystemVectorSet (int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
     }
 
     abstract class Subproblem<T> : Continuation

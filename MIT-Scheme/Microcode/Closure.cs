@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 
 namespace Microcode
 {
@@ -24,19 +22,10 @@ namespace Microcode
 
         public Environment Environment
         {
-        [DebuggerStepThrough]   
+            [DebuggerStepThrough]   
             get
             {
                 return this.environment;
-            }
-        }
-
-        public string Name
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.lambda.Name;
             }
         }
 
@@ -49,10 +38,54 @@ namespace Microcode
             }
         }
 
+        public string Name
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.lambda.Name;
+            }
+        }
+
         public int FormalOffset (string name)
         {
             return this.lambda.FormalOffset (name);
         }
+
+
+        #region ISystemPair Members
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]  
+        public object SystemPairCar
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.lambda;
+            }
+ 
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)] 
+        public object SystemPairCdr
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.environment;
+            }
+
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
@@ -93,41 +126,6 @@ namespace Microcode
         {
             interpreter.Return (arg is Closure);
         }
-
-        #region ISystemPair Members
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]  
-        public object SystemPairCar
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            [DebuggerStepThrough]
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-           [DebuggerBrowsable (DebuggerBrowsableState.Never)] 
-        public object SystemPairCdr
-        {
-
-           [DebuggerStepThrough]
-            get
-            {
-                throw new NotImplementedException ();
-            }
-            [DebuggerStepThrough]
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        #endregion
     }
 
     class ExtendedClosure : Closure
