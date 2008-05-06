@@ -121,7 +121,7 @@ namespace Microcode
         SCode expression;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        Environment environment;
+        object environment;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Continuation continuation;
@@ -151,7 +151,7 @@ namespace Microcode
         {
             this.continuation = new ExitInterpreter ();
             this.expression = initialForm;
-            this.environment = Environment.Global;
+            this.environment = false;
             this.history = FixedObjectsVector.TheDummyHistory;
 
             try
@@ -186,7 +186,7 @@ namespace Microcode
         }
 
         [DebuggerStepThrough]
-        internal object EvalReduction (SCode sCode, Environment environment)
+        internal object EvalReduction (SCode sCode, object environment)
         {
             this.expression = sCode;
             this.environment = environment;
@@ -204,7 +204,7 @@ namespace Microcode
         }
 
         [DebuggerStepThrough]
-        internal object EvalNewSubproblem (SCode sCode, Environment environment, Continuation continuation)
+        internal object EvalNewSubproblem (SCode sCode, object environment, Continuation continuation)
         {
             this.expression = sCode;
             this.environment = environment;
@@ -223,7 +223,7 @@ namespace Microcode
         }
 
         [DebuggerStepThrough]
-        internal object EvalReuseSubproblem (SCode sCode, Environment environment, Continuation continuation)
+        internal object EvalReuseSubproblem (SCode sCode, object environment, Continuation continuation)
         {
             this.expression = sCode;
             this.environment = environment;
@@ -366,7 +366,7 @@ namespace Microcode
             }
         }
 
-        internal Environment Environment
+        internal object Environment
         {
             [DebuggerStepThrough]
             get
@@ -452,16 +452,18 @@ namespace Microcode
                                                    interpreter.Continuation) });
         }
 
+        [SchemePrimitive ("GET-INTERRUPT-ENABLES", 0)]
+        public static object GetInterruptEnables (Interpreter interpreter)
+        {
+            return interpreter.Return (0);
+        }
 
         [SchemePrimitive ("SCODE-EVAL", 2)]
         public static object ScodeEval (Interpreter interpreter, object arg0, object arg1)
         {
-            Environment env = ((Environment) (arg1));
-            if (env == null)
-                env = Environment.Global;
 
             SCode sarg0 = arg0 as SCode;
-            return interpreter.EvalReduction (sarg0 == null ? Quotation.Make (arg0) : sarg0, env);
+            return interpreter.EvalReduction (sarg0 == null ? Quotation.Make (arg0) : sarg0, arg1);
         }
  
         [SchemePrimitive ("SET-INTERRUPT-ENABLES!", 1)]

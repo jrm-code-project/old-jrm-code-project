@@ -8,6 +8,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly Continuation parent;
 
+        [DebuggerStepThrough]
         internal Continuation (Continuation parent)
         {
             this.parent = parent;
@@ -66,9 +67,10 @@ namespace Microcode
         readonly T expression;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Environment environment;
+        readonly object environment;
 
-        public Subproblem (Continuation next, T expression, Environment environment)
+        [DebuggerStepThrough]
+        public Subproblem (Continuation next, T expression, object environment)
             : base (next)
         {
             this.expression = expression;
@@ -84,7 +86,7 @@ namespace Microcode
             }
         }
 
-        public Environment Environment
+        public object Environment
         {
             [DebuggerStepThrough]
             get

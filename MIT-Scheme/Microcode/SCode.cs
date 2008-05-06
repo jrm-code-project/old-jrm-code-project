@@ -95,14 +95,14 @@ namespace Microcode
 
     sealed class AssignContinue : Subproblem<Assignment>
     {
-        public AssignContinue (Continuation next, Assignment expression, Environment environment)
+        public AssignContinue (Continuation next, Assignment expression, object environment)
             : base (next, expression, environment)
         {
         }
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            return interpreter.Return (this.Environment.Assign (this.Expression.Name, value));
+            return interpreter.Return (((Environment)(this.Environment)).Assign (this.Expression.Name, value));
         }
 
         public override int FrameSize
@@ -133,7 +133,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            Environment environment = interpreter.Environment;
+            object environment = interpreter.Environment;
             if (components.Length == 1)
             {
                 return interpreter.EvalNewSubproblem (components [0], new CombinationApply (interpreter.Continuation, new object [] { }));
@@ -178,9 +178,9 @@ namespace Microcode
         int index;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Environment environment;
+        readonly object environment;
 
-        public CombinationAccumulate (Continuation next, SCode [] components, Cons values, int index, Environment environment)
+        public CombinationAccumulate (Continuation next, SCode [] components, Cons values, int index, object environment)
             : base (next)
         {
             this.components = components;
@@ -260,6 +260,14 @@ namespace Microcode
             this.rand = rand;
         }
 
+        public Combination1 (object rator, object rand)
+        {
+            SCode srator = rator as SCode;
+            SCode srand = rand as SCode;
+            this.rator = (srator == null) ? Quotation.Make (rator) : srator;
+            this.rand = (srand == null) ? Quotation.Make (rand) : srand;
+        }
+
         public SCode Operator
         {
             [DebuggerStepThrough]
@@ -276,6 +284,7 @@ namespace Microcode
 
         #region ISystemPair Members
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
             get
@@ -288,6 +297,7 @@ namespace Microcode
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCdr
         {
             get
@@ -305,7 +315,8 @@ namespace Microcode
 
     sealed class Combination1First : Subproblem<Combination1>
     {
-        public Combination1First (Continuation next, Combination1 expression, Environment environment)
+        [DebuggerStepThrough]
+        public Combination1First (Continuation next, Combination1 expression, object environment)
             : base (next, expression, environment)
         {
         }
@@ -463,7 +474,7 @@ namespace Microcode
 
     sealed class Combination2First : Subproblem<Combination2>
     {
-        public Combination2First (Continuation next, Combination2 expression, Environment environment)
+        public Combination2First (Continuation next, Combination2 expression, object environment)
             : base (next, expression, environment)
         {
         }
@@ -485,7 +496,7 @@ namespace Microcode
         readonly object rand0;
 
  
-        public Combination2Second (Continuation next, Combination2 expression, object rand0, Environment environment)
+        public Combination2Second (Continuation next, Combination2 expression, object rand0, object environment)
             : base (next, expression, environment)
         {
             this.rand0 = rand0;
@@ -655,14 +666,14 @@ namespace Microcode
 
     sealed class ConditionalDecide : Subproblem<Conditional>
     {
-        public ConditionalDecide (Continuation next, Conditional expression, Environment environment)
+        public ConditionalDecide (Continuation next, Conditional expression, object environment)
             : base (next, expression, environment)
         {
         }
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            return interpreter.EvalReduction (value == null || value is bool && (bool) value == false
+            return interpreter.EvalReduction ((value is bool && (bool) value == false)
                                                   ? this.Expression.Alternative
                                                   : this.Expression.Consequent, this.Environment);
         }
@@ -707,15 +718,15 @@ namespace Microcode
 
     sealed class DefineContinue : Subproblem<Definition>
     {
-        public DefineContinue (Continuation next, Definition definition, Environment environment)
+        public DefineContinue (Continuation next, Definition definition, object environment)
             : base (next, definition, environment)
         {
         }
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            this.Environment.AddBinding (this.Expression.Name);
-            this.Environment.Assign (this.Expression.Name, value);
+            Microcode.Environment.ToEnvironment(this.Environment).AddBinding (this.Expression.Name);
+            Microcode.Environment.ToEnvironment(this.Environment).Assign (this.Expression.Name, value);
             // like MIT Scheme, discard old value and return name.
             return interpreter.Return (this.Expression.Name);
         }
@@ -775,14 +786,14 @@ namespace Microcode
 
     sealed class DisjunctionDecide : Subproblem<Disjunction>
     {
-        public DisjunctionDecide (Continuation next, Disjunction disjunction, Environment environment)
+        public DisjunctionDecide (Continuation next, Disjunction disjunction, object environment)
             : base (next, disjunction, environment)
         {
         }
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            if (value == null || value is bool && (bool) value == false)
+            if (value is bool && (bool) value == false)
             {
                 return interpreter.EvalReduction (this.Expression.Alternative, this.Environment);
             }
@@ -843,7 +854,8 @@ namespace Microcode
 
         public Lambda (SCode body, string [] formals)
         {
-            // body can be null?!
+            if (body == null)
+                throw new ArgumentNullException ("body");
             if (formals == null)
                 throw new ArgumentNullException ("formals");
             this.body = body;
@@ -1141,7 +1153,7 @@ namespace Microcode
 
     sealed class PrimitiveCombination2First : Subproblem<PrimitiveCombination2>
     {
-        public PrimitiveCombination2First (Continuation next, PrimitiveCombination2 expression, Environment environment)
+        public PrimitiveCombination2First (Continuation next, PrimitiveCombination2 expression, object environment)
             : base (next, expression, environment)
         {
         }
@@ -1259,7 +1271,7 @@ namespace Microcode
 
     sealed class PrimitiveCombination3First : Subproblem<PrimitiveCombination3>
     {
-        public PrimitiveCombination3First (Continuation next, PrimitiveCombination3 expression, Environment environment)
+        public PrimitiveCombination3First (Continuation next, PrimitiveCombination3 expression, object environment)
             : base (next, expression, environment)
         {
         }
@@ -1280,7 +1292,7 @@ namespace Microcode
     {
         readonly object rand0;
 
-        public PrimitiveCombination3Second (Continuation next, PrimitiveCombination3 expression, Environment environment, object rand0)
+        public PrimitiveCombination3Second (Continuation next, PrimitiveCombination3 expression, object environment, object rand0)
             : base (next, expression, environment)
         {
             this.rand0 = rand0;
@@ -1363,16 +1375,16 @@ namespace Microcode
                     QuoteNull = new Quotation (null);
                 return QuoteNull;
             }
-            else if (cacheItem (item)) {
-                Quotation probe;
-                cacheHits++;
-                if (table.TryGetValue (item, out probe) != true) {
-                    cacheHits--;
-                    probe = new Quotation (item);
-                    table.Add (item, probe);
-                }
-                return probe;
-            }
+            //else if (cacheItem (item)) {
+            //    Quotation probe;
+            //    cacheHits++;
+            //    if (table.TryGetValue (item, out probe) != true) {
+            //        cacheHits--;
+            //        probe = new Quotation (item);
+            //        table.Add (item, probe);
+            //    }
+            //    return probe;
+            //}
             else
                 return new Quotation (item);
         }
@@ -1442,6 +1454,15 @@ namespace Microcode
             this.second = second;
         }
 
+        public SCode First
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.first;
+            }
+        }
+
         public SCode Second
         {
             [DebuggerStepThrough]
@@ -1458,6 +1479,7 @@ namespace Microcode
 
         #region ISystemPair Members
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
             get
@@ -1470,6 +1492,7 @@ namespace Microcode
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCdr
         {
             get
@@ -1487,7 +1510,7 @@ namespace Microcode
 
     sealed class Sequence2Second : Subproblem<Sequence2>
     {
-        public Sequence2Second (Continuation next, Sequence2 sequence, Environment environment)
+        public Sequence2Second (Continuation next, Sequence2 sequence, object environment)
             : base (next, sequence, environment)
         {
         }
@@ -1604,7 +1627,7 @@ namespace Microcode
 
     class Sequence3Second : Subproblem<Sequence3>
     {
-        public Sequence3Second (Continuation parent, Sequence3 expression, Environment environment)
+        public Sequence3Second (Continuation parent, Sequence3 expression, object environment)
             : base (parent, expression, environment)
         {
         }
@@ -1622,7 +1645,7 @@ namespace Microcode
 
     sealed class Sequence3Third : Subproblem<Sequence3>
     {
-        public Sequence3Third (Continuation next, Sequence3 expression, Environment environment)
+        public Sequence3Third (Continuation next, Sequence3 expression, object environment)
             : base (next, expression, environment)
         {
         }
@@ -1649,7 +1672,6 @@ namespace Microcode
             this.mark1 = mark1;
             this.mark2 = mark2;
         }
-
  
         internal override object Invoke (Interpreter interpreter, object value)
         {
@@ -1707,11 +1729,19 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            return interpreter.Return (interpreter.Environment.Lookup (this.name));
+            //if (this.Name == string.Intern ("record-type-dispatch-tag"))
+            //{
+            //    Debug.WriteLine ("FOOFOOFOO");
+            //}
+            //Debug.WriteLineIf (Primitive.Noisy, this.Name);
+            //Debug.WriteLine (this.Name);
+            object value = Environment.ToEnvironment (interpreter.Environment).Lookup (this.name);
+            //Debug.WriteLineIf (Primitive.Noisy, "   " + ((value == null) ? "()" : value.ToString()));
+            return interpreter.Return (value);
         }
 
         #region ISystemHunk3 Members
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr0
         {
             get
@@ -1723,7 +1753,7 @@ namespace Microcode
                 throw new NotImplementedException ();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr1
         {
             get
@@ -1735,7 +1765,7 @@ namespace Microcode
                 throw new NotImplementedException ();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr2
         {
             get

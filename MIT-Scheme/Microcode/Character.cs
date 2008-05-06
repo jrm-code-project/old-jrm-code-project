@@ -7,8 +7,8 @@ namespace Microcode
 {
     static class Character
     {
-        [SchemePrimitive ("MAKE-CHAR", 1)]
-        public static object MakeChar (Interpreter interpreter, object argument)
+        [SchemePrimitive ("MAKE-CHAR", 2)]
+        public static object MakeChar (Interpreter interpreter, object arg0, object arg1)
         {
             throw new NotImplementedException ();
         }

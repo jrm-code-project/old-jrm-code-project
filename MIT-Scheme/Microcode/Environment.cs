@@ -14,6 +14,7 @@ namespace Microcode
 
     abstract class Environment
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static Environment global;
 
         public static Environment Global
@@ -25,6 +26,14 @@ namespace Microcode
                     global = new TopLevelEnvironment ();
                 return global;
             }
+        }
+
+        static public Environment ToEnvironment (object env)
+        {
+            if (env is bool && (bool) env == false)
+                return Environment.Global;
+            else
+                return (Environment) env;
         }
 
         public abstract void AddBinding (string name);
@@ -92,12 +101,17 @@ namespace Microcode
             return interpreter.Return (((Environment) env).LookupType ((string) name));
         }
 
+        static bool hacked = false;
         [SchemePrimitive ("LINK-VARIABLES", 4)]
         public static object LinkVariables (Interpreter interpreter, object [] arglist)
         {
-            Environment target_env = (Environment) arglist [0];
-            if (target_env == null)
+            Environment target_env;
+            if (arglist [0] is bool && (bool) arglist [0] == false)
                 target_env = Environment.Global;
+            else
+                target_env = (Environment) arglist [0];
+            
+
             string target_name = (string) arglist [1];
             Environment source_env = (Environment) arglist [2];
             string source_name = (string) arglist [3];
@@ -108,9 +122,11 @@ namespace Microcode
         [SchemePrimitive ("LOCAL-ASSIGNMENT", 3)]
         public static object LocalAssignment (Interpreter interpreter, object aenv, object aname, object value)
         {
-            Environment env = (Environment) aenv;
-            if (env == null)
+            Environment env;
+            if (aenv is bool && (bool) aenv == false)
                 env = Environment.Global;
+            else
+                env = (Environment) aenv;
             string name = (string) aname;
             return interpreter.Return (env.LocalAssign (name, value));
         }
@@ -118,7 +134,60 @@ namespace Microcode
         [SchemePrimitive ("ENVIRONMENT?", 1)]
         public static object IsEnvironment (Interpreter interpreter, object arg)
         {
-            return interpreter.Return (arg is Environment);
+            return interpreter.Return (arg is Environment || (arg is bool && (bool) arg == false));
+        }
+    }
+
+    class NullEnvironment : Environment
+    {
+        public override void AddBinding (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override object Assign (string name, object value)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override object LocalAssign (string name, object value)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override object Lookup (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override object LookupType (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override object Argument (int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override ValueCell LexicalLoop (string name, int frame, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override object Lexical (string name, int frame, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override ValueCell ValueCell (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override void LinkVariable (string name, ValueCell cell)
+        {
+            throw new NotImplementedException ();
         }
     }
 
@@ -246,7 +315,7 @@ namespace Microcode
                 {
                     return vcell;
                 }
-                return this.Parent.ValueCell (name);
+                return Environment.ToEnvironment(this.Parent).ValueCell (name);
             }
             return this.framevector [offset];
         }
@@ -287,7 +356,7 @@ namespace Microcode
                     return vcell.Assign (value);
                 }
                 else
-                    return this.Parent.Assign (name, value);
+                    return Environment.ToEnvironment(this.Parent).Assign (name, value);
             }
             return framevector [offset].Assign (value);
         }
@@ -323,7 +392,7 @@ namespace Microcode
                 if (incrementals != null && incrementals.TryGetValue (name, out vcell))
                     return vcell.Value;
                 else
-                    return this.Parent.Lookup (name);
+                    return Environment.ToEnvironment(this.Parent).Lookup (name);
             }
             else
                 return framevector [offset].Value;
@@ -343,7 +412,7 @@ namespace Microcode
                         return (int) ReferenceType.Unassigned;
                 }
                 else
-                    return this.Parent.LookupType (name);
+                    return Environment.ToEnvironment(this.Parent).LookupType (name);
             }
             else
                 return (int) ReferenceType.Normal;
@@ -365,7 +434,7 @@ namespace Microcode
                 incrementals.TryGetValue (name, out vcell))
                 return vcell;
             else
-                return this.Parent.LexicalLoop (name, frame - 1, offset);
+                return ToEnvironment(this.Parent).LexicalLoop (name, frame - 1, offset);
         }
 
         // Variant of Lookup.  If variable is *not* bound in the nearest environment
@@ -376,7 +445,7 @@ namespace Microcode
             return vcell.Value;
         }
 
-        public Environment Parent
+        public object Parent
         {
             [DebuggerStepThrough]
             get

@@ -117,13 +117,13 @@ namespace Microcode
             return vertebra;
         }
 
-        internal void NewReduction (SCode expression, Environment env)
+        internal void NewReduction (SCode expression, object env)
         {
         }
-        internal void NewSubproblem (SCode expression, Environment env)
+        internal void NewSubproblem (SCode expression, object env)
         {
         }
-        internal void ReuseSubproblem (SCode expression, Environment env)
+        internal void ReuseSubproblem (SCode expression, object env)
         {
         }
 
@@ -166,6 +166,19 @@ namespace Microcode
         }
 
         #endregion
+
+        [SchemePrimitive ("SET-CURRENT-HISTORY!", 1)]
+        public static object SetCurrentHistory (Interpreter interpreter, object arg)
+        {
+            return interpreter.Return (false);
+        }
+
+        [SchemePrimitive ("WITH-HISTORY-DISABLED", 1)]
+        public static object WithHistoryDisabled (Interpreter interpreter, object thunk)
+        {
+            Primitive.Noisy = true;
+             return interpreter.Apply (thunk, new object [] { });
+        }
     }
 
     class MarkedHistory : History

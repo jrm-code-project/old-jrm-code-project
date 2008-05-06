@@ -7,21 +7,24 @@ namespace Microcode
 {
     class Closure : SCode, ISystemPair
     {
+        static public bool Noisy = false;
+        static public string internalLambda = String.Intern ("#[internal-lambda]");
         static public string unnamed = String.Intern ("#[unnamed-procedure]");
+        static public string let = String.Intern ("#[let-procedure]");
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Lambda lambda;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected Environment environment;
+        protected object environment;
 
-        public Closure (Lambda lambda, Environment environment)
+        public Closure (Lambda lambda, object environment)
         {
             this.lambda = lambda;
             this.environment = environment;
         }
 
-        public Environment Environment
+        public object Environment
         {
             [DebuggerStepThrough]   
             get
@@ -95,7 +98,7 @@ namespace Microcode
             int nparams = this.lambda.formals.Length - 1;
             if (nargs != nparams)
                 throw new NotImplementedException ();
-
+            if (Noisy && this.lambda.Name != unnamed && this.lambda.Name != let && this.lambda.Name != internalLambda) Debug.WriteLine (this.lambda.Name);
             return interpreter.EvalReduction (this.lambda.body, new InterpreterEnvironment (this, rands));
         }
 
@@ -133,7 +136,7 @@ namespace Microcode
     {
         public ExtendedLambda lambda;
 
-        public ExtendedClosure (ExtendedLambda lambda, Environment environment)
+        public ExtendedClosure (ExtendedLambda lambda, object environment)
             : base (lambda, environment)
         {
             this.lambda = lambda;
@@ -169,7 +172,7 @@ namespace Microcode
                 for (i = (nargs); --i >= 0; )
                     framevector [frameptr++] = rands [randptr++];
                 for (i = (parms - nargs); --i >= 0; )
-                    framevector [frameptr++] = Constant.Unassigned;
+                    framevector [frameptr++] = Constant.DefaultObject;
                 if (rest_flag)
                     framevector [frameptr++] = null;
                 for (i = auxes; --i >= 0; )
@@ -190,7 +193,7 @@ namespace Microcode
                 for (i = (nargs - parms); --i >= 0; )
                     framevector [listloc] = new Cons (rands [--randptr], framevector [listloc]);
             }
-
+            if (Noisy && this.lambda.Name != unnamed && this.lambda.Name != let && this.lambda.Name != internalLambda) Debug.WriteLine (this.lambda.Name);
             return interpreter.EvalReduction (this.lambda.body, new InterpreterEnvironment (this, framevector));
         }
 

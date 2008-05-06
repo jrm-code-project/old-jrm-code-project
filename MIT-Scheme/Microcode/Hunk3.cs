@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
-    class Hunk3
+    class Hunk3 : ISystemHunk3
     {
         object cxr0;
         object cxr1;
@@ -38,5 +38,45 @@ namespace Microcode
             return interpreter.Return (new Hunk3 (cxr0, cxr1, cxr2));
         }
 
+
+        #region ISystemHunk3 Members
+
+        public object SystemHunk3Cxr0
+        {
+            get
+            {
+                return this.cxr0;
+            }
+            set
+            {
+                this.cxr0 = value ;
+            }
+        }
+
+        public object SystemHunk3Cxr1
+        {
+            get
+            {
+                return this.cxr1;
+            }
+            set
+            {
+                this.cxr1 = value;
+            }
+        }
+
+        public object SystemHunk3Cxr2
+        {
+            get
+            {
+                return this.cxr2;
+            }
+            set
+            {
+                this.cxr2 = value;
+            }
+        }
+
+        #endregion
     }
 }
