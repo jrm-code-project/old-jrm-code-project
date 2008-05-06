@@ -124,7 +124,11 @@ namespace Microcode
         [SchemePrimitive ("EQ?", 2)]
         public static object Eq (Interpreter interpreter, object arg0, object arg1)
         {
-            if (Object.ReferenceEquals (arg0, arg1))
+            if (arg0 == null)
+                return interpreter.Return (arg1 == null);
+            else if (arg1 == null)
+                return interpreter.Return (false);
+            else if (Object.ReferenceEquals (arg0, arg1))
                 return interpreter.Return (true);
             else if (arg0 is Int32 && arg1 is Int32)
                 return interpreter.Return ((int) arg0 == (int) arg1);
@@ -145,8 +149,17 @@ namespace Microcode
         [SchemePrimitive ("NOT", 1)]
         public static object Not (Interpreter interpreter, object arg)
         {
-            return interpreter.Return ((arg == null || (arg is bool && (bool) (arg) == false))
-                                      );
+            if (arg is bool)
+            {
+                bool val = (bool) arg;
+                if (val == false)
+                    return interpreter.Return (true);
+                else
+                    return interpreter.Return (false);
+            }
+            else
+                return interpreter.Return (false);
+
         }
 
         [SchemePrimitive ("NULL?", 1)]
@@ -168,12 +181,16 @@ namespace Microcode
         [SchemePrimitive ("OBJECT-TYPE", 1)]
         public static object ObjectType (Interpreter interpreter, object arg)
         {
-            if (arg is char)
+            if (arg == null)
+                return interpreter.Return (TC.NULL);
+            else if (arg is char)
                 return interpreter.Return (TC.CHARACTER);
             else if (arg is char [])
                 return interpreter.Return (TC.CHARACTER_STRING);
             else if (arg is Closure)
                 return interpreter.Return (TC.PROCEDURE);
+            else if (arg is Combination1)
+                return interpreter.Return (TC.COMBINATION_1);
             else if (arg is Combination2)
                 return interpreter.Return (TC.COMBINATION_2);
             else if (arg is Cons)
@@ -243,6 +260,8 @@ namespace Microcode
                     return interpreter.Return (arg1 is Lambda);
                 case TC.LIST:
                     return interpreter.Return (arg1 is Cons);
+                case TC.NULL:
+                    return interpreter.Return (arg1 == null);
                 case TC.PCOMB0:
                     return interpreter.Return (arg1 is PrimitiveCombination0);
                 case TC.PCOMB1:
@@ -279,24 +298,20 @@ namespace Microcode
             TC newType = (TC) (int) arg0;
             // kludge!!!!
             if ((int) arg0 == 0 && (int) arg1 == 1)
-                return interpreter.Return (new TopLevelEnvironment ());
+                return interpreter.Return (new NullEnvironment ());
             switch (newType)
             {
                 case TC.COMBINATION_2:
                     return interpreter.Return (new Combination2 ((Hunk3) arg1));
 
                 case TC.CONSTANT:
-                    switch ((int) arg1)
-                    {
-                        case 1:
-                            return interpreter.Return (Constant.Unspecific);
-                        case 3:
-                            return interpreter.Return (Constant.LambdaOptionalTag);
-                        case 4:
-                            return interpreter.Return (Constant.LambdaRestTag);
-                        default:
-                            throw new NotImplementedException ();
-                    }
+                    return interpreter.Return (Constant.Decode ((uint) (int) arg1));
+
+                case TC.HUNK3_A:
+                    // Probably someone trying to mark a history object.
+                    return interpreter.Return (arg1);
+                case TC.HUNK3_B:
+                    return interpreter.Return (arg1);
                 case TC.ENVIRONMENT:
                     return interpreter.Return (new InterpreterEnvironment ((object []) arg1));
                 case TC.RECORD:
@@ -387,8 +402,6 @@ namespace Microcode
             else
 
                 throw new NotImplementedException ();
-
-
         }
 
         [SchemePrimitive ("SYSTEM-HUNK3-CXR1", 1)]
@@ -400,8 +413,6 @@ namespace Microcode
             else
 
                 throw new NotImplementedException ();
-
-
         }
 
         [SchemePrimitive ("SYSTEM-HUNK3-CXR2", 1)]
@@ -413,10 +424,50 @@ namespace Microcode
             else
 
                 throw new NotImplementedException ();
-
-
         }
 
+        [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR0!", 2)]
+        public static object SystemHunk3SetCxr0 (Interpreter interpreter, object arg, object newValue)
+        {
+            ISystemHunk3 hunk = arg as ISystemHunk3;
+            if (hunk != null)
+            {
+                object oldValue = hunk.SystemHunk3Cxr0;
+                hunk.SystemHunk3Cxr0 = newValue;
+                return interpreter.Return (oldValue);
+            }
+            else
+
+                throw new NotImplementedException ();
+        }
+        [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR1!", 2)]
+        public static object SystemHunk3SetCxr1 (Interpreter interpreter, object arg, object newValue)
+        {
+            ISystemHunk3 hunk = arg as ISystemHunk3;
+            if (hunk != null)
+            {
+                object oldValue = hunk.SystemHunk3Cxr1;
+                hunk.SystemHunk3Cxr1 = newValue;
+                return interpreter.Return (oldValue);
+            }
+            else
+
+                throw new NotImplementedException ();
+        }
+        [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR2!", 2)]
+        public static object SystemHunk3SetCxr2 (Interpreter interpreter, object arg, object newValue)
+        {
+            ISystemHunk3 hunk = arg as ISystemHunk3;
+            if (hunk != null)
+            {
+                object oldValue = hunk.SystemHunk3Cxr2;
+                hunk.SystemHunk3Cxr2 = newValue;
+                return interpreter.Return (oldValue);
+            }
+            else
+
+                throw new NotImplementedException ();
+        }
 
         [SchemePrimitive ("SYSTEM-LIST-TO-VECTOR", 2)]
         public static object SystemListToVector (Interpreter interpreter, object arg0, object arg1)
@@ -483,12 +534,14 @@ namespace Microcode
             TC code = (TC) acode;
             switch (code)
             {
+                case TC.COMBINATION_1:
+                    return interpreter.Return (new Combination1 (car, cdr));
                 case TC.ENTITY:
                     return interpreter.Return (new Entity (car, cdr));
                 case TC.LAMBDA:
                     return interpreter.Return (new Lambda (car, cdr));
                 case TC.PROCEDURE:
-                    return interpreter.Return (new Closure ((Lambda) car, cdr == null ? Environment.Global : (Environment) cdr));
+                    return interpreter.Return (new Closure ((Lambda) car, (cdr is bool && (bool) cdr == false) ? Environment.Global : (Environment) cdr));
                 case TC.RATNUM:
                     return interpreter.Return (new Ratnum (car, cdr));
                 case TC.UNINTERNED_SYMBOL:

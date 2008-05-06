@@ -10,7 +10,7 @@ namespace Microcode
                 object bodyOrValue;
         object environmentOrTrue;
 
-        public Promise (SCode body, Environment environment)
+        public Promise (SCode body, object environment)
         {
             this.bodyOrValue = body;
             this.environmentOrTrue = environment;

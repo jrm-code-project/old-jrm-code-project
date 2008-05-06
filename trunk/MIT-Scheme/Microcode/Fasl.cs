@@ -69,7 +69,6 @@ namespace Microcode
 
         internal EncodedObject this [uint offset]
         {
-            [DebuggerStepThrough]
             get
             {
                 return this.contents [(offset - this.sectionBase) / 4];
@@ -181,7 +180,10 @@ namespace Microcode
             uint length = header.Datum;
             object [] vector = new object [length];
             for (uint i = 0; i < length; i++)
-                vector [i] = file.ReadObject (offset + 4 + i * 4);
+            {
+                object obj = file.ReadObject (offset + 4 + i * 4);
+                vector [i] = (obj is bool && (bool) obj == false) ? null : obj;
+            }
             return vector;
         }
 
@@ -298,6 +300,7 @@ namespace Microcode
     class FaslFile
     {
         static readonly object sharpT = true;
+        static readonly object sharpF = false;
         FaslHeader faslHeader;
         FaslSection heapSection;
         FaslSection constSection;
@@ -481,17 +484,8 @@ namespace Microcode
                                              ReadSCode (encoded.Datum + 8));
 
                 case TC.CONSTANT:
-                    if (encoded.Datum == 0)
-                        return sharpT;
-                    else if (encoded.Datum == 1)
-                        return Constant.Unspecific;
-                    else if (encoded.Datum == 3)
-                        return Constant.LambdaOptionalTag;
-                    else if (encoded.Datum == 9)
-                        return null;
-                    else
-                        throw new NotImplementedException ();
-
+                    return Constant.Decode (encoded.Datum);
+ 
                 case TC.DEFINITION:
                     return new Definition ((string) ReadObject (encoded.Datum),
                                             ReadSCode (encoded.Datum + 4));
@@ -518,24 +512,16 @@ namespace Microcode
                     return new Lambda (ReadSCode (encoded.Datum), ReadFormals (encoded.Datum + 4));
 
                 case TC.LIST:
+                    object second = ReadObject (encoded.Datum + 4);
                     return new Cons (ReadObject (encoded.Datum),
-                                     ReadObject (encoded.Datum + 4));
+                                     second == sharpF ? null : second);
 
                 case TC.NULL:
                     if (encoded.Datum != 0)
-                       throw new NotImplementedException();
-                    return null;
+                        throw new NotImplementedException ();
+                    return sharpF;
 
-                case TC.SEQUENCE_2:
-                    return new Sequence2 (ReadSCode (encoded.Datum),
-                                          ReadSCode (encoded.Datum + 4));
-
-                case TC.SEQUENCE_3:
-                    return new Sequence3 (ReadSCode (encoded.Datum),
-                                          ReadSCode (encoded.Datum + 4),
-                                          ReadSCode (encoded.Datum + 8));
-
-                case TC.PCOMB0:
+                 case TC.PCOMB0:
                     return new PrimitiveCombination0 ((Primitive0) primSection[encoded.Datum]);
 
                 case TC.PCOMB1:
@@ -559,8 +545,22 @@ namespace Microcode
                 case TC.REFERENCE_TRAP:
                     return ReferenceTrap.Make (encoded.Datum);
 
+                case TC.RATNUM:
+                    return new Ratnum (ReadObject (encoded.Datum),
+                                       ReadObject (encoded.Datum + 4));
+
                 case TC.RETURN_CODE:
                     return (ReturnCode) (encoded.Datum);
+
+                case TC.SEQUENCE_2:
+                    return new Sequence2 (ReadSCode (encoded.Datum),
+                                          ReadSCode (encoded.Datum + 4));
+
+                case TC.SEQUENCE_3:
+                    return new Sequence3 (ReadSCode (encoded.Datum),
+                                          ReadSCode (encoded.Datum + 4),
+                                          ReadSCode (encoded.Datum + 8));
+
 
                 case TC.THE_ENVIRONMENT:
                     return new TheEnvironment ();
@@ -626,6 +626,10 @@ namespace Microcode
         [SchemePrimitive ("BINARY-FASLOAD", 1)]
         public static object BinaryFasload (Interpreter interpreter, object arg)
         {
+            string filename = new String ((char []) arg);
+            if (filename == "runtime-w32.pkd")
+                return interpreter.Return (Package.Initial ());
+            else
             return interpreter.Return (Fasload (new String ((char []) (arg))));
         }
     }

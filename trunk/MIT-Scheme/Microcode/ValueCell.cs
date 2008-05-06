@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 
 namespace Microcode
 {
     class ValueCell
     {
         static object unassigned = Constant.Unassigned;
+
         object val;
         public bool isAssigned;
 
@@ -35,7 +34,12 @@ namespace Microcode
             get
             {
                 if (this.isAssigned == true)
-                    return this.val;
+                {
+                    if (this.val is ReferenceTrap)
+                        throw new NotImplementedException ();
+                    else
+                        return this.val;
+                }
                 else
                     throw new NotImplementedException ();
             }

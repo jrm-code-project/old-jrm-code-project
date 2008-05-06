@@ -142,7 +142,10 @@ namespace Microcode
         [SchemePrimitive ("LIST->VECTOR", 1)]
         public static object ToVector (Interpreter interpreter, Object arg0)
         {
-            return interpreter.Return (((Cons) arg0).ToVector ());
+            if (arg0 == null)
+                return interpreter.Return (new object [0]);
+            else
+                return interpreter.Return (((Cons) arg0).ToVector ());
         }
 
         [SchemePrimitive ("PAIR?", 1)]

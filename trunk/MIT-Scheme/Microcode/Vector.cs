@@ -48,6 +48,48 @@ namespace Microcode
             return interpreter.Return (oldValue);
         }
 
+        [SchemePrimitive ("SUBVECTOR-MOVE-RIGHT!", 5)]
+        public static object SubvectorMoveRight (Interpreter interpreter, object [] arglist)
+        {
+            object [] ptr1 = (object []) (arglist [0]);
+            int len1 = ptr1.Length;
+            int end1 = (int) (arglist [2]);
+            int start1 = (int) (arglist [1]);
+            object [] ptr2 = (object []) (arglist [3]);
+            int len2 = ptr2.Length;
+            int start2 = (int) (arglist [4]);
+            int length = end1 - start1;
+            int end2 = start2 + length;
+
+            int scan1 = end1;
+            int scan2 = end2;
+            int limit = scan1 - length;
+            while (scan1 > limit)
+                ptr2 [--scan2] = ptr1 [--scan1];
+            return interpreter.Return ();
+        }
+
+        [SchemePrimitive ("SUBVECTOR-MOVE-LEFT!", 5)]
+        public static object SubvectorMoveLeft (Interpreter interpreter, object [] arglist)
+        {
+            object [] ptr1 = (object []) (arglist [0]);
+            int len1 = ptr1.Length;
+            int end1 = (int) (arglist [2]);
+            int start1 = (int) (arglist [1]);
+            object [] ptr2 = (object []) (arglist [3]);
+            int len2 = ptr2.Length;
+            int start2 = (int) (arglist [4]);
+            int length = end1 - start1;
+            int end2 = start2 + length;
+
+            int scan1 = start1;
+            int scan2 = start2;
+            int limit = scan1 + length;
+            while (scan1 < limit)
+                ptr2 [scan2++] = ptr1 [scan1++];
+            return interpreter.Return ();
+        }
+
         [SchemePrimitive ("SUBVECTOR->LIST", 3)]
         public static object SubvectorToList (Interpreter interpreter, object avec, object astart, object aend)
         {

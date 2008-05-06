@@ -350,7 +350,7 @@ namespace Microcode
         [SchemePrimitive ("FLONUM-TRUNCATE", 1)]
         public static object Truncate (Interpreter interpreter, object arg)
         {
-            throw new NotImplementedException ();
+            return interpreter.Return (Math.Truncate ((double) arg));
         }
 
         [SchemePrimitive ("FLONUM-ROUND", 1)]

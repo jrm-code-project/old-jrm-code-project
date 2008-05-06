@@ -15,10 +15,11 @@ namespace Microcode
 
     public abstract class Primitive : SCode
     {
+        public static bool Noisy = false;
         // Global table mapping names to primitive procedures.
         static Dictionary<String, Primitive> primitiveTable = new Dictionary<String, Primitive> ();
 
-        readonly string name;
+        protected readonly string name;
         readonly int arity;
 
         internal Primitive (string name, int arity)
@@ -130,6 +131,7 @@ namespace Microcode
             AddPrimitives (typeof (FloatArithmetic));
             AddPrimitives (typeof (FloatingVector));
             AddPrimitives (typeof (GenericArithmetic));
+            AddPrimitives (typeof (History));
             AddPrimitives (typeof (Hunk3));
             AddPrimitives (typeof (IntegerArithmetic));
             AddPrimitives (typeof (Interpreter));
@@ -248,6 +250,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
            return this.method (interpreter);
         }
     }
@@ -264,6 +267,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
             return this.method (interpreter, interpreter.PrimitiveArgument0);
         }
 
@@ -281,9 +285,9 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
             return this.method (interpreter, interpreter.PrimitiveArgument0, interpreter.PrimitiveArgument1);
         }
-
     }
 
     sealed class Primitive3 : Primitive
@@ -298,6 +302,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
             return this.method (interpreter, interpreter.PrimitiveArgument0, interpreter.PrimitiveArgument1, interpreter.PrimitiveArgument2);
         }
 
@@ -315,6 +320,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
             return this.method (interpreter, interpreter.Arguments);
         }
     }
