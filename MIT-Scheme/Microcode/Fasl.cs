@@ -627,9 +627,9 @@ namespace Microcode
         public static object BinaryFasload (Interpreter interpreter, object arg)
         {
             string filename = new String ((char []) arg);
-            if (filename == "runtime-w32.pkd")
-                return interpreter.Return (Package.Initial ());
-            else
+            //if (filename == "runtime-w32.pkd")
+            //    return interpreter.Return (Package.Initial ());
+            //else
             return interpreter.Return (Fasload (new String ((char []) (arg))));
         }
     }

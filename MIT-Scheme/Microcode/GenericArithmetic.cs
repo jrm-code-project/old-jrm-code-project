@@ -127,6 +127,8 @@ namespace Microcode
             {
                 if (right is int)
                     return interpreter.Return ((int) left == (int) right);
+                else if (right is long)
+                    return interpreter.Return ((long) (int) left == (long) right);
                 else
                     throw new NotImplementedException ();
             }

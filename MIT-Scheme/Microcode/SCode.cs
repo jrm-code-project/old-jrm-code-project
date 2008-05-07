@@ -1171,7 +1171,6 @@ namespace Microcode
 
     sealed class PrimitiveCombination2Apply : Continuation
     {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly Primitive2 rator;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]

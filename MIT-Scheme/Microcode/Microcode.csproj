@@ -75,7 +75,6 @@
     <Compile Include="Misc.cs" />
     <Compile Include="NonMarkedVector.cs" />
     <Compile Include="ObjectModel.cs" />
-    <Compile Include="Package.cs" />
     <Compile Include="Primitive.cs" />
     <Compile Include="Promise.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

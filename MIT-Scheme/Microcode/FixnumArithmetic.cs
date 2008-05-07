@@ -85,10 +85,10 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("MULITPLY-FIXNUM", 2)]
+        [SchemePrimitive ("MULTIPLY-FIXNUM", 2)]
         public static object Multiply (Interpreter interpreter, object left, object right)
         {
-            throw new NotImplementedException ();
+            return interpreter.Return ((int) left * (int) right);
         }
 
         [SchemePrimitive ("DIVIDE-FIXNUM", 2)]

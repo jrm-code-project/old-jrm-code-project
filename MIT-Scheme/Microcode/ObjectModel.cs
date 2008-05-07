@@ -318,6 +318,19 @@ namespace Microcode
                     return interpreter.Return (new Record ((object []) arg1));
                 case TC.VARIABLE:
                     return interpreter.Return (new Variable ((Hunk3) arg1));
+                case TC.VECTOR:
+                    // Someone wants to see what endian we are! 
+                    char [] source = (char []) arg1;
+                    object [] result = new object [source.Length / 4];
+                    result [1] = ((((((byte)source[3]) * 256) 
+                        + ((byte)source[2])) * 256)
+                    + ((byte)source[1])) * 256 
+                        + ((byte)source[0]);
+                                        result [0] = ((((((byte)source[7]) * 256) 
+                        + ((byte)source[6])) * 256)
+                    + ((byte)source[5])) * 256 
+                        + ((byte)source[4]);
+                    return interpreter.Return (result);
                 default:
                     throw new NotImplementedException ();
             }
@@ -379,6 +392,8 @@ namespace Microcode
             {
                 case TC.FIXNUM:
                     return interpreter.Return (arg1.GetHashCode ());
+                case TC.MANIFEST_NM_VECTOR:
+                    return interpreter.Return (arg1);
                 case TC.MANIFEST_SPECIAL_NM_VECTOR:
                     return interpreter.Return (new ManifestSpecialNMVector ((int) arg1));
                 case TC.NON_MARKED_VECTOR:
