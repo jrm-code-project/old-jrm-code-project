@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Win32;
 using System.Text;
 
 namespace Microcode
@@ -76,18 +77,20 @@ namespace Microcode
         [SchemePrimitive ("MICROCODE-IDENTIFY", 0)]
         public static object MicrocodeIdentify (Interpreter interpreter)
         {
-            return interpreter.Return (new object [] {"JRM Scheme",
-                0,
-                0,
+            return interpreter.Return (new object [] {false,
+                "15.1".ToCharArray(),
+                false,
                 80,
                 20,
                 '\n',
                 53,
                 Double.Epsilon,
             "NT".ToCharArray(),
-            null,
-            null,
-            null});
+            "MS Windows".ToCharArray(),
+            "standard".ToCharArray(),
+            "IA-32".ToCharArray(),
+            "i386".ToCharArray(),
+            false, false, false, false, false ,false, false});
         }
 
         [SchemePrimitive ("MICROCODE-LIBRARY-PATH", 0)]
@@ -182,6 +185,27 @@ namespace Microcode
         public static object IsUnderEmacs (Interpreter interpreter)
         {
             return interpreter.Return (false);
+        }
+
+        [SchemePrimitive ("WIN32-PREDEFINED-REGISTRY-KEYS", 0)]
+        public static object Win32PredefinedRegistryKeys (Interpreter interpreter)
+        {
+            return interpreter.Return (
+                new Cons (
+                new Cons (string.Intern ("HKEY_CLASSES_ROOT"), Registry.ClassesRoot),
+                new Cons (
+                new Cons (string.Intern ("HKEY_CURRENT_USER"), Registry.CurrentUser),
+                new Cons (
+                new Cons (string.Intern ("HKEY_LOCAL_MACHINE"), Registry.LocalMachine),
+                new Cons (
+                new Cons (string.Intern ("HKEY_USERS"), Registry.Users),
+                new Cons (
+                new Cons (string.Intern ("HKEY_PERFORMANCE_DATA"), Registry.PerformanceData),
+                new Cons (
+                new Cons (string.Intern ("HKEY_CURRENT_CONFIG"), Registry.CurrentConfig),
+                new Cons (
+                new Cons (string.Intern ("HKEY_DYNAMIC_DATA"), Registry.DynData),
+                null))))))));
         }
 
         [SchemePrimitive ("WORKING-DIRECTORY-PATHNAME", 0)]

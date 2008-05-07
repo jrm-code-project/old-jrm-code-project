@@ -26,6 +26,12 @@ namespace Microcode
             return interpreter.Return (new char [((int) arg)]);
         }
 
+        [SchemePrimitive ("STRING-HASH-MOD", 2)]
+        public static object StringHashMod (Interpreter interpreter, object str, object modulus)
+        {
+            return interpreter.Return (new string ((char []) str).GetHashCode () % (int) modulus);
+        }
+
         [SchemePrimitive ("STRING-LENGTH", 1)]
         public static object StringLength (Interpreter interpreter, object arg)
         {

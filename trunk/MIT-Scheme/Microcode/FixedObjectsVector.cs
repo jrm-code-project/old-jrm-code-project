@@ -9,6 +9,8 @@ namespace Microcode
         const int SystemCallNames = 0x09;
         const int SystemErrorNames = 0x0A;
         const int DummyHistory = 0x13;
+        const int TerminationVector = 0x16;
+        const int TerminationProcVector  = 0x17;
         const int MeMyself = 0x18;
         const int GenericTrampolineZeroP = 0x24;
         const int GenericTrampolinePositiveP = 0x25;
@@ -25,7 +27,7 @@ namespace Microcode
         const int GenericTrampolineQuotient = 0x30;
         const int GenericTrampolineRemainder = 0x31;
         const int GenericTrampolineModulo = 0x32;
-        const int nFixedObjects = 0x41;
+        const int nFixedObjects = 0x45;
 
         static object [] theFixedObjectsVector;
 
@@ -33,6 +35,8 @@ namespace Microcode
         {
             theFixedObjectsVector = new object [nFixedObjects];
             theFixedObjectsVector [DummyHistory] = History.DummyHistory ();
+            theFixedObjectsVector [TerminationVector] = new object [0];
+            theFixedObjectsVector [TerminationProcVector] = new object [0];
             theFixedObjectsVector [MeMyself] = theFixedObjectsVector;
             theFixedObjectsVector [SystemCallNames] = new object [0];
             theFixedObjectsVector [SystemErrorNames] = new object [0];
