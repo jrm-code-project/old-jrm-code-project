@@ -38,7 +38,7 @@
 
 (define (bayesian-list-splitter classifier)
   (lambda (list receiver)
-    (split-list (lambda (item)
+    (divide-list (lambda (item)
 		  (positive? (classifier item)))
 		list
 		receiver)))
