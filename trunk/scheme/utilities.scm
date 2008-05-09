@@ -129,7 +129,7 @@
                        a
                        (+ a (flo:log2 (exact->inexact x1)))))))))
 
-(declare (integrate-operator probability->entropy))
+(declare (integrate-operator probability->entropy/bits))
 (define (probability->entropy/bits p)
   (- (* p (log2 p))))
 
@@ -169,7 +169,7 @@
                0
                list))
 
-(define-integrable (split-list predicate input receiver)
+(define-integrable (divide-list predicate input receiver)
   (define (iter tail yes no)
     (cond ((pair? tail) (let ((this-element (car tail)))
                           (if (predicate this-element)
