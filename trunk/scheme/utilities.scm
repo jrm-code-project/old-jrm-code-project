@@ -104,6 +104,20 @@
                '()
                left))
 
+(declare (integrate-operator interdifference/eq))
+(define (interdifference/eq left right receiver)
+  (declare (integrate left receiver))
+  ;; Compute the set intersection and difference between
+  ;; left and right.
+  (define (iter tail intersection difference)
+    (cond ((pair? tail) (let ((item (car tail)))
+			  (if (memq item right)
+			      (iter (cdr tail) (adjoin/eq intersection item) difference)
+			      (iter (cdr tail) intersection (adjoin/eq difference item)))))
+	  ((null? tail) (receiver intersection difference))
+	  (else (error "Improper list" left))))
+  (iter left '() '()))
+
 (declare (integrate-operator is-nan?))
 (define (is-nan? x)
   (not (or (flo:negative? x)
@@ -129,6 +143,46 @@
                        a
                        (+ a (flo:log2 (exact->inexact x1)))))))))
 
+(define (int:gamma x)
+  (define (iter x answer)
+    (if (fix:< x 11)
+	answer
+	(iter (fix:- x 1) (int:* answer x))))
+
+  (cond	((not (int:positive? x))
+	 (error "int:gamma defined only for positive integers."))
+	((int:= x 1) 1)
+	((int:= x 2) 1)
+	((int:= x 3) 2)
+	((int:= x 4) 6)
+	((int:= x 5) 24)
+	((int:= x 6) 120)
+	((int:= x 7) 720)
+	((int:= x 8) 5040)
+	((int:= x 9) 40320)
+	((int:= x 10) 362880)
+	(else (iter x 3628800))))
+
+(define-integrable (factorial x)
+  (gamma (+ x 1)))
+
+(define (double-factorial x)
+  (define (iter x answer)
+    (if (< x 2)
+	answer
+	(iter (- x 2) (* answer x))))
+  (iter x 1))
+
+(define (gamma x)
+  (cond ((integer? x) (int:gamma x))
+	((integer? (- x 1/2)) (let ((n (- x 1/2)))
+				(if (zero? n)
+				    (inexact->exact 1.772453850905516027298167483341)
+				    (* (inexact->exact 1.772453850905516027298167483341)
+				       (/ (double-factorial (- (* n 2) 1))
+					  (expt 2 n))))))
+	(else (error "Can't take gamma of this: " x))))
+
 (declare (integrate-operator probability->entropy/bits))
 (define (probability->entropy/bits p)
   (- (* p (log2 p))))
@@ -144,7 +198,21 @@
 (define-integrable (odds->entropy/bits o)
   (probability->entropy/bits (odds->probability o)))
 
-(define-integrable (sum weight list)
+(define-integrable (probability->log-odds p)
+  (10log10 (probability->odds p)))
+
+(declare (integrate-operator product))
+(define (product weight list)
+  (declare (integrate list))
+  (head-reduce (lambda (total item)
+                 (declare (integrate total item))
+                 (* total (weight item)))
+               1
+               list))
+
+(declare (integrate-operator sum))
+(define (sum weight list)
+  (declare (integrate list))
   (head-reduce (lambda (total item)
                  (declare (integrate total item))
                  (+ total (weight item)))
