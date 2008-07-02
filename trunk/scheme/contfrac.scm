@@ -79,6 +79,20 @@
 
 (declare (usual-integrations))
 
+(define-syntax when
+  (syntax-rules ()
+    ((when predicate action0 . actions)
+     (if predicate
+         (begin action0 . actions)
+         #f))))
+
+(define-syntax unless
+  (syntax-rules ()
+    ((unless predicate action0 . actions)
+     (if predicate
+         #f
+         (begin action0 . actions)))))
+
 ;;; Continued fractions are represented as streams of coefficients:
 ;;;
 ;;;                         1
@@ -185,8 +199,8 @@
 
 (define (rat:->cf rat)
   (ratio->cf
-   (numerator rat)
-   (denominator rat)))
+   (numerator (inexact->exact rat))
+   (denominator (inexact->exact rat))))
 
 (define (cf*rat:= cf rat)
   (cf:= cf (rat:->cf rat)))
@@ -207,8 +221,8 @@
   (cf:< (rat:->cf rat) cf))
 
 (define-integrable (guarantee-exact-integer x)
-  (if (not (int:integer? x))
-      (error "Not an exact integer.")))
+  (unless (int:integer? x)
+    (error "Not an exact integer.")))
 
 (define-integrable (same-sign? a b)
   (or (and (positive? a) (positive? b))
@@ -263,7 +277,9 @@
   (let ((cd (int:+ c d)))
     (cond ((same-sign? c cd)
            (let ((target (int:quotient (int:+ a b) cd)))
-             (if (int:= (int:quotient a c) target)
+             (if (and (int:= (int:quotient a c) target)
+                      ;; avoid outputting negative numbers
+                      (not (negative? target)))
                  (success target)
                  (fail))))
           ;; At some value of x, the denominator is zero.
@@ -372,22 +388,23 @@
                   (int:+ (int:* a coeff) b) a
                   (int:+ (int:* c coeff) d) c))))
 
-    (cond ((and (int:zero? a) (int:zero? b))
-           ;; If numerator hits zero, the answer is an exact rational.
-           ;; We truncate the output.
-           the-empty-stream)
-
+    (if (and (int:zero? a) (int:zero? b))
+        ;; If numerator hits zero, the answer is an exact rational.
+        ;; We truncate the output.
+        the-empty-stream
+        (begin
           ;; If we keep inputting digits, but don't output any,
           ;; the fraction is not converging.
-          ((>= spin-count *cf-spin-limit*) (error "Stuck computation"))
+          (when (>= spin-count *cf-spin-limit*)
+            (bkpt "Stuck computation")
+            (set! *cf-spin-limit* (+ *cf-spin-limit* *cf-spin-limit*)))
 
           ;; otherwise, attempt to perform a step of
           ;; euclid reduction.
-          (else
-           (euclid-step-1
-            a b c d
-            output
-            input))))
+          (euclid-step-1
+           a b c d
+           output
+           input))))
 
   (guarantee-exact-integer a)
   (guarantee-exact-integer b)
@@ -449,10 +466,12 @@
         ;; allows the stream to `back up'.  Can't do that when
         ;; printing, though.  Shouldn't happen here, anyway.
         (if (int:negative? digits)
-            (error "negative digits??"))
-        (write digits)
-        (if (int:zero? digit-count)
-            (write-char #\.))
+            (begin (write-string "(Oops! ")
+                   (write digits)
+                   (write-string ")"))
+            (write digits))
+        (when (int:zero? digit-count)
+          (write-char #\.))
         ;; in effect, multiply the remainder
         ;; of the fraction by the base
         (let ((next-a (int:* base (int:- a (int:* c digits))))
@@ -486,10 +505,12 @@
        ;; could be more clever here, but this is adequate for now.
        ((int:= digit-count limit) (display "...") cf)
 
-       ((int:>= spin-count *cf-spin-limit*)
-        (error "Stuck computation"))
-
        (else
+        ;; If we keep inputting digits, but don't output any,
+        ;; the fraction is not converging.
+        (when (>= spin-count *cf-spin-limit*)
+          (bkpt "Stuck computation")
+          (set! *cf-spin-limit* (+ *cf-spin-limit* *cf-spin-limit*)))
         (euclid-step-1
          a b c d
          output
@@ -593,9 +614,6 @@
                   g))))
 
     (cond
-       ;; If no digits for a while, give up
-       ((int:>= spin-count *cf-spin-limit*)     (error "Stuck computation"))
-
        ;; If numerator hits zero, answer is rational
        ;; but we have already emitted stuff, so just
        ;; truncate.
@@ -607,7 +625,13 @@
        ((int:zero? e) (input-something))
 
        ;; Try a reduction step.
-       (else (euclid-step-4-1 a b c d e f g h output
+       (else
+          ;; If we keep inputting digits, but don't output any,
+          ;; the fraction is not converging.
+          (when (>= spin-count *cf-spin-limit*)
+            (bkpt "Stuck computation")
+            (set! *cf-spin-limit* (+ *cf-spin-limit* *cf-spin-limit*)))
+          (euclid-step-4-1 a b c d e f g h output
                               input-from-x input-from-y
                               input-something))))
 
@@ -683,13 +707,15 @@
                   (int:+ (int:* c coeff) (int:* d num)) c))))
 
     (cond
-     ;; If no digits for a while, give up
-     ((>= spin-count *cf-spin-limit*) (error "Stuck computation"))
-
      ((and (int:zero? a) (int:zero? b)) the-empty-stream)
 
      ;; try a euclid step
      (else
+      ;; If we keep inputting digits, but don't output any,
+      ;; the fraction is not converging.
+      (when (>= spin-count *cf-spin-limit*)
+        (bkpt "Stuck computation")
+        (set! *cf-spin-limit* (+ *cf-spin-limit* *cf-spin-limit*)))
       (euclid-step-0
        a b c d
        output
@@ -701,7 +727,7 @@
   (guarantee-exact-integer d)
   (step 0 numerators denominators a b c d))
 
-(define pi
+(define cf:pi
   (let ()
     (define odds
       (let loop ((i 1))
@@ -713,12 +739,27 @@
 
     (normalize-cf (cons-stream 1 squares) odds 0 4 1 0)))
 
+(define (cf:log z)
+  ;; Natural log of z.
+  (define nums
+    (let loop ((n 1))
+      (cons-stream (* n (- z 1))
+                   (cons-stream (* n (- z 1))
+                                (loop (+ n 1))))))
+
+  (define dens
+    (let loop ((n 1))
+      (cons-stream n (cons-stream 2 (loop (+ n 2))))))
+
+  (normalize-cf (cons-stream (- z 1) nums)
+                dens
+                0 1 1 0))
 
 #||
 ;;; Random testing code.
 
 (define (print-pi ndigits)
-  (cf:render pi 10 ndigits))
+  (cf:render cf:pi 10 ndigits))
 
 (define (test-0)
   (map (lambda (cf)
@@ -732,7 +773,7 @@
          (cf:render (cf:negate (cf:recip cf)))
          (newline)
          (cf:render (gosper-1 cf -2 5 -3 6)))
-       (list phi sqrt-two sqrt-three e pi)))
+       (list phi sqrt-two sqrt-three e cf:pi)))
 
 (define (test-1)
   (let loop ((count 0)
@@ -741,7 +782,7 @@
         (floor (* (- (runtime) start) 10))
         (begin
           (stream-ref (gosper-1 sqrt-two 0 2 -1 3) 1000)
-          (stream-ref (gosper-1 pi 1 2 0 3) 1000)
+          (stream-ref (gosper-1 cf:pi 1 2 0 3) 1000)
           (stream-ref (gosper-1 e 1 1 1 -1) 1000)
           (stream-ref (gosper-1 phi 0 1 6 2) 1000)
           (loop (1+ count) start)))))
@@ -759,7 +800,7 @@
                     (begin (newline) (display i) (display " ")
                            (display j) (display " ")
                            (display k) (display " ")
-                           (cf:render (gosper-1 pi i j k (- i)))
+                           (cf:render (gosper-1 cf:pi i j k (- i)))
                            (cf:render (gosper-1 e i j k (- i)))
                            (l3 (+ k 1))))))))))
 
@@ -779,12 +820,12 @@
   (display
    "0.423310825130748003102355911926840386439922305675146246007976964...")
   (newline)
-  (cf:render (cf*cf:- pi e))
+  (cf:render (cf*cf:- cf:pi e))
   (newline)
   (display
    "2.816305093398751331727331379663195459013258742431006753294691576...")
   (newline)
-  (cf:render (cf*cf:/ (cf*cf:* pi e)
+  (cf:render (cf*cf:/ (cf*cf:* cf:pi e)
                       (cf*cf:+ phi sqrt-two))))
 
 (define (muller)
