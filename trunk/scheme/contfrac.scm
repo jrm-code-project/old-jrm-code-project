@@ -740,20 +740,21 @@
     (normalize-cf (cons-stream 1 squares) odds 0 4 1 0)))
 
 (define (cf:log z)
-  ;; Natural log of z.
-  (define nums
-    (let loop ((n 1))
-      (cons-stream (* n (- z 1))
-                   (cons-stream (* n (- z 1))
-                                (loop (+ n 1))))))
+  (let ((x (- z 1)))
 
-  (define dens
-    (let loop ((n 1))
-      (cons-stream n (cons-stream 2 (loop (+ n 2))))))
+    (define nums
+      (let loop ((xx x))
+	(cons-stream xx
+		     (cons-stream xx
+				  (loop (+ x xx))))))
 
-  (normalize-cf (cons-stream (- z 1) nums)
-                dens
-                0 1 1 0))
+    (define dens
+      (let loop ((n 1))
+	(cons-stream n (cons-stream 2 (loop (+ n 2))))))
+
+    (normalize-cf (cons-stream x nums)
+		  dens
+		  0 1 1 0)))
 
 #||
 ;;; Random testing code.
