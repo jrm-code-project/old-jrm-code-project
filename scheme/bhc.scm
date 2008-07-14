@@ -3,20 +3,16 @@
 
 ;; Magic constant to determine the aggressiveness
 ;; of clustering.
-(define *alpha* 1/8)
+
+(define *alpha* 3)
 
 (define (gamma-ratio num den)
   ;; Compute gamma(num)/gamma(den) efficiently
   ;; with the assumption that abs(num - den) is an integer.
 
-  (define (iter count answer)
-    (if (>= count num)
-	answer
-	(iter (+ count 1) (* count answer))))
-
   (if (> den num)
       (/ 1 (gamma-ratio den num))
-      (iter den 1)))
+      (/ (gamma num) (gamma den))))
 
 (define (bernoulli-beta alpha beta m N)
   (* (gamma-ratio (+ alpha m) alpha)
@@ -63,8 +59,8 @@
 
 ;; Determines the likelihood of the bernoulli distribution.
 ;; These values make it heavily skewed towards zero.
-(define (alpha term) term 1/16)
-(define (beta term) term 15/16)
+(define (alpha term) term 1)  ; 1/16
+(define (beta term) term 1)   ; 15/16
 
 (define (ph1 all-terms tree)
   (let ((term-table (make-eq-hash-table))
@@ -153,8 +149,7 @@
     (newline))
   (do-it 0 tree))
 
-(define (cluster-data-points data-points)
-  (let ((terms (all-terms data-points)))
+(define (cluster-data-points terms data-points)
 
     (define (step trees)
       (display "; Step ")
@@ -168,6 +163,17 @@
 	(define (test-combination a b)
 	  (let* ((combined-tree (combine terms a b))
 		 (r_k           (r terms combined-tree)))
+	    (display "; Test combination")
+	    (newline)
+	    (display "; a = ")
+	    (display a)
+	    (newline)
+	    (display "; b = ")
+	    (display b)
+	    (newline)
+	    (display "; r = ")
+	    (display r_k)
+	    (newline)
 	    (if (> r_k best-r)
 		(begin (set! best-a a)
 		       (set! best-b b)
@@ -175,6 +181,15 @@
 		       (set! best-r r_k)))))
 
 	(for-each-list-pairs test-combination trees)
+	(display "; Best score = ")
+	(display best-r)
+	(newline)
+	(display "; Left = ")
+	(display best-a)
+	(newline)
+	(display "; Right = ")
+	(display best-b)
+	(newline)
 	(cons best-combined
 	      (delete best-a (delete best-b trees)))))
 
@@ -188,4 +203,4 @@
 			     (car trees)))
 	    (else (error "Bogus trees"))))
 
-    (iter data-points)))
+    (iter data-points))
