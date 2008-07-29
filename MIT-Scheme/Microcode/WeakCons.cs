@@ -7,12 +7,14 @@ namespace Microcode
 {
     class WeakCons : ISystemPair
     {
-        WeakReference car;
+        // WeakReference car;
+        object car;
         object cdr;
 
         public WeakCons (object car, object cdr)
         {
-            this.car = new WeakReference (car);
+            // this.car = new WeakReference (car);
+            this.car = car;
             this.cdr = cdr;
         }
 
@@ -22,11 +24,13 @@ namespace Microcode
         {
             get
             {
-                return this.car.Target;
+                //return this.car.Target;
+                return this.car;
             }
             set
             {
-                this.car.Target = value;
+                // this.car.Target = value;
+                this.car = value;
             }
         }
 

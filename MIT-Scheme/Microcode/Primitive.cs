@@ -227,7 +227,13 @@ namespace Microcode
         [SchemePrimitive ("GET-PRIMITIVE-NAME", 1)]
         public static object GetPrimitiveName (Interpreter interpreter, object arg)
         {
-            return interpreter.Return (((Primitive) (arg)).name.ToCharArray ());
+            return interpreter.Return (((Primitive) arg).name.ToCharArray ());
+            //Primitive prim = (Primitive) arg;
+            ////object prim;
+            ////if (ObjectModel.datumObjectDictionary.TryGetValue ((int)arg, out prim)) {
+            ////    ;
+            ////}
+            //throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("PRIMITIVE-PROCEDURE-ARITY", 1)]

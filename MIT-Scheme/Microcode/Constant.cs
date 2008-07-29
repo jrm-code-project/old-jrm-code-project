@@ -9,6 +9,8 @@ namespace Microcode
         static object sharpT = true;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static Constant defaultObject;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        static Constant eofObject;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static Constant aux;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -18,9 +20,11 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static Constant rest;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Constant unassigned;
+        static Constant externalUnassigned;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static Constant unspecific;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        static object sharpF = false;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         string name;
@@ -43,12 +47,16 @@ namespace Microcode
                     return sharpT;
                 case 1:
                     return Unspecific;
+                case 2:
+                    return ExternalUnassigned;
                 case 3:
                     return LambdaOptionalTag;
                 case 4:
                     return LambdaRestTag;
                 case 5:
                     return LambdaKeyTag;
+                case 6:
+                    return EofObject;
                 case 7:
                     return DefaultObject;
                 case 8:
@@ -68,6 +76,17 @@ namespace Microcode
                 if (defaultObject == null)
                     defaultObject = new Constant ("default");
                 return defaultObject;
+            }
+        }
+
+        public static Constant EofObject
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                if (eofObject == null)
+                    eofObject = new Constant("eof");
+                return eofObject;
             }
         }
 
@@ -116,14 +135,14 @@ namespace Microcode
             }
         }
 
-        public static Constant Unassigned
+        public static Constant ExternalUnassigned
         {
             [DebuggerStepThrough]
             get
             {
-                if (unassigned == null)
-                    unassigned = new Constant ("Unassigned");
-                return unassigned;
+                if (externalUnassigned == null)
+                    externalUnassigned = new Constant ("Unassigned");
+                return externalUnassigned;
             }
         }
 

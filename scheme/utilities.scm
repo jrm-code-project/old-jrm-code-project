@@ -14,6 +14,21 @@
   (if (negative? object)
       (error:not-nonnegative object caller)))
 
+(define (reverse-head list n-elements)
+  (do ((count 0 (+ count 1))
+       (tail  list (cdr tail))
+       (answer '() (if (pair? tail)
+		       (cons (car tail) answer)
+		       (error "reverse-head: List too short."))))
+      ((>= count n-elements) answer)))
+
+(define (reverse-sublist list start end)
+  (cond ((positive? start) (if (pair? list)
+			       (reverse-sublist (cdr list) (- start 1) (- end 1))
+			       (error "reverse-sublist: List too short.")))
+	((zero? start) (reverse-head list end))
+	(else (error "reverse-sublist: bad start"))))
+
 (declare (integrate-operator head-reduce))
 (define (head-reduce procedure init list)
   (declare (integrate procedure init))

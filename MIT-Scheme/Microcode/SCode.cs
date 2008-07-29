@@ -10,7 +10,7 @@ namespace Microcode
         internal abstract object EvalStep (Interpreter interpreter, object etc);
     }
 
-    sealed class Access : SCode
+    sealed class Access : SCode, ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly string var;
@@ -29,7 +29,35 @@ namespace Microcode
             return interpreter.EvalNewSubproblem (this.env, new AccessLookup (interpreter.Continuation, this.var));
         }
 
-     }
+
+        #region ISystemPair Members
+
+        public object SystemPairCar
+        {
+            get
+            {
+                return this.env;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public object SystemPairCdr
+        {
+            get
+            {
+                return this.var;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
+    }
 
     sealed class AccessLookup : Continuation
     {
@@ -47,7 +75,11 @@ namespace Microcode
             Environment env = value as Environment;
             if (env == null)
                 env = InterpreterEnvironment.Global;
-            return interpreter.Return (env.Lookup (this.name));
+            object avalue;
+            LookupDisposition disp = env.LookupVariable (this.name, out avalue);
+            if (disp == LookupDisposition.OK)
+                return interpreter.Return (avalue);
+            throw new NotImplementedException ();
         }
 
         public override int FrameSize
@@ -102,7 +134,11 @@ namespace Microcode
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            return interpreter.Return (((Environment)(this.Environment)).Assign (this.Expression.Name, value));
+            object oldValue;
+            LookupDisposition disp = ((Environment) (this.Environment)).AssignVariable (this.Expression.Name, value, out oldValue);
+            if (disp == LookupDisposition.OK)
+               return interpreter.Return (oldValue);
+            throw new NotImplementedException();
         }
 
         public override int FrameSize
@@ -131,6 +167,20 @@ namespace Microcode
             this.components = components;
         }
 
+        public Combination(Cons components)
+        {
+            SCode[] comps = new SCode[components.Length()];
+            int i = 0;
+            while (components != null)
+            {
+                SCode component = (SCode)(components.Car);
+                comps[i] = component;
+                components = (Cons)(components.Cdr);
+                i += 1;
+            }
+            this.components = comps;
+        }
+
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
             object environment = interpreter.Environment;
@@ -150,7 +200,7 @@ namespace Microcode
 
         public int SystemVectorSize
         {
-            get { throw new NotImplementedException (); }
+            get { return this.components.Length; }
         }
 
         public object SystemVectorRef (int index)
@@ -605,7 +655,7 @@ namespace Microcode
         #endregion
     }
 
-    sealed class Conditional : SCode
+    sealed class Conditional : SCode, ISystemHunk3
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode predicate;
@@ -662,6 +712,46 @@ namespace Microcode
         {
             return interpreter.EvalNewSubproblem (this.predicate, new ConditionalDecide (interpreter.Continuation, this, interpreter.Environment));
         }
+
+        #region ISystemHunk3 Members
+
+        public object SystemHunk3Cxr0
+        {
+            get
+            {
+                return this.predicate;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public object SystemHunk3Cxr1
+        {
+            get
+            {
+                return this.consequent;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public object SystemHunk3Cxr2
+        {
+            get
+            {
+                return this.alternative;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
     }
 
     sealed class ConditionalDecide : Subproblem<Conditional>
@@ -725,10 +815,13 @@ namespace Microcode
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            Microcode.Environment.ToEnvironment(this.Environment).AddBinding (this.Expression.Name);
-            Microcode.Environment.ToEnvironment(this.Environment).Assign (this.Expression.Name, value);
+            LookupDisposition disp = Microcode.Environment.ToEnvironment(this.Environment).DefineVariable (this.Expression.Name, value);
             // like MIT Scheme, discard old value and return name.
-            return interpreter.Return (this.Expression.Name);
+            if (disp == LookupDisposition.OK)
+               return interpreter.Return (this.Expression.Name);
+            else {
+                throw new NotImplementedException ();
+            }
         }
 
         public override int FrameSize
@@ -1339,13 +1432,13 @@ namespace Microcode
         }
     }
 
-    sealed class Quotation : SCode
+    sealed class Quotation : SCode, ISystemPair
     {
         // Space optimization.
         static Dictionary<object, Quotation> table = new Dictionary<object, Quotation> (8000);
         static Quotation QuoteNull;
 
-        static int cacheHits;
+        //static int cacheHits;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object item;
@@ -1363,7 +1456,6 @@ namespace Microcode
                 || (item is string)
                 || (item is Constant)
                 || (item is Primitive)
-                || (item is ReferenceTrap)
                 ;
         }
 
@@ -1409,6 +1501,34 @@ namespace Microcode
         {
             return interpreter.Return (this.item);
         }
+
+        #region ISystemPair Members
+
+        public object SystemPairCar
+        {
+            get
+            {
+                return this.item;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public object SystemPairCdr
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
     }
 
     sealed class RestoreInterruptMask : Continuation
@@ -1638,7 +1758,7 @@ namespace Microcode
 
         public override int FrameSize
         {
-            get { throw new NotImplementedException (); }
+            get { return 3; }
         }
     }
 
@@ -1732,11 +1852,14 @@ namespace Microcode
             //{
             //    Debug.WriteLine ("FOOFOOFOO");
             //}
-            //Debug.WriteLineIf (Primitive.Noisy, this.Name);
+            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             //Debug.WriteLine (this.Name);
-            object value = Environment.ToEnvironment (interpreter.Environment).Lookup (this.name);
+            object value;
+            LookupDisposition disp = Environment.ToEnvironment (interpreter.Environment).LookupVariable (this.name, out value);
             //Debug.WriteLineIf (Primitive.Noisy, "   " + ((value == null) ? "()" : value.ToString()));
-            return interpreter.Return (value);
+            if (disp == LookupDisposition.OK)
+                return interpreter.Return (value);
+            throw new NotImplementedException();
         }
 
         #region ISystemHunk3 Members

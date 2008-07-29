@@ -176,7 +176,7 @@ namespace Microcode
         [SchemePrimitive ("WITH-HISTORY-DISABLED", 1)]
         public static object WithHistoryDisabled (Interpreter interpreter, object thunk)
         {
-            Primitive.Noisy = true;
+            Primitive.Noisy = false;
              return interpreter.Apply (thunk, new object [] { });
         }
     }
