@@ -175,8 +175,10 @@ namespace Microcode
                     framevector [frameptr++] = Constant.DefaultObject;
                 if (rest_flag)
                     framevector [frameptr++] = null;
-                for (i = auxes; --i >= 0; )
-                    framevector [frameptr++] = Constant.Unassigned;
+                for (i = auxes; --i >= 0; ) {
+                    throw new NotImplementedException ();
+                    //framevector [frameptr++] = Constant.Unassigned;
+                }
             }
             else
             {
@@ -187,8 +189,10 @@ namespace Microcode
                     framevector [frameptr++] = rands [randptr++];
                 listloc = frameptr++;
                 framevector [listloc] = null;
-                for (i = auxes; --i >= 0; )
-                    framevector [frameptr++] = Constant.Unassigned;
+                for (i = auxes; --i >= 0; ) {
+                    throw new NotImplementedException ();
+                    //framevector [frameptr++] = Constant.Unassigned;
+                }
                 randptr = rands.Length;
                 for (i = (nargs - parms); --i >= 0; )
                     framevector [listloc] = new Cons (rands [--randptr], framevector [listloc]);

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Microcode
 {
-    sealed class Record
+    sealed class Record: ISystemPair
     {
         object [] slots;
 
@@ -58,5 +58,33 @@ namespace Microcode
         {
             return interpreter.Return (((Record) record).Set ((int) idx, value));
         }
+
+        #region ISystemPair Members
+
+        public object SystemPairCar
+        {
+            get
+            {
+                return Ref(0);
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public object SystemPairCdr
+        {
+            get
+            {
+                return this;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
     }
 }

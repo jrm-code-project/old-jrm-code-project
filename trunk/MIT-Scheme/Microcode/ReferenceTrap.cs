@@ -1,25 +1,108 @@
-﻿
+﻿using System;
 namespace Microcode
 {
+    enum TrapKind
+    {
+        NON_TRAP_KIND = 32,
+        TRAP_COMPILER_CACHED = 14,
+        TRAP_EXPENSIVE = 6,
+        TRAP_MACRO = 15,
+        TRAP_UNASSIGNED = 0,
+        TRAP_UNBOUND = 2
+    }
+
+
+
     class ReferenceTrap
     {
-        static ReferenceTrap rtzero;
-        object innerObject;
-
-        ReferenceTrap (object innerObject)
+        public static TrapKind GetTrapKind (object value)
         {
-            this.innerObject = innerObject;
+            ReferenceTrap reftrap = value as ReferenceTrap;
+            if (reftrap == null)
+                return TrapKind.NON_TRAP_KIND;
+            else if (reftrap == unassigned)
+                return TrapKind.TRAP_UNASSIGNED;
+            else 
+                return (TrapKind)(((Cons)(reftrap.contents)).Car);
         }
 
-        public static ReferenceTrap Make (object innerObject)
+        static ReferenceTrap expensive;
+        static ReferenceTrap unassigned;
+        static ReferenceTrap unbound;
+        object contents;
+
+        public ReferenceTrap ()
         {
-            if ((innerObject is int) && ((int) innerObject == 0))
+            contents = null;
+        }
+
+        public ReferenceTrap (object obj)
+        {
+            this.contents = obj;
+        }
+
+        public object Contents
+        {
+            get
             {
-                if (rtzero == null)
-                    rtzero = new ReferenceTrap (0);
-                return rtzero;
+                return this.contents;
             }
-            return new ReferenceTrap (innerObject);
         }
+
+        public static ReferenceTrap Expensive
+        {
+            get
+            {
+                if (expensive == null)
+                    expensive = new ReferenceTrap ();
+                return expensive;
+            }
+        }
+
+        public static ReferenceTrap Unassigned
+        {
+            get
+            {
+                if (unassigned == null)
+                    unassigned = new ReferenceTrap ();
+                return unassigned;
+            }
+        }
+
+        public static ReferenceTrap Unbound
+        {
+            get
+            {
+                if (unbound == null)
+                    unbound = new ReferenceTrap ();
+                return unbound;
+            }
+        }
+
+        public static ReferenceTrap Make (object arg)
+        {
+            if (arg is int)
+                return Make ((int) arg);
+            else if (arg is Cons)
+                return Make ((Cons) arg);
+            else
+                throw new NotImplementedException ();
+        }
+
+        public static ReferenceTrap Make (int arg)
+        {
+            if (arg == 0)
+                return Unassigned;
+            else if (arg == 2)
+                return Unbound;
+            else
+                throw new NotImplementedException ();
+        }
+
+        public static ReferenceTrap Make (Cons arg)
+        {
+            return new ReferenceTrap (arg);
+        }
+
     }
 }

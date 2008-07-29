@@ -31,13 +31,27 @@ namespace Microcode
         [SchemePrimitive ("VECTOR-LENGTH", 1)]
         public static object VectorLength (Interpreter interpreter, object arg)
         {
-            return interpreter.Return (((object []) arg).Length);
+            if (arg is object []) {
+                return interpreter.Return(((object []) arg).Length);
+            }
+            else if (arg is char []) {
+                return interpreter.Return (((char []) arg).Length);
+            }
+            else
+               throw new NotImplementedException();
         }
 
         [SchemePrimitive ("VECTOR-REF", 2)]
         public static object VectorRef (Interpreter interpreter, object vec, object idx)
         {
-            return interpreter.Return (((object []) vec) [(int) idx]);
+            if (vec is object []) {
+                return interpreter.Return (((object []) vec) [(int) idx]);
+            }
+            else if (vec is char []) {
+                return interpreter.Return (((char []) vec) [(int) idx]);
+            }
+            else
+                throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("VECTOR-SET!", 3)]

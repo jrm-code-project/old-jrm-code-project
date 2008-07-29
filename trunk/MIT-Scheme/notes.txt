@@ -1,3 +1,52 @@
 A belated notes file.
 -----
 VERSION SKEW!! ARGHHH!!!!
+
+I seem to have a number of different versions of MIT Scheme
+on my machine, and I seem to have problems with most of them.
+
+Microcode
+    c:\Program Files\MIT\bin\bchschem.exe             973074  Feb 13 2007   7.8.0 / 14.11
+    c:\Program Files\MIT\bin\old-bchschem.exe        1173258  Jun 16 2002   7.7.0 / -----
+    c:\Program Files\MIT\bin\scheme.exe               936466  Jun 23 2007   7.8.0 / 14.11
+    c:\Program Files\MIT\Scheme\bin\bchscheme.exe    1137922  Jan 30 2004   7.7.1 / -----
+    c:\Program Files\MIT\Scheme\bin\newscheme.exe    1120034  Apr 30 2004   7.7.1 / -----
+    c:\Program Files\MIT\Scheme\bin\old-bchschem.exe 1173258  Jun 16 2002   7.7.0 / -----
+    c:\Program Files\MIT\Scheme\bin\old-scheme.exe   1155874  Jun 16 2002   7.7.0 / -----
+    c:\Program Files\MIT\Scheme\bin\scheme.exe	     1120034  Jan 30 2004   7.7.1 / -----
+
+Heap Images
+    c:\Program Files\MIT\lib\all.com                10717436  Feb 05 2007
+    c:\Program Files\MIT\lib\runtime.com             3918056  Feb 03 2006
+    c:\Program Files\MIT\Scheme\lib\all.com          9557012  Jun 17 2002
+    c:\Program Files\MIT\Scheme\lib\runtime.com      3369824  Jun 17 2002
+
+
+I set up link to run bchscheme from the start menu.  It is set up to run
+
+    c:\Program Files\MIT\bin\bchschem.exe --library "C:\Program Files\MIT\lib" --compiler --heap 11100 --edwin --edit
+
+and this reliably works to run
+    Release 7.7.90.+
+    Microcode 14.18
+    Runtime 15.7
+    Win32 1.8
+    SF 4.41
+    Liar 4.118
+    Edwin 3.116
+
+This version
+    c:\Program Files\MIT\bin\scheme.exe
+
+appears to boot, but immediately gets an access violation upon typing the first close paren.
+It doesn't make sense to keep around the ancient versions, so off they go.
+
+The runtime.com band gets an access violation right away.
+
+The problem with this setup is that there isn't much heap and it seems
+that the fasdumper has problems.  Every fasdumped file seems to be
+exactly 65536 bytes long and the runtime.pkd file is malformatted.
+
+Here's an idea:  get the bin files from the latest Unix/C distribution.
+I've got that running on my linux box at work.
+

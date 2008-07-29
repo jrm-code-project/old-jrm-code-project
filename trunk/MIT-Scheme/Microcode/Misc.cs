@@ -35,6 +35,18 @@ namespace Microcode
             : (UInt32) n;
         }
 
+        [SchemePrimitive("BATCH-MODE?", 0)]
+        public static object IsBatchMode(Interpreter interpreter)
+        {
+            return interpreter.Return (false);
+        }
+
+        [SchemePrimitive("CONSTANT?", 1)]
+        public static object IsConstant(Interpreter interpreter, object arg)
+        {
+            return interpreter.Return(System.GC.GetGeneration(arg) > 0);
+        }
+
         [SchemePrimitive ("FILE-EXISTS?", 1)]
         public static object IsFileExists (Interpreter interpreter, object arg)
         {
@@ -47,10 +59,18 @@ namespace Microcode
             return interpreter.Return (String.IsInterned (new String ((char []) (arg))));
         }
 
+        [SchemePrimitive ("FILE-TYPE-INDIRECT", 1)]
+        public static object FileTypeIndirect (Interpreter interpreter, object arg)
+        {
+            String filename = new String ((char []) arg);
+            System.IO.FileAttributes fa = System.IO.File.GetAttributes (filename);
+            throw new NotImplementedException ();
+        }
+
         [SchemePrimitive ("GARBAGE-COLLECT", 1)]
         public static object GarbageCollect (Interpreter interpreter, object arg)
         {
-            // Not sure what the arg is.
+            // Arg is the safety margin.
             return interpreter.Return (GC.GetTotalMemory (true));
         }
 
@@ -178,6 +198,12 @@ namespace Microcode
         public static object TerminalCookedOutputP (Interpreter interpreter, object arg)
         {
             return interpreter.Return (true);
+        }
+
+        [SchemePrimitive("TTY-X-SIZE", 0)]
+        public static object TtyXSize(Interpreter interpreter)
+        {
+            return interpreter.Return(80);
         }
 
 

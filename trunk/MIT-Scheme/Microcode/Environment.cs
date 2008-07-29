@@ -4,6 +4,14 @@ using System.Diagnostics;
 
 namespace Microcode
 {
+    enum LookupDisposition
+    {
+        OK,
+        Unbound,
+        Unassigned,
+        Macro
+    };
+
     enum ReferenceType
     {
         Unbound,
@@ -37,32 +45,41 @@ namespace Microcode
         }
 
         public abstract void AddBinding (string name);
-        public abstract object Assign (string name, object value);
-        public abstract object LocalAssign (string name, object value);
-        public abstract object Lookup (string name);
+        public abstract LookupDisposition AssignVariable (string name, object value, out object oldValue);
+        public abstract LookupDisposition DefineVariable (string name, object value);
+        public abstract object SafeLookup (string name);
+        public abstract LookupDisposition LookupVariable (string name, out object value);
         public abstract object LookupType (string name);
         public abstract object Argument (int offset);
         public abstract ValueCell LexicalLoop (string name, int frame, int offset);
         public abstract object Lexical (string name, int frame, int offset);
         public abstract ValueCell ValueCell (string name);
         public abstract void LinkVariable (string name, ValueCell cell);
-        public bool IsUnassigned (string name)
-        {
-            ValueCell vcell = ValueCell (name);
-            return !vcell.isAssigned;
-        }
+        //public bool IsUnassigned (string name)
+        //{
+        //    ValueCell vcell = ValueCell (name);
+        //    return !vcell.isAssigned;
+        //}
 
-        public bool IsUnbound (string name)
-        {
-            ValueCell vcell = ValueCell (name);
-            return vcell == null;
-        }
+        //public bool IsUnbound (string name)
+        //{
+        //    ValueCell vcell = ValueCell (name);
+        //    return vcell == null;
+        //}
 
         [SchemePrimitive ("LEXICAL-UNREFERENCEABLE?", 2)]
         public static object IsLexicalUnreferenceable (Interpreter interpreter, object env, object name)
         {
-            ValueCell vcell = ((Environment) env).ValueCell ((string) name);
-            return interpreter.Return (vcell == null || !vcell.isAssigned);
+            object dummy;
+            switch (((Environment) env).LookupVariable ((string) name, out dummy)) {
+                case LookupDisposition.OK:
+                    return interpreter.Return (false);
+                case LookupDisposition.Unassigned:
+                case LookupDisposition.Unbound:
+                    return interpreter.Return (true);
+                default:
+                    throw new NotImplementedException ();
+            }
         }
 
         [SchemePrimitive ("LEXICAL-ASSIGNMENT", 3)]
@@ -70,17 +87,22 @@ namespace Microcode
         {
             Environment env = (Environment) aenv;
             string name = (string) aname;
-            return interpreter.Return (env.Assign (name, value));
+            object oldValue;
+            LookupDisposition disp = env.AssignVariable (name, value, out oldValue);
+            if (disp == LookupDisposition.OK)
+                return interpreter.Return (oldValue);
+            throw new NotImplementedException();
         }
 
         [SchemePrimitive ("LEXICAL-UNASSIGNED?", 2)]
         public static object LexicalUnassigned (Interpreter interpreter, object envobj, object nameobj)
         {
-            Environment env = (Environment) envobj;
-            string name = (string) nameobj;
-            bool unassignedp = env.IsUnassigned (name);
+            throw new NotImplementedException ();
+            //Environment env = (Environment) envobj;
+            //string name = (string) nameobj;
+            ////bool unassignedp = env.IsUnassigned (name);
 
-            return interpreter.Return (unassignedp);
+            //return interpreter.Return (unassignedp);
         }
 
         [SchemePrimitive ("LEXICAL-UNBOUND?", 2)]
@@ -92,16 +114,43 @@ namespace Microcode
         [SchemePrimitive ("LEXICAL-REFERENCE", 2)]
         public static object LexicalReference (Interpreter interpreter, object env, object name)
         {
-            return interpreter.Return (((Environment) env).Lookup ((string) name));
+            object value;
+            LookupDisposition disp = ((Environment) env).LookupVariable ((string) name, out value);
+            if (disp != LookupDisposition.OK)
+                throw new NotImplementedException();
+            return interpreter.Return (value);
+        }
+
+        [SchemePrimitive("SAFE-LEXICAL-REFERENCE", 2)]
+        public static object SafeLexicalReference(Interpreter interpreter, object env, object name)
+        {
+            object value;
+            LookupDisposition disp = ((Environment) env).LookupVariable ((string) name, out value);
+            if (disp == LookupDisposition.Unassigned)
+                return interpreter.Return (Constant.ExternalUnassigned);
+            else
+                return interpreter.Return (value);
         }
 
         [SchemePrimitive ("LEXICAL-REFERENCE-TYPE", 2)]
         public static object LexicalReferenceType (Interpreter interpreter, object env, object name)
         {
-            return interpreter.Return (((Environment) env).LookupType ((string) name));
+            object dummy;
+            switch (((Environment) env).LookupVariable ((string) name, out dummy)) {
+                case LookupDisposition.OK:
+                    return interpreter.Return (2);
+                case LookupDisposition.Macro:
+                    return interpreter.Return (3);
+                case LookupDisposition.Unassigned:
+                    return interpreter.Return (1);
+                case LookupDisposition.Unbound:
+                    return interpreter.Return (0);
+                default:
+                    throw new NotImplementedException ();
+            }
         }
 
-        static bool hacked = false;
+        //static bool hacked = false;
         [SchemePrimitive ("LINK-VARIABLES", 4)]
         public static object LinkVariables (Interpreter interpreter, object [] arglist)
         {
@@ -128,7 +177,10 @@ namespace Microcode
             else
                 env = (Environment) aenv;
             string name = (string) aname;
-            return interpreter.Return (env.LocalAssign (name, value));
+            LookupDisposition disp = env.DefineVariable (name, value);
+            if (disp != LookupDisposition.OK)
+                throw new NotImplementedException ();
+            return interpreter.Return (name);
         }
 
         [SchemePrimitive ("ENVIRONMENT?", 1)]
@@ -145,22 +197,27 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override object Assign (string name, object value)
+        public override LookupDisposition AssignVariable (string name, object value, out object oldValue)
         {
             throw new NotImplementedException ();
         }
 
-        public override object LocalAssign (string name, object value)
+        public override LookupDisposition DefineVariable (string name, object value)
         {
             throw new NotImplementedException ();
         }
 
-        public override object Lookup (string name)
+        public override LookupDisposition LookupVariable (string name, out object value)
         {
             throw new NotImplementedException ();
         }
 
         public override object LookupType (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override object SafeLookup (string name)
         {
             throw new NotImplementedException ();
         }
@@ -216,28 +273,80 @@ namespace Microcode
             bindings.Add (name, cell);
         }
 
-        public override object Assign (string name, object value)
+        public override LookupDisposition AssignVariable (string name, object value, out object oldValue)
         {
             ValueCell cell = null;
-            if (this.bindings.TryGetValue (name, out cell) == true)
-                return cell.Assign (value);
-            throw new NotImplementedException ();
+            if (this.bindings.TryGetValue (name, out cell) == true) {
+                oldValue = cell.Assign (value);
+                return LookupDisposition.OK;
+             
+            }
+            else
+                throw new NotImplementedException ();
+
+            //    if (cell.isAssigned) {
+            //        oldValue = cell.Assign (value);
+            //        return LookupDisposition.OK;
+            //    }
+            //    else
+            //        throw new NotImplementedException ();
+            //}
+            //else
+            //    throw new NotImplementedException ();
         }
 
-        public override object LocalAssign (string name, object value)
+        public override LookupDisposition DefineVariable (string name, object value)
         {
             ValueCell cell = null;
-            if (this.bindings.TryGetValue (name, out cell) == true)
-                return cell.Assign (value);
-            else
-            {
+            if (this.bindings.TryGetValue (name, out cell) == false)
+                {
                 cell = new ValueCell ();
                 this.bindings.Add (name, cell);
-                return cell.Assign (value);
+
+            }        
+            cell.Assign (value);
+            return LookupDisposition.OK;
+        }
+
+
+        public override LookupDisposition LookupVariable (string name, out object value)
+        {
+            ValueCell cell = null;
+            if (this.bindings.TryGetValue (name, out cell) == true) {
+                object temp = cell.Value;
+                switch (ReferenceTrap.GetTrapKind (temp)) {
+                    case TrapKind.NON_TRAP_KIND:
+                        value = temp;
+                        return LookupDisposition.OK;
+
+                    case TrapKind.TRAP_UNASSIGNED:
+                        value = null;
+                        return LookupDisposition.Unassigned;
+
+                    case TrapKind.TRAP_UNBOUND:
+                        value = null;
+                        return LookupDisposition.Unbound;
+
+                    case TrapKind.TRAP_MACRO:
+                        value = temp;
+                        return LookupDisposition.Macro;
+
+                    case TrapKind.TRAP_COMPILER_CACHED:
+                        throw new NotImplementedException ();
+
+                    default:
+                        throw new NotImplementedException ();
+                }
+
+
+            }
+            else {
+                value = null;
+                return LookupDisposition.Unbound;
             }
         }
 
-        public override object Lookup (string name)
+        public override object SafeLookup (string name)
         {
             ValueCell cell = null;
             if (this.bindings.TryGetValue (name, out cell) == true)
@@ -247,16 +356,19 @@ namespace Microcode
 
         public override object LookupType (string name)
         {
-            ValueCell cell = null;
-            if (this.bindings.TryGetValue (name, out cell) == true)
-            {
-                if (cell.isAssigned)
-                    return ReferenceType.Normal;
-                else
-                    return ReferenceType.Unassigned;
-            }
-            else
-                return ReferenceType.Unbound;
+            throw new NotImplementedException ();
+            //ValueCell cell = null;
+            //if (this.bindings.TryGetValue (name, out cell) == true)
+            //{
+            //    if (cell.isAssigned) {
+ 
+            //            return ReferenceType.Normal;
+            //    }
+            //    else
+            //        return ReferenceType.Unassigned;
+            //}
+            //else
+            //    return ReferenceType.Unbound;
 
         }
 
@@ -345,7 +457,7 @@ namespace Microcode
                 this.framevector [offset] = cell;
         }
 
-        public override object Assign (string name, object value)
+        public override LookupDisposition AssignVariable (string name, object value, out object oldValue)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1)
@@ -353,46 +465,109 @@ namespace Microcode
                 ValueCell vcell = null;
                 if (incrementals != null && incrementals.TryGetValue (name, out vcell))
                 {
-                    return vcell.Assign (value);
+                    oldValue = vcell.Assign (value);
+                    return LookupDisposition.OK;
                 }
                 else
-                    return Environment.ToEnvironment(this.Parent).Assign (name, value);
+                    return Environment.ToEnvironment(this.Parent).AssignVariable (name, value, out oldValue);
             }
-            return framevector [offset].Assign (value);
+            ValueCell avcell = framevector [offset];
+            oldValue = avcell.Assign (value);
+            return LookupDisposition.OK;
         }
 
-        public override object LocalAssign (string name, object value)
+        public override LookupDisposition DefineVariable (string name, object value)
         {
             int offset = this.closure.FormalOffset (name);
-            if (offset == -1)
-            {
+            if (offset == -1) {
                 ValueCell vcell = null;
-                if (incrementals != null && incrementals.TryGetValue (name, out vcell))
-                {
-                    return vcell.Assign (value);
+                if (incrementals != null && incrementals.TryGetValue (name, out vcell)) {
+                    vcell.Assign (value);
                 }
-                else
-                {
+                else {
                     vcell = new ValueCell ();
                     if (incrementals == null)
                         incrementals = new Dictionary<string, ValueCell> ();
                     incrementals.Add (name, vcell);
-                    return vcell.Assign (value);
+                    vcell.Assign (value);
                 }
             }
-            return framevector [offset].Assign (value);
+            else framevector [offset].Assign (value);
+            return LookupDisposition.OK;
         }
 
-        public override object Lookup (string name)
+        public override LookupDisposition LookupVariable (string name, out object value)
         {
             int offset = this.closure.FormalOffset (name);
-            if (offset == -1)
-            {
+            if (offset == -1) {
+                ValueCell vcell = null;
+                if (incrementals != null && incrementals.TryGetValue (name, out vcell)) {
+                    object temp = vcell.Value;
+                    switch (ReferenceTrap.GetTrapKind (temp)) {
+                        case TrapKind.NON_TRAP_KIND:
+                            value = temp;
+                            return LookupDisposition.OK;
+
+                        case TrapKind.TRAP_UNASSIGNED:
+                            value = null;
+                            throw new NotImplementedException ();
+
+                        case TrapKind.TRAP_UNBOUND:
+                            value = null;
+                            throw new NotImplementedException ();
+
+                        case TrapKind.TRAP_MACRO:
+                            value = temp;
+                            throw new NotImplementedException ();
+
+                        case TrapKind.TRAP_COMPILER_CACHED:
+                            throw new NotImplementedException ();
+
+                        default:
+                            throw new NotImplementedException ();
+                    }
+                }
+                else
+                    return Environment.ToEnvironment (this.Parent).LookupVariable (name, out value);
+            }
+            else {
+                ValueCell vcell = framevector [offset];
+                object temp = vcell.Value;
+                switch (ReferenceTrap.GetTrapKind (temp)) {
+                    case TrapKind.NON_TRAP_KIND:
+                        value = temp;
+                        return LookupDisposition.OK;
+
+                    case TrapKind.TRAP_UNASSIGNED:
+                        value = null;
+                        return LookupDisposition.Unassigned;
+
+                    case TrapKind.TRAP_UNBOUND:
+                        value = null;
+                        return LookupDisposition.Unbound;
+
+                    case TrapKind.TRAP_MACRO:
+                        value = temp;
+                        return LookupDisposition.Macro;
+
+                    case TrapKind.TRAP_COMPILER_CACHED:
+                        throw new NotImplementedException ();
+
+                    default:
+                        throw new NotImplementedException ();
+                }
+            }
+        }
+
+        public override object SafeLookup (string name)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
                 ValueCell vcell = null;
                 if (incrementals != null && incrementals.TryGetValue (name, out vcell))
                     return vcell.Value;
                 else
-                    return Environment.ToEnvironment(this.Parent).Lookup (name);
+                    return Environment.ToEnvironment (this.Parent).SafeLookup (name);
             }
             else
                 return framevector [offset].Value;
@@ -400,22 +575,23 @@ namespace Microcode
 
         public override object LookupType (string name)
         {
-            int offset = this.closure.FormalOffset (name);
-            if (offset == -1)
-            {
-                ValueCell vcell = null;
-                if (incrementals != null && incrementals.TryGetValue (name, out vcell))
-                {
-                    if (vcell.isAssigned)
-                        return (int) ReferenceType.Normal;
-                    else
-                        return (int) ReferenceType.Unassigned;
-                }
-                else
-                    return Environment.ToEnvironment(this.Parent).LookupType (name);
-            }
-            else
-                return (int) ReferenceType.Normal;
+            throw new NotImplementedException ();
+            //int offset = this.closure.FormalOffset (name);
+            //if (offset == -1)
+            //{
+            //    ValueCell vcell = null;
+            //    if (incrementals != null && incrementals.TryGetValue (name, out vcell))
+            //    {
+            //        if (vcell.isAssigned)
+            //            return (int) ReferenceType.Normal;
+            //        else
+            //            return (int) ReferenceType.Unassigned;
+            //    }
+            //    else
+            //        return Environment.ToEnvironment(this.Parent).LookupType (name);
+            //}
+            //else
+            //    return (int) ReferenceType.Normal;
         }
 
         // Variant of Lookup.  If variable is bound in the nearest environment,

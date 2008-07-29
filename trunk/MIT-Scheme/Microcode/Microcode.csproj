@@ -80,7 +80,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Ratnum.cs" />
     <Compile Include="Record.cs" />
-    <Compile Include="ReferenceTrap.cs" />
+    <Compile Include="ReferenceTrap.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ReturnAddress.cs" />
     <Compile Include="SchemePrimitiveAttribute.cs" />
     <Compile Include="SchemeString.cs" />

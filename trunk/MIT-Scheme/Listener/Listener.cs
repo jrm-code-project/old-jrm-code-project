@@ -11,7 +11,7 @@ namespace Listener
             string originalDirectory = System.Environment.CurrentDirectory;
             try {
                 // System.Environment.CurrentDirectory = System.Environment.CurrentDirectory + "\\..\\..\\..\\Runtime7\\";
-                System.Environment.CurrentDirectory = "C:\\Documents and Settings\\jmarshall\\test\\mit-scheme\\v7\\src\\runtime\\";
+                System.Environment.CurrentDirectory = "C:\\Program Files\\MIT\\src\\runtime\\";
                 SCode bootstrap = Fasl.Fasload ("make.bin") as SCode;
                 Interpreter interpreter = new Interpreter ();
                 Termination term = interpreter.Start (bootstrap);

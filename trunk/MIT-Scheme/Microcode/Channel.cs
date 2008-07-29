@@ -76,6 +76,22 @@ namespace Microcode
             return interpreter.Return (arglist [3]);
         }
 
+        [SchemePrimitive("TERMINAL-NONBUFFERED", 1)]
+        public static object TerminalNonBuffered(Interpreter interpreter, object arg0)
+        {
+            return interpreter.Return(false);
+        }
+
+        [SchemePrimitive("TEST-SELECT-DESCRIPTOR", 3)]
+        public static object TestSelectDescriptor(Interpreter interpreter, object arg0, object arg1, object arg2)
+        {
+            System.IO.TextWriter tw= arg0 as System.IO.TextWriter;
+            System.IO.TextReader tr = arg0 as System.IO.TextReader;
+            bool block = (bool)arg1;
+            int direction = (int)arg2;
+            return interpreter.Return(0);
+        }
+
         [SchemePrimitive ("TTY-INPUT-CHANNEL", 0)]
         public static object TtyInputChannel (Interpreter interpreter)
         {

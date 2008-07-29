@@ -543,7 +543,11 @@ namespace Microcode
                     return primSection [encoded.Datum];
 
                 case TC.REFERENCE_TRAP:
-                    return ReferenceTrap.Make (encoded.Datum);
+                    if (encoded.Datum == 0)
+                        return ReferenceTrap.Unassigned;
+                    else
+                        throw new NotImplementedException ();
+                    // return ReferenceTrap.Make (encoded.Datum);
 
                 case TC.RATNUM:
                     return new Ratnum (ReadObject (encoded.Datum),
