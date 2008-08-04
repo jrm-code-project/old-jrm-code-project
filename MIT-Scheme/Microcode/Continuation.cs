@@ -67,10 +67,10 @@ namespace Microcode
         readonly T expression;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object environment;
+        readonly Environment environment;
 
         [DebuggerStepThrough]
-        public Subproblem (Continuation next, T expression, object environment)
+        public Subproblem (Continuation next, T expression, Environment environment)
             : base (next)
         {
             this.expression = expression;
@@ -86,7 +86,7 @@ namespace Microcode
             }
         }
 
-        public object Environment
+        public Environment Environment
         {
             [DebuggerStepThrough]
             get

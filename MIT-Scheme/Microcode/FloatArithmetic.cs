@@ -278,7 +278,7 @@ namespace Microcode
         [SchemePrimitive ("FLONUM-SIN", 1)]
         public static object Sin (Interpreter interpreter, object arg)
         {
-            throw new NotImplementedException ();
+            return interpreter.Return (Math.Sin ((double) arg));
         }
 
         [SchemePrimitive ("FLONUM-COS", 1)]

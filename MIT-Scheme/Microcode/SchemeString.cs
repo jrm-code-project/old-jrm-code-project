@@ -29,7 +29,9 @@ namespace Microcode
         [SchemePrimitive ("STRING-HASH-MOD", 2)]
         public static object StringHashMod (Interpreter interpreter, object str, object modulus)
         {
-            return interpreter.Return (new string ((char []) str).GetHashCode () % (int) modulus);
+            int tmp = new string ((char []) str).GetHashCode () % (int) modulus;
+            if (tmp < 0) tmp += (int)modulus;
+            return interpreter.Return (tmp);
         }
 
         [SchemePrimitive ("STRING-LENGTH", 1)]
@@ -142,7 +144,7 @@ namespace Microcode
 
             while (scan < limit)
             {
-                if (charset [scan++] != '\0')
+                if (charset [str[scan++]] != '\0')
                     return interpreter.Return (scan - 1);
             }
             return interpreter.Return (false);

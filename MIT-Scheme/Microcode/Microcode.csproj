@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -75,6 +77,8 @@
     <Compile Include="Misc.cs" />
     <Compile Include="NonMarkedVector.cs" />
     <Compile Include="ObjectModel.cs" />
+    <Compile Include="OSIO.cs" />
+    <Compile Include="OSScheme.cs" />
     <Compile Include="Primitive.cs" />
     <Compile Include="Promise.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -87,6 +91,7 @@
     <Compile Include="SchemePrimitiveAttribute.cs" />
     <Compile Include="SchemeString.cs" />
     <Compile Include="SCode.cs" />
+    <Compile Include="SComb.cs" />
     <Compile Include="Termination.cs" />
     <Compile Include="ValueCell.cs" />
     <Compile Include="Vector.cs" />

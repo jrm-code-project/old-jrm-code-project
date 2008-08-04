@@ -5,7 +5,13 @@ using System.Text;
 
 namespace Microcode
 {
-    class Closure : SCode, ISystemPair
+    interface IClosure
+    {
+        int FormalOffset (string name);
+        Environment Environment { get; }
+    }
+
+    class Closure : SCode, IClosure, ISystemPair
     {
         static public bool Noisy = false;
         static public string internalLambda = String.Intern ("#[internal-lambda]");
@@ -16,15 +22,23 @@ namespace Microcode
         Lambda lambda;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected object environment;
+        Environment environment;
 
-        public Closure (Lambda lambda, object environment)
+        public Closure (Lambda lambda, Environment environment)
         {
             this.lambda = lambda;
+            if (environment == null)
+                throw new ArgumentNullException ("environment");
             this.environment = environment;
         }
 
-        public object Environment
+        public object Lambda
+        {
+            [DebuggerStepThrough]
+            get { return this.lambda; }
+        }
+
+        public Environment Environment
         {
             [DebuggerStepThrough]   
             get
@@ -95,11 +109,11 @@ namespace Microcode
         {
             object [] rands = interpreter.Arguments;
             int nargs = rands.Length;
-            int nparams = this.lambda.formals.Length - 1;
+            int nparams = this.lambda.Formals.Length - 1;
             if (nargs != nparams)
                 throw new NotImplementedException ();
             if (Noisy && this.lambda.Name != unnamed && this.lambda.Name != let && this.lambda.Name != internalLambda) Debug.WriteLine (this.lambda.Name);
-            return interpreter.EvalReduction (this.lambda.body, new InterpreterEnvironment (this, rands));
+            return interpreter.EvalReduction (this.lambda.Body, new InterpreterEnvironment (this, rands));
         }
 
         public override string ToString ()
@@ -132,14 +146,21 @@ namespace Microcode
         }
     }
 
-    class ExtendedClosure : Closure
+    class ExtendedClosure : SCode, IClosure
     {
+        static public bool Noisy = false;
+        static public string internalLambda = String.Intern ("#[internal-lambda]");
+        static public string unnamed = String.Intern ("#[unnamed-procedure]");
+        static public string let = String.Intern ("#[let-procedure]");
         public ExtendedLambda lambda;
+        public Environment environment; 
 
-        public ExtendedClosure (ExtendedLambda lambda, object environment)
-            : base (lambda, environment)
+        public ExtendedClosure (ExtendedLambda lambda, Environment environment)
         {
             this.lambda = lambda;
+            if (environment == null)
+                throw new ArgumentNullException ("environment");
+            this.environment = environment;
         }
 
         internal override object EvalStep (Interpreter interpreter, object etc)
@@ -201,10 +222,35 @@ namespace Microcode
             return interpreter.EvalReduction (this.lambda.body, new InterpreterEnvironment (this, framevector));
         }
 
+        public int FormalOffset (string name)
+        {
+            return this.lambda.FormalOffset (name);
+        }
+
         [SchemePrimitive ("EXTENDED-PROCEDURE?", 1)]
         public static void IsExtendedProcedure (Interpreter interpreter, object arg)
         {
             interpreter.Return (arg is ExtendedClosure);
         }
+
+        public string Name
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.lambda.Name;
+            }
+        }
+
+
+        #region IClosure Members
+
+
+        public Environment Environment
+        {
+            get { return this.environment; }
+        }
+
+        #endregion
     }
 }

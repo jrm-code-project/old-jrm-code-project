@@ -59,12 +59,29 @@ namespace Microcode
             return interpreter.Return (String.IsInterned (new String ((char []) (arg))));
         }
 
+        [SchemePrimitive ("FILE-MOD-TIME", 1)]
+        public static object FileModTime (Interpreter interpreter, object arg)
+        {
+            String filename = new String ((char []) arg);
+            return interpreter.Return (System.IO.File.GetLastWriteTimeUtc (filename).ToFileTimeUtc());
+        }
+
         [SchemePrimitive ("FILE-TYPE-INDIRECT", 1)]
         public static object FileTypeIndirect (Interpreter interpreter, object arg)
         {
             String filename = new String ((char []) arg);
-            System.IO.FileAttributes fa = System.IO.File.GetAttributes (filename);
-            throw new NotImplementedException ();
+            System.IO.FileAttributes fa;
+            try {
+                fa = System.IO.File.GetAttributes (filename);
+            }
+            catch (System.IO.FileNotFoundException) {
+                return interpreter.Return (false);
+            }
+            if ((fa & System.IO.FileAttributes.Directory) == System.IO.FileAttributes.Directory)
+                return interpreter.Return(1);
+            else {
+                return interpreter.Return(0);
+            }
         }
 
         [SchemePrimitive ("GARBAGE-COLLECT", 1)]
@@ -72,6 +89,34 @@ namespace Microcode
         {
             // Arg is the safety margin.
             return interpreter.Return (GC.GetTotalMemory (true));
+        }
+
+        [SchemePrimitive ("GC-SPACE-STATUS", 0)]
+        public static object GcSpaceStatus (Interpreter interpreter)
+        {
+            object [] answer = new object [12];
+            answer [0] = 4; // bytes per object
+            answer [1] = 0x100; // constant-start
+            answer [2] = 0x200; // constant-alloc-next
+            answer [3] = 0x400; // constant-end
+            answer [4] = 0x1000; // heap-start
+            answer [5] = 0x20000000; // free
+            answer [6] = 0x40000000; // heap-alloc-limit
+            answer [7] = 0x50000000; // heap-end
+            answer [8] = 0x90000000; // stack start
+            answer [9] = 0x100000000; //stack pointer
+            answer [10] = 0x200000000; // stack guard
+            answer [11] = 0x400000000; // stack end
+            return interpreter.Return (answer);
+        }
+
+        [SchemePrimitive ("GET-ENVIRONMENT-VARIABLE", 1)]
+        public static object GetEnvironmentVariable (Interpreter interpreter, object arg)
+        {
+            char [] name = (char []) arg;
+            string sname = new string (name);
+            string answer = System.Environment.GetEnvironmentVariable (sname);
+            return interpreter.Return((answer == null) ? (object)false : (object)answer.ToCharArray ());
         }
 
         [SchemePrimitive ("GET-NEXT-CONSTANT", 0)]
@@ -116,10 +161,12 @@ namespace Microcode
         [SchemePrimitive ("MICROCODE-LIBRARY-PATH", 0)]
         public static object MicrocodeLibraryPath (Interpreter interpreter)
         {
-            return interpreter.Return (new object [] {"Program Files".ToCharArray(),
-                "MIT".ToCharArray(),
-                "scheme-7.7.1".ToCharArray(),
-                "lib".ToCharArray()});
+            return interpreter.Return (new object [] { "C:\\Program Files\\MIT\\lib\\".ToCharArray () });
+
+            //return interpreter.Return (new object [] {"Program Files".ToCharArray(),
+            //    "MIT".ToCharArray(),
+            //    "scheme-7.7.1".ToCharArray(),
+            //    "lib".ToCharArray()});
         }
 
 
@@ -140,6 +187,18 @@ namespace Microcode
         public static object MicrocodeTablesFilename (Interpreter interpreter)
         {
             return interpreter.Return ("utabmd.bin".ToCharArray ());
+        }
+
+        [SchemePrimitive ("NT-GET-VOLUME-INFORMATION", 1)]
+        public static object NTGetVolumeInformation (Interpreter interpreter, object arg)
+        {
+            object [] answer = new object [5];
+            answer [0] = "VOLUMEFOO".ToCharArray () ;
+            answer [1] = 42;
+            answer [2] = 255;
+            answer [3] = 7;
+            answer [4] = "NTFS".ToCharArray();
+            return interpreter.Return (answer);
         }
 
         [SchemePrimitive ("PURE?", 1)]
@@ -240,7 +299,12 @@ namespace Microcode
             return interpreter.Return (System.Environment.CurrentDirectory.ToCharArray ());
         }
 
-
-
+        [SchemePrimitive ("SET-WORKING-DIRECTORY-PATHNAME!", 1)]
+        public static object SetWorkingDirectoryPathname (Interpreter interpreter, object arg)
+        {
+            char [] oldDirectory = System.Environment.CurrentDirectory.ToCharArray ();
+            System.Environment.CurrentDirectory = new String ((char []) arg);
+            return interpreter.Return (oldDirectory);
+        }
     }
 }

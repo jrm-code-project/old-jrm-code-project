@@ -25,6 +25,8 @@ namespace Microcode
         [SchemePrimitive ("VECTOR?", 1)]
         public static object IsVector (Interpreter interpreter, object arg)
         {
+            if (arg is object [] && (((object []) arg).Length == 4))
+                return interpreter.Return (true);
             return interpreter.Return (arg is object []);
         }
 

@@ -156,15 +156,6 @@ namespace Microcode
             return result;
         }
 
-        internal SCode [] ReadSCodeVector (FaslFile file, uint offset)
-        {
-            uint length = this [offset].Datum;
-            SCode [] vector = new SCode [length];
-            for (uint i = 0; i < length; i++)
-                vector [i] = file.ReadSCode (offset + 4 + i * 4);
-            return vector;
-        }
-
         public string [] ReadFormals (FaslFile file, uint offset)
         {
             uint length = this [offset].Datum;
@@ -174,7 +165,7 @@ namespace Microcode
             return vector;
         }
 
-        public object ReadVector (FaslFile file, uint offset)
+        public object [] ReadVector (FaslFile file, uint offset)
         {
             EncodedObject header = this [offset];
             uint length = header.Datum;
@@ -182,7 +173,7 @@ namespace Microcode
             for (uint i = 0; i < length; i++)
             {
                 object obj = file.ReadObject (offset + 4 + i * 4);
-                vector [i] = (obj is bool && (bool) obj == false) ? null : obj;
+                vector [i] = obj;
             }
             return vector;
         }
@@ -371,18 +362,11 @@ namespace Microcode
                 : 0.0;
         }
 
-        public object ReadVector (uint location)
+        public object [] ReadVector (uint location)
         {
             return heapSection.Contains (location) ? heapSection.ReadVector (this, location)
                 : constSection.Contains (location) ? constSection.ReadVector (this, location)
                 : null;
-        }
-
-        public SCode [] ReadSCodeVector (uint location)
-        {
-            return heapSection.Contains (location) ? heapSection.ReadSCodeVector (this, location)
-                   : constSection.Contains (location) ? constSection.ReadSCodeVector (this, location)
-                   : null;
         }
 
         public string [] ReadFormals (uint location)
@@ -397,7 +381,7 @@ namespace Microcode
         public Assignment ReadAssignment (uint location)
         {
             return new Assignment (((Variable) ReadObject (location)).name,
-                                   ReadSCode (location + 4));
+                                   ReadObject (location + 4));
         }
 
         public ExtendedLambda ReadExtendedLambda (uint location)
@@ -408,21 +392,7 @@ namespace Microcode
             uint optional = (argcount.Datum & 0x00FF);
             uint required = (argcount.Datum & 0xFF00) >> 8;
             bool rest = ((argcount.Datum & 0x10000) == 0x10000);
-            return new ExtendedLambda (ReadSCode (location), second, required, optional, rest);
-        }
-
-        internal SCode ReadSCode (uint location)
-        {
-            object obj = ReadObject (location);
-            if (obj == null)
-                return Quotation.Make (obj);
-            SCode sobj = obj as SCode;
-            if (sobj == null)
-                return Quotation.Make (obj);
-            Primitive p = sobj as Primitive;
-            if (p == null)
-                return sobj;
-            return Quotation.Make (p);
+            return new ExtendedLambda (ReadObject (location), second, required, optional, rest);
         }
 
         internal object ReadObject (uint location)
@@ -440,7 +410,7 @@ namespace Microcode
             switch (encoded.TypeCode)
             {
                 case TC.ACCESS:
-                    return new Access (ReadSCode (encoded.Datum),
+                    return new Access (ReadObject (encoded.Datum),
                        (string) ReadObject (encoded.Datum + 4));
 
                 case TC.ASSIGNMENT:
@@ -459,19 +429,19 @@ namespace Microcode
                     return heapSection.ReadString (encoded.Datum);
 
                 case TC.COMBINATION:
-                    return new Combination (ReadSCodeVector (encoded.Datum));
+                    return new Combination (ReadVector (encoded.Datum));
 
                 case TC.COMBINATION_1:
-                    return new Combination1 (ReadSCode (encoded.Datum),
-                                             ReadSCode (encoded.Datum + 4));
+                    return new Combination1 (ReadObject (encoded.Datum),
+                                             ReadObject (encoded.Datum + 4));
 
                 case TC.COMBINATION_2:
-                    return Combination2.Make (ReadSCode (encoded.Datum),
-                                              ReadSCode (encoded.Datum + 4),
-                                              ReadSCode (encoded.Datum + 8));
+                    return Combination2.Make (ReadObject (encoded.Datum),
+                                              ReadObject (encoded.Datum + 4),
+                                              ReadObject (encoded.Datum + 8));
 
                 case TC.COMMENT:
-                    return new Comment (ReadSCode (encoded.Datum),
+                    return new Comment (ReadObject (encoded.Datum),
                                         ReadObject (encoded.Datum + 4));
 
                 case TC.COMPLEX:
@@ -479,37 +449,37 @@ namespace Microcode
                                         ReadObject (encoded.Datum + 4));
 
                 case TC.CONDITIONAL:
-                    return Conditional.Make (ReadSCode (encoded.Datum),
-                                             ReadSCode (encoded.Datum + 4),
-                                             ReadSCode (encoded.Datum + 8));
+                    return Conditional.Make (ReadObject (encoded.Datum),
+                                             ReadObject (encoded.Datum + 4),
+                                             ReadObject (encoded.Datum + 8));
 
                 case TC.CONSTANT:
                     return Constant.Decode (encoded.Datum);
  
                 case TC.DEFINITION:
                     return new Definition ((string) ReadObject (encoded.Datum),
-                                            ReadSCode (encoded.Datum + 4));
+                                            ReadObject (encoded.Datum + 4));
 
                 case TC.DELAY:
-                    return new Delay (ReadSCode (encoded.Datum));
+                    return new Delay (ReadObject (encoded.Datum));
 
                 case TC.DISJUNCTION:
-                    return new Disjunction (ReadSCode (encoded.Datum),
-                                            ReadSCode (encoded.Datum + 4));
+                    return new Disjunction (ReadObject (encoded.Datum),
+                                            ReadObject (encoded.Datum + 4));
 
                 case TC.EXTENDED_LAMBDA:
                     return ReadExtendedLambda (encoded.Datum);
 
                 case TC.FIXNUM:
                     return encoded.Datum > 0x02000000
-                           ? (int) (encoded.Datum - 0x04000000)
+                           ? (int) - (0x04000000 - encoded.Datum)
                            : (int) encoded.Datum;
 
                 case TC.INTERNED_SYMBOL:
                     return String.Intern (new String ((char []) ReadObject (encoded.Datum)));
 
                 case TC.LAMBDA:
-                    return new Lambda (ReadSCode (encoded.Datum), ReadFormals (encoded.Datum + 4));
+                    return new Lambda (ReadObject (encoded.Datum), ReadFormals (encoded.Datum + 4));
 
                 case TC.LIST:
                     object second = ReadObject (encoded.Datum + 4);
@@ -526,18 +496,18 @@ namespace Microcode
 
                 case TC.PCOMB1:
                     return PrimitiveCombination1.Make ((Primitive1) ReadObject (encoded.Datum),
-                                                       ReadSCode (encoded.Datum + 4));
+                                                       ReadObject (encoded.Datum + 4));
 
                 case TC.PCOMB2:
                     return PrimitiveCombination2.Make ((Primitive2) ReadObject (encoded.Datum),
-                                                        ReadSCode (encoded.Datum + 4),
-                                                        ReadSCode (encoded.Datum + 8));
+                                                        ReadObject (encoded.Datum + 4),
+                                                        ReadObject (encoded.Datum + 8));
 
                 case TC.PCOMB3:
                     return new PrimitiveCombination3 ((Primitive3) ReadObject (encoded.Datum + 4),
-                                                       ReadSCode (encoded.Datum + 8),
-                                                       ReadSCode (encoded.Datum + 12),
-                                                       ReadSCode (encoded.Datum + 16));
+                                                       ReadObject (encoded.Datum + 8),
+                                                       ReadObject (encoded.Datum + 12),
+                                                       ReadObject (encoded.Datum + 16));
 
                 case TC.PRIMITIVE:
                     return primSection [encoded.Datum];
@@ -557,13 +527,43 @@ namespace Microcode
                     return (ReturnCode) (encoded.Datum);
 
                 case TC.SEQUENCE_2:
-                    return new Sequence2 (ReadSCode (encoded.Datum),
-                                          ReadSCode (encoded.Datum + 4));
+                    return new Sequence2 (ReadObject (encoded.Datum),
+                                          ReadObject (encoded.Datum + 4));
 
                 case TC.SEQUENCE_3:
-                    return new Sequence3 (ReadSCode (encoded.Datum),
-                                          ReadSCode (encoded.Datum + 4),
-                                          ReadSCode (encoded.Datum + 8));
+                    // Chains of sequence_3 can be arbitrarily long.
+                    // Unfortunately, the CLR puts a strict limit on
+                    // the stack, so we have to do this funky thing.
+                    Cons sequenceStack = null;
+                    while (true) {
+                        // read the first two elements
+                        object s1 = ReadObject (encoded.Datum);
+                        sequenceStack = new Cons (s1, sequenceStack);
+                        object s2 = ReadObject (encoded.Datum + 4);
+                        sequenceStack = new Cons (s2, sequenceStack);
+
+                        // peek at the third
+
+                        EncodedObject sencoded = 
+                             heapSection.Contains (encoded.Datum + 8) ? heapSection [encoded.Datum + 8]
+                           : constSection.Contains (encoded.Datum + 8) ? constSection [encoded.Datum + 8]
+                           : new EncodedObject (0);
+
+                        if (sencoded.TypeCode == TC.SEQUENCE_3)
+                            encoded = sencoded;
+                        else {
+                            // found the end of the chain!
+                            object tail = ReadObject (encoded.Datum + 8);
+                            while (sequenceStack != null) {
+                                object ob2 = sequenceStack.Car;
+                                sequenceStack = (Cons) sequenceStack.Cdr;
+                                object ob1 = sequenceStack.Car;
+                                sequenceStack = (Cons) sequenceStack.Cdr;
+                                tail = new Sequence3 (ob1, ob2, tail);
+                            }
+                            return tail;
+                        }
+                    }
 
 
                 case TC.THE_ENVIRONMENT:

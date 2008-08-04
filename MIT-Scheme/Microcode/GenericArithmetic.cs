@@ -55,6 +55,8 @@ namespace Microcode
                     return interpreter.Return (Narrow (Widen (left) - Widen (right)));
                 else if (right is long)
                     return interpreter.Return (Narrow (Widen (left) - Widen (right)));
+                else if (right is double)
+                    return interpreter.Return ((double) (int) (left) - (double) (right));
                 else
                     throw new NotImplementedException ();
             }
@@ -163,7 +165,9 @@ namespace Microcode
             }
             else if (left is long)
             {
-                if (right is int)
+                if (right is long)
+                    return interpreter.Return ((long) left < (long) right);
+                else if (right is int)
                     return interpreter.Return ((long) left < (int) right);
                 else
                     throw new NotImplementedException ();

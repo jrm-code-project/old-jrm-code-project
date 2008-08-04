@@ -241,49 +241,59 @@ namespace Microcode
         public static object ObjectType (Interpreter interpreter, object arg)
         {
             if (arg == null)
-                return interpreter.Return(TC.NULL);
+                return interpreter.Return (TC.NULL);
             else if (arg is bool)
-                return interpreter.Return(TC.CONSTANT);
+                return interpreter.Return (TC.CONSTANT);
             else if (arg is char)
-                return interpreter.Return(TC.CHARACTER);
-            else if (arg is char[])
-                return interpreter.Return(TC.CHARACTER_STRING);
+                return interpreter.Return (TC.CHARACTER);
+            else if (arg is char [])
+                return interpreter.Return (TC.CHARACTER_STRING);
             else if (arg is Access)
-                return interpreter.Return(TC.ACCESS);
+                return interpreter.Return (TC.ACCESS);
+            else if (arg is Assignment)
+                return interpreter.Return (TC.ASSIGNMENT);
             else if (arg is Closure)
-                return interpreter.Return(TC.PROCEDURE);
+                return interpreter.Return (TC.PROCEDURE);
+            else if (arg is Definition)
+                return interpreter.Return (TC.DEFINITION);
             else if (arg is Combination)
-                return interpreter.Return(TC.COMBINATION);
+                return interpreter.Return (TC.COMBINATION);
             else if (arg is Combination1)
-                return interpreter.Return(TC.COMBINATION_1);
+                return interpreter.Return (TC.COMBINATION_1);
             else if (arg is Combination2)
-                return interpreter.Return(TC.COMBINATION_2);
+                return interpreter.Return (TC.COMBINATION_2);
             else if (arg is Conditional)
-                return interpreter.Return(TC.CONDITIONAL);
+                return interpreter.Return (TC.CONDITIONAL);
             else if (arg is Cons)
-                return interpreter.Return(TC.LIST);
+                return interpreter.Return (TC.LIST);
             else if (arg is Constant)
-                return interpreter.Return(TC.CONSTANT);
+                return interpreter.Return (TC.CONSTANT);
             else if (arg is ExtendedLambda)
-                return interpreter.Return(TC.EXTENDED_LAMBDA);
+                return interpreter.Return (TC.EXTENDED_LAMBDA);
             else if (arg is int)
-                return interpreter.Return(TC.FIXNUM);
+                return interpreter.Return (TC.FIXNUM);
             else if (arg is Lambda)
-                return interpreter.Return(TC.LAMBDA);
+                return interpreter.Return (TC.LAMBDA);
             else if (arg is Primitive)
-                return interpreter.Return(TC.PRIMITIVE);
+                return interpreter.Return (TC.PRIMITIVE);
             else if (arg is PrimitiveCombination2)
-                return interpreter.Return(TC.PCOMB2);
+                return interpreter.Return (TC.PCOMB2);
+            else if (arg is Promise)
+                return interpreter.Return (TC.DELAYED);
             else if (arg is Quotation)
-                return interpreter.Return(TC.SCODE_QUOTE);
+                return interpreter.Return (TC.SCODE_QUOTE);
+            else if (arg is Sequence2)
+                return interpreter.Return (TC.SEQUENCE_2);
+            else if (arg is Sequence3)
+                return interpreter.Return (TC.SEQUENCE_3);
             else if (arg is string)
                 //return interpreter.Return (Misc.IsGensym ((string) arg) ? TC.UNINTERNED_SYMBOL : TC.INTERNED_SYMBOL);
-                return interpreter.Return(TC.INTERNED_SYMBOL);
+                return interpreter.Return (TC.INTERNED_SYMBOL);
             else if (arg is Variable)
-                return interpreter.Return(TC.VARIABLE);
+                return interpreter.Return (TC.VARIABLE);
 
             else
-                throw new NotImplementedException();
+                throw new NotImplementedException ();
         }
 
 
@@ -346,7 +356,7 @@ namespace Microcode
                 //return interpreter.Return ((arg1 is string)
                 //&& (!Misc.IsGensym ((string) arg1)));
                 case TC.LAMBDA:
-                    return interpreter.Return (arg1 is Lambda);
+                    return interpreter.Return (arg1 is Lambda && ! (arg1 is ExtendedLambda));
                 case TC.LIST:
                     return interpreter.Return (arg1 is Cons);
                 case TC.LEXPR:
@@ -401,6 +411,9 @@ namespace Microcode
                 case TC.COMBINATION_2:
                     return interpreter.Return (new Combination2 ((Hunk3) arg1));
 
+                case TC.CONDITIONAL:
+                    return interpreter.Return (Conditional.Make ((Hunk3) arg1));
+
                 case TC.CONSTANT:
                     return interpreter.Return (Constant.Decode ((uint) (int) arg1));
 
@@ -411,8 +424,12 @@ namespace Microcode
                     return interpreter.Return (arg1);
                 case TC.ENVIRONMENT:
                     return interpreter.Return (new InterpreterEnvironment ((object []) arg1));
+                case TC.EXTENDED_LAMBDA:
+                    return interpreter.Return (new ExtendedLambda ((Hunk3) arg1));
                 case TC.RECORD:
                     return interpreter.Return (new Record ((object []) arg1));
+                case TC.SEQUENCE_3:
+                    return interpreter.Return (new Sequence3 ((Hunk3) arg1));
                 case TC.VARIABLE:
                     return interpreter.Return (new Variable ((Hunk3) arg1));
                 case TC.VECTOR:
@@ -674,8 +691,12 @@ namespace Microcode
             TC code = (TC) acode;
             switch (code)
             {
+                case TC.ASSIGNMENT:
+                    return interpreter.Return (new Assignment (car, cdr));
                 case TC.COMBINATION_1:
                     return interpreter.Return (new Combination1 (car, cdr));
+                case TC.DEFINITION:
+                    return interpreter.Return (new Definition (car, cdr));
                 case TC.ENTITY:
                     return interpreter.Return (new Entity (car, cdr));
                 case TC.LAMBDA:
@@ -685,7 +706,7 @@ namespace Microcode
                 case TC.RATNUM:
                     return interpreter.Return (new Ratnum (car, cdr));
                 case TC.SEQUENCE_2:
-                    return interpreter.Return(new Sequence2((SCode)car, (SCode)cdr));
+                    return interpreter.Return(new Sequence2(car, cdr));
                 case TC.UNINTERNED_SYMBOL:
                     return interpreter.Return (new String ((char []) car));
                 case TC.WEAK_CONS:
@@ -702,7 +723,7 @@ namespace Microcode
             if (sysVec != null)
             {
                 Cons answer = null;
-                for (int i = (int)end - 1; i > (int)start; i--)
+                for (int i = (int)end - 1; i > ((int)start - 1); i--)
                 {
                     answer = new Cons(sysVec.SystemVectorRef(i), answer);
                 }
@@ -729,6 +750,10 @@ namespace Microcode
                 return interpreter.Return (sysVec.SystemVectorSize);
             else if (arg is bool [])
                 return interpreter.Return ((((bool []) arg).Length / 32) + 1);
+            else if (arg is int)
+                return interpreter.Return (0x1000);
+            else if (arg is long)
+                return interpreter.Return (0x2000);
             else
                 throw new NotImplementedException ();
         }
