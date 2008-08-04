@@ -121,7 +121,7 @@ namespace Microcode
         SCode expression;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        object environment;
+        Environment environment;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Continuation continuation;
@@ -151,7 +151,7 @@ namespace Microcode
         {
             this.continuation = new ExitInterpreter ();
             this.expression = initialForm;
-            this.environment = false;
+            this.environment = Environment.Global;
             this.history = FixedObjectsVector.TheDummyHistory;
 
             try
@@ -169,7 +169,7 @@ namespace Microcode
         {
             // The etc argument isn't used.
             // We want EvalStep to be an expression rather
-            // than a statement, so we chain the return value
+            // than a statement so we chain the return value
             // around in case we think of a use in the
             // future.
             object etc = null;
@@ -186,7 +186,7 @@ namespace Microcode
         }
 
         [DebuggerStepThrough]
-        internal object EvalReduction (SCode sCode, object environment)
+        internal object EvalReduction (SCode sCode, Environment environment)
         {
             this.expression = sCode;
             this.environment = environment;
@@ -204,7 +204,7 @@ namespace Microcode
         }
 
         [DebuggerStepThrough]
-        internal object EvalNewSubproblem (SCode sCode, object environment, Continuation continuation)
+        internal object EvalNewSubproblem (SCode sCode, Environment environment, Continuation continuation)
         {
             this.expression = sCode;
             this.environment = environment;
@@ -223,7 +223,7 @@ namespace Microcode
         }
 
         [DebuggerStepThrough]
-        internal object EvalReuseSubproblem (SCode sCode, object environment, Continuation continuation)
+        internal object EvalReuseSubproblem (SCode sCode, Environment environment, Continuation continuation)
         {
             this.expression = sCode;
             this.environment = environment;
@@ -366,7 +366,16 @@ namespace Microcode
             }
         }
 
-        internal object Environment
+        internal SCode Expression
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.expression;
+            }
+        }
+
+        internal Environment Environment
         {
             [DebuggerStepThrough]
             get
@@ -463,7 +472,8 @@ namespace Microcode
         {
 
             SCode sarg0 = arg0 as SCode;
-            return interpreter.EvalReduction (sarg0 == null ? Quotation.Make (arg0) : sarg0, arg1);
+            Environment earg1 = arg1 as Environment;
+            return interpreter.EvalReduction (sarg0 == null ? Quotation.Make (arg0) : sarg0, earg1);
         }
  
         [SchemePrimitive ("SET-INTERRUPT-ENABLES!", 1)]

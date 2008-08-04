@@ -8,42 +8,95 @@ namespace Microcode
     {
         // return value is so this is an expression
         internal abstract object EvalStep (Interpreter interpreter, object etc);
+
+        static bool SelfEvaluating (object obj)
+        {
+
+            return (obj == null) 
+                || obj is char []
+                || obj is object []
+                || obj is char
+                || obj is double
+                || obj is int
+                || obj is long
+                || obj is Boolean
+                || obj is Complex
+                || obj is Cons 
+                || obj is Constant
+                || obj is Primitive
+                || obj is Ratnum
+                || obj is ReferenceTrap
+                || obj is ReturnCode
+                || obj is String
+                ;
+        }
+
+        // In this implementation, the evaluator only sees SCode
+        // and never sees self-evaluating objects.  To present the
+        // illusion of self-evaluating objects, we wrap them in
+        // SCode quotations when necessary and strip off the quotation
+        // when the objects are taken apart through the generic
+        // constructors.
+        static internal SCode EnsureSCode (object obj)
+        {
+            if (SelfEvaluating (obj))
+                return Quotation.Make (obj);
+            else {
+                SCode sobj = obj as SCode;
+                if (sobj == null) {
+                    throw new NotImplementedException ();
+                }
+                return sobj;
+            }
+        }
+
+        static internal object UnwrapQuoted (object obj)
+        {
+            Quotation qobj = obj as Quotation;
+            if (qobj == null)
+                return obj;
+            object quoted = qobj.Quoted;
+            return SelfEvaluating(quoted) ? quoted : obj;
+        }
     }
 
     sealed class Access : SCode, ISystemPair
     {
+        static long evaluationCount;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly string var;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode env;
 
-        public Access (SCode env, string name)
+        public Access (object env, string name)
         {
             this.var = name;
-            this.env = env;
+            this.env = EnsureSCode(env);
         }
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Access.evaluationCount += 1;
             return interpreter.EvalNewSubproblem (this.env, new AccessLookup (interpreter.Continuation, this.var));
         }
 
 
         #region ISystemPair Members
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
             get
             {
-                return this.env;
+                return UnwrapQuoted (this.env);
             }
             set
             {
                 throw new NotImplementedException();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCdr
         {
             get
@@ -76,7 +129,7 @@ namespace Microcode
             if (env == null)
                 env = InterpreterEnvironment.Global;
             object avalue;
-            LookupDisposition disp = env.LookupVariable (this.name, out avalue);
+            LookupDisposition disp = env.LookupVariable (0, this.name, out avalue);
             if (disp == LookupDisposition.OK)
                 return interpreter.Return (avalue);
             throw new NotImplementedException ();
@@ -89,8 +142,10 @@ namespace Microcode
     }
 
 
-    sealed class Assignment : SCode
+    sealed class Assignment : SCode, ISystemPair
     {
+        static long evaluationCount;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly string target;
 
@@ -103,6 +158,24 @@ namespace Microcode
             if (value == null) throw new ArgumentNullException ("value");
             this.target = target;
             this.value = value;
+        }
+
+        public Assignment (object target, object value)
+        {
+            Variable vtarget = target as Variable;
+            if (vtarget != null) {
+                this.target = vtarget.name;
+                this.value = EnsureSCode (value);
+            }
+            else {
+                string starget = target as String;
+                if (starget != null) {
+                    this.target = starget;
+                    this.value = EnsureSCode (value);
+                }
+                else
+                    throw new NotImplementedException ();
+            }
         }
 
         public string Name
@@ -121,13 +194,43 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Assignment.evaluationCount += 1;
             return interpreter.EvalNewSubproblem (this.value, new AssignContinue (interpreter.Continuation, this, interpreter.Environment));
         }
+
+        #region ISystemPair Members
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public object SystemPairCar
+        {
+            get
+            {
+                return new Variable (this.target);
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public object SystemPairCdr
+        {
+            get
+            {
+                return UnwrapQuoted (this.value);
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 
     sealed class AssignContinue : Subproblem<Assignment>
     {
-        public AssignContinue (Continuation next, Assignment expression, object environment)
+        public AssignContinue (Continuation next, Assignment expression, Environment environment)
             : base (next, expression, environment)
         {
         }
@@ -156,478 +259,31 @@ namespace Microcode
 
     }
 
-
-    sealed class Combination : SCode, ISystemVector
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode [] components;
-
-        public Combination (SCode [] components)
-        {
-            this.components = components;
-        }
-
-        public Combination(Cons components)
-        {
-            SCode[] comps = new SCode[components.Length()];
-            int i = 0;
-            while (components != null)
-            {
-                SCode component = (SCode)(components.Car);
-                comps[i] = component;
-                components = (Cons)(components.Cdr);
-                i += 1;
-            }
-            this.components = comps;
-        }
-
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            object environment = interpreter.Environment;
-            if (components.Length == 1)
-            {
-                return interpreter.EvalNewSubproblem (components [0], new CombinationApply (interpreter.Continuation, new object [] { }));
-            }
-            else
-                return interpreter.EvalNewSubproblem (components [components.Length - 1],
-                                                   new CombinationAccumulate (interpreter.Continuation, components,
-                                                                              null,
-                                                                              components.Length - 1,
-                                                                              environment));
-        }
-
-        #region ISystemVector Members
-
-        public int SystemVectorSize
-        {
-            get { return this.components.Length; }
-        }
-
-        public object SystemVectorRef (int index)
-        {
-            return this.components [index];
-        }
-
-        public object SystemVectorSet (int index, object newValue)
-        {
-            throw new NotImplementedException ();
-        }
-
-        #endregion
-    }
-
-    sealed class CombinationAccumulate : Continuation
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode [] components;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Cons values;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        int index;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object environment;
-
-        public CombinationAccumulate (Continuation next, SCode [] components, Cons values, int index, object environment)
-            : base (next)
-        {
-            this.components = components;
-            this.values = values;
-            this.index = index;
-            this.environment = environment;
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            if (this.index == 1)
-            {
-                object [] valuevector = new object [this.components.Length - 1];
-                Cons tail = this.values;
-                int scan = 1;
-                valuevector [0] = value;
-                while (tail != null)
-                {
-                    valuevector [scan++] = tail.Car;
-                    tail = (Cons) tail.Cdr;
-                }
-                return interpreter.EvalReuseSubproblem (this.components [0], this.environment, new CombinationApply (this.Parent, valuevector));
-            }
-            else
-                return interpreter.EvalReuseSubproblem (this.components [this.index - 1], this.environment,
-                                                   new CombinationAccumulate (this.Parent,
-                                                                              this.components,
-                                                                              new Cons (value, this.values),
-                                                                              this.index - 1,
-                                                                              this.environment));
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-    sealed class CombinationApply : Continuation
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object [] arguments;
-
-        public CombinationApply (Continuation next, object [] arguments)
-            : base (next)
-        {
-            this.arguments = arguments;
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.Apply (value, arguments);
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-
-    sealed class Combination1 : SCode, ISystemPair
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode rator;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode rand;
-
-        public Combination1 (SCode rator, SCode rand)
-        {
-            if (rator == null)
-                throw new ArgumentNullException ("rator");
-            if (rand == null)
-                throw new ArgumentNullException ("rand");
-            this.rator = rator;
-            this.rand = rand;
-        }
-
-        public Combination1 (object rator, object rand)
-        {
-            SCode srator = rator as SCode;
-            SCode srand = rand as SCode;
-            this.rator = (srator == null) ? Quotation.Make (rator) : srator;
-            this.rand = (srand == null) ? Quotation.Make (rand) : srand;
-        }
-
-        public SCode Operator
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.rator;
-            }
-        }
-
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            return interpreter.EvalNewSubproblem (this.rand, new Combination1First (interpreter.Continuation, this, interpreter.Environment));
-        }
-
-        #region ISystemPair Members
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCar
-        {
-            get
-            {
-                return this.rator;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCdr
-        {
-            get
-            {
-                return this.rand;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        #endregion
-    }
-
-    sealed class Combination1First : Subproblem<Combination1>
-    {
-        [DebuggerStepThrough]
-        public Combination1First (Continuation next, Combination1 expression, object environment)
-            : base (next, expression, environment)
-        {
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.EvalReuseSubproblem (this.Expression.Operator, this.Environment, new Combination1Apply (this.Parent, value));
-        }
-
-        public override int FrameSize
-        {
-            get { return 3; }
-        }
-
-        public override object FrameRef (int offset)
-        {
-            switch (offset)
-            {
-                case 0:
-                    return ReturnCode.COMB_1_PROCEDURE;
-                case 1:
-                    return this.Expression;
-                case 2:
-                    return this.Environment;
-                default:
-                    throw new NotImplementedException ();
-            }
-        }
-    }
-
-    sealed class Combination1Apply : Continuation
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object rand;
-
-        public Combination1Apply (Continuation next, object rand)
-            : base (next)
-        {
-            this.rand = rand;
-        }
- 
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.CallProcedure ((SCode) value, this.rand);
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-
-    class Combination2 : SCode, ISystemHunk3
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode rator;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode rand0;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode rand1;
-
-        public Combination2 (SCode rator, SCode rand0, SCode rand1)
-        {
-            if (rator == null)
-                throw new ArgumentNullException ("rator");
-            if (rand0 == null)
-                throw new ArgumentNullException ("rand0");
-            if (rand1 == null)
-                throw new ArgumentNullException ("rand1");
-            this.rator = rator;
-            this.rand0 = rand0;
-            this.rand1 = rand1;
-        }
-
-        public Combination2 (Hunk3 init)
-        {
-            this.rator = (SCode) init.Cxr0;
-            SCode cxr1 = init.Cxr1 as SCode;
-            this.rand0 = cxr1 == null ? Quotation.Make (init.Cxr1) : cxr1;
-            SCode cxr2 = init.Cxr2 as SCode;
-            this.rand1 = cxr2 == null ? Quotation.Make (init.Cxr2) : cxr2;
-        }
-
-        public static SCode Make (SCode rator, SCode rand0, SCode rand1)
-        {
-            return new Combination2 (rator, rand0, rand1);
-        }
-
-        public SCode Rand1
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.rand1;
-            }
-        }
-
-        public SCode Rator
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.rator;
-            }
-        }
-
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            return interpreter.EvalNewSubproblem (this.rand0, new Combination2First (interpreter.Continuation, this, interpreter.Environment));
-        }
-
-        #region ISystemHunk3 Members
-
-        public object SystemHunk3Cxr0
-        {
-            get
-            {
-                return rator;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        public object SystemHunk3Cxr1
-        {
-            get
-            {
-                return rand0;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        public object SystemHunk3Cxr2
-        {
-            get
-            {
-                return rand1;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        #endregion
-    }
-
-    sealed class Combination2First : Subproblem<Combination2>
-    {
-        public Combination2First (Continuation next, Combination2 expression, object environment)
-            : base (next, expression, environment)
-        {
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.EvalReuseSubproblem (this.Expression.Rand1, this.Environment, new Combination2Second (this.Parent, this.Expression, value, this.Environment));
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-    sealed class Combination2Second : Subproblem<Combination2>
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object rand0;
-
- 
-        public Combination2Second (Continuation next, Combination2 expression, object rand0, object environment)
-            : base (next, expression, environment)
-        {
-            this.rand0 = rand0;
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.EvalReuseSubproblem (this.Expression.Rator, this.Environment, new Combination2Apply (this.Parent, this.rand0, value));
-        }
-
-        public object Evaluated
-        {
-            get
-            {
-                return new object [] { rand0 };
-            }
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-    sealed class Combination2Apply : Continuation
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object rand0;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object rand1;
-
-        public Combination2Apply (Continuation next, object rand0, object rand1)
-            : base (next)
-        {
-            this.rand0 = rand0;
-            this.rand1 = rand1;
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.CallProcedure ((SCode) value, this.rand0, this.rand1);
-        }
-
-        public object Evaluated
-        {
-            get
-            {
-                return new object [] { rand0, rand1 };
-            }
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
     sealed class Comment : SCode, ISystemPair
     {
+        static long evaluationCount;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object text;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode code;
 
-        public Comment (SCode code, object text)
+        public Comment (object code, object text)
         {
             if (code == null) throw new ArgumentNullException ("code");
             // comment text can be null
-            this.code = code;
+            this.code = EnsureSCode(code);
             this.text = text;
         }
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Comment.evaluationCount += 1;
             return interpreter.EvalReduction (this.code);
         }
 
         #region ISystemPair Members
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
             get
@@ -639,12 +295,12 @@ namespace Microcode
                 throw new NotImplementedException ();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCdr
         {
             get
             {
-                return this.code;
+                return UnwrapQuoted(this.code);
             }
             set
             {
@@ -657,6 +313,8 @@ namespace Microcode
 
     sealed class Conditional : SCode, ISystemHunk3
     {
+        static long evaluationCount;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode predicate;
 
@@ -676,9 +334,17 @@ namespace Microcode
             this.alternative = alternative;
         }
 
-        public static SCode Make (SCode predicate, SCode consequent, SCode alternative)
+        public static SCode Make (object predicate, object consequent, object alternative)
         {
-            return new Conditional (predicate, consequent, alternative);
+            return new Conditional (EnsureSCode(predicate), EnsureSCode(consequent), EnsureSCode(alternative));
+        }
+
+        public static SCode Make (Hunk3 elements)
+        {
+            if (elements == null) throw new ArgumentNullException ("elements");
+            return new Conditional (SCode.EnsureSCode (elements.Cxr0), 
+                SCode.EnsureSCode (elements.Cxr1), 
+                SCode.EnsureSCode (elements.Cxr2));
         }
 
         public SCode Predicate
@@ -710,40 +376,41 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Conditional.evaluationCount += 1;
             return interpreter.EvalNewSubproblem (this.predicate, new ConditionalDecide (interpreter.Continuation, this, interpreter.Environment));
         }
 
         #region ISystemHunk3 Members
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr0
         {
             get
             {
-                return this.predicate;
+                return UnwrapQuoted (this.predicate);
             }
             set
             {
                 throw new NotImplementedException();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr1
         {
             get
             {
-                return this.consequent;
+                return UnwrapQuoted(this.consequent);
             }
             set
             {
                 throw new NotImplementedException();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr2
         {
             get
             {
-                return this.alternative;
+                return UnwrapQuoted(this.alternative);
             }
             set
             {
@@ -756,7 +423,7 @@ namespace Microcode
 
     sealed class ConditionalDecide : Subproblem<Conditional>
     {
-        public ConditionalDecide (Continuation next, Conditional expression, object environment)
+        public ConditionalDecide (Continuation next, Conditional expression, Environment environment)
             : base (next, expression, environment)
         {
         }
@@ -775,8 +442,9 @@ namespace Microcode
     }
 
 
-    sealed class Definition : SCode
+    sealed class Definition : SCode, ISystemPair
     {
+        static long evaluationCount;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly string name;
 
@@ -791,6 +459,13 @@ namespace Microcode
             this.value = value;
         }
 
+        public Definition (object name, object value)
+        {
+            if (name == null) throw new ArgumentNullException ("name");
+            this.name = (string) name;
+            this.value = EnsureSCode (value);
+        }
+
         public string Name
         {
             [DebuggerStepThrough]
@@ -802,20 +477,51 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Definition.evaluationCount += 1;
             return interpreter.EvalNewSubproblem (this.value, new DefineContinue (interpreter.Continuation, this, interpreter.Environment));
         }
+
+        #region ISystemPair Members
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public object SystemPairCar
+        {
+            get
+            {
+                return this.name;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public object SystemPairCdr
+        {
+            get
+            {
+                return UnwrapQuoted (this.value);
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 
     sealed class DefineContinue : Subproblem<Definition>
     {
-        public DefineContinue (Continuation next, Definition definition, object environment)
+        public DefineContinue (Continuation next, Definition definition, Environment environment)
             : base (next, definition, environment)
         {
         }
 
         internal override object Invoke (Interpreter interpreter, object value)
         {
-            LookupDisposition disp = Microcode.Environment.ToEnvironment(this.Environment).DefineVariable (this.Expression.Name, value);
+            LookupDisposition disp = this.Environment.DefineVariable (this.Expression.Name, value);
             // like MIT Scheme, discard old value and return name.
             if (disp == LookupDisposition.OK)
                return interpreter.Return (this.Expression.Name);
@@ -832,34 +538,37 @@ namespace Microcode
 
     sealed class Delay : SCode
     {
+        static long evaluationCount;
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
         readonly SCode body;
 
-        public Delay (SCode body)
+        public Delay (object body)
         {
-            this.body = body;
+            this.body = EnsureSCode(body);
         }
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Delay.evaluationCount += 1;
             return interpreter.Return (new Promise (this.body, interpreter.Environment));
         }
     }
 
     sealed class Disjunction : SCode
     {
+        static long evaluationCount;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode predicate;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode alternative;
 
-        public Disjunction (SCode predicate, SCode alternative)
+        public Disjunction (object predicate, object alternative)
         {
             if (predicate == null) throw new ArgumentNullException ("predicate");
             if (alternative == null) throw new ArgumentNullException ("alternative");
-            this.predicate = predicate;
-            this.alternative = alternative;
+            this.predicate = EnsureSCode(predicate);
+            this.alternative = EnsureSCode(alternative);
         }
 
         public SCode Alternative
@@ -873,13 +582,14 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Disjunction.evaluationCount += 1;
             return interpreter.EvalNewSubproblem (this.predicate, new DisjunctionDecide (interpreter.Continuation, this, interpreter.Environment));
         }
     }
 
     sealed class DisjunctionDecide : Subproblem<Disjunction>
     {
-        public DisjunctionDecide (Continuation next, Disjunction disjunction, object environment)
+        public DisjunctionDecide (Continuation next, Disjunction disjunction, Environment environment)
             : base (next, disjunction, environment)
         {
         }
@@ -939,11 +649,12 @@ namespace Microcode
 
     class Lambda : SCode, ISystemPair
     {
+        static long evaluationCount;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public readonly string [] formals;
+        readonly string [] formals;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public readonly SCode body;
+        readonly SCode body;
 
         public Lambda (SCode body, string [] formals)
         {
@@ -951,19 +662,24 @@ namespace Microcode
                 throw new ArgumentNullException ("body");
             if (formals == null)
                 throw new ArgumentNullException ("formals");
+            if (formals [0] == "guarded-system-loader")
+                throw new NotImplementedException ();
             this.body = body;
             this.formals = formals;
         }
 
         public Lambda (object body, object formals)
         {
-            SCode sbody = body as SCode;
+            if ((string) (((object []) formals) [0]) == "guarded-system-loader")
+                Debug.WriteLine ("Closing");
+
+            //SCode sbody = body as SCode;
 
             object [] cdrArray = (object []) formals;
             string [] sformals = new string [cdrArray.Length];
             for (int i = 0; i < sformals.Length; i++)
                 sformals [i] = (string) cdrArray [i];
-            this.body = (sbody == null) ? Quotation.Make (body) : sbody;
+            this.body = EnsureSCode (body);// (sbody == null) ? Quotation.Make (body) : sbody;
             this.formals = sformals;
         }
 
@@ -994,17 +710,20 @@ namespace Microcode
             }
         }
 
+        static int [] formalOffsetCount = new int [512 + 256];
         public int FormalOffset (string name)
         {
             for (int i = 0; i < formals.Length; i++)
-                //if (name == formals [i])
-                if (Object.ReferenceEquals (name, formals [i]))
+                if (Object.ReferenceEquals (name, formals [i])) {
+                    formalOffsetCount [i] += 1;
                     return i - 1;
+                }
             return -1;
         }
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Lambda.evaluationCount += 1;
             return interpreter.Return (new Closure (this, interpreter.Environment));
         }
 
@@ -1016,7 +735,7 @@ namespace Microcode
         {
             get
             {
-                return this.body;
+                return UnwrapQuoted (this.body);
             }
             set
             {
@@ -1040,176 +759,80 @@ namespace Microcode
         #endregion
     }
 
-    sealed class ExtendedLambda : Lambda
+    // You'd think this would inherit from Lambda, but 
+    // it is easier if it is disjoint.
+    sealed class ExtendedLambda : SCode, ISystemHunk3
     {
+        static long evaluationCount;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public readonly string [] formals;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public readonly SCode body;
+
         public readonly uint required;
 
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public readonly uint optional;
 
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public readonly bool rest;
 
-        public ExtendedLambda (SCode body, string [] formals, uint required, uint optional, bool rest)
-            : base (body, formals)
+        public ExtendedLambda (object body, string [] formals, uint required, uint optional, bool rest)
         {
+            this.body = EnsureSCode (body);
+            this.formals = formals;
             this.required = required;
             this.optional = optional;
             this.rest = rest;
         }
 
+        public ExtendedLambda (Hunk3 init)
+        {
+            object [] cdrArray = (object []) init.Cxr1;
+            string [] sformals = new string [cdrArray.Length];
+            for (int i = 0; i < sformals.Length; i++)
+                sformals [i] = (string) cdrArray [i];
+            this.body = EnsureSCode (init.Cxr0);
+            this.formals = sformals;
+            uint code = (uint)(int)(init.Cxr2);
+            this.optional = code & 0xFF;
+            this.required = (code >> 8) & 0xFF;
+            this.rest = ((code >> 16) & 0x1) == 0x1;
+        }
+
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            ExtendedLambda.evaluationCount += 1;
             return interpreter.Return (new ExtendedClosure (this, interpreter.Environment));
         }
-    }
 
-    sealed class PrimitiveCombination0 : SCode
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Primitive0 procedure;
-
-        public PrimitiveCombination0 (Primitive0 procedure)
-        {
-            if (procedure == null) throw new ArgumentNullException ("procedure");
-            this.procedure = procedure;
-        }
-
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            return interpreter.CallPrimitive (this.procedure);
-        }
-    }
-
-    sealed class PrimitiveCombination1 : SCode
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        Primitive1 procedure;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        SCode arg0;
-
-        PrimitiveCombination1 (Primitive1 procedure, SCode arg0)
-        {
-            this.procedure = procedure;
-            this.arg0 = arg0;
-        }
-
-        public static SCode Make (Primitive1 rator, SCode rand)
-        {
-            if (rator == null) throw new ArgumentNullException ("rator");
-            if (rand == null) throw new ArgumentNullException ("rand");
-            return new PrimitiveCombination1 (rator, rand);
-        }
-
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            return interpreter.EvalNewSubproblem (this.arg0, new PrimitiveCombination1Apply (interpreter.Continuation, this.procedure));
-        }
-    }
-
-    sealed class PrimitiveCombination1Apply : Continuation
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Primitive1 rator;
-
-        public PrimitiveCombination1Apply (Continuation next, Primitive1 rator)
-            : base (next)
-        {
-            this.rator = rator;
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.CallPrimitive (this.rator, value);
-        }
-
-        public Primitive1 Operator
+        public string Name
         {
             [DebuggerStepThrough]
             get
             {
-                return this.rator;
+                return this.formals [0];
             }
         }
 
-        public override int FrameSize
+        static int [] formalOffsetCount = new int [16];
+        public int FormalOffset (string name)
         {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-
-    class PrimitiveCombination2 : SCode, ISystemHunk3
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Primitive2 rator;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode rand0;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode rand1;
-
-        protected PrimitiveCombination2 (Primitive2 rator, SCode rand0, SCode rand1)
-        {
-            this.rator = rator;
-            this.rand0 = rand0;
-            this.rand1 = rand1;
+            for (int i = 0; i < formals.Length; i++)
+                if (Object.ReferenceEquals (name, formals [i])) {
+                    formalOffsetCount [i] += 1;
+                    return i - 1;
+                }
+            return -1;
         }
 
-        public Primitive2 Rator
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.rator;
-            }
-        }
-
-        public SCode Rand0
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.rand0;
-            }
-        }
-
-        public SCode Rand1
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.rand1;
-            }
-        }
-
-        public static SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
-        {
-            if (rator == null)
-                throw new ArgumentNullException ("rator");
-            if (rand0 == null)
-                throw new ArgumentNullException ("rand0");
-            if (rand1 == null)
-                throw new ArgumentNullException ("rand1");
-            return new PrimitiveCombination2 (rator, rand0, rand1);
-        }
-
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            return interpreter.EvalNewSubproblem (this.rand0, new PrimitiveCombination2First (interpreter.Continuation, this, interpreter.Environment));
-
-        }
 
         #region ISystemHunk3 Members
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr0
         {
             get
             {
-                return this.rator;
+                return UnwrapQuoted (this.body);
             }
             set
             {
@@ -1217,23 +840,26 @@ namespace Microcode
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr1
         {
+            [DebuggerStepThrough]
             get
             {
-                return this.rand0;
+                return this.formals;
             }
             set
             {
                 throw new NotImplementedException ();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr2
         {
             get
             {
-                return this.rand1;
+                return this.optional + (256 * (this.required + (this.rest ? 256 : 0)));
+
             }
             set
             {
@@ -1244,196 +870,9 @@ namespace Microcode
         #endregion
     }
 
-    sealed class PrimitiveCombination2First : Subproblem<PrimitiveCombination2>
-    {
-        public PrimitiveCombination2First (Continuation next, PrimitiveCombination2 expression, object environment)
-            : base (next, expression, environment)
-        {
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.EvalReuseSubproblem (this.Expression.Rand1, this.Environment, new PrimitiveCombination2Apply (this.Parent, this.Expression.Rator, value));
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-    sealed class PrimitiveCombination2Apply : Continuation
-    {
-        readonly Primitive2 rator;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object rand0;
-
-        public PrimitiveCombination2Apply (Continuation next, Primitive2 rator, object rand0)
-            : base (next)
-        {
-            this.rator = rator;
-            this.rand0 = rand0;
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.CallPrimitive (this.rator, this.rand0, value);
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-    sealed class PrimitiveCombination3 : SCode
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        Primitive3 procedure;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        SCode arg0;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        SCode arg1;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        SCode arg2;
-
-        public PrimitiveCombination3 (Primitive3 procedure, SCode arg0, SCode arg1, SCode arg2)
-        {
-            if (procedure == null) throw new ArgumentNullException ("procedure");
-            if (arg0 == null) throw new ArgumentNullException ("arg0");
-            if (arg1 == null) throw new ArgumentNullException ("arg1");
-            if (arg2 == null) throw new ArgumentNullException ("arg2");
-            this.procedure = procedure;
-            this.arg0 = arg0;
-            this.arg1 = arg1;
-            this.arg2 = arg2;
-        }
-
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            return interpreter.EvalNewSubproblem (this.arg0, new PrimitiveCombination3First (interpreter.Continuation, this, interpreter.Environment));
-        }
-
-        public Primitive3 Operator
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.procedure;
-            }
-        }
-
-        public SCode Operand0
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.arg0;
-            }
-        }
-
-        public SCode Operand1
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.arg1;
-            }
-        }
-
-        public SCode Operand2
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.arg2;
-            }
-        }
-
-        [SchemePrimitive ("PRIMITIVE-COMBINATION3?", 1)]
-        public static void IsPrimitiveCombination3 (Interpreter interpreter, object arg)
-        {
-            interpreter.Return (arg is PrimitiveCombination3);
-        }
-    }
-
-    sealed class PrimitiveCombination3First : Subproblem<PrimitiveCombination3>
-    {
-        public PrimitiveCombination3First (Continuation next, PrimitiveCombination3 expression, object environment)
-            : base (next, expression, environment)
-        {
-        }
-
- 
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-             return interpreter.EvalReuseSubproblem (this.Expression.Operand1, this.Environment, new PrimitiveCombination3Second (this.Parent, this.Expression, this.Environment, value));
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-    sealed class PrimitiveCombination3Second : Subproblem<PrimitiveCombination3>
-    {
-        readonly object rand0;
-
-        public PrimitiveCombination3Second (Continuation next, PrimitiveCombination3 expression, object environment, object rand0)
-            : base (next, expression, environment)
-        {
-            this.rand0 = rand0;
-        }
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.EvalReuseSubproblem (this.Expression.Operand2, this.Environment, new PrimitiveCombination3Apply (this.Parent, this.Expression.Operator, this.rand0, value));
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
-    sealed class PrimitiveCombination3Apply : Continuation
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Primitive3 rator;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object rand0;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object rand1;
-
-        public PrimitiveCombination3Apply (Continuation next, Primitive3 rator, object rand0, object rand1)
-            : base (next)
-        {
-            this.rator = rator;
-            this.rand0 = rand0;
-            this.rand1 = rand1;
-        }
-
-
-        internal override object Invoke (Interpreter interpreter, object value)
-        {
-            return interpreter.CallPrimitive (this.rator, this.rand0, this.rand1, value);
-        }
-
-        public override int FrameSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-    }
-
     sealed class Quotation : SCode, ISystemPair
     {
+        static int evaluationCount;
         // Space optimization.
         static Dictionary<object, Quotation> table = new Dictionary<object, Quotation> (8000);
         static Quotation QuoteNull;
@@ -1499,11 +938,12 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Quotation.evaluationCount += 1;
             return interpreter.Return (this.item);
         }
 
         #region ISystemPair Members
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
             get
@@ -1515,7 +955,7 @@ namespace Microcode
                 throw new NotImplementedException();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCdr
         {
             get
@@ -1557,20 +997,19 @@ namespace Microcode
 
     sealed class Sequence2 : SCode, ISystemPair
     {
+        static long evaluationCount;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode first;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode second;
 
-        public Sequence2 (SCode first, SCode second)
+        public Sequence2 (object first, object second)
         {
             if (first == null)
                 throw new ArgumentNullException ("first");
-            if (second == null)
-                throw new ArgumentNullException ("second");
-            this.first = first;
-            this.second = second;
+            this.first = EnsureSCode(first);
+            this.second = EnsureSCode(second);
         }
 
         public SCode First
@@ -1593,6 +1032,7 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Sequence2.evaluationCount += 1;
             return interpreter.EvalNewSubproblem (this.first, new Sequence2Second (interpreter.Continuation, this, interpreter.Environment));
         }
 
@@ -1603,7 +1043,7 @@ namespace Microcode
         {
             get
             {
-                return this.first ;
+                return UnwrapQuoted(this.first) ;
             }
             set
             {
@@ -1616,7 +1056,7 @@ namespace Microcode
         {
             get
             {
-                return this.second;
+                return UnwrapQuoted(this.second);
             }
             set
             {
@@ -1629,7 +1069,7 @@ namespace Microcode
 
     sealed class Sequence2Second : Subproblem<Sequence2>
     {
-        public Sequence2Second (Continuation next, Sequence2 sequence, object environment)
+        public Sequence2Second (Continuation next, Sequence2 sequence, Environment environment)
             : base (next, sequence, environment)
         {
         }
@@ -1648,6 +1088,7 @@ namespace Microcode
 
     sealed class Sequence3 : SCode, ISystemHunk3
     {
+        static long evaluationCount;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode first;
 
@@ -1657,7 +1098,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode third;
 
-        public Sequence3 (SCode first, SCode second, SCode third)
+        public Sequence3 (object first, object second, object third)
         {
             if (first == null)
                 throw new ArgumentNullException ("first");
@@ -1665,9 +1106,16 @@ namespace Microcode
                 throw new ArgumentNullException ("second");
             if (third == null)
                 throw new ArgumentNullException ("third");
-            this.first = first;
-            this.second = second;
-            this.third = third;
+            this.first = EnsureSCode(first);
+            this.second = EnsureSCode(second);
+            this.third = EnsureSCode(third);
+        }
+
+        public Sequence3 (Hunk3 init)
+        {
+            this.first = EnsureSCode (init.Cxr0);
+            this.second = EnsureSCode (init.Cxr1);
+            this.third = EnsureSCode (init.Cxr2);
         }
 
         public SCode First
@@ -1699,41 +1147,42 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            Sequence3.evaluationCount += 1;
             return interpreter.EvalNewSubproblem (this.first, 
                 new Sequence3Second (interpreter.Continuation, this, interpreter.Environment)); 
         }
 
         #region ISystemHunk3 Members
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr0
         {
             get
             {
-                return this.first;
+                return UnwrapQuoted(this.first);
             }
             set
             {
                 throw new NotImplementedException ();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr1
         {
             get
             {
-                return this.second;
+                return UnwrapQuoted(this.second);
             }
             set
             {
                 throw new NotImplementedException ();
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr2
         {
             get
             {
-                return this.third;
+                return UnwrapQuoted(this.third);
             }
             set
             {
@@ -1746,7 +1195,7 @@ namespace Microcode
 
     class Sequence3Second : Subproblem<Sequence3>
     {
-        public Sequence3Second (Continuation parent, Sequence3 expression, object environment)
+        public Sequence3Second (Continuation parent, Sequence3 expression, Environment environment)
             : base (parent, expression, environment)
         {
         }
@@ -1764,7 +1213,7 @@ namespace Microcode
 
     sealed class Sequence3Third : Subproblem<Sequence3>
     {
-        public Sequence3Third (Continuation next, Sequence3 expression, object environment)
+        public Sequence3Third (Continuation next, Sequence3 expression, Environment environment)
             : base (next, expression, environment)
         {
         }
@@ -1799,25 +1248,28 @@ namespace Microcode
 
         public override int FrameSize
         {
-            get { throw new NotImplementedException (); }
+            get { return 2; }
         }
     }
 
 
     sealed class TheEnvironment : SCode
     {
+        static long evaluationCount;
         public TheEnvironment ()
         {
         }
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
+            TheEnvironment.evaluationCount += 1;
             return interpreter.Return (interpreter.Environment);
         }
     }
 
     class Variable : SCode, ISystemHunk3
     {
+        static long evaluationCount;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public readonly string name;
 
@@ -1848,14 +1300,14 @@ namespace Microcode
 
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
-            //if (this.Name == string.Intern ("record-type-dispatch-tag"))
-            //{
+            Variable.evaluationCount += 1;
+            //if (this.Name == String.Intern("construct-normal-package-from-description")) {
             //    Debug.WriteLine ("FOOFOOFOO");
             //}
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
+            //Debug.WriteLineIf (Primitive.Noisy, this.Name);
             //Debug.WriteLine (this.Name);
             object value;
-            LookupDisposition disp = Environment.ToEnvironment (interpreter.Environment).LookupVariable (this.name, out value);
+            LookupDisposition disp = interpreter.Environment.LookupVariable (0, this.name, out value);
             //Debug.WriteLineIf (Primitive.Noisy, "   " + ((value == null) ? "()" : value.ToString()));
             if (disp == LookupDisposition.OK)
                 return interpreter.Return (value);

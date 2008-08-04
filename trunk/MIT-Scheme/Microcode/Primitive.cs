@@ -21,6 +21,7 @@ namespace Microcode
 
         protected readonly string name;
         readonly int arity;
+        protected long invocationCount;
 
         internal Primitive (string name, int arity)
         {
@@ -118,7 +119,7 @@ namespace Microcode
             AddPrimitives (typeof (Bignum));
             AddPrimitives (typeof (BitString));
             AddPrimitives (typeof (Cell));
-            AddPrimitives (typeof (Channel));
+            AddPrimitives (typeof (IOPrims));
             AddPrimitives (typeof (Character));
             AddPrimitives (typeof (Complex));
             AddPrimitives (typeof (ControlPoint));
@@ -257,6 +258,7 @@ namespace Microcode
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
             Debug.WriteLineIf (Primitive.Noisy, this.name);
+            this.invocationCount += 1;
            return this.method (interpreter);
         }
     }
@@ -274,6 +276,7 @@ namespace Microcode
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
             Debug.WriteLineIf (Primitive.Noisy, this.name);
+            this.invocationCount += 1;
             return this.method (interpreter, interpreter.PrimitiveArgument0);
         }
 
@@ -292,6 +295,7 @@ namespace Microcode
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
             Debug.WriteLineIf (Primitive.Noisy, this.name);
+            this.invocationCount += 1;
             return this.method (interpreter, interpreter.PrimitiveArgument0, interpreter.PrimitiveArgument1);
         }
     }
@@ -309,6 +313,7 @@ namespace Microcode
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
             Debug.WriteLineIf (Primitive.Noisy, this.name);
+            this.invocationCount += 1;
             return this.method (interpreter, interpreter.PrimitiveArgument0, interpreter.PrimitiveArgument1, interpreter.PrimitiveArgument2);
         }
 
@@ -327,6 +332,7 @@ namespace Microcode
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
             Debug.WriteLineIf (Primitive.Noisy, this.name);
+            this.invocationCount += 1;
             return this.method (interpreter, interpreter.Arguments);
         }
     }

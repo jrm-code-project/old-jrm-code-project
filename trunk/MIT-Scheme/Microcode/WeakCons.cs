@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 
 namespace Microcode
 {
@@ -18,8 +16,32 @@ namespace Microcode
             this.cdr = cdr;
         }
 
-        #region ISystemPair Members
+        public object Car
+        {
+            get
+            {
+                return this.car;
+            }
+            set
+            {
+                this.car = value;
+            }
+        }
 
+        public object Cdr
+        {
+            get
+            {
+                return this.cdr;
+            }
+            set
+            {
+                this.cdr = value;
+            }
+        }
+
+        #region ISystemPair Members
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
             get
@@ -33,7 +55,7 @@ namespace Microcode
                 this.car = value;
             }
         }
-
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCdr
         {
             get

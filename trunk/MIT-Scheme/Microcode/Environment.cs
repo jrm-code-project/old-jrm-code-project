@@ -36,19 +36,32 @@ namespace Microcode
             }
         }
 
+        static public Environment ToEnvironment (Environment env)
+        {
+            throw new NotImplementedException ();
+        }
+
         static public Environment ToEnvironment (object env)
         {
-            if (env is bool && (bool) env == false)
-                return Environment.Global;
+            Environment eenv = env as Environment;
+            if (eenv == null) {
+                if (env is bool && (bool) env == false)
+                    return Environment.Global;
+                else
+                    throw new NotImplementedException ();
+            }
             else
-                return (Environment) env;
+                return eenv;
         }
+
+        static protected int [] foundAtDepth = new int [128];
+        static protected int [] foundInAuxes = new int [128];
 
         public abstract void AddBinding (string name);
         public abstract LookupDisposition AssignVariable (string name, object value, out object oldValue);
         public abstract LookupDisposition DefineVariable (string name, object value);
         public abstract object SafeLookup (string name);
-        public abstract LookupDisposition LookupVariable (string name, out object value);
+        public abstract LookupDisposition LookupVariable (int depth, string name, out object value);
         public abstract object LookupType (string name);
         public abstract object Argument (int offset);
         public abstract ValueCell LexicalLoop (string name, int frame, int offset);
@@ -71,7 +84,7 @@ namespace Microcode
         public static object IsLexicalUnreferenceable (Interpreter interpreter, object env, object name)
         {
             object dummy;
-            switch (((Environment) env).LookupVariable ((string) name, out dummy)) {
+            switch (((Environment) env).LookupVariable (0, (string) name, out dummy)) {
                 case LookupDisposition.OK:
                     return interpreter.Return (false);
                 case LookupDisposition.Unassigned:
@@ -115,7 +128,7 @@ namespace Microcode
         public static object LexicalReference (Interpreter interpreter, object env, object name)
         {
             object value;
-            LookupDisposition disp = ((Environment) env).LookupVariable ((string) name, out value);
+            LookupDisposition disp = ((Environment) env).LookupVariable (0, (string) name, out value);
             if (disp != LookupDisposition.OK)
                 throw new NotImplementedException();
             return interpreter.Return (value);
@@ -125,7 +138,7 @@ namespace Microcode
         public static object SafeLexicalReference(Interpreter interpreter, object env, object name)
         {
             object value;
-            LookupDisposition disp = ((Environment) env).LookupVariable ((string) name, out value);
+            LookupDisposition disp = ToEnvironment (env).LookupVariable (0, (string) name, out value);
             if (disp == LookupDisposition.Unassigned)
                 return interpreter.Return (Constant.ExternalUnassigned);
             else
@@ -136,7 +149,7 @@ namespace Microcode
         public static object LexicalReferenceType (Interpreter interpreter, object env, object name)
         {
             object dummy;
-            switch (((Environment) env).LookupVariable ((string) name, out dummy)) {
+            switch (ToEnvironment(env).LookupVariable (0, (string) name, out dummy)) {
                 case LookupDisposition.OK:
                     return interpreter.Return (2);
                 case LookupDisposition.Macro:
@@ -207,7 +220,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override LookupDisposition LookupVariable (string name, out object value)
+        public override LookupDisposition LookupVariable (int depth, string name, out object value)
         {
             throw new NotImplementedException ();
         }
@@ -309,10 +322,11 @@ namespace Microcode
         }
 
 
-        public override LookupDisposition LookupVariable (string name, out object value)
+        public override LookupDisposition LookupVariable (int depth, string name, out object value)
         {
             ValueCell cell = null;
             if (this.bindings.TryGetValue (name, out cell) == true) {
+                foundAtDepth [depth] += 1;
                 object temp = cell.Value;
                 switch (ReferenceTrap.GetTrapKind (temp)) {
                     case TrapKind.NON_TRAP_KIND:
@@ -390,11 +404,11 @@ namespace Microcode
 
     class InterpreterEnvironment : Environment
     {
-        Closure closure;
+        IClosure closure;
         ValueCell [] framevector;
         Dictionary<string, ValueCell> incrementals;
 
-        public InterpreterEnvironment (Closure closure, object [] framevector)
+        public InterpreterEnvironment (IClosure closure, object [] framevector)
         {
             this.closure = closure;
             this.framevector = new ValueCell [framevector.Length];
@@ -496,12 +510,13 @@ namespace Microcode
             return LookupDisposition.OK;
         }
 
-        public override LookupDisposition LookupVariable (string name, out object value)
+        public override LookupDisposition LookupVariable (int depth, string name, out object value)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
                 ValueCell vcell = null;
                 if (incrementals != null && incrementals.TryGetValue (name, out vcell)) {
+                    foundInAuxes [depth] += 1;
                     object temp = vcell.Value;
                     switch (ReferenceTrap.GetTrapKind (temp)) {
                         case TrapKind.NON_TRAP_KIND:
@@ -528,9 +543,10 @@ namespace Microcode
                     }
                 }
                 else
-                    return Environment.ToEnvironment (this.Parent).LookupVariable (name, out value);
+                    return Environment.ToEnvironment (this.Parent).LookupVariable (depth + 1, name, out value);
             }
             else {
+                foundAtDepth [depth] += 1;
                 ValueCell vcell = framevector [offset];
                 object temp = vcell.Value;
                 switch (ReferenceTrap.GetTrapKind (temp)) {
