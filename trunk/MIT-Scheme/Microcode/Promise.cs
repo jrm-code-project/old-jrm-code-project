@@ -5,12 +5,13 @@ using System.Text;
 
 namespace Microcode
 {
-    class Promise : ISystemPair
+    class Promise : SchemeObject, ISystemPair
     {
                 object bodyOrValue;
         object environmentOrTrue;
 
         public Promise (SCode body, object environment)
+            : base (TC.DELAYED)
         {
             this.bodyOrValue = body;
             this.environmentOrTrue = environment;

@@ -144,6 +144,8 @@ namespace Microcode
             {
                 if (right is long)
                     return interpreter.Return ((long) left > (long) right);
+                else if (right is Bignum)
+                    return interpreter.Return ((Bignum) (long) left > (Bignum) right);
                 else
                     throw new NotImplementedException ();
             }
@@ -246,6 +248,8 @@ namespace Microcode
         [SchemePrimitive ("INTEGER-ADD-1", 1)]
         public static object Add1 (Interpreter interpreter, object arg)
         {
+            if (arg is int)
+                return interpreter.Return (Narrow (((long) (int) (arg)) + 1));
             throw new NotImplementedException ();
         }
 
@@ -296,7 +300,9 @@ namespace Microcode
             else if (left is Bignum)
             {
                 if (right is int)
-                    return interpreter.Return (Bignum.ToInteger (Bignum.Quotient ((Bignum) (left), (Bignum) (long) (int) (right))));
+                    return interpreter.Return (Bignum.ToInteger (Bignum.Quotient ((Bignum) left, (Bignum) (long) (int) right)));
+                else if (right is long)
+                    return interpreter.Return (Bignum.ToInteger (Bignum.Quotient ((Bignum) left, (Bignum) (long) right)));
                 else
                     throw new NotImplementedException ();
             }

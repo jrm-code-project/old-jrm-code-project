@@ -6,11 +6,12 @@ using System.Text;
 
 namespace Microcode
 {
-    sealed class Record: ISystemPair
+    sealed class Record: SchemeObject, ISystemPair
     {
         object [] slots;
 
         public Record (object [] slots)
+            : base (TC.RECORD)
         {
             this.slots = (object []) slots.Clone ();
         }

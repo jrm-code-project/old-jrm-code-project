@@ -41,6 +41,11 @@ namespace Microcode
             this.bigit = (high << 31) + low;
         }
 
+        static public explicit operator BignumDigit (int n)
+        {
+            return new BignumDigit (n);
+        }
+
         static public explicit operator BignumDigit (long n)
         {
             return new BignumDigit (n);
@@ -109,6 +114,11 @@ namespace Microcode
         static public bool operator == (BignumDigit left, BignumDigit right)
         {
             return left.ToLong () == right.ToLong ();
+        }
+
+        static public BignumDigit operator << (BignumDigit left, int right)
+        {
+            return new BignumDigit ((left.ToLong ()) << right);
         }
 
         static public bool operator != (BignumDigit left, int right)
@@ -571,6 +581,36 @@ namespace Microcode
                 r [scan_r] = (BignumDigit) (r [scan_r].ToLong () + carry.ToLong ());
             }
             return r.Trim ();
+        }
+
+        static public bool operator > (Bignum left, Bignum right)
+        {
+            if (left.IsNegative) {
+                if (right.IsNegative) {
+                    throw new NotImplementedException ();
+                }
+                return false;
+            }
+            else if (right.IsNegative) {
+                return true;
+            }
+            else
+                return bignum_compare_unsigned (left, right) == bignum_comparison.greater;
+        }
+
+        static public bool operator < (Bignum left, Bignum right)
+        {
+            if (left.IsNegative) {
+                if (right.IsNegative) {
+                    throw new NotImplementedException ();
+                }
+                return true;
+            }
+            else if (right.IsNegative) {
+                return false;
+            }
+            else
+                return bignum_compare_unsigned (left, right) == bignum_comparison.less;
         }
 
         // Note, bignums must be normalized (no leading zeros in representation)

@@ -58,12 +58,13 @@ namespace Microcode
         static protected int [] foundInAuxes = new int [128];
 
         public abstract void AddBinding (string name);
+        public abstract ValueCell [] Argvector { get; }
         public abstract LookupDisposition AssignVariable (string name, object value, out object oldValue);
         public abstract LookupDisposition DefineVariable (string name, object value);
         public abstract object SafeLookup (string name);
         public abstract LookupDisposition LookupVariable (int depth, string name, out object value);
         public abstract object LookupType (string name);
-        public abstract object Argument (int offset);
+        public abstract LookupDisposition Argument (int offset, out object value);
         public abstract ValueCell LexicalLoop (string name, int frame, int offset);
         public abstract object Lexical (string name, int frame, int offset);
         public abstract ValueCell ValueCell (string name);
@@ -215,6 +216,11 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
+        public override ValueCell [] Argvector
+        {
+            get { throw new NotImplementedException (); }
+        }
+
         public override LookupDisposition DefineVariable (string name, object value)
         {
             throw new NotImplementedException ();
@@ -235,7 +241,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override object Argument (int offset)
+        public override LookupDisposition Argument (int offset, out object value)
         {
             throw new NotImplementedException ();
         }
@@ -279,6 +285,11 @@ namespace Microcode
             ValueCell cell = null;
             this.bindings.TryGetValue (name, out cell);
             return cell;
+        }
+
+        public override ValueCell [] Argvector
+        {
+            get { return null; }
         }
 
         public override void LinkVariable (string name, ValueCell cell)
@@ -386,7 +397,7 @@ namespace Microcode
 
         }
 
-        public override object Argument (int offset)
+        public override LookupDisposition Argument (int offset, out object value)
         {
             throw new NotImplementedException ();
         }
@@ -404,36 +415,40 @@ namespace Microcode
 
     class InterpreterEnvironment : Environment
     {
-        IClosure closure;
         ValueCell [] framevector;
         Dictionary<string, ValueCell> incrementals;
 
-        public InterpreterEnvironment (IClosure closure, object [] framevector)
-        {
-            this.closure = closure;
-            this.framevector = new ValueCell [framevector.Length];
-
-            for (int i = 0; i < framevector.Length; i++)
-            {
-                this.framevector [i] = new ValueCell (framevector [i]);
-            }
-        }
+        //public InterpreterEnvironment (IClosure closure, object [] framevector)
+        //{
+        //    this.closure = closure;
+        //    this.framevector = new ValueCell [framevector.Length];
+        //    if (framevector.Length != closure.Lambda.Formals.Length) {
+        //        throw new NotImplementedException ();
+        //    }
+        //    for (int i = 0; i < framevector.Length; i++) {
+        //        this.framevector [i] = new ValueCell (framevector [i]);
+        //    }
+        //}
 
         public InterpreterEnvironment (object [] framevector)
         {
-            this.closure = (Closure) (framevector [0]);
-            this.framevector = new ValueCell [framevector.Length - 1];
+            // Sanity check.
+            if (framevector.Length != ((IClosure)(framevector[0])).Lambda.Formals.Length) {
+                throw new NotImplementedException ();
+            }   
+            
+            //throw new NotImplementedException ();
+            // this.closure = (IClosure) (framevector [0]);
+            this.framevector = new ValueCell [framevector.Length];
 
-            for (int i = 0; i < framevector.Length - 1; i++)
-            {
-                this.framevector [i] = new ValueCell ();
-                this.framevector [i].Assign (framevector [i + 1]);
+            for (int i = 0; i < framevector.Length; i++) {
+                this.framevector [i] = new ValueCell (framevector [i]);
             }
         }
 
         public override ValueCell ValueCell (string name)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = ((IClosure) (this.framevector [0].Value)).FormalOffset (name);
             if (offset == -1)
             {
                 ValueCell vcell = null;
@@ -448,7 +463,7 @@ namespace Microcode
 
         public override void AddBinding (string name)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = ((IClosure) (this.framevector [0])).FormalOffset (name);
             if (offset == -1)
             {
                 if (incrementals == null)
@@ -458,9 +473,14 @@ namespace Microcode
             }
         }
 
+        public override ValueCell [] Argvector
+        {
+            get { return this.framevector; }
+        }
+
         public override void LinkVariable (string name, ValueCell cell)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = ((IClosure) (this.framevector [0].Value)).FormalOffset (name);
             if (offset == -1)
             {
                 if (incrementals == null)
@@ -473,7 +493,7 @@ namespace Microcode
 
         public override LookupDisposition AssignVariable (string name, object value, out object oldValue)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = ((IClosure) (this.framevector [0].Value)).FormalOffset (name);
             if (offset == -1)
             {
                 ValueCell vcell = null;
@@ -492,7 +512,7 @@ namespace Microcode
 
         public override LookupDisposition DefineVariable (string name, object value)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = ((IClosure) (this.framevector [0].Value)).FormalOffset (name);
             if (offset == -1) {
                 ValueCell vcell = null;
                 if (incrementals != null && incrementals.TryGetValue (name, out vcell)) {
@@ -512,7 +532,7 @@ namespace Microcode
 
         public override LookupDisposition LookupVariable (int depth, string name, out object value)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = ((IClosure) (this.framevector [0].Value)).FormalOffset (name);
             if (offset == -1) {
                 ValueCell vcell = null;
                 if (incrementals != null && incrementals.TryGetValue (name, out vcell)) {
@@ -525,15 +545,15 @@ namespace Microcode
 
                         case TrapKind.TRAP_UNASSIGNED:
                             value = null;
-                            throw new NotImplementedException ();
+                            return LookupDisposition.Unassigned;
 
                         case TrapKind.TRAP_UNBOUND:
                             value = null;
-                            throw new NotImplementedException ();
+                            return LookupDisposition.Unbound;
 
                         case TrapKind.TRAP_MACRO:
                             value = temp;
-                            throw new NotImplementedException ();
+                            return LookupDisposition.Macro;
 
                         case TrapKind.TRAP_COMPILER_CACHED:
                             throw new NotImplementedException ();
@@ -577,7 +597,7 @@ namespace Microcode
 
         public override object SafeLookup (string name)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = ((IClosure) (this.framevector [0])).FormalOffset (name);
             if (offset == -1) {
                 ValueCell vcell = null;
                 if (incrementals != null && incrementals.TryGetValue (name, out vcell))
@@ -612,9 +632,33 @@ namespace Microcode
 
         // Variant of Lookup.  If variable is bound in the nearest environment,
         // it cannot be shadowed.  Just grab it.
-        public override object Argument (int offset)
+        public override LookupDisposition Argument (int offset, out object value)
         {
-            return framevector [offset].Value;
+            ValueCell vcell = framevector [offset];
+            object temp = vcell.Value;
+            switch (ReferenceTrap.GetTrapKind (temp)) {
+                case TrapKind.NON_TRAP_KIND:
+                    value = temp;
+                    return LookupDisposition.OK;
+
+                case TrapKind.TRAP_UNASSIGNED:
+                    value = null;
+                    return LookupDisposition.Unassigned;
+
+                case TrapKind.TRAP_UNBOUND:
+                    value = null;
+                    return LookupDisposition.Unbound;
+
+                case TrapKind.TRAP_MACRO:
+                    value = temp;
+                    return LookupDisposition.Macro;
+
+                case TrapKind.TRAP_COMPILER_CACHED:
+                    throw new NotImplementedException ();
+
+                default:
+                    throw new NotImplementedException ();
+            }
         }
 
         public override ValueCell LexicalLoop (string name, int frame, int offset)
@@ -637,12 +681,20 @@ namespace Microcode
             return vcell.Value;
         }
 
+        public IClosure Closure
+        {
+            get
+            {
+                return (IClosure) (this.framevector [0].Value);
+            }
+        }
+
         public object Parent
         {
             [DebuggerStepThrough]
             get
             {
-                return this.closure.Environment;
+                return ((IClosure) (this.framevector [0].Value)).Environment;
             }
         }
     }

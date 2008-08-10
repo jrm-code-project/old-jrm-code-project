@@ -11,11 +11,13 @@ namespace Microcode
         readonly SCode [] components;
 
         public Combination (SCode [] components)
+            : base (TC.COMBINATION)
         {
             this.components = components;
         }
 
         public Combination (object [] components)
+            : base (TC.COMBINATION)
         {
             SCode[] comps = new SCode [components.Length];
             for (int i = 0; i < components.Length; i++)
@@ -24,6 +26,7 @@ namespace Microcode
         }
 
         public Combination(Cons components)
+            : base (TC.COMBINATION)
         {
             SCode[] comps = new SCode[components.Length()];
             int i = 0;
@@ -70,6 +73,14 @@ namespace Microcode
         }
 
         #endregion
+
+        internal override SCode Optimize (CompileTimeEnvironment ctenv)
+        {
+            SCode [] opt = new SCode [this.components.Length];
+            for (int i = 0; i < this.components.Length; i++)
+                opt [i] = this.components [i].Optimize (ctenv);
+            return new Combination (opt);
+        }
     }
 
     sealed class CombinationAccumulate : Continuation
@@ -158,6 +169,7 @@ namespace Microcode
         readonly SCode rand;
 
         public Combination1 (SCode rator, SCode rand)
+            :base (TC.COMBINATION_1)
         {
             if (rator == null)
                 throw new ArgumentNullException ("rator");
@@ -168,6 +180,7 @@ namespace Microcode
         }
 
         public Combination1 (object rator, object rand)
+            : base (TC.COMBINATION_1)
         {
             this.rator = EnsureSCode (rator);
             this.rand = EnsureSCode (rand);
@@ -230,6 +243,12 @@ namespace Microcode
         }
 
         #endregion
+
+        internal override SCode Optimize (CompileTimeEnvironment ctenv)
+        {
+            return new Combination1 (this.rator.Optimize (ctenv),
+                this.rand.Optimize (ctenv));
+        }
     }
 
     sealed class Combination1First : Subproblem<Combination1>
@@ -302,6 +321,7 @@ namespace Microcode
         readonly SCode rand1;
 
         public Combination2 (object rator, object rand0, object rand1)
+            : base (TC.COMBINATION_2)
         {
             this.rator = EnsureSCode(rator);
             this.rand0 = EnsureSCode (rand0);
@@ -309,6 +329,7 @@ namespace Microcode
         }
 
         public Combination2 (Hunk3 init)
+            : base (TC.COMBINATION_2)
         {
             this.rator = EnsureSCode (init.Cxr0);
             this.rand0 = EnsureSCode (init.Cxr1);
@@ -392,6 +413,13 @@ namespace Microcode
         }
 
         #endregion
+
+        internal override SCode Optimize (CompileTimeEnvironment ctenv)
+        {
+            return new Combination2 (this.rator.Optimize (ctenv),
+                                     this.rand0.Optimize (ctenv),
+                                     this.rand1.Optimize (ctenv));
+        }
     }
 
     sealed class Combination2First : Subproblem<Combination2>
@@ -484,6 +512,7 @@ namespace Microcode
         readonly Primitive0 procedure;
 
         public PrimitiveCombination0 (Primitive0 procedure)
+            : base (TC.PCOMB0)
         {
             if (procedure == null) throw new ArgumentNullException ("procedure");
             this.procedure = procedure;
@@ -493,6 +522,11 @@ namespace Microcode
         {
             PrimitiveCombination0.evaluationCount += 1;
             return interpreter.CallPrimitive (this.procedure);
+        }
+
+        internal override SCode Optimize (CompileTimeEnvironment ctenv)
+        {
+            return this;
         }
     }
 
@@ -506,6 +540,7 @@ namespace Microcode
         SCode arg0;
 
         PrimitiveCombination1 (Primitive1 procedure,  SCode arg0)
+            : base (TC.PCOMB1)
         {
             this.procedure = procedure;
             this.arg0 = arg0;
@@ -540,6 +575,12 @@ namespace Microcode
             {
                 return this.arg0;
             }
+        }
+
+        internal override SCode Optimize (CompileTimeEnvironment ctenv)
+        {
+            return new PrimitiveCombination1 (this.procedure,
+                this.arg0.Optimize (ctenv));
         }
     }
 
@@ -578,6 +619,10 @@ namespace Microcode
     class PrimitiveCombination2 : SCode, ISystemHunk3
     {
         static long evaluationCount;
+        static long rand0Variable;
+        static long rand0Quoted;
+        static long rand1Variable;
+        static long rand1Quoted;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly Primitive2 rator;
 
@@ -588,6 +633,7 @@ namespace Microcode
         readonly SCode rand1;
 
         protected PrimitiveCombination2 (Primitive2 rator, object rand0, object rand1)
+            : base (TC.PCOMB2)
         {
             this.rator = rator;
             this.rand0 = EnsureSCode(rand0);
@@ -628,9 +674,22 @@ namespace Microcode
             return new PrimitiveCombination2 (rator, rand0, rand1);
         }
 
+        public static SCode Make (Hunk3 init)
+        {
+            return Make ((Primitive2) init.Cxr0, init.Cxr1, init.Cxr2);
+        }
+
         internal override object EvalStep (Interpreter interpreter, object etc)
         {
             PrimitiveCombination2.evaluationCount += 1;
+            if (this.rand0 is Quotation)
+                PrimitiveCombination2.rand0Quoted += 1;
+            else if (this.rand0 is Variable)
+                PrimitiveCombination2.rand0Variable += 1;
+            if (this.rand1 is Quotation)
+                PrimitiveCombination2.rand1Quoted += 1;
+            else if (this.rand1 is Variable)
+                PrimitiveCombination2.rand1Variable += 1;
             return interpreter.EvalNewSubproblem (this.rand0, new PrimitiveCombination2First (interpreter.Continuation, this, interpreter.Environment));
 
         }
@@ -674,6 +733,13 @@ namespace Microcode
         }
 
         #endregion
+
+        internal override SCode Optimize (CompileTimeEnvironment ctenv)
+        {
+            return new PrimitiveCombination2 (this.rator,
+                                              this.rand0.Optimize (ctenv),
+                                              this.rand1.Optimize (ctenv));
+        }
     }
 
     sealed class PrimitiveCombination2First : Subproblem<PrimitiveCombination2>
@@ -736,6 +802,7 @@ namespace Microcode
         SCode arg2;
 
         public PrimitiveCombination3 (Primitive3 procedure, object arg0, object arg1, object arg2)
+            : base (TC.PCOMB3)
         {
             if (procedure == null) throw new ArgumentNullException ("procedure");
             this.procedure = procedure;
@@ -790,6 +857,14 @@ namespace Microcode
         public static void IsPrimitiveCombination3 (Interpreter interpreter, object arg)
         {
             interpreter.Return (arg is PrimitiveCombination3);
+        }
+
+        internal override SCode Optimize (CompileTimeEnvironment ctenv)
+        {
+            return new PrimitiveCombination3 (this.procedure,
+                this.Operand0.Optimize (ctenv),
+                this.Operand1.Optimize (ctenv),
+                this.Operand2.Optimize (ctenv));
         }
     }
 

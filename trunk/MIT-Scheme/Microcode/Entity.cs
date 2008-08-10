@@ -10,6 +10,7 @@ namespace Microcode
         object second;
 
         public Entity (object first, object second)
+            : base (TC.ENTITY)
         {
             this.first = first;
             this.second = second;
@@ -57,6 +58,11 @@ namespace Microcode
         public static object IsEntity (Interpreter interpreter, object arg)
         {
             return interpreter.Return (arg is Entity);
+        }
+
+        internal override SCode Optimize (CompileTimeEnvironment ctenv)
+        {
+            throw new NotImplementedException ();
         }
     }
 }
