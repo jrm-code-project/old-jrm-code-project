@@ -121,6 +121,9 @@ namespace Microcode
         SCode expression;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        ValueCell [] argvector;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Environment environment;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -150,7 +153,8 @@ namespace Microcode
         public Termination Start (SCode initialForm)
         {
             this.continuation = new ExitInterpreter ();
-            this.expression = initialForm;
+            this.expression = initialForm.Optimize(new CompileTimeEnvironment(null));
+            this.argvector = null;
             this.environment = Environment.Global;
             this.history = FixedObjectsVector.TheDummyHistory;
 
@@ -172,7 +176,7 @@ namespace Microcode
             // than a statement so we chain the return value
             // around in case we think of a use in the
             // future.
-            object etc = null;
+            object etc = this.argvector;
             while (true)
                 etc = this.expression.EvalStep (this, etc);
         }
@@ -182,16 +186,17 @@ namespace Microcode
         {
             this.expression = sCode;
             this.history.NewReduction (this.expression, this.environment);
-            return null;
+            return this.argvector;
         }
 
         [DebuggerStepThrough]
         internal object EvalReduction (SCode sCode, Environment environment)
         {
             this.expression = sCode;
+            this.argvector = environment.Argvector;
             this.environment = environment;
             this.history.NewReduction (this.expression, this.environment);
-            return null;
+            return environment.Argvector;
         }
 
         [DebuggerStepThrough]
@@ -200,17 +205,18 @@ namespace Microcode
             this.expression = sCode;
             this.continuation = continuation;
             this.history.NewSubproblem (sCode, this.environment);
-            return null;
+            return this.argvector;
         }
 
         [DebuggerStepThrough]
         internal object EvalNewSubproblem (SCode sCode, Environment environment, Continuation continuation)
         {
             this.expression = sCode;
+            this.argvector = environment.Argvector;
             this.environment = environment;
             this.continuation = continuation;
             this.history.NewSubproblem (sCode, environment);
-            return null;
+            return environment.Argvector;
         }
 
         [DebuggerStepThrough]
@@ -219,17 +225,18 @@ namespace Microcode
             this.expression = sCode;
             this.continuation = continuation;
             this.history.ReuseSubproblem (sCode, this.environment);
-            return null;
+            return this.argvector;
         }
 
         [DebuggerStepThrough]
         internal object EvalReuseSubproblem (SCode sCode, Environment environment, Continuation continuation)
         {
             this.expression = sCode;
+            this.argvector = environment.Argvector;     
             this.environment = environment;
             this.continuation = continuation;
             this.history.ReuseSubproblem (sCode, environment);
-            return null;
+            return environment.Argvector;
         }
 
 
@@ -240,7 +247,7 @@ namespace Microcode
             {
                 this.expression = (SCode) rator;
                 this.arguments = rands;
-                return this.expression;
+                return this.argvector;
             }
             else switch (primrator.Arity)
                 {
@@ -255,7 +262,7 @@ namespace Microcode
                     default:
                         this.expression = (SCode) rator;
                         this.arguments = rands;
-                        return this.expression;
+                        return null;
                 }
         }
 
@@ -317,7 +324,7 @@ namespace Microcode
             {
                 this.expression = rator;
                 this.arguments = new object [] { rand0, rand1 };
-                return rator;
+                return null;
             }
             else if (primval.Arity == 2)
                 return CallPrimitive ((Primitive2) primval, rand0, rand1);
@@ -333,7 +340,7 @@ namespace Microcode
             {
                 this.expression = rator;
                 this.arguments = new object [] { rand0, rand1, rand2 };
-                return rator;
+                return null;
             }
             else if (primval.Arity == 3)
                 return CallPrimitive ((Primitive3) primval, rand0, rand1, rand2);
@@ -372,6 +379,15 @@ namespace Microcode
             get
             {
                 return this.expression;
+            }
+        }
+
+        internal ValueCell [] Argvector
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.argvector;
             }
         }
 
@@ -470,10 +486,12 @@ namespace Microcode
         [SchemePrimitive ("SCODE-EVAL", 2)]
         public static object ScodeEval (Interpreter interpreter, object arg0, object arg1)
         {
-
-            SCode sarg0 = arg0 as SCode;
-            Environment earg1 = arg1 as Environment;
-            return interpreter.EvalReduction (sarg0 == null ? Quotation.Make (arg0) : sarg0, earg1);
+            Environment env = Environment.ToEnvironment (arg1);
+            CompileTimeEnvironment ctenv = (env is InterpreterEnvironment) 
+                ? new CompileTimeEnvironment (((InterpreterEnvironment) env).Closure.Lambda.Formals)
+                : new CompileTimeEnvironment (null);
+            SCode sarg0 = SCode.EnsureSCode (arg0).Optimize(ctenv);
+            return interpreter.EvalReduction (sarg0, env);
         }
  
         [SchemePrimitive ("SET-INTERRUPT-ENABLES!", 1)]

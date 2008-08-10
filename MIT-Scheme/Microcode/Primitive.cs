@@ -17,15 +17,16 @@ namespace Microcode
     {
         public static bool Noisy = false;
         // Global table mapping names to primitive procedures.
-        static Dictionary<String, Primitive> primitiveTable = new Dictionary<String, Primitive> ();
+        static Dictionary<string, Primitive> primitiveTable = new Dictionary<string, Primitive> ();
 
         protected readonly string name;
         readonly int arity;
         protected long invocationCount;
 
         internal Primitive (string name, int arity)
+            : base (TC.PRIMITIVE)
         {
-            this.name = name.ToUpperInvariant();
+            this.name = name;
             this.arity = arity;
         }
 
@@ -43,7 +44,7 @@ namespace Microcode
             return "#<PRIMITIVE " + this.name + " " + this.arity.ToString (CultureInfo.InvariantCulture) + ">";
         }
 
-        static string CanonicalizeName (string name)
+	static string CanonicalizeName (string name)
         {
             return String.Intern (name.ToUpperInvariant());
         }
@@ -151,7 +152,7 @@ namespace Microcode
         internal static Primitive Find (string name)
         {
             Primitive value;
-            if (primitiveTable.TryGetValue (CanonicalizeName (name), out value) == true) {
+            if (primitiveTable.TryGetValue (CanonicalizeName(name), out value) == true) {
                     return value;
             }
             throw new NotImplementedException ();
@@ -160,7 +161,7 @@ namespace Microcode
         internal static Primitive Find (string name, int arity)
         {
             Primitive value;
-            if (primitiveTable.TryGetValue (CanonicalizeName (name), out value) == true) {
+            if (primitiveTable.TryGetValue (CanonicalizeName(name), out value) == true) {
                 // found one, but wrong arity
                 if (value.Arity == arity)
                     return value;
@@ -221,8 +222,8 @@ namespace Microcode
         public static object GetPrimitiveAddress (Interpreter interpreter, object arg0, object arg1)
         {
             if (arg1 is int)
-                return interpreter.Return (Find ((string) (arg0), (int) (arg1)));
-            return interpreter.Return (Find ((string) (arg0)));
+                return interpreter.Return (Find ((string) arg0, (int) arg1));
+            return interpreter.Return (Find ((string) arg0));
         }
 
         [SchemePrimitive ("GET-PRIMITIVE-NAME", 1)]
@@ -243,13 +244,21 @@ namespace Microcode
             return interpreter.Return (((Primitive) (arg)).Arity);
         }
 
+        internal override object EvalStep (Interpreter interpreter, object etc)
+        {
+            throw new NotImplementedException ();
+        }
 
+        internal override SCode Optimize (CompileTimeEnvironment ctenv)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     sealed class Primitive0 : Primitive
     {
         PrimitiveMethod0 method;
-        public Primitive0 (String name, PrimitiveMethod0 method)
+        public Primitive0 (string name, PrimitiveMethod0 method)
             : base (name, 0)
         {
             this.method = method;
@@ -259,7 +268,7 @@ namespace Microcode
         {
             Debug.WriteLineIf (Primitive.Noisy, this.name);
             this.invocationCount += 1;
-           return this.method (interpreter);
+            return this.method (interpreter);
         }
     }
 
@@ -267,7 +276,7 @@ namespace Microcode
     {
         PrimitiveMethod1 method;
 
-        public Primitive1 (String name, PrimitiveMethod1 method)
+        public Primitive1 (string name, PrimitiveMethod1 method)
             : base (name, 1)
         {
             this.method = method;
@@ -286,7 +295,7 @@ namespace Microcode
     {
         PrimitiveMethod2 method;
 
-        public Primitive2 (String name, PrimitiveMethod2 method)
+        public Primitive2 (string name, PrimitiveMethod2 method)
             : base (name, 2)
         {
             this.method = method;
@@ -304,7 +313,7 @@ namespace Microcode
     {
         PrimitiveMethod3 method;
 
-        public Primitive3 (String name, PrimitiveMethod3 method)
+        public Primitive3 (string name, PrimitiveMethod3 method)
             : base (name, 3)
         {
             this.method = method;
@@ -323,7 +332,7 @@ namespace Microcode
     {
         PrimitiveMethod method;
 
-        public PrimitiveN (String name, int arity, PrimitiveMethod method)
+        public PrimitiveN (string name, int arity, PrimitiveMethod method)
             : base (name, arity)
         {
             this.method = method;

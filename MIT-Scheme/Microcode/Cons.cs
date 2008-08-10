@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    sealed class Cons: ISystemPair
+    sealed class Cons: SchemeObject, ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object car;
@@ -12,6 +12,7 @@ namespace Microcode
         object cdr;
 
         public Cons (object car, object cdr)
+            : base (TC.LIST)
         {
             this.car = car;
             this.cdr = cdr;

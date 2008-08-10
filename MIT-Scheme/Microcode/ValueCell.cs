@@ -27,6 +27,7 @@ namespace Microcode
 
         public object Value
         {
+            [DebuggerStepThrough]
             get
             {
                         return this.val;

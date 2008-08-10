@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    sealed class Constant
+    sealed class Constant : SchemeObject
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static object sharpT = true;
@@ -30,6 +30,7 @@ namespace Microcode
         string name;
 
         private Constant (string name)
+            : base (TC.CONSTANT)
         {
             this.name = name;
         }

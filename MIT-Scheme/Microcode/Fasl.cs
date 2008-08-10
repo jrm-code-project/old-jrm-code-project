@@ -386,14 +386,16 @@ namespace Microcode
 
         public ExtendedLambda ReadExtendedLambda (uint location)
         {
-            string [] second = (string []) ReadFormals (location + 4);
+            string [] second = ReadFormals (location + 4);
             object third = ReadObject (location + 8);
             EncodedObject argcount = new EncodedObject ((uint) (int) third);
             uint optional = (argcount.Datum & 0x00FF);
             uint required = (argcount.Datum & 0xFF00) >> 8;
             bool rest = ((argcount.Datum & 0x10000) == 0x10000);
-            return new ExtendedLambda (ReadObject (location), second, required, optional, rest);
+            return new ExtendedLambda (second, ReadObject (location), required, optional, rest);
         }
+
+        static int gensymCounter;
 
         internal object ReadObject (uint location)
         {
@@ -457,8 +459,8 @@ namespace Microcode
                     return Constant.Decode (encoded.Datum);
  
                 case TC.DEFINITION:
-                    return new Definition ((string) ReadObject (encoded.Datum),
-                                            ReadObject (encoded.Datum + 4));
+                    return new Definition (ReadObject (encoded.Datum),
+                                           ReadObject (encoded.Datum + 4));
 
                 case TC.DELAY:
                     return new Delay (ReadObject (encoded.Datum));
@@ -479,7 +481,8 @@ namespace Microcode
                     return String.Intern (new String ((char []) ReadObject (encoded.Datum)));
 
                 case TC.LAMBDA:
-                    return new Lambda (ReadObject (encoded.Datum), ReadFormals (encoded.Datum + 4));
+                    return new Lambda (ReadFormals (encoded.Datum + 4),
+                                       ReadObject (encoded.Datum));
 
                 case TC.LIST:
                     object second = ReadObject (encoded.Datum + 4);
@@ -570,14 +573,15 @@ namespace Microcode
                     return new TheEnvironment ();
 
                 case TC.UNINTERNED_SYMBOL:
-                    // KLUDGE!!  Make sure that all uninterned symbols within a file
+                    // KLUDGE!!  Make sure that all uninterned strings within a file
                     // keep their identity when read.
+                    // Also, postpend a unique number so we can tell these apart.
                     first = ReadObject (encoded.Datum);
                     if (first is string)
                         return first;
                     else
                     {
-                        string result = new String ((char []) first);
+                        string result = new String ((char []) first) + (gensymCounter++).ToString();
                         this.sharingTable.Add (encoded.Datum, result);
                         return result;
                     }

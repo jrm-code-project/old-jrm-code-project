@@ -207,7 +207,11 @@ namespace Microcode
             return interpreter.Return (GC.GetGeneration (arg) >= 2);
         }
 
-
+        [SchemePrimitive ("PRIMITIVE-PURIFY", 3)]
+        public static object PrimitivePurify (Interpreter interpreter, object obj, object isPure, object space)
+        {
+            return interpreter.Return (new Cons (true, 0x1000));
+        }
 
         static DateTime UnixEpochStart = new DateTime (1971, 1, 1, 0, 0, 0);
 
