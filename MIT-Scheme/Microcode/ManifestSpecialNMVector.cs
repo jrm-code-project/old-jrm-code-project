@@ -13,6 +13,5 @@ namespace Microcode
         {
             this.size = size;
         }
-
     }
 }

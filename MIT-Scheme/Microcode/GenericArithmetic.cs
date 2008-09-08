@@ -26,215 +26,243 @@ namespace Microcode
         }
 
         [SchemePrimitive ("&+", 2)]
-        public static object Add (Interpreter interpreter, object left, object right)
+        public static bool Add (out object answer, object left, object right)
         {
-            if (left is int)
-            {
+            if (left is int) {
                 if (right is int)
-                    return interpreter.Return ((int) left + (int) right);
+                    answer = (int) left + (int) right;
                 else
                     throw new NotImplementedException ();
             }
-            else if (left is long)
-            {
+            else if (left is long) {
                 if (right is long)
-                    return interpreter.Return (Narrow ((long) left + (long) right));
+                    answer = Narrow ((long) left + (long) right);
                 else
                     throw new NotImplementedException ();
             }
-            else
-                return interpreter.Apply (FixedObjectsVector.GenericAdd, new object [] { left, right });
+            else {
+                answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericAdd, new Cons (FixedObjectsVector.GenericAdd, new Cons (left, new Cons (right, null)))), null);
+                return true;
+            }
+            // return interpreter.Apply (FixedObjectsVector.GenericAdd, new object [] { left, right });
+            return false;
         }
 
         [SchemePrimitive ("&-", 2)]
-        public static object Subtract (Interpreter interpreter, object left, object right)
+        public static bool Subtract (out object answer, object left, object right)
         {
-            if (left is int)
-            {
+            if (left is int) {
                 if (right is int)
-                    return interpreter.Return (Narrow (Widen (left) - Widen (right)));
+                    answer = Narrow (Widen (left) - Widen (right));
                 else if (right is long)
-                    return interpreter.Return (Narrow (Widen (left) - Widen (right)));
+                    answer = Narrow (Widen (left) - Widen (right));
                 else if (right is double)
-                    return interpreter.Return ((double) (int) (left) - (double) (right));
+                    answer = (double) (int) (left) - (double) (right);
                 else
                     throw new NotImplementedException ();
             }
-            else if (left is long)
-            {
+            else if (left is long) {
                 if (right is int)
-                    return interpreter.Return (Narrow (Widen (left) - Widen (right)));
+                    answer = Narrow (Widen (left) - Widen (right));
                 else if (right is long)
-                    return interpreter.Return (Narrow (Widen (left) - Widen (right)));
+                    answer = Narrow (Widen (left) - Widen (right));
                 else
                     throw new NotImplementedException ();
             }
-            else
-                return interpreter.Apply (FixedObjectsVector.GenericSubtract, new object [] { left, right });
+            else {
+                answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericSubtract, new Cons (FixedObjectsVector.GenericSubtract, new Cons (left, new Cons (right, null)))), null);
+                return true;
+            }
+            return false;
         }
 
         [SchemePrimitive ("&*", 2)]
-        public static object Multiply (Interpreter interpreter, object left, object right)
+        public static bool Multiply (out object answer, object left, object right)
         {
-            if (left is int)
-            {
+            if (left is int) {
                 if (right is int)
-                    return interpreter.Return (Narrow (Widen (left) * Widen (right)));
+                    answer = Narrow (Widen (left) * Widen (right));
                 else if (right is long)
-                    return interpreter.Return (Narrow (Widen (left) * (long) right));
+                    answer = Narrow (Widen (left) * (long) right);
                 else if (right is double)
-                    return interpreter.Return ((double) (int) left * (double) right);
+                    answer = (double) (int) left * (double) right;
                 else
                     throw new NotImplementedException ();
             }
-            else if (left is long)
-            {
+            else if (left is long) {
                 if (right is int)
-                    return interpreter.Return (Bignum.ToInteger ((Bignum) (long) left * (Bignum) (int) right));
+                    answer = Bignum.ToInteger ((Bignum) (long) left * (Bignum) (int) right);
                 else
                     throw new NotImplementedException ();
             }
-            else
-                return interpreter.Apply (FixedObjectsVector.GenericMultiply, new object [] { left, right });
+            else {
+                answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericMultiply, new Cons (FixedObjectsVector.GenericMultiply, new Cons (left, new Cons (right, null)))), null);
+                return true;
+            }
+            return false;
+            //return interpreter.Apply (FixedObjectsVector.GenericMultiply, new object [] { left, right });
         }
 
         [SchemePrimitive ("&/", 2)]
-        public static object Divide (Interpreter interpreter, object left, object right)
+        public static bool Divide (out object answer, object left, object right)
         {
-            return interpreter.Apply (FixedObjectsVector.GenericDivide, new object [] { left, right });
+            answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericDivide, new Cons (FixedObjectsVector.GenericDivide, new Cons (left, new Cons (right, null)))), null);
+            return true;
         }
 
         [SchemePrimitive ("QUOTIENT", 2)]
-        public static object Quotient (Interpreter interpreter, object left, object right)
+        public static bool Quotient (out object answer, object left, object right)
         {
-            return interpreter.Apply (FixedObjectsVector.GenericQuotient, new object [] { left, right });
+            answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericQuotient, new Cons (FixedObjectsVector.GenericQuotient, new Cons (left, new Cons (right, null)))), null);
+            return true;
+            //throw new NotImplementedException ();
+            //answer = new TailCallInterpreter ((SCode) , new InterpreterEnvironment (new object [] { FixedObjectsVector.GenericQuotient, left, right }));
+            //return true;
+
+            //return Interpreter.Apply (FixedObjectsVector.GenericQuotient, new object [] { left, right });
         }
 
         [SchemePrimitive ("REMAINDER", 2)]
-        public static object Remainder (Interpreter interpreter, object left, object right)
+        public static bool Remainder (out object answer, object left, object right)
         {
-            return interpreter.Apply (FixedObjectsVector.GenericRemainder, new object [] { left, right });
+            answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericRemainder, new Cons (FixedObjectsVector.GenericRemainder, new Cons (left, new Cons (right, null)))), null);
+            return true;
         }
 
         [SchemePrimitive ("MODULO", 2)]
-        public static object Modulo (Interpreter interpreter, object left, object right)
+        public static bool Modulo (out object answer, object left, object right)
         {
-            return interpreter.Apply (FixedObjectsVector.GenericModulo, new object [] { left, right });
+            throw new NotImplementedException ();
+            //return interpreter.Apply (FixedObjectsVector.GenericModulo, new object [] { left, right });
         }
 
         [SchemePrimitive ("&=", 2)]
-        public static object IsEqual (Interpreter interpreter, object left, object right)
+        public static bool IsEqual (out object answer, object left, object right)
         {
-            if (left is int)
-            {
+            if (left is int) {
                 if (right is int)
-                    return interpreter.Return ((int) left == (int) right);
+                    answer = (int) left == (int) right;
                 else if (right is long)
-                    return interpreter.Return ((long) (int) left == (long) right);
+                    answer = (long) (int) left == (long) right;
                 else
                     throw new NotImplementedException ();
             }
-            else if (left is long)
-            {
+            else if (left is long) {
                 if (right is long)
-                    return interpreter.Return ((long) left == (long) right);
+                    answer = (long) left == (long) right;
                 else
                     throw new NotImplementedException ();
             }
-            else if (left is Bignum)
-            {
+            else if (left is Bignum) {
                 if (right is Bignum)
-                    return interpreter.Return ((Bignum) left == (Bignum) right);
+                    answer = (Bignum) left == (Bignum) right;
                 else
                     throw new NotImplementedException ();
             }
             else
-
-                return interpreter.Apply (FixedObjectsVector.GenericEqualP, new object [] { left, right });
+                throw new NotImplementedException ();
+            return false;
+            //return interpreter.Apply (FixedObjectsVector.GenericEqualP, new object [] { left, right });
         }
 
         [SchemePrimitive ("&<", 2)]
-        public static object IsLess (Interpreter interpreter, object left, object right)
+        public static bool IsLess (out object answer, object left, object right)
         {
-            if (left is int)
-            {
+            if (left is int) {
                 if (right is int)
-                    return interpreter.Return ((int) left < (int) right);
+                    answer = (int) left < (int) right;
                 else
                     throw new NotImplementedException ();
             }
-            else if (left is long)
-            {
+            else if (left is long) {
                 if (right is long)
-                    return interpreter.Return ((long) left < (long) right);
+                    answer = (long) left < (long) right;
                 else if (right is int)
-                    return interpreter.Return ((long) left < (int) right);
+                    answer = (long) left < (int) right;
                 else
                     throw new NotImplementedException ();
             }
             else
-                return interpreter.Apply (FixedObjectsVector.GenericLessP, new object [] { left, right });
+                throw new NotImplementedException ();
+            return false;
+            //return interpreter.Apply (FixedObjectsVector.GenericLessP, new object [] { left, right });
         }
 
         [SchemePrimitive ("&>", 2)]
-        public static object IsGreater (Interpreter interpreter, object left, object right)
+        public static bool IsGreater (out object answer, object left, object right)
         {
-            if (left is int)
-            {
-                if (right is int)
-                    return interpreter.Return ((int) left > (int) right);
+            if (left is int) {
+                if (right is int) {
+                    answer = (int) left > (int) right;
+                    return false;
+                }
                 else
                     throw new NotImplementedException ();
             }
             else
-                return interpreter.Apply (FixedObjectsVector.GenericGreaterP, new object [] { left, right });
+                throw new NotImplementedException ();
+            // return interpreter.Apply (FixedObjectsVector.GenericGreaterP, new object [] { left, right });
         }
 
         [SchemePrimitive ("ZERO?", 1)]
-        public static object IsZero (Interpreter interpreter, object arg)
+        public static bool IsZero (out object answer, object arg)
         {
-            if (arg is int)
-                return interpreter.Return ((int) arg == 0);
-            else
-                return interpreter.Apply (FixedObjectsVector.GenericZeroP, new object [] { arg });
+            if (arg is int) {
+                answer = (int) arg == 0;
+                return false;
+            }
+            else {
+                answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericZeroP, new Cons (FixedObjectsVector.GenericZeroP, new Cons (arg,  null))), null);
+            return true;
+            }
         }
 
         [SchemePrimitive ("POSITIVE?", 1)]
-        public static object IsPositive (Interpreter interpreter, object arg)
+        public static bool IsPositive (out object answer, object arg)
         {
-            if (arg is int)
-                return interpreter.Return ((int) arg > 0);
-            else
-                return interpreter.Apply (FixedObjectsVector.GenericPositiveP, new object [] { arg });
+            if (arg is int) {
+                answer = (int) arg > 0;
+                return false;
+            }
+            else {
+                 answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericPositiveP, new Cons (FixedObjectsVector.GenericPositiveP, new Cons (arg, null))), null);
+            return true;
+            }
         }
 
         [SchemePrimitive ("NEGATIVE?", 1)]
-        public static object IsNegative (Interpreter interpreter, object arg)
+        public static bool IsNegative (out object answer, object arg)
         {
             if (arg is int)
-                return interpreter.Return ((int) arg < 0);
+                answer = (int) arg < 0;
             else
-                return interpreter.Apply (FixedObjectsVector.GenericNegativeP, new object [] { arg });
+                throw new NotImplementedException ();
+            //return interpreter.Apply (FixedObjectsVector.GenericNegativeP, new object [] { arg });
+            return false;
         }
 
         [SchemePrimitive ("1+", 1)]
-        public static object Increment (Interpreter interpreter, object arg)
+        public static bool Increment (out object answer, object arg)
         {
             if (arg is int)
-                return interpreter.Return ((int) arg + 1);
+                answer = (int) arg + 1;
             else
-                return interpreter.Apply (FixedObjectsVector.GenericAdd, new object [2] { arg, 1 });
+                throw new NotImplementedException ();
+            // return interpreter.Apply (FixedObjectsVector.GenericAdd, new object [2] { arg, 1 });
+            return false;
         }
 
         [SchemePrimitive ("-1+", 1)]
-        public static object Decrement (Interpreter interpreter, object arg)
+        public static bool Decrement (out object answer, object arg)
         {
             if (arg is int)
-                return interpreter.Return ((int) arg - 1);
+                answer = (int) arg - 1;
             else if (arg is long)
-                return interpreter.Return (Narrow ((long) arg - 1));
+                answer = Narrow ((long) arg - 1);
             else
-                return interpreter.Apply (FixedObjectsVector.GenericSubtract, new object [2] { arg, 1 });
+                throw new NotImplementedException ();
+            // return interpreter.Apply (FixedObjectsVector.GenericSubtract, new object [2] { arg, 1 });
+            return false;
         }
     }
 }

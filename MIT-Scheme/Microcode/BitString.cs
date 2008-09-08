@@ -5,19 +5,20 @@ using System.Text;
 
 namespace Microcode
 {
-    static  class BitString
+    static class BitString
     {
         [SchemePrimitive ("MAKE-BIT-STRING", 2)]
-        public static object MakeBitString (Interpreter interpreter, object arg0, object arg1)
+        public static bool MakeBitString (out object answer, object arg0, object arg1)
         {
-            // what is arg1?
-            return interpreter.Return (new bool [(int) arg0]);
+            answer = new bool [(int) arg0];
+            return false;
         }
 
         [SchemePrimitive ("BIT-STRING?", 1)]
-        public static object IsBitString (Interpreter interpreter, object arg)
+        public static bool IsBitString (out object answer, object arg)
         {
-            return interpreter.Return (arg is BitString);
+            answer = arg is bool [];
+            return false;
         }
     }
 }

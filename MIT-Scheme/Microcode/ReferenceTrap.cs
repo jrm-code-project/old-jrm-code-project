@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+
 namespace Microcode
 {
     enum TrapKind
@@ -29,6 +31,8 @@ namespace Microcode
         static ReferenceTrap expensive;
         static ReferenceTrap unassigned;
         static ReferenceTrap unbound;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object contents;
 
         public ReferenceTrap ()
@@ -43,6 +47,7 @@ namespace Microcode
 
         public object Contents
         {
+            [DebuggerStepThrough]
             get
             {
                 return this.contents;

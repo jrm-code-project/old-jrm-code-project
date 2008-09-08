@@ -632,13 +632,14 @@ namespace Microcode
         }
 
         [SchemePrimitive ("BINARY-FASLOAD", 1)]
-        public static object BinaryFasload (Interpreter interpreter, object arg)
+        public static bool BinaryFasload (out object answer, object arg)
         {
             string filename = new String ((char []) arg);
             //if (filename == "runtime-w32.pkd")
             //    return interpreter.Return (Package.Initial ());
             //else
-            return interpreter.Return (Fasload (new String ((char []) (arg))));
+            answer = Fasload (new String ((char []) arg));
+            return false;
         }
     }
 }

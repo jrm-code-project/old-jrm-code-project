@@ -295,96 +295,106 @@ namespace Microcode
     static class IOPrims
     {
 
-        [SchemePrimitive ("CHANNEL-BLOCKING?", 1)]
-        public static object IsChannelBlocking (Interpreter interpreter, object arg)
+
+        [SchemePrimitive ("CHANNEL-BLOCKING", 1)]
+        public static bool ChannelBlocking (out object answer, object arg)
         {
-            return interpreter.Return ((Channel.ArgChannel ((int) arg)).IsBlocking);
+            answer = (Channel.ArgChannel ((int) arg)).IsBlocking;
+            (Channel.ArgChannel ((int) arg)).IsBlocking = true;
+            return false;
+        }
+        
+        [SchemePrimitive ("CHANNEL-BLOCKING?", 1)]
+        public static bool IsChannelBlocking (out object answer, object arg)
+        {
+            answer = Channel.ArgChannel ((int) arg).IsBlocking;
+            return false;
         }
 
         [SchemePrimitive ("CHANNEL-CLOSE", 1)]
-        public static object ChannelClose (Interpreter interpreter, object arg)
+        public static bool ChannelClose (out object answer, object arg)
         {
-            return interpreter.Return ((Channel.ArgChannel ((int) arg)).Close ());
+            answer = Channel.ArgChannel ((int) arg).Close ();
+            return false;
         }
 
         [SchemePrimitive ("CHANNEL-DESCRIPTOR", 1)]
-        public static object PrimitiveChannelDescriptor (Interpreter interpreter, object arg)
+        public static bool PrimitiveChannelDescriptor (out object answer, object arg)
         {
-            return interpreter.Return (arg);
-        }
-
-        [SchemePrimitive ("CHANNEL-BLOCKING", 1)]
-        public static object ChannelBlocking (Interpreter interpreter, object arg)
-        {
-            bool wasBlocking = (Channel.ArgChannel ((int) arg)).IsBlocking;
-            (Channel.ArgChannel ((int) arg)).IsBlocking = true;
-            return interpreter.Return (wasBlocking);
+            answer = arg;
+            return false;
         }
 
         [SchemePrimitive ("CHANNEL-NONBLOCKING", 1)]
-        public static object ChannelNonBlocking (Interpreter interpreter, object arg)
+        public static bool ChannelNonBlocking (out object answer, object arg)
         {
-            bool wasBlocking = (Channel.ArgChannel ((int) arg)).IsBlocking;
-            (Channel.ArgChannel ((int) arg)).IsBlocking = false;
-            return interpreter.Return (wasBlocking);
+            bool wasBlocking = Channel.ArgChannel ((int) arg).IsBlocking;
+            Channel.ArgChannel ((int) arg).IsBlocking = false;
+            answer = (wasBlocking);
+            return false;
         }
 
         [SchemePrimitive ("CHANNEL-TYPE-NAME", 1)]
-        public static object ChannelTypeName (Interpreter interpreter, object arg)
+        public static bool ChannelTypeName (out object answer, object arg)
         {
-            return interpreter.Return (Channel.ArgChannel ((int)arg).TypeName);
+            answer = Channel.ArgChannel ((int) arg).TypeName;
+            return false;
         }
 
         [SchemePrimitive ("CHANNEL-READ", 4)]
-        public static object ChannelRead (Interpreter interpreter, object [] arglist)
+        public static bool ChannelRead (out object answer, object [] arglist)
         {
-            return interpreter.Return (Channel.ArgChannel ((int) arglist[0]).Read ((char[]) arglist[1], (int) arglist[2], (int) arglist[3]));
-
-
+            answer = Channel.ArgChannel ((int) arglist [0]).Read ((char []) arglist [1], (int) arglist [2], (int) arglist [3]);
+            return false;
         }
 
         [SchemePrimitive ("CHANNEL-WRITE", 4)]
-        public static object ChannelWrite (Interpreter interpreter, object [] arglist)
+        public static bool ChannelWrite (out object answer, object [] arglist)
         {
-            return interpreter.Return ((Channel.ArgChannel (0)).Write ((char []) (arglist [1]), (int) (arglist [2]), (int) (arglist [3])));
+            answer = Channel.ArgChannel ((int) arglist[0]).Write ((char []) (arglist [1]), (int) (arglist [2]), (int) (arglist [3]));
+            return false;
         }
 
         [SchemePrimitive ("NEW-FILE-OPEN-INPUT-CHANNEL", 2)]
-        public static object NewFileOpenInputChannel (Interpreter interpreter, object arg0, object arg1)
+        public static bool NewFileOpenInputChannel (out object answer, object arg0, object arg1)
         {
             char [] filename = (char []) arg0;
             WeakCons holder = (WeakCons) arg1;
-            int channel = Channel.MakeFileChannel(new FileStream (new String (filename), System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read));
+            int channel = Channel.MakeFileChannel (new FileStream (new String (filename), System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read));
             holder.Cdr = channel;
-            return interpreter.Return(true);
+            answer = true;
+            return false;
         }
 
         [SchemePrimitive("TERMINAL-NONBUFFERED", 1)]
-        public static object TerminalNonBuffered(Interpreter interpreter, object arg0)
+        public static bool TerminalNonBuffered (out object answer, object arg0)
         {
             throw new NotImplementedException ();
         }
 
-        [SchemePrimitive("TEST-SELECT-DESCRIPTOR", 3)]
-        public static object TestSelectDescriptor(Interpreter interpreter, object arg0, object arg1, object arg2)
+        [SchemePrimitive ("TEST-SELECT-DESCRIPTOR", 3)]
+        public static bool TestSelectDescriptor (out object answer, object arg0, object arg1, object arg2)
         {
             int channel = (int) arg0;
             bool blockp = (bool) arg1;
             int qmode = (int) arg2;
 
-            return interpreter.Return (blockp ? Channel.WaitOnSingleObject (channel, qmode) : Channel.TestSingleObject (channel, qmode));
+            answer = blockp ? Channel.WaitOnSingleObject (channel, qmode) : Channel.TestSingleObject (channel, qmode);
+            return false;
         }
 
         [SchemePrimitive ("TTY-INPUT-CHANNEL", 0)]
-        public static object TtyInputChannel (Interpreter interpreter)
+        public static bool TtyInputChannel (out object answer)
         {
-            return interpreter.Return (Channel.TTYInputChannel);
+            answer = Channel.TTYInputChannel;
+            return false;
         }
 
         [SchemePrimitive ("TTY-OUTPUT-CHANNEL", 0)]
-        public static object TtyOutputChannel (Interpreter interpreter)
+        public static bool TtyOutputChannel (out object answer)
         {
-            return interpreter.Return (Channel.TTYOutputChannel);
+            answer = Channel.TTYOutputChannel;
+            return false;
         }
     }
 }

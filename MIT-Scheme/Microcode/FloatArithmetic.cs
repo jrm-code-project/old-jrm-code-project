@@ -186,215 +186,235 @@ namespace Microcode
         }
 
         [SchemePrimitive ("FLONUM?", 1)]
-        public static object IsFlonum (Interpreter interpreter, object arg0)
+        public static bool IsFlonum (out object answer, object arg0)
         {
-            return interpreter.Return (arg0 is double);
+            answer = arg0 is double;
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-ADD", 2)]
-        public static object Add (Interpreter interpreter, object left, object right)
+        public static bool Add (out object answer, object left, object right)
         {
-            return interpreter.Return ((double) left + (double) right);
+            answer = (double) left + (double) right;
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-SUBTRACT", 2)]
-        public static object Subtract (Interpreter interpreter, object left, object right)
+        public static bool Subtract (out object answer, object left, object right)
         {
-            return interpreter.Return ((double) left - (double) right);
+            answer = (double) left - (double) right;
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-MULTIPLY", 2)]
-        public static object Multiply (Interpreter interpreter, object left, object right)
+        public static bool Multiply (out object answer, object left, object right)
         {
-            return interpreter.Return ((double) left * (double) right);
+            answer = (double) left * (double) right;
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-DIVIDE", 2)]
-        public static object Divide (Interpreter interpreter, object left, object right)
+        public static bool Divide (out object answer, object left, object right)
         {
-            return interpreter.Return ((double) left / (double) right);
+            answer = (double) left / (double) right;
+            return false;
         }
 
-        [SchemePrimitive ("FLONUM-NEGATE", 1)]
-        public static object Negate (Interpreter interpreter, object arg0)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-NEGATE", 1)]
+        //public static PartialResult Negate (object arg0)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
-        [SchemePrimitive ("FLONUM-ABS", 1)]
-        public static object Abs (Interpreter interpreter, object arg0)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-ABS", 1)]
+        //public static PartialResult Abs (object arg0)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
         [SchemePrimitive ("FLONUM-EQUAL?", 2)]
-        public static object IsEqual (Interpreter interpreter, object left, object right)
+        public static bool IsEqual (out object answer, object left, object right)
         {
-            return interpreter.Return ((double) left == (double) right);
+            answer = (double) left == (double) right;
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-LESS?", 2)]
-        public static object IsLess (Interpreter interpreter, object left, object right)
+        public static bool IsLess (out object answer, object left, object right)
         {
-            return interpreter.Return ((double) left < (double) right);
+            answer = (double) left < (double) right;
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-GREATER?", 2)]
-        public static object IsGreater (Interpreter interpreter, object left, object right)
+        public static bool IsGreater (out object answer, object left, object right)
         {
-            return interpreter.Return ((double) left > (double) right);
+            answer = (double) left > (double) right;
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-ZERO?", 1)]
-        public static object IsZero (Interpreter interpreter, object arg)
+        public static bool IsZero (out object answer, object arg)
         {
-            return interpreter.Return ((double) arg == 0.0);
+            answer = (double) arg == 0.0;
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-POSITIVE?", 1)]
-        public static object IsPositive (Interpreter interpreter, object arg)
+        public static bool IsPositive (out object answer, object arg)
         {
-            return interpreter.Return ((double) arg > 0.0);
+            answer = (double) arg > 0.0;
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-NEGATIVE?", 1)]
-        public static object IsNegative (Interpreter interpreter, object arg)
+        public static bool IsNegative (out object answer, object arg)
         {
-            return interpreter.Return ((double) arg < 0.0);
+            answer = (double) arg < 0.0;
+            return false;
         }
 
-        [SchemePrimitive ("FLONUM-EXP", 1)]
-        public static object Exp (Interpreter interpreter, object arg)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-EXP", 1)]
+        //public static PartialResult Exp (object arg)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
         [SchemePrimitive ("FLONUM-LOG", 1)]
-        public static object Log (Interpreter interpreter, object arg)
+        public static bool Log (out object answer, object arg)
         {
-            return interpreter.Return (Math.Log ((double) arg));
+            answer = Math.Log ((double) arg);
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-SIN", 1)]
-        public static object Sin (Interpreter interpreter, object arg)
+        public static bool Sin (out object answer, object arg)
         {
-            return interpreter.Return (Math.Sin ((double) arg));
+            answer = Math.Sin ((double) arg);
+            return false;
         }
 
-        [SchemePrimitive ("FLONUM-COS", 1)]
-        public static object Cos (Interpreter interpreter, object arg)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-COS", 1)]
+        //public static PartialResult Cos (object arg)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
-        [SchemePrimitive ("FLONUM-TAN", 1)]
-        public static object Tan (Interpreter interpreter, object arg)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-TAN", 1)]
+        //public static PartialResult Tan (object arg)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
-        [SchemePrimitive ("FLONUM-ASIN", 1)]
-        public static object Asin (Interpreter interpreter, object arg)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-ASIN", 1)]
+        //public static PartialResult Asin (object arg)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
-        [SchemePrimitive ("FLONUM-ACOS", 1)]
-        public static object Acos (Interpreter interpreter, object arg)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-ACOS", 1)]
+        //public static PartialResult Acos (object arg)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
-        [SchemePrimitive ("FLONUM-ATAN", 1)]
-        public static object Atan (Interpreter interpreter, object arg)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-ATAN", 1)]
+        //public static PartialResult Atan (object arg)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
-        [SchemePrimitive ("FLONUM-ATAN2", 2)]
-        public static object Atan2 (Interpreter interpreter, object left, object right)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-ATAN2", 2)]
+        //public static PartialResult Atan2 (object left, object right)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
-        [SchemePrimitive ("FLONUM-SQRT", 1)]
-        public static object Sqrt (Interpreter interpreter, object arg)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-SQRT", 1)]
+        //public static PartialResult Sqrt (object arg)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
-        [SchemePrimitive ("FLONUM-EXPT", 2)]
-        public static object Expt (Interpreter interpreter, object fbase, object fpower)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-EXPT", 2)]
+        //public static PartialResult Expt (object fbase, object fpower)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
-        [SchemePrimitive ("FLONUM-INTEGER?", 1)]
-        public static object IsFlonumInteger (Interpreter interpreter, object arg)
-        {
-            throw new NotImplementedException ();
-        }
+        //[SchemePrimitive ("FLONUM-INTEGER?", 1)]
+        //public static PartialResult IsFlonumInteger (object arg)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
         [SchemePrimitive ("FLONUM-FLOOR", 1)]
-        public static object Floor (Interpreter interpreter, object arg)
+        public static bool Floor (out object answer, object arg)
         {
             throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("FLONUM-CEILING", 1)]
-        public static object Ceiling (Interpreter interpreter, object arg)
+        public static bool Ceiling (out object answer, object arg)
         {
             throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("FLONUM-TRUNCATE", 1)]
-        public static object Truncate (Interpreter interpreter, object arg)
+        public static bool Truncate (out object answer, object arg)
         {
-            return interpreter.Return (Math.Truncate ((double) arg));
+            answer = Math.Truncate ((double) arg);
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-ROUND", 1)]
-        public static object Round (Interpreter interpreter, object arg)
+        public static bool Round (out object answer, object arg)
         {
             throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("FLONUM-TRUNCATE->EXACT", 1)]
-        public static object TruncateToExact (Interpreter interpreter, object arg)
+        public static bool TruncateToExact (out object answer, object arg)
         {
-            return interpreter.Return (Narrow ((long) (Math.Truncate ((double) arg))));
+            answer = Narrow ((long) (Math.Truncate ((double) arg)));
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-FLOOR->EXACT", 1)]
-        public static object FloorToExact (Interpreter interpreter, object arg)
+        public static bool FloorToExact (out object answer, object arg)
         {
-            return interpreter.Return (Narrow ((long) (Math.Floor ((double) arg))));
+            answer = Narrow ((long) (Math.Floor ((double) arg)));
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-CEILING->EXACT", 1)]
-        public static object CeilingToExact (Interpreter interpreter, object arg)
+        public static bool CeilingToExact (out object answer, object arg)
         {
-            return interpreter.Return (Narrow ((long) (Math.Ceiling ((double) arg))));
+            answer = Narrow ((long) (Math.Ceiling ((double) arg)));
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-ROUND->EXACT", 1)]
-        public static object RoundToExact (Interpreter interpreter, object arg)
+        public static bool RoundToExact (out object answer, object arg)
         {
-            return interpreter.Return (Narrow ((long) (Math.Round ((double) arg))));
+            answer = Narrow ((long) (Math.Round ((double) arg)));
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-NORMALIZE", 1)]
-        public static object Normalize (Interpreter interpreter, object arg)
+        public static bool Normalize (out object answer, object arg)
         {
             int exponent;
             double significand = FrExp ((double) arg, out exponent);
-            return interpreter.Return (new Cons (significand, exponent));
+            answer = new Cons (significand, exponent);
+            return false;
         }
 
         [SchemePrimitive ("FLONUM-DENORMALIZE", 2)]
-        public static object Denormalize (Interpreter interpreter, object left, object right)
+        public static bool Denormalize (out object answer, object left, object right)
         {
-            return interpreter.Return (LdExp ((double) left, (int) right));
+            answer = LdExp ((double) left, (int) right);
+            return false;
         }
     }
 }

@@ -168,16 +168,12 @@ namespace Microcode
         #endregion
 
         [SchemePrimitive ("SET-CURRENT-HISTORY!", 1)]
-        public static object SetCurrentHistory (Interpreter interpreter, object arg)
+        public static bool SetCurrentHistory (out object answer, object arg)
         {
-            return interpreter.Return (false);
+            answer = false;
+            return false;
         }
 
-        [SchemePrimitive ("WITH-HISTORY-DISABLED", 1)]
-        public static object WithHistoryDisabled (Interpreter interpreter, object thunk)
-        {
-             return interpreter.Apply (thunk, new object [] { });
-        }
     }
 
     class MarkedHistory : History
@@ -195,12 +191,12 @@ namespace Microcode
         {
         }
 
-        [SchemePrimitive ("HUNK3B?", 1)]
-        public static object IsHunk3b (Interpreter interpreter, object arg)
-        {
-            return interpreter.Return (arg is UnmarkedHistory);
-            // return interpreter.Return (arg == null || (arg is bool && (bool) (arg) == false));
-        }
+        //[SchemePrimitive ("HUNK3B?", 1)]
+        //public static PartialResult IsHunk3b (object arg)
+        //{
+        //    return new PartialResult (arg is UnmarkedHistory);
+        //    // return interpreter.Return (arg == null || (arg is bool && (bool) (arg) == false));
+        //}
     }
 
     abstract class HistoryElement : ISystemHunk3

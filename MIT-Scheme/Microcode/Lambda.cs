@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Microcode
@@ -7,12 +8,14 @@ namespace Microcode
     interface ILambda
     {
         string [] Formals { get; }
+        SCode Body { get; }
     }
 
-    class Lambda : SCode, ILambda, ISystemPair
+    sealed class Lambda : SCode, ILambda, ISystemPair
     {
+#if DEBUG
         static long evaluationCount;
-
+#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly string [] formals;
 
@@ -42,15 +45,6 @@ namespace Microcode
             this.body = EnsureSCode (body);
         }
 
-        public SCode Body
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.body;
-            }
-        }
-
         public string Name
         {
             [DebuggerStepThrough]
@@ -60,22 +54,13 @@ namespace Microcode
             }
         }
 
-        public string [] Formals
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.formals;
-            }
-        }
-
         static int [] formalOffsetCount = new int [512 + 256];
         public int LexicalOffset (string name)
         {
             //int theirs = Array.IndexOf<object>(this.formals, name);
 
             for (int i = 0; i < formals.Length; i++)
-                if ((object)name == (object) formals [i]) {
+                if ((object) name == (object) formals [i]) {
                     formalOffsetCount [i] += 1;
                     //if (theirs != ours)
                     //    throw new NotImplementedException ();
@@ -86,18 +71,61 @@ namespace Microcode
             return -1;
         }
 
-        internal override object EvalStep (Interpreter interpreter, object etc)
+
+        public override SCode Bind (CompileTimeEnvironment ctenv)
         {
-            Lambda.evaluationCount += 1;
-            return interpreter.Return (new Closure (this, interpreter.Environment));
+            SCode optimizedBody = this.body.Bind (ctenv.Extend (this.formals));
+            return this.body == optimizedBody
+                ? this
+                : new Lambda (this.formals, optimizedBody);
         }
 
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+#if DEBUG
+            Lambda.evaluationCount += 1;
+#endif
+            answer = new Closure (this, environment);
+            return false;
+        }
+
+        public override HashSet<string> FreeVariables ()
+        {
+            HashSet<string> bodyFree = this.body.FreeVariables ();
+            bodyFree.ExceptWith (this.formals);
+            return bodyFree;
+        }
+
+        public override bool NeedsTheEnvironment ()
+        {
+            return this.body.NeedsTheEnvironment ();
+        }
+
+        #region ILambda Members
+
+        public string [] Formals
+        {
+            [DebuggerStepThrough]
+            get { return this.formals; }
+        }
+
+        public SCode Body
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.body;
+            }
+        }
+
+        #endregion
 
         #region ISystemPair Members
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
+            [DebuggerStepThrough]
             get
             {
                 return UnwrapQuoted (this.body);
@@ -111,6 +139,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCdr
         {
+            [DebuggerStepThrough]
             get
             {
                 return this.formals;
@@ -122,26 +151,13 @@ namespace Microcode
         }
 
         #endregion
-
-        internal override SCode Optimize (CompileTimeEnvironment ctenv)
-        {
-            return new Lambda (this.formals, this.body.Optimize (ctenv.Extend (this.formals)));
-        }
-
-        #region ILambda Members
-
-        string [] ILambda.Formals
-        {
-            get { return this.Formals; }
-        }
-
-        #endregion
     }
 
     sealed class ExtendedLambda : SCode, ILambda, ISystemHunk3
     {
+#if DEBUG
         static long evaluationCount;
-
+#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public readonly string [] formals;
 
@@ -178,13 +194,7 @@ namespace Microcode
             this.required = (code >> 8) & 0xFF;
             this.rest = ((code >> 16) & 0x1) == 0x1;
         }
-
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            ExtendedLambda.evaluationCount += 1;
-            return interpreter.Return (new ExtendedClosure (this, interpreter.Environment));
-        }
-
+        
         public string Name
         {
             [DebuggerStepThrough]
@@ -210,7 +220,58 @@ namespace Microcode
         }
 
 
+        public override SCode Bind (CompileTimeEnvironment ctenv)
+        {
+            SCode optimized = this.body.Bind (ctenv.Extend (this.formals));
+            return optimized == this.body
+                ? this
+                : new ExtendedLambda (this.formals, optimized, this.required, this.optional, this.rest);
+        }
+
+
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+#if DEBUG
+            ExtendedLambda.evaluationCount += 1;
+#endif
+            answer = new ExtendedClosure (this, environment);
+            return false;
+        }
+
+        public override HashSet<string> FreeVariables ()
+        {
+            HashSet<string> bodyFree = this.body.FreeVariables ();
+            bodyFree.ExceptWith (this.formals);
+            return bodyFree;
+        }
+
+        public override bool NeedsTheEnvironment ()
+        {
+            return this.body.NeedsTheEnvironment ();
+        }
+
+
+        #region ILambda Members
+
+        public string [] Formals
+        {
+            [DebuggerStepThrough]
+            get { return this.formals; }
+        }
+
+        public SCode Body
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.body;
+            }
+        }
+
+        #endregion
+
         #region ISystemHunk3 Members
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr0
         {
@@ -252,20 +313,5 @@ namespace Microcode
         }
 
         #endregion
-
-        internal override SCode Optimize (CompileTimeEnvironment ctenv)
-        {
-            return new ExtendedLambda (this.formals, this.body.Optimize (ctenv.Extend (this.formals)), this.required, this.optional, this.rest);
-        }
-
-        #region ILambda Members
-
-        public string [] Formals
-        {
-            get { return this.formals; }
-        }
-
-        #endregion
     }
-
 }

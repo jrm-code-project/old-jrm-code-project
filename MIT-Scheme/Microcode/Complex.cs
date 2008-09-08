@@ -17,9 +17,10 @@ namespace Microcode
         }
 
         [SchemePrimitive ("COMPLEX?", 1)]
-        public static object IsComplex (Interpreter interpreter, object arg)
+        public static bool IsComplex (out object answer, object arg)
         {
-            return interpreter.Return (arg is Complex);
+            answer = arg is Complex;
+            return false;
         }
     }
 }

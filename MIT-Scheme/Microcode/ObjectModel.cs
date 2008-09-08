@@ -67,7 +67,8 @@ namespace Microcode
         STACK_ENVIRONMENT = 0x3B,
         COMPLEX = 0x3C,
         COMPILED_CODE_BLOCK = 0x3D,
-        RECORD = 0x3E
+        RECORD = 0x3E,
+        SPECIAL = 0x3F  // for magic objects
     }
 
     interface ISystemHunk3
@@ -89,21 +90,6 @@ namespace Microcode
         }
     }
     
-    interface ISystemPair
-    {
-        object SystemPairCar
-        {
-            get;
-            set;
-        }
-
-        object SystemPairCdr
-        {
-            get;
-            set;
-        }
-    }
-
     interface ISystemVector
     {
         int SystemVectorSize
@@ -122,50 +108,59 @@ namespace Microcode
         }
 
         [SchemePrimitive ("EQ?", 2)]
-        public static object Eq (Interpreter interpreter, object arg0, object arg1)
+        public static bool Eq (out object answer, object arg0, object arg1)
         {
             if (arg0 == null)
-                return interpreter.Return (arg1 == null);
+                answer = (arg1 == null) ? Constant.sharpT : Constant.sharpF;
             else if (arg1 == null)
-                return interpreter.Return (false);
-            else if (Object.ReferenceEquals (arg0, arg1))
-                return interpreter.Return (true);
+                answer = Constant.sharpF;
+            else if (arg0 == arg1)
+                answer = Constant.sharpT;
             else if (arg0 is Int32 && arg1 is Int32)
-                return interpreter.Return ((int) arg0 == (int) arg1);
+                answer = ((int) arg0 == (int) arg1 ? Constant.sharpT : Constant.sharpF);
             else if (arg0 is char && arg1 is char)
-                return interpreter.Return ((char) arg0 == (char) arg1);
+                answer = ((char) arg0 == (char) arg1 ? Constant.sharpT : Constant.sharpF);
             else if (arg0 is bool && arg1 is bool)
-                return interpreter.Return ((bool) arg0 == (bool) arg1);
+                answer = ((bool) arg0 == (bool) arg1 ? Constant.sharpT : Constant.sharpF);
             else
-                return interpreter.Return (false);
+                answer = Constant.sharpF;
+            return false;
+        }
+
+        [SchemePrimitive ("HUNK3-CONS", 3)]
+        public static bool Hunk3Cons (out object answer, object cxr0, object cxr1, object cxr2)
+        {
+            answer = new Hunk3 (cxr0, cxr1, cxr2);
+            return false;
         }
 
         [SchemePrimitive ("MAKE-NON-POINTER-OBJECT", 1)]
-        public static object MakeNonPointerObject (Interpreter interpreter, object arg)
+        public static bool MakeNonPointerObject (out object answer, object arg)
         {
-            return interpreter.Return (arg);
+            answer = arg;
+            return false;
         }
 
         [SchemePrimitive ("NOT", 1)]
-        public static object Not (Interpreter interpreter, object arg)
+        public static bool Not (out object answer, object arg)
         {
-            if (arg is bool)
-            {
+            if (arg is bool) {
                 bool val = (bool) arg;
                 if (val == false)
-                    return interpreter.Return (true);
+                    answer = true;
                 else
-                    return interpreter.Return (false);
+                    answer = false;
             }
             else
-                return interpreter.Return (false);
-
+                answer = false;
+            return false;
         }
 
         [SchemePrimitive ("NULL?", 1)]
-        public static object IsNull (Interpreter interpreter, object arg)
+        public static bool IsNull (out object answer, object arg)
         {
-            return interpreter.Return (arg == null);
+            answer = (arg == null  ? Constant.sharpT : Constant.sharpF);
+            return false;
         }
 
         // MIT Scheme uses the address of an object for various
@@ -178,401 +173,525 @@ namespace Microcode
         //public static IDictionary<int, object> datumObjectDictionary = new Dictionary<int, object> ();
 
         [SchemePrimitive ("OBJECT-DATUM", 1)]
-        public static object ObjectDatum (Interpreter interpreter, object arg)
+        public static bool ObjectDatum (out object answer, object arg)
         {
             Primitive prim = arg as Primitive;
             // make.scm does this song and dance with a primitive to find
             // if it exists.  We just sidestep by hacking object-datum to
             // return the primitive itself!
             if (prim != null) {
-                return interpreter.Return(prim);
+                answer = prim;
             }
-            else  if (arg is bool && (bool) arg == false)
-                return interpreter.Return (0);
+
+            else if (arg is bool && (bool) arg == false) {
+                answer = 0;
+            }
             else if (arg == null)
-                return interpreter.Return (9);
+                answer = 9;
             else if (arg is Int32)
-                return interpreter.Return (arg);
-            //else {
-            //    int probe;
-            //    if (objectDatumDictionary.TryGetValue (arg, out probe)) {
-            //        return interpreter.Return (probe);
-            //    }
-            //    int datum = objectDatumCounter;
-            //    objectDatumDictionary.Add (arg, datum);
-            //    datumObjectDictionary.Add (datum, arg);
-            //    objectDatumCounter += 1;
-            //    return interpreter.Return (datum);
+                answer = arg;
+            else if (arg is long)
+                answer = arg;
+
+            ////else {
+            ////    int probe;
+            ////    if (objectDatumDictionary.TryGetValue (arg, out probe)) {
+            ////        return probe);
+            ////    }
+            ////    int datum = objectDatumCounter;
+            ////    objectDatumDictionary.Add (arg, datum);
+            ////    datumObjectDictionary.Add (datum, arg);
+            ////    objectDatumCounter += 1;
+            ////    return datum);
             else if (arg is ReferenceTrap) {
                 ReferenceTrap rarg = (ReferenceTrap) arg;
                 TrapKind kind = ReferenceTrap.GetTrapKind (rarg);
                 if (kind == TrapKind.TRAP_UNASSIGNED
                     || kind == TrapKind.TRAP_UNBOUND
                     || kind == TrapKind.TRAP_EXPENSIVE)
-                    return interpreter.Return ((int) kind);
+                    answer =  (int) kind;
                 else {
-                    return interpreter.Return (arg.GetHashCode ());
+                    answer =  arg.GetHashCode ();
                 }
             }
-            else {
-                return interpreter.Return (arg.GetHashCode ());
-            }
-            
+            else
+                answer = arg.GetHashCode ();
+            return false;
         }
 
-        [SchemePrimitive("OBJECT-GC-TYPE", 1)]
-        public static object ObjectGCType(Interpreter interpreter, object arg)
+
+        [SchemePrimitive ("OBJECT-GC-TYPE", 1)]
+        public static bool ObjectGCType (out object answer, object arg)
         {
-             //Primitive.Noisy = false;
+            //Primitive.Noisy = false;
             if (arg == null)
-                return interpreter.Return (0);
-            else if (arg is object [])
-                return interpreter.Return (-3);
-            else if (arg is char [])
-                return interpreter.Return (0);
-            else if (arg is double)
-                return interpreter.Return (0);
-            else if (arg is int)
-                return interpreter.Return (0);
-            else if (arg is string)
-                return interpreter.Return (0);
-            else if (arg is ISystemHunk3)
-                return interpreter.Return (3);
-            else if (arg is ISystemPair)
-                return interpreter.Return (2);
-            else if (arg is Quotation)
-                return interpreter.Return (1);
+                answer = 0;
             // '#(COMPILED-ENTRY VECTOR GC-INTERNAL UNDEFINED NON-POINTER
             //	CELL PAIR TRIPLE QUADRUPLE)
-            else if (arg is Boolean ||
-                     arg is char ||
-                     arg is Constant)
-                return interpreter.Return (0);
+            else if (arg is bool)
+                answer = 0;
+            else if (arg is Constant)
+                answer = 0;
             else
                 throw new NotImplementedException ();
+            return false;
         }
 
         [SchemePrimitive ("OBJECT-TYPE", 1)]
-        public static object ObjectType (Interpreter interpreter, object arg)
+        public static bool ObjectType (out object answer, object arg)
         {
-            return PrimitiveObjectType (interpreter, arg);
+            return PrimitiveObjectType (out answer, arg);
         }
 
         [SchemePrimitive ("OBJECT-TYPE?", 2)]
-        public static object IsObjectType (Interpreter interpreter, object arg0, object arg1)
+        public static bool IsObjectType (out object answer, object arg0, object arg1)
         {
-            return IsPrimitiveObjectType (interpreter, arg0, arg1);
+            return IsPrimitiveObjectType (out answer, arg0, arg1);
         }
 
 
         [SchemePrimitive ("OBJECT-SET-TYPE", 2)]
-        public static object ObjectSetType (Interpreter interpreter, object arg0, object arg1)
+        public static bool ObjectSetType (out object answer, object arg0, object arg1)
         {
             TC newType = (TC) (int) arg0;
             // kludge!!!!
             if ((int) arg0 == 0 && (int) arg1 == 1)
-                return interpreter.Return (new NullEnvironment ());
+                answer = new NullEnvironment ();
+            else
             switch (newType)
             {
                 case TC.COMBINATION_2:
-                    return interpreter.Return (new Combination2 ((Hunk3) arg1));
+                    answer = new Combination2 ((Hunk3) arg1);
+                    break;
 
                 case TC.CONDITIONAL:
-                    return interpreter.Return (Conditional.Make ((Hunk3) arg1));
+                    answer = Conditional.Make ((Hunk3) arg1);
+                    break;
 
                 case TC.CONSTANT:
-                    return interpreter.Return (Constant.Decode ((uint) (int) arg1));
+                    answer = Constant.Decode ((uint) (int) arg1);
+                    break;
 
                 case TC.HUNK3_A:
                     // Probably someone trying to mark a history object.
-                    return interpreter.Return (arg1);
+                    answer = arg1;
+                    break;
+
                 case TC.HUNK3_B:
-                    return interpreter.Return (arg1);
+                    answer = arg1;
+                    break;
+
                 case TC.ENVIRONMENT:
-                    return interpreter.Return (new InterpreterEnvironment ((object []) arg1));
+                    answer = new TopLevelEnvironment ((IClosure)((object[])arg1)[0], (object []) arg1);
+                    break;
+
+                     // throw new NotImplementedException ();
+        //            // answer = (new InterpreterEnvironment ((object []) arg1));
+
                 case TC.EXTENDED_LAMBDA:
-                    return interpreter.Return (new ExtendedLambda ((Hunk3) arg1));
+                    answer = new ExtendedLambda ((Hunk3) arg1);
+                    break;
+
                 case TC.PCOMB2:
-                    return interpreter.Return (PrimitiveCombination2.Make ((Hunk3) arg1));
+                    answer = PrimitiveCombination2.Make ((Hunk3) arg1);
+                    break;
+
                 case TC.RECORD:
-                    return interpreter.Return (new Record ((object []) arg1));
+                    answer = new Record ((object []) arg1);
+                    return false;
+
                 case TC.SEQUENCE_3:
-                    return interpreter.Return (new Sequence3 ((Hunk3) arg1));
+                    answer = new Sequence3 ((Hunk3) arg1);
+                    break;
+
                 case TC.THE_ENVIRONMENT:
-                    return interpreter.Return (new TheEnvironment ());
+                    answer = new TheEnvironment ();
+                    break;
+
                 case TC.VARIABLE:
-                    return interpreter.Return (new Variable ((Hunk3) arg1));
+                    answer = new Variable ((Hunk3) arg1);
+                    break;
+
                 case TC.VECTOR:
                     // Someone wants to see what endian we are! 
                     char [] source = (char []) arg1;
                     object [] result = new object [source.Length / 4];
-                    result [1] = ((((((byte)source[3]) * 256) 
-                        + ((byte)source[2])) * 256)
-                    + ((byte)source[1])) * 256 
-                        + ((byte)source[0]);
-                                        result [0] = ((((((byte)source[7]) * 256) 
-                        + ((byte)source[6])) * 256)
-                    + ((byte)source[5])) * 256 
-                        + ((byte)source[4]);
-                    return interpreter.Return (result);
+                    result [1] = ((((((byte) source [3]) * 256)
+                        + ((byte) source [2])) * 256)
+                        + ((byte) source [1])) * 256
+                        + ((byte) source [0]);
+                    result [0] = ((((((byte) source [7]) * 256)
+                                        + ((byte) source [6])) * 256)
+                                        + ((byte) source [5])) * 256
+                                        + ((byte) source [4]);
+                    answer = result;
+                    break;
+
                 case TC.WEAK_CONS:
-                    return interpreter.Return (new WeakCons (((Cons) arg1).Car, ((Cons) arg1).Cdr));
-                default:
+                    answer = new WeakCons (((Cons) arg1).Car, ((Cons) arg1).Cdr);
+                    break;
+
+               default:
                     throw new NotImplementedException ();
             }
+            return false;
         }
 
         [SchemePrimitive ("PRIMITIVE-OBJECT-EQ?", 2)]
-        public static object PrimitiveObjectEq (Interpreter interpreter, object arg0, object arg1)
+        public static bool PrimitiveObjectEq (out object answer, object arg0, object arg1)
         {
-            return interpreter.Return (Object.ReferenceEquals (arg0, arg1));
+            answer = (Object.ReferenceEquals (arg0, arg1));
+            return false;
         }
 
         [SchemePrimitive ("PRIMITIVE-OBJECT-TYPE", 1)]
-        public static object PrimitiveObjectType (Interpreter interpreter, object arg)
+        public static bool PrimitiveObjectType (out object answer, object arg)
         {
             if (arg == null)
-                return interpreter.Return ((int) TC.CONSTANT);
+                answer =  (int) TC.CONSTANT;
             else if (arg is object [])
-                return interpreter.Return ((int) TC.VECTOR);
+                answer = (int) TC.VECTOR;
             else if (arg is Boolean)
-                return interpreter.Return ((bool) arg == false ? (int) TC.NULL : (int) TC.CONSTANT);
+                answer = (bool) arg == false ? (int) TC.NULL : (int) TC.CONSTANT;
             else if (arg is char)
-                return interpreter.Return ((int) TC.CHARACTER);
+                answer = (int) TC.CHARACTER;
             else if (arg is char [])
-                return interpreter.Return ((int) TC.CHARACTER_STRING);
+                answer = (int) TC.CHARACTER_STRING;
             else if (arg is double)
-                return interpreter.Return ((int) TC.BIG_FLONUM);
+                answer = (int) TC.BIG_FLONUM;
             else if (arg is int)
-                return interpreter.Return ((int) TC.FIXNUM);
+                answer = (int) TC.FIXNUM;
             else if (arg is string)
-                return interpreter.Return (Misc.IsGensym ((string) arg) ? (int) TC.UNINTERNED_SYMBOL : (int) TC.INTERNED_SYMBOL);
+                answer = Misc.IsGensym ((string) arg) ? (int) TC.UNINTERNED_SYMBOL : (int) TC.INTERNED_SYMBOL;
             else if (arg is SchemeObject)
-                return interpreter.Return ((int) ((SchemeObject) arg).TypeCode);
+                answer = (int) ((SchemeObject) arg).TypeCode;
             else
                 throw new NotImplementedException ();
+            return false;
         }
 
 
         [SchemePrimitive ("PRIMITIVE-OBJECT-TYPE?", 2)]
-        public static object IsPrimitiveObjectType (Interpreter interpreter, object arg0, object arg1)
+        public static bool IsPrimitiveObjectType (out object answer, object arg0, object arg1)
         {
-           TC targetType = (TC) arg0;
-            switch (targetType)
-            {
+            TC targetType = (TC) arg0;
+            switch (targetType) {
                 case TC.ACCESS:
-                    return interpreter.Return (arg1 is Access);
+                    answer = arg1 is Access;
+                    break;
+
                 case TC.BIG_FIXNUM:
-                    return interpreter.Return (arg1 is Int64);
+                    answer = arg1 is Int64;
+                    break;
+
                 case TC.BIG_FLONUM:
-                    return interpreter.Return (arg1 is double);
+                    answer = arg1 is double;
+                    break;
+
                 case TC.BROKEN_HEART:
-                    return interpreter.Return (false);
+                    answer = false;
+                    break;
+
                 case TC.CHARACTER:
-                    return interpreter.Return (arg1 is char);
+                    answer = arg1 is char;
+                    break;
+
                 case TC.CHARACTER_STRING:
-                    return interpreter.Return (arg1 is char []);
+                    answer = arg1 is char [];
+                    break;
+
                 case TC.COMBINATION:
-                    return interpreter.Return (arg1 is Combination);
+                    answer = arg1 is Combination;
+                    break;
+
                 case TC.COMBINATION_1:
-                    return interpreter.Return (arg1 is Combination1);
+                    answer = arg1 is Combination1;
+                    break;
+
                 case TC.COMBINATION_2:
-                    return interpreter.Return (arg1 is Combination2);
+                    answer = arg1 is Combination2;
+                    break;
                 case TC.COMMENT:
-                    return interpreter.Return (arg1 is Comment);
+                    answer = arg1 is Comment;
+                    break;
                 case TC.COMPILED_ENTRY:
-                    return interpreter.Return (false);
+                    answer = false;
+                    break;
+
                 case TC.COMPLEX:
-                    return interpreter.Return (arg1 is Complex);
+                    answer = arg1 is Complex;
+                    break;
+
                 case TC.CONDITIONAL:
-                    return interpreter.Return(arg1 is Conditional);
+                    answer = arg1 is Conditional;
+                    break;
+
                 case TC.CONSTANT:
-                    return interpreter.Return (arg1 == null
+                    answer = arg1 == null
                                                || arg1 is Constant
-                                               || ((arg1 is bool) && ((bool) arg1 == true)));
+                                               || ((arg1 is bool) && ((bool) arg1 == true));
+                    break;
+
                 case TC.DEFINITION:
-                    return interpreter.Return(arg1 is Definition);
+                    answer = arg1 is Definition;
+                    break;
+
                 case TC.DELAY:
-                    return interpreter.Return(arg1 is Delay);
+                    answer = arg1 is Delay;
+                    break;
+
                 case TC.DELAYED:
-                    return interpreter.Return (arg1 is Promise);
+                    answer = arg1 is Promise;
+                    break;
+
                 case TC.DISJUNCTION:
-                    return interpreter.Return(arg1 is Disjunction);
+                    answer = arg1 is Disjunction;
+                    break;
+
                 case TC.ENTITY:
-                    return interpreter.Return (arg1 is Entity);
+                    answer = arg1 is Entity;
+                    break;
+
                 case TC.ENVIRONMENT:
-                    return interpreter.Return (arg1 is Environment);
+                    answer = arg1 is Environment;
+                    break;
+
                 case TC.EXTENDED_LAMBDA:
-                    return interpreter.Return(arg1 is ExtendedLambda);
+                    answer = arg1 is ExtendedLambda;
+                    break;
+
                 case TC.EXTENDED_PROCEDURE:
-                    return interpreter.Return (arg1 is ExtendedClosure);
+                    answer = arg1 is ExtendedClosure;
+                    break;
+
                 case TC.FIXNUM:
-                    return interpreter.Return (arg1 is Int32);
+                    answer = arg1 is Int32;
+                    break;
+
                 case TC.FUTURE:
-                    return interpreter.Return (false);
+                    answer = false;
+                    break;
+
                 case TC.HUNK3_B:
-                    return interpreter.Return (arg1 is MarkedHistory);
+                    answer = arg1 is MarkedHistory;
+                    break;
+
                 case TC.INTERNED_SYMBOL:
-                    return interpreter.Return (arg1 is string);
-                //return interpreter.Return ((arg1 is string)
-                //&& (!Misc.IsGensym ((string) arg1)));
+                    answer = arg1 is string;
+                    break;
+                //        //return (arg1 is string)
+                //        //&& (!Misc.IsGensym ((string) arg1)));
+
                 case TC.LAMBDA:
-                    return interpreter.Return (arg1 is Lambda && ! (arg1 is ExtendedLambda));
+                    answer = arg1 is Lambda;
+                    break;
+
                 case TC.LIST:
-                    return interpreter.Return (arg1 is Cons);
+                    answer = arg1 is Cons;
+                    break;
+
                 case TC.LEXPR:
-                    return interpreter.Return(false);
+                    answer = false;
+                    break;
                 case TC.MANIFEST_NM_VECTOR:
-                    return interpreter.Return (false);
+                    answer = false;
+                    break;
                 case TC.NULL:
-                    return interpreter.Return ((arg1 is bool) && ((bool)arg1 == false));
+                    answer = (arg1 is bool) && ((bool) arg1 == false);
+                    break;
+
                 case TC.PCOMB0:
-                    return interpreter.Return (arg1 is PrimitiveCombination0);
+                    answer = arg1 is PrimitiveCombination0;
+                    break;
+
                 case TC.PCOMB1:
-                    return interpreter.Return (arg1 is PrimitiveCombination1);
+                    answer = arg1 is PrimitiveCombination1;
+                    break;
+
                 case TC.PCOMB2:
-                    return interpreter.Return (arg1 is PrimitiveCombination2);
+                    answer = arg1 is PrimitiveCombination2;
+                    break;
+
                 case TC.PCOMB3:
-                    return interpreter.Return (arg1 is PrimitiveCombination3);
+                    answer = arg1 is PrimitiveCombination3;
+                    break;
+
                 case TC.PRIMITIVE:
-                    return interpreter.Return (arg1 is Primitive);
+                    answer = arg1 is Primitive;
+                    break;
+
                 case TC.PROCEDURE:
-                    return interpreter.Return (arg1 is Closure);
+                    answer = arg1 is Closure;
+                    break;
+
                 case TC.RATNUM:
-                    return interpreter.Return (arg1 is Ratnum);
+                    answer = arg1 is Ratnum;
+                    break;
+
                 case TC.RECORD:
-                    return interpreter.Return (arg1 is Record);
+                    answer = arg1 is Record;
+                    break;
+
                 case TC.REFERENCE_TRAP:
-                    return interpreter.Return (arg1 is ReferenceTrap);
+                    answer = arg1 is ReferenceTrap;
+                    break;
+
                 case TC.RETURN_CODE:
-                    return interpreter.Return (arg1 is ReturnCode);
+                    answer = arg1 is ReturnCode;
+                    break;
+
                 case TC.SEQUENCE_2:
-                    return interpreter.Return (arg1 is Sequence2);
+                    answer = arg1 is Sequence2;
+                    break;
+
                 case TC.SEQUENCE_3:
-                    return interpreter.Return (arg1 is Sequence3);
+                    answer = arg1 is Sequence3;
+                    break;
+
                 case TC.UNINTERNED_SYMBOL:
-                    return interpreter.Return ((arg1 is string)
-                    && (Misc.IsGensym ((string) arg1)));
+                    answer = (arg1 is string)
+                        && Misc.IsGensym ((string) arg1);
+                    break;
+
                 case TC.VECTOR:
-                    return interpreter.Return (arg1 is object []);
+                    answer = arg1 is object [];
+                    break;
+
                 case TC.WEAK_CONS:
-                    return interpreter.Return(arg1 is WeakCons);
+                    answer = arg1 is WeakCons;
+                    break;
+
                 default:
                     throw new NotImplementedException ();
             }
+            return false;
         }
 
         [SchemePrimitive ("PRIMITIVE-OBJECT-REF", 2)]
-        public static object PrimitiveObjectRef (Interpreter interpreter, object arg0, object arg1)
+        public static bool PrimitiveObjectRef (ref object answer, object arg0, object arg1)
         {
             ReferenceTrap reftrap = arg0 as ReferenceTrap;
             if (reftrap != null) {
                 int idx = (int) arg1;
                 if (idx == 0)
-                    return interpreter.Return (((Cons) (reftrap.Contents)).Car);
+                    answer = (((Cons) (reftrap.Contents)).Car);
                 else if (idx == 1)
-                    return interpreter.Return (((Cons) (reftrap.Contents)).Cdr);
+                    answer = (((Cons) (reftrap.Contents)).Cdr);
                 else
                     throw new NotImplementedException ();
             }
             else
                 throw new NotImplementedException ();
+            return false;
         }
 
 
         [SchemePrimitive ("PRIMITIVE-OBJECT-SET-TYPE", 2)]
-        public static object PrimitiveObjectSetType (Interpreter interpreter, object arg0, object arg1)
+        public static bool PrimitiveObjectSetType (out object answer, object arg0, object arg1)
         {
             TC newType = (TC) (int) arg0;
-            switch (newType)
-            {
+            switch (newType) {
+
                 case TC.FIXNUM:
-                    return interpreter.Return (arg1.GetHashCode ());
+                    answer = arg1.GetHashCode ();
+                    break;
+
                 case TC.MANIFEST_NM_VECTOR:
-                    return interpreter.Return (arg1);
+                    answer = arg1;
+                    break;
+
                 case TC.MANIFEST_SPECIAL_NM_VECTOR:
-                    return interpreter.Return (new ManifestSpecialNMVector ((int) arg1));
+                    answer = new ManifestSpecialNMVector ((int) arg1);
+                    break;
+
                 case TC.NON_MARKED_VECTOR:
-                    return interpreter.Return (new NonMarkedVector (arg1));
+                    answer = new NonMarkedVector (arg1);
+                    break;
+
                 case TC.REFERENCE_TRAP:
-                    return interpreter.Return (ReferenceTrap.Make (arg1));
+                    answer = ReferenceTrap.Make (arg1);
+                    break;
+
                 case TC.VECTOR:
-                    return interpreter.Return (((NonMarkedVector)arg1).contents);
+                    answer = ((NonMarkedVector) arg1).contents;
+                    break;
+
                 default:
                     throw new NotImplementedException ();
             }
+            return false;
         }
 
         [SchemePrimitive ("SYSTEM-HUNK3-CXR0", 1)]
-        public static object SystemHunk3Cxr0 (Interpreter interpreter, object arg)
+        public static bool SystemHunk3Cxr0 (out object answer, object arg)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
             if (hunk != null)
-                return interpreter.Return (hunk.SystemHunk3Cxr0);
+                answer = hunk.SystemHunk3Cxr0;
             else
 
                 throw new NotImplementedException ();
+            return false;
         }
 
         [SchemePrimitive ("SYSTEM-HUNK3-CXR1", 1)]
-        public static object SystemHunk3Cxr1 (Interpreter interpreter, object arg)
+        public static bool SystemHunk3Cxr1 (out object answer, object arg)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
             if (hunk != null)
-                return interpreter.Return (hunk.SystemHunk3Cxr1);
+                answer = hunk.SystemHunk3Cxr1;
             else
 
                 throw new NotImplementedException ();
+            return false;
         }
 
         [SchemePrimitive ("SYSTEM-HUNK3-CXR2", 1)]
-        public static object SystemHunk3Cxr2 (Interpreter interpreter, object arg)
+        public static bool SystemHunk3Cxr2 (out object answer, object arg)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
             if (hunk != null)
-                return interpreter.Return (hunk.SystemHunk3Cxr2);
+                answer = hunk.SystemHunk3Cxr2;
             else
 
                 throw new NotImplementedException ();
+            return false;
         }
 
         [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR0!", 2)]
-        public static object SystemHunk3SetCxr0 (Interpreter interpreter, object arg, object newValue)
+        public static bool SystemHunk3SetCxr0 (out object answer, object arg, object newValue)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
-            if (hunk != null)
-            {
-                object oldValue = hunk.SystemHunk3Cxr0;
+            if (hunk != null) {
+                answer = hunk.SystemHunk3Cxr0;
                 hunk.SystemHunk3Cxr0 = newValue;
-                return interpreter.Return (oldValue);
+                return false;
             }
             else
 
                 throw new NotImplementedException ();
         }
         [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR1!", 2)]
-        public static object SystemHunk3SetCxr1 (Interpreter interpreter, object arg, object newValue)
+        public static bool SystemHunk3SetCxr1 (out object answer, object arg, object newValue)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
-            if (hunk != null)
-            {
-                object oldValue = hunk.SystemHunk3Cxr1;
+            if (hunk != null) {
+                answer = hunk.SystemHunk3Cxr1;
                 hunk.SystemHunk3Cxr1 = newValue;
-                return interpreter.Return (oldValue);
+                return false;
             }
             else
 
                 throw new NotImplementedException ();
         }
         [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR2!", 2)]
-        public static object SystemHunk3SetCxr2 (Interpreter interpreter, object arg, object newValue)
+        public static bool SystemHunk3SetCxr2 (out object answer, object arg, object newValue)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
-            if (hunk != null)
-            {
-                object oldValue = hunk.SystemHunk3Cxr2;
+            if (hunk != null) {
+                answer = hunk.SystemHunk3Cxr2;
                 hunk.SystemHunk3Cxr2 = newValue;
-                return interpreter.Return (oldValue);
+                return false;
             }
             else
 
@@ -580,143 +699,70 @@ namespace Microcode
         }
 
         [SchemePrimitive ("SYSTEM-LIST-TO-VECTOR", 2)]
-        public static object SystemListToVector (Interpreter interpreter, object arg0, object arg1)
+        public static bool SystemListToVector (out object answer, object arg0, object arg1)
         {
-            switch ((TC) arg0)
-            {
+            TC code = (TC) arg0;
+            switch ((TC) arg0) {
                 case TC.COMBINATION:
-                    return interpreter.Return(new Combination((Cons)arg1));
+                    answer = new Combination ((Cons) arg1);
+                    break;
+
                 case TC.ENVIRONMENT:
-                    Cons list = (Cons) arg1;
-                    Closure closure = (Closure) list.Car;
-                    Cons tail = (Cons) list.Cdr;
-                    object [] vector = (tail == null) ? new object [0] : tail.ToVector ();
-                    return interpreter.Return (new InterpreterEnvironment (((Cons) arg1).ToVector()));
+                    object [] initialValues = ((Cons) arg1).ToVector ();
+                    answer = new TopLevelEnvironment ((IClosure) initialValues[0], initialValues);
+                    break;
+
                 default:
                     throw new NotImplementedException ();
             }
+            return false;
         }
 
-        [SchemePrimitive ("SYSTEM-PAIR-CAR", 1)]
-        public static object SystemPairCar (Interpreter interpreter, object arg)
-        {
-            ISystemPair systemPair = arg as ISystemPair;
-            if (systemPair == null)
-            {
-                if (arg is string)
-                    return interpreter.Return (((string) arg).ToCharArray ());
-                else
-                    throw new NotImplementedException ();
-            }
-            return interpreter.Return (systemPair.SystemPairCar);
-         }
 
-        [SchemePrimitive ("SYSTEM-PAIR-CDR", 1)]
-        public static object SystemPairCdr (Interpreter interpreter, object arg)
-        {
-            ISystemPair systemPair = arg as ISystemPair;
-            if (systemPair == null)
-                throw new NotImplementedException ();
-            return
-                interpreter.Return (systemPair.SystemPairCdr);
-        }
 
-        [SchemePrimitive ("SYSTEM-PAIR-SET-CAR!", 2)]
-        public static object SystemPairSetCar (Interpreter interpreter, object arg, object newValue)
-        {
-            ISystemPair systemPair = arg as ISystemPair;
-            object oldValue = systemPair.SystemPairCar;
-            systemPair.SystemPairCar = newValue;
-            return interpreter.Return (oldValue);
-        }
-
-        [SchemePrimitive ("SYSTEM-PAIR-SET-CDR!", 2)]
-        public static object SystemPairSetCdr (Interpreter interpreter, object arg, object newValue)
-        {
-            ISystemPair systemPair = arg as ISystemPair;
-            object oldValue = systemPair.SystemPairCdr;
-            systemPair.SystemPairCdr = newValue;
-            return interpreter.Return (oldValue);
-        }
-
-        [SchemePrimitive ("SYSTEM-PAIR-CONS", 3)]
-        public static object SystemPairCons (Interpreter interpreter, object acode, object car, object cdr)
-        {
-            TC typeCode = (TC) (int) acode; // for debugging porpoises
-            switch ((TC)acode)
-            {
-                case TC.ACCESS:
-                    return interpreter.Return (new Access (car, (string)cdr));
-                case TC.ASSIGNMENT:
-                    return interpreter.Return (new Assignment (car, cdr));
-                case TC.COMBINATION_1:
-                    return interpreter.Return (new Combination1 (car, cdr));
-                case TC.DEFINITION:
-                    return interpreter.Return (new Definition (car, cdr));
-                case TC.DISJUNCTION:
-                    return interpreter.Return (new Disjunction (car, cdr));
-                case TC.ENTITY:
-                    return interpreter.Return (new Entity (car, cdr));
-                case TC.LAMBDA:
-                    // passed in backwards.
-                    return interpreter.Return (new Lambda (cdr, car));
-                case TC.PROCEDURE:
-                    return interpreter.Return (new Closure ((Lambda) car, (cdr is bool && (bool) cdr == false) ? Environment.Global : (Environment) cdr));
-                case TC.RATNUM:
-                    return interpreter.Return (new Ratnum (car, cdr));
-                case TC.SEQUENCE_2:
-                    return interpreter.Return(new Sequence2(car, cdr));
-                case TC.UNINTERNED_SYMBOL:
-                    return interpreter.Return (new String ((char []) car));
-                case TC.WEAK_CONS:
-                    return interpreter.Return (new WeakCons (car, cdr));
-                default:
-                    throw new NotImplementedException ();
-            }
-        }
-
-        [SchemePrimitive("SYSTEM-SUBVECTOR-TO-LIST", 3)]
-        public static object SystemSubvectorToList(Interpreter interpreter, object arg, object start, object end)
+        [SchemePrimitive ("SYSTEM-SUBVECTOR-TO-LIST", 3)]
+        public static bool SystemSubvectorToList (out object answer, object arg, object start, object end)
         {
             ISystemVector sysVec = arg as ISystemVector;
-            if (sysVec != null)
-            {
-                Cons answer = null;
-                for (int i = (int)end - 1; i > ((int)start - 1); i--)
-                {
-                    answer = new Cons(sysVec.SystemVectorRef(i), answer);
+            if (sysVec != null) {
+                Cons result = null;
+                for (int i = (int) end - 1; i > ((int) start - 1); i--) {
+                    result = new Cons (sysVec.SystemVectorRef (i), result);
                 }
-                return interpreter.Return(answer);
+                answer = result;
+                return false;
             }
-            else throw new NotImplementedException();
+            else throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("SYSTEM-VECTOR-REF", 2)]
-        public static object SystemVectorRef (Interpreter interpreter, object arg, object offset)
+        public static bool SystemVectorRef (out object answer, object arg, object offset)
         {
             ISystemVector sysVec = arg as ISystemVector;
             if (sysVec != null)
-                return interpreter.Return (sysVec.SystemVectorRef ((int) offset));
+                answer = sysVec.SystemVectorRef ((int) offset);
             else
                 throw new NotImplementedException ();
+            return false;
         }
 
         [SchemePrimitive ("SYSTEM-VECTOR-SIZE", 1)]
-        public static object SystemVectorSize (Interpreter interpreter, object arg)
+        public static bool SystemVectorSize (out object answer, object arg)
         {
             ISystemVector sysVec = arg as ISystemVector;
             if (sysVec != null)
-                return interpreter.Return (sysVec.SystemVectorSize);
+                answer = sysVec.SystemVectorSize;
             else if (arg is bool [])
-                return interpreter.Return ((((bool []) arg).Length / 32) + 1);
+                answer = (((bool []) arg).Length / 32) + 1;
             else if (arg is int)
-                return interpreter.Return (0x1000);
+                answer = 0x1000;
             else if (arg is long)
-                return interpreter.Return (0x2000);
+                answer = 0x2000;
             else if (arg is double)
-                return interpreter.Return (2);
+                answer = 2;
             else
                 throw new NotImplementedException ();
+            return false;
         }
     }
 }

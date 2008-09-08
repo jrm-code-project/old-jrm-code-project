@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
-    interface IClosure
+    interface IClosure : IApplicable, ISystemPair
     {
         int FormalOffset (string name);
 
@@ -13,9 +13,13 @@ namespace Microcode
         ILambda Lambda { get; }
     }
 
-    class Closure : SCode, IClosure, ISystemPair
+    sealed class Closure : SchemeObject, IClosure
     {
+#if DEBUG
+        static long applicationCount = 0;
         static public bool Noisy = false;
+#endif
+
         static public readonly string internalLambda = String.Intern ("#[internal-lambda]");
         static public readonly string unnamed = String.Intern ("#[unnamed-procedure]");
         static public readonly string let = String.Intern ("#[let-procedure]");
@@ -35,35 +39,95 @@ namespace Microcode
             this.environment = environment;
         }
 
-        public ILambda Lambda
-        {
-            [DebuggerStepThrough]
-            get { return this.lambda; }
-        }
-
-        public Environment Environment
-        {
-            [DebuggerStepThrough]   
-            get
-            {
-                return this.environment;
-            }
-        }
-
         public string Name
         {
             [DebuggerStepThrough]
-            get
-            {
-                return this.lambda.Name;
-            }
+            get { return this.lambda.Name; }
         }
+
+        public override string ToString ()
+        {
+            if (this.lambda.Name == unnamed)
+            {
+                StringBuilder sb = new StringBuilder ();
+                string [] formals = this.lambda.Formals;
+                sb.Append ("#<PROCEDURE (");
+                if (formals.Length > 1)
+                {
+                    sb.Append (formals [1]);
+                    for (int i = 2; i < formals.Length; i++)
+                    {
+                        sb.Append (" ");
+                        sb.Append (formals [i]);
+                    }
+                }
+                sb.Append (")>");
+                return sb.ToString ();
+            }
+            else
+                return "#<PROCEDURE " + this.lambda.Name + ">";
+        }
+
+        [SchemePrimitive ("PROCEDURE?", 1)]
+        public static bool IsProcedure (out object answer, object arg)
+        {
+            answer = arg is Closure;
+            return false;
+        }
+
+        #region IClosure Members
 
         public int FormalOffset (string name)
         {
             return this.lambda.LexicalOffset (name);
         }
 
+        public Environment Environment
+        {
+            [DebuggerStepThrough]   
+            get { return this.environment; }
+        }
+
+        public ILambda Lambda
+        {
+            [DebuggerStepThrough]
+            get { return this.lambda; }
+        }
+
+        #endregion
+
+        #region IApplicable Members
+
+        public bool Apply (out object answer, ref SCode expression, ref Environment environment, object [] args)
+        {
+#if DEBUG
+            Closure.applicationCount += 1;
+#endif
+            if (args.Length != this.lambda.Formals.Length)
+                throw new NotImplementedException ();
+            expression = this.lambda.Body;
+            environment = this.environment.Extend (this, args);
+            answer = null; // keep the compiler happy
+            return true;
+
+        }
+
+        public bool Call (out object answer, ref SCode expression, ref Environment environment)
+        {
+            return Apply (out answer, ref expression, ref environment, new object [] { this });
+        }
+
+        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0)
+        {
+            return Apply (out answer, ref expression, ref environment, new object [] { this, arg0 });
+        }
+
+        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0, object arg1)
+        {
+            return Apply (out answer, ref expression, ref environment, new object [] { this, arg0, arg1 });
+        }
+
+        #endregion
 
         #region ISystemPair Members
 
@@ -99,63 +163,40 @@ namespace Microcode
 
         #endregion
 
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            object [] rands = new object [interpreter.Arguments.Length + 1];
-            rands [0] = this;
-            for (int i = 1; i < rands.Length; i++)
-                rands [i] = interpreter.Arguments [i - 1];
-            int nargs = rands.Length;
-            int nparams = this.lambda.Formals.Length;
-            if (nargs != nparams)
-                throw new NotImplementedException ();
-            if (Noisy && this.lambda.Name != unnamed && this.lambda.Name != let && this.lambda.Name != internalLambda) Debug.WriteLine (this.lambda.Name);
-            return interpreter.EvalReduction (this.lambda.Body, new InterpreterEnvironment (rands));
-        }
+//        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Closure.applicationCount += 1;
+//#endif
+//            throw new NotImplementedException ();
+//            //object [] values = environment.FrameVector;
+//            //int nargs = values.Length;
+//            //int nparams = this.lambda.Formals.Length;
+//            //if (nargs != nparams)
+//            //    throw new NotImplementedException ();
+//            //if (Noisy && this.lambda.Name != unnamed && this.lambda.Name != let && this.lambda.Name != internalLambda) Debug.WriteLine (this.lambda.Name);
 
-        public override string ToString ()
-        {
-            if (this.lambda.Name == unnamed)
-            {
-                StringBuilder sb = new StringBuilder ();
-                string [] formals = this.lambda.Formals;
-                sb.Append ("#<PROCEDURE (");
-                if (formals.Length > 1)
-                {
-                    sb.Append (formals [1]);
-                    for (int i = 2; i < formals.Length; i++)
-                    {
-                        sb.Append (" ");
-                        sb.Append (formals [i]);
-                    }
-                }
-                sb.Append (")>");
-                return sb.ToString ();
-            }
-            else
-                return "#<PROCEDURE " + this.lambda.Name + ">";
-        }
+//            //expression = this.lambda.Body;
+//            //return true;
+//        }
 
-        [SchemePrimitive ("PROCEDURE?", 1)]
-        public static void IsProcedure (Interpreter interpreter, object arg)
-        {
-            interpreter.Return (arg is Closure);
-        }
-
-        internal override SCode Optimize (CompileTimeEnvironment ctenv)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
-    class ExtendedClosure : SCode, IClosure, ISystemPair
+    sealed class ExtendedClosure : SchemeObject, IClosure
     {
+#if DEBUG
+        static long applicationCount = 0;
         static public bool Noisy = false;
+#endif
         static public readonly string internalLambda = String.Intern ("#[internal-lambda]");
         static public readonly string unnamed = String.Intern ("#[unnamed-procedure]");
         static public readonly string let = String.Intern ("#[let-procedure]");
-        public ExtendedLambda lambda;
-        public Environment environment; 
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        ExtendedLambda lambda;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        Environment environment;
 
         public ExtendedClosure (ExtendedLambda lambda, Environment environment)
             : base (TC.EXTENDED_PROCEDURE)
@@ -164,77 +205,6 @@ namespace Microcode
             if (environment == null)
                 throw new ArgumentNullException ("environment");
             this.environment = environment;
-        }
-
-        internal override object EvalStep (Interpreter interpreter, object etc)
-        {
-            object [] rands = interpreter.Arguments;
-            int nargs = rands.Length;
-            int nparams = this.lambda.formals.Length - 1; // param 0 is self
-            int formals = (int)this.lambda.required;
-            int parms = (int)this.lambda.optional + formals;
-            bool rest_flag = this.lambda.rest;
-            int auxes = nparams - (parms + (rest_flag ? 1 : 0));
-
-            if (nargs < formals)
-            {
-                throw new NotImplementedException ("Too few arguments.");
-            }
-            else if (!rest_flag & (nargs > parms))
-            {
-                throw new NotImplementedException ("Too many arguments.");
-            }
-            int size = parms + (rest_flag ? 1 : 0) + auxes;
-
-            int randptr = 0;
-            int frameptr = 1;
-            object [] framevector = new object [size+1];
-            framevector [0] = this;
-
-            if (nargs <= parms)
-            {
-                int i;
-                for (i = (nargs); --i >= 0; )
-                    framevector [frameptr++] = rands [randptr++];
-                for (i = (parms - nargs); --i >= 0; )
-                    framevector [frameptr++] = Constant.DefaultObject;
-                if (rest_flag)
-                    framevector [frameptr++] = null;
-                for (i = auxes; --i >= 0; ) {
-                    throw new NotImplementedException ();
-                    //framevector [frameptr++] = Constant.Unassigned;
-                }
-            }
-            else
-            {
-                // rest flag must be true
-                int i;
-                int listloc;
-                for (i = (parms); --i >= 0; )
-                    framevector [frameptr++] = rands [randptr++];
-                listloc = frameptr++;
-                framevector [listloc] = null;
-                for (i = auxes; --i >= 0; ) {
-                    throw new NotImplementedException ();
-                    //framevector [frameptr++] = Constant.Unassigned;
-                }
-                randptr = rands.Length;
-                for (i = (nargs - parms); --i >= 0; )
-                    framevector [listloc] = new Cons (rands [--randptr], framevector [listloc]);
-            }
-            if (Noisy && this.lambda.Name != unnamed && this.lambda.Name != let && this.lambda.Name != internalLambda) Debug.WriteLine (this.lambda.Name);
-            return interpreter.EvalReduction (this.lambda.body, new InterpreterEnvironment (framevector));
-        }
-
-        public int FormalOffset (string name)
-        {
-            return this.lambda.LexicalOffset (name);
-        }
-
-        [SchemePrimitive ("EXTENDED-PROCEDURE?", 1)]
-        public static void IsExtendedProcedure (Interpreter interpreter, object arg)
-        {
-            interpreter.Return (arg is ExtendedClosure);
         }
 
         public string Name
@@ -246,7 +216,24 @@ namespace Microcode
             }
         }
 
+        public override string ToString ()
+        {
+            return "#<PROCEDURE " + this.lambda.Name + ">";
+        }
+
+        [SchemePrimitive ("EXTENDED-PROCEDURE?", 1)]
+        public static bool IsExtendedProcedure (out object answer, object arg)
+        {
+            answer = arg is ExtendedClosure;
+            return false;
+        }
+
         #region IClosure Members
+
+        public int FormalOffset (string name)
+        {
+            return this.lambda.LexicalOffset (name);
+        }
 
         public Environment Environment
         {
@@ -256,6 +243,90 @@ namespace Microcode
         public ILambda Lambda
         {
             get { return this.lambda; }
+        }
+
+        #endregion
+
+        #region IApplicable Members
+
+        public bool Call (out object answer, ref SCode expression, ref Environment environment)
+        {
+            return Apply (out answer, ref expression, ref environment, new object [] { this });
+        }
+
+        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0)
+        {
+            return Apply (out answer, ref expression, ref environment, new object [] { this, arg0 });
+        }
+
+        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0, object arg1)
+        {
+            return Apply (out answer, ref expression, ref environment, new object [] { this, arg0, arg1 });
+        }
+
+        public bool Apply (out object answer, ref SCode expression, ref Environment environment, object [] args)
+        {
+#if DEBUG
+            ExtendedClosure.applicationCount += 1;
+#endif
+            //object [] rands = environment.FrameVector;
+            int nargs = args.Length - 1;
+            int nparams = this.lambda.formals.Length - 1; // param 0 is self
+            int formals = (int) this.lambda.required;
+            int parms = (int) this.lambda.optional + formals;
+            bool rest_flag = this.lambda.rest;
+            int auxes = nparams - (parms + (rest_flag ? 1 : 0));
+
+            if (nargs < formals) {
+                throw new NotImplementedException ("Too few arguments.");
+            }
+            else if (!rest_flag & (nargs > parms)) {
+                throw new NotImplementedException ("Too many arguments.");
+            }
+            int size = parms + (rest_flag ? 1 : 0) + auxes;
+
+            int argptr = 1;
+            int frameptr = 1;
+            object [] framevector = new object [size + 1];
+            framevector [0] = this;
+
+            if (nargs <= parms) {
+                int i;
+                for (i = (nargs); --i >= 0; ){
+                    framevector [frameptr++] = args [argptr++];
+                }
+                for (i = (parms - nargs); --i >= 0; )
+                    framevector [frameptr++] = Constant.DefaultObject;
+                if (rest_flag)
+                    framevector [frameptr++] = null;
+                for (i = auxes; --i >= 0; ) {
+                    throw new NotImplementedException ();
+                    //framevector [frameptr++] = Constant.Unassigned;
+                }
+            }
+            else {
+                // rest flag must be true
+                int i;
+                int listloc;
+                for (i = (parms); --i >= 0; )
+                    framevector [frameptr++] = args [argptr++];
+                listloc = frameptr++;
+                framevector [listloc] = null;
+                for (i = auxes; --i >= 0; ) {
+                    throw new NotImplementedException ();
+                    //framevector [frameptr++] = Constant.Unassigned;
+                }
+                argptr = args.Length;
+                for (i = (nargs - parms); --i >= 0; )
+                    framevector [listloc] = new Cons (args [--argptr], framevector [listloc]);
+            }
+#if DEBUG
+            if (Noisy && this.lambda.Name != unnamed && this.lambda.Name != let && this.lambda.Name != internalLambda) Debug.WriteLine (this.lambda.Name);
+#endif
+            expression = this.lambda.body;
+            environment = this.environment.Extend (this, framevector);
+            answer = null;
+            return true;
         }
 
         #endregion
@@ -292,9 +363,5 @@ namespace Microcode
 
         #endregion
 
-        internal override SCode Optimize (CompileTimeEnvironment ctenv)
-        {
-            throw new NotImplementedException ();
-        }
     }
 }
