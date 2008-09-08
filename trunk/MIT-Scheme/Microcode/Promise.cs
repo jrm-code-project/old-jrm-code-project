@@ -88,50 +88,29 @@ namespace Microcode
         }
 
         [SchemePrimitive ("DELAYED?", 1)]
-        public static object IsDelayed (Interpreter interpreter, object arg)
+        public static bool IsDelayed (out object answer, object arg)
         {
-            return interpreter.Return (arg is Promise);
+            answer = arg is Promise;
+            return false;
         }
 
         [SchemePrimitive ("FORCE", 1)]
-        public static object Force (Interpreter interpreter, object arg)
+        public static bool Force (out object answer, object arg)
         {
-            Promise p = (Promise) (arg);
+            Promise p = (Promise) arg;
             if (p.IsForced)
-                return interpreter.Return (p.Value);
-            else
-                return interpreter.EvalNewSubproblem (p.Expression, p.Environment, new MemoizePromise (interpreter.Continuation, p));
+                answer = p.bodyOrValue;
+            else {
+                object value = null;
+                SCode expression = (SCode) p.bodyOrValue;
+                Environment env = (Environment) p.environmentOrTrue;
+                while (expression.EvalStep (out value, ref expression, ref env)) { };
+                if (value == Interpreter.UnwindStack) throw new NotImplementedException ();
+                p.bodyOrValue = value;
+                p.environmentOrTrue = true;
+                answer = value;
+            }
+            return false;
         }
-
-        sealed class MemoizePromise : Continuation
-        {
-            readonly Promise p;
-
-            public MemoizePromise (Continuation next, Promise p)
-                : base (next)
-            {
-                this.p = p;
-            }
- 
-            internal override object Invoke (Interpreter interpreter, object value)
-            {
-                if (p.IsForced)
-                    return interpreter.Return (p.Value);
-                else
-                {
-                    p.Value = value;
-                    return interpreter.Return (value);
-                }
-            }
-
-            public override int FrameSize
-            {
-                get { throw new NotImplementedException (); }
-            }
-        }
-
-
-
-
     }
 }

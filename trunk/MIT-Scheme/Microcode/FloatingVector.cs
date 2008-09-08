@@ -8,31 +8,32 @@ namespace Microcode
     static class FloatingVector
     {
         [SchemePrimitive ("FLOATING-VECTOR-CONS", 1)]
-        public static object FloatingVectorCons (Interpreter interpreter, object arg)
+        public static bool FloatingVectorCons (out object answer, object arg)
         {
-            double [] result = new double [(int) arg];
-            return interpreter.Return (result);
+            answer = new double [(int) arg];
+            return false;
         }
 
         [SchemePrimitive ("FLOATING-VECTOR-LENGTH", 1)]
-        public static object FloatingVectorLength (Interpreter interpreter, object arg)
+        public static bool FloatingVectorLength (out object answer, object arg)
         {
-            return interpreter.Return (((double []) arg).Length);
+            answer = ((double []) arg).Length;
+            return false;
         }
 
         [SchemePrimitive ("FLOATING-VECTOR-REF", 2)]
-        public static object FloatingVectorRef (Interpreter interpreter, object vec, object idx)
+        public static bool FloatingVectorRef (out object answer, object vec, object idx)
         {
-            double old = ((double []) vec) [(int) idx];
-            return interpreter.Return (old);
+            answer = ((double []) vec) [(int) idx];
+            return false;
         }
 
         [SchemePrimitive ("FLOATING-VECTOR-SET!", 3)]
-        public static object FloatingVectorSet (Interpreter interpreter, object vec, object idx, object val)
+        public static bool FloatingVectorSet (out object answer, object vec, object idx, object val)
         {
-            double old = ((double []) vec) [(int) idx];
+            answer = ((double []) vec) [(int) idx];
             ((double []) vec) [(int) idx] = (double) val;
-            return interpreter.Return (old);
+            return false;
         }
     }
 }

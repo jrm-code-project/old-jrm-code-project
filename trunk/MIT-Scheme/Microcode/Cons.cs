@@ -104,24 +104,25 @@ namespace Microcode
         }
 
         [SchemePrimitive ("CAR", 1)]
-        public static object PrimitiveCar (Interpreter interpreter, object arg0)
+        public static bool PrimitiveCar (out object answer, object arg0)
         {
-            return interpreter.Return (((Cons) arg0).Car);
+            answer = ((Cons) arg0).Car;
+            return false;
         }
 
         [SchemePrimitive ("CDR", 1)]
-        public static object PrimitiveCdr (Interpreter interpreter, object arg0)
+        public static bool PrimitiveCdr (out object answer, object arg0)
         {
-            return interpreter.Return (((Cons) arg0).Cdr);
+            answer = ((Cons) arg0).Cdr;
+            return false;
         }
 
         [SchemePrimitive ("GENERAL-CAR-CDR", 2)]
-        public static object GeneralCarCdr (Interpreter interpreter, object arg0, object arg1)
+        public static bool GeneralCarCdr (out object answer, object arg0, object arg1)
         {
             object result = arg0;
             int pattern = (int) arg1;
-            while (pattern > 1)
-            {
+            while (pattern > 1) {
                 Cons pair = result as Cons;
                 if (pair == null)
                     throw new NotImplementedException ();
@@ -131,44 +132,47 @@ namespace Microcode
                     result = pair.Cdr;
                 pattern >>= 1;
             }
-            return interpreter.Return (result);
+            answer = result;
+            return false;
         }
 
         [SchemePrimitive ("CONS", 2)]
-        public static object PrimitiveCons (Interpreter interpreter, object car, object cdr)
+        public static bool PrimitiveCons (out object answer, object car, object cdr)
         {
-            return interpreter.Return (new Cons (car, cdr));
+            answer = new Cons (car, cdr);
+            return false;
         }
 
         [SchemePrimitive ("LIST->VECTOR", 1)]
-        public static object ToVector (Interpreter interpreter, Object arg0)
+        public static bool ToVector (out object answer, object arg0)
         {
-            if (arg0 == null)
-                return interpreter.Return (new object [0]);
-            else
-                return interpreter.Return (((Cons) arg0).ToVector ());
+            answer = (arg0 == null)
+                ? new object [0]
+                : ((Cons) arg0).ToVector ();
+            return false;
         }
 
         [SchemePrimitive ("PAIR?", 1)]
-        public static object IsPair (Interpreter interpreter, object arg0)
+        public static bool IsPair (out object answer, object arg0)
         {
-            return interpreter.Return (arg0 is Cons);
+            answer = arg0 is Cons ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
 
         [SchemePrimitive ("SET-CAR!", 2)]
-        public static object SetCar (Interpreter interpreter, object pair, object value)
+        public static bool SetCar (out object answer, object pair, object value)
         {
-            object old = ((Cons) pair).Car;
+            answer = ((Cons) pair).Car;
             ((Cons) pair).Car = value;
-            return interpreter.Return (old);
+            return false;
         }
 
         [SchemePrimitive ("SET-CDR!", 2)]
-        public static object SetCdr (Interpreter interpreter, object pair, object value)
+        public static bool SetCdr (out object answer, object pair, object value)
         {
-            object old = ((Cons) pair).Cdr;
+            answer = ((Cons) pair).Cdr;
             ((Cons) pair).Cdr = value;
-            return interpreter.Return (old);
+            return false;
         }
     }
 }

@@ -11,6 +11,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         TC typeCode;
 
+        [DebuggerStepThrough]
         protected SchemeObject (TC typeCode)
         {
             this.typeCode = typeCode;

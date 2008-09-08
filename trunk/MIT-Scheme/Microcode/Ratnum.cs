@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace Microcode
 {
-    class Ratnum : ISystemPair
+    sealed class Ratnum : ISystemPair
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object numerator;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object denominator;
 
         public Ratnum (object numerator, object denominator)
@@ -16,19 +20,12 @@ namespace Microcode
             this.denominator = denominator;
         }
 
- 
-
-        [SchemePrimitive ("RATNUM?", 1)]
-        public static object IsRatnum (Interpreter interpreter, object arg)
-        {
-            return interpreter.Return (arg is Ratnum);
-
-        }
-
         #region ISystemPair Members
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
+            [DebuggerStepThrough]
             get
             {
                  return this.numerator;
@@ -39,8 +36,10 @@ namespace Microcode
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCdr
         {
+            [DebuggerStepThrough]
             get
             {
                 return this.denominator;
@@ -52,5 +51,12 @@ namespace Microcode
         }
 
         #endregion
+
+        [SchemePrimitive ("RATNUM?", 1)]
+        public static bool IsRatnum (out object answer, object arg)
+        {
+            answer = arg is Ratnum;
+            return false;
+        }
     }
 }

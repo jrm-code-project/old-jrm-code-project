@@ -35,114 +35,138 @@ namespace Microcode
             : (UInt32) n;
         }
 
-        [SchemePrimitive("BATCH-MODE?", 0)]
-        public static object IsBatchMode(Interpreter interpreter)
+        [SchemePrimitive ("BATCH-MODE?", 0)]
+        public static bool IsBatchMode (out object answer)
         {
-            return interpreter.Return (false);
+            answer = false;
+            return false;
         }
 
-        [SchemePrimitive("CONSTANT?", 1)]
-        public static object IsConstant(Interpreter interpreter, object arg)
+        [SchemePrimitive ("CONSTANT?", 1)]
+        public static bool IsConstant (out object answer, object arg)
         {
-            return interpreter.Return(System.GC.GetGeneration(arg) > 0);
+            answer = System.GC.GetGeneration (arg) > 0;
+            return false;
         }
 
         [SchemePrimitive ("FILE-EXISTS?", 1)]
-        public static object IsFileExists (Interpreter interpreter, object arg)
+        public static bool IsFileExists (out object answer, object arg)
         {
-            return interpreter.Return (System.IO.File.Exists (new String ((char []) (arg))));
+            answer = System.IO.File.Exists (new String ((char []) arg));
+            return false;
         }
 
-        [SchemePrimitive ("FIND-SYMBOL", 1)]
-        public static object FindSymbol (Interpreter interpreter, object arg)
-        {
-            return interpreter.Return (String.IsInterned (new String ((char []) (arg))));
-        }
+        //[SchemePrimitive ("FIND-SYMBOL", 1)]
+        //public static bool FindSymbol (out object answer, object arg)
+        //{
+        //    answer = (String.IsInterned (new String ((char []) arg)));
+        //    return false;
+        //}
 
         [SchemePrimitive ("FILE-MOD-TIME", 1)]
-        public static object FileModTime (Interpreter interpreter, object arg)
+        public static bool FileModTime (out object answer, object arg)
         {
             String filename = new String ((char []) arg);
-            return interpreter.Return (System.IO.File.GetLastWriteTimeUtc (filename).ToFileTimeUtc());
+            answer = System.IO.File.GetLastWriteTimeUtc (filename).ToFileTimeUtc ();
+            return false;
         }
 
         [SchemePrimitive ("FILE-TYPE-INDIRECT", 1)]
-        public static object FileTypeIndirect (Interpreter interpreter, object arg)
+        public static bool FileTypeIndirect (out object answer, object arg)
         {
             String filename = new String ((char []) arg);
             System.IO.FileAttributes fa;
             try {
                 fa = System.IO.File.GetAttributes (filename);
+                if ((fa & System.IO.FileAttributes.Directory) == System.IO.FileAttributes.Directory)
+                    answer = 1;
+                else {
+                    answer = 0;
+                }
             }
             catch (System.IO.FileNotFoundException) {
-                return interpreter.Return (false);
+                answer = false;
             }
-            if ((fa & System.IO.FileAttributes.Directory) == System.IO.FileAttributes.Directory)
-                return interpreter.Return(1);
-            else {
-                return interpreter.Return(0);
-            }
+
+            return false;
         }
 
         [SchemePrimitive ("GARBAGE-COLLECT", 1)]
-        public static object GarbageCollect (Interpreter interpreter, object arg)
+        public static bool GarbageCollect (out object answer, object arg)
         {
             // Arg is the safety margin.
-            return interpreter.Return (GC.GetTotalMemory (true));
+            answer = GC.GetTotalMemory (true);
+            return false;
         }
 
         [SchemePrimitive ("GC-SPACE-STATUS", 0)]
-        public static object GcSpaceStatus (Interpreter interpreter)
+        public static bool GcSpaceStatus (out object answer)
         {
-            object [] answer = new object [12];
-            answer [0] = 4; // bytes per object
-            answer [1] = 0x100; // constant-start
-            answer [2] = 0x200; // constant-alloc-next
-            answer [3] = 0x400; // constant-end
-            answer [4] = 0x1000; // heap-start
-            answer [5] = 0x20000000; // free
-            answer [6] = 0x40000000; // heap-alloc-limit
-            answer [7] = 0x50000000; // heap-end
-            answer [8] = 0x90000000; // stack start
-            answer [9] = 0x100000000; //stack pointer
-            answer [10] = 0x200000000; // stack guard
-            answer [11] = 0x400000000; // stack end
-            return interpreter.Return (answer);
+            object [] status =  {4,
+                29114368,
+                33318628,
+                33319140,
+                33766628,
+                58149296,
+                58167296,
+                28704768,
+                29114232,
+                28721152,
+                29114368};
+            //answer [0] = 4; // bytes per object
+            //answer [1] = ; // constant-start
+            //answer [2] = 0x200; // constant-alloc-next
+            //answer [3] = 0x400; // constant-end
+            //answer [4] = 0x1000; // heap-start
+            //answer [5] = 0x20000000; // free
+            //answer [6] = 0x40000000; // heap-alloc-limit
+            //answer [7] = 0x50000000; // heap-end
+            //answer [8] = 0x90000000; // stack start
+            //answer [9] = 0x100000000; //stack pointer
+            //answer [10] = 0x200000000; // stack guard
+            //answer [11] = 0x400000000; // stack end
+            answer = status;
+            return false;
         }
 
         [SchemePrimitive ("GET-ENVIRONMENT-VARIABLE", 1)]
-        public static object GetEnvironmentVariable (Interpreter interpreter, object arg)
+        public static bool GetEnvironmentVariable (out object answer, object arg)
         {
             char [] name = (char []) arg;
             string sname = new string (name);
-            string answer = System.Environment.GetEnvironmentVariable (sname);
-            return interpreter.Return((answer == null) ? (object)false : (object)answer.ToCharArray ());
+            string temp = System.Environment.GetEnvironmentVariable (sname);
+            answer = (temp == null
+                ? (object) false
+                : (object) temp.ToCharArray ());
+            return false;
         }
 
-        [SchemePrimitive ("GET-NEXT-CONSTANT", 0)]
-        public static object GetNextConstant (Interpreter interpreter)
-        {
-            return interpreter.Return (0);
-        }
+        //[SchemePrimitive ("GET-NEXT-CONSTANT", 0)]
+        //public static bool GetNextConstant (out object answer)
+        //{
+        //    answer = (0);
+        //    return false;
+        //}
 
         [SchemePrimitive ("HAVE-SELECT?", 0)]
-        public static object HaveSelect (Interpreter interpreter)
+        public static bool HaveSelect (out object answer)
         {
-            return interpreter.Return (false);
+            answer = false;
+            return false;
         }
 
-
         [SchemePrimitive ("INITIALIZE-C-COMPILED-BLOCK", 1)]
-        public static object InitializeCCompiledBlock (Interpreter interpreter, object arg)
+        public static bool InitializeCCompiledBlock (out object answer, object arg)
         {
             // what is arg?
-            return interpreter.Return (false);
+            answer = false;
+            return false;
         }
 
         [SchemePrimitive ("MICROCODE-IDENTIFY", 0)]
-        public static object MicrocodeIdentify (Interpreter interpreter)
+        public static bool MicrocodeIdentify (out object answer)
         {
-            return interpreter.Return (new object [] {false,
+            answer = new object [] {false,
                 "15.1".ToCharArray(),
                 false,
                 80,
@@ -155,62 +179,73 @@ namespace Microcode
             "standard".ToCharArray(),
             "IA-32".ToCharArray(),
             "i386".ToCharArray(),
-            false, false, false, false, false ,false, false});
+            false, false, false, false, false ,false, false};
+            return false;
         }
 
         [SchemePrimitive ("MICROCODE-LIBRARY-PATH", 0)]
-        public static object MicrocodeLibraryPath (Interpreter interpreter)
+        public static bool MicrocodeLibraryPath (out object answer)
         {
-            return interpreter.Return (new object [] { "C:\\Program Files\\MIT\\lib\\".ToCharArray () });
+            answer = new object [] { "C:\\Program Files\\MIT\\lib\\".ToCharArray () };
+            return false;
 
-            //return interpreter.Return (new object [] {"Program Files".ToCharArray(),
-            //    "MIT".ToCharArray(),
-            //    "scheme-7.7.1".ToCharArray(),
-            //    "lib".ToCharArray()});
+        //    //return new object [] {"Program Files".ToCharArray(),
+        //    //    "MIT".ToCharArray(),
+        //    //    "scheme-7.7.1".ToCharArray(),
+        //    //    "lib".ToCharArray()});
         }
 
 
         [SchemePrimitive ("MICROCODE-SYSTEM-CALL-NAMES", 0)]
-        public static object MicrocodeSystemCallNames (Interpreter interpreter)
+        public static bool MicrocodeSystemCallNames (out object answer)
         {
-            return interpreter.Return (FixedObjectsVector.SyscallNames);
+            answer = FixedObjectsVector.SyscallNames;
+            return false;
         }
 
         [SchemePrimitive ("MICROCODE-SYSTEM-ERROR-NAMES", 0)]
-        public static object MicrocodeSystemErrorNames (Interpreter interpreter)
+        public static bool MicrocodeSystemErrorNames (out object answer)
         {
-            return interpreter.Return (FixedObjectsVector.SyserrNames);
+            answer = FixedObjectsVector.SyserrNames;
+            return false;
         }
 
 
         [SchemePrimitive ("MICROCODE-TABLES-FILENAME", 0)]
-        public static object MicrocodeTablesFilename (Interpreter interpreter)
+        public static bool MicrocodeTablesFilename ( out object answer)
         {
-            return interpreter.Return ("utabmd.bin".ToCharArray ());
+            answer = "utabmd.bin".ToCharArray ();
+            return false;
         }
 
         [SchemePrimitive ("NT-GET-VOLUME-INFORMATION", 1)]
-        public static object NTGetVolumeInformation (Interpreter interpreter, object arg)
+        public static bool NTGetVolumeInformation (out object answer, object arg)
         {
-            object [] answer = new object [5];
-            answer [0] = "VOLUMEFOO".ToCharArray () ;
-            answer [1] = 42;
-            answer [2] = 255;
-            answer [3] = 7;
-            answer [4] = "NTFS".ToCharArray();
-            return interpreter.Return (answer);
+            if (((char []) arg).ToString ().Equals("c:\\", StringComparison.InvariantCultureIgnoreCase))
+                answer = Constant.sharpF;
+            else {
+                object [] temp = { "".ToCharArray(),
+                                   3260986805,
+                                   255,
+                                   2556159,
+                                   "NTFS".ToCharArray()};
+                answer = temp;
+            }
+                return false;
         }
 
-        [SchemePrimitive ("PURE?", 1)]
-        public static object IsPure (Interpreter interpreter, object arg)
-        {
-            return interpreter.Return (GC.GetGeneration (arg) >= 2);
-        }
+        //[SchemePrimitive ("PURE?", 1)]
+        //public static bool IsPure (out object answer, object arg)
+        //{
+        //    answer = (GC.GetGeneration (arg) >= 2);
+        //    return false;
+        //}
 
         [SchemePrimitive ("PRIMITIVE-PURIFY", 3)]
-        public static object PrimitivePurify (Interpreter interpreter, object obj, object isPure, object space)
+        public static bool PrimitivePurify (out object answer, object obj, object isPure, object space)
         {
-            return interpreter.Return (new Cons (true, 0x1000));
+            answer = new Cons (true, 0x1000);
+            return false;
         }
 
         static DateTime UnixEpochStart = new DateTime (1971, 1, 1, 0, 0, 0);
@@ -219,67 +254,74 @@ namespace Microcode
         /// Return the current real time in units of milliseconds.
         /// </summary>
         [SchemePrimitive ("REAL-TIME-CLOCK", 0)]
-        public static object RealTimeClock (Interpreter interpreter)
+        public static bool RealTimeClock (out object answer)
         {
-            return interpreter.Return ((long) (DateTime.UtcNow.Subtract (UnixEpochStart).TotalMilliseconds));
+            answer = (long) DateTime.UtcNow.Subtract (UnixEpochStart).TotalMilliseconds;
+            return false;
         }
 
         [SchemePrimitive ("REQUEST-INTERRUPTS!", 1)]
-        public static object RequestInterrupts (Interpreter interpreter, object arg)
+        public static bool RequestInterrupts (out object answer, object arg)
         {
-            return interpreter.Return (Constant.Unspecific);
+            answer = Constant.Unspecific;
+            return false;
         }
 
         static Stopwatch systemTime = Stopwatch.StartNew ();
         [SchemePrimitive ("SYSTEM-CLOCK", 0)]
-        public static object SystemClock (Interpreter interpreter)
+        public static bool SystemClock (out object answer)
         {
-            return interpreter.Return (systemTime.ElapsedMilliseconds);
+            answer = systemTime.ElapsedMilliseconds;
+            return false;
         }
 
         [SchemePrimitive ("TERMINAL-BUFFERED", 1)]
-        public static object TerminalBuffered (Interpreter interpreter, object arg)
+        public static bool TerminalBuffered (out object answer, object arg)
         {
-            return interpreter.Return (true);
+            answer = true;
+            return false;
         }
-
 
         [SchemePrimitive ("TERMINAL-BUFFERED?", 1)]
-        public static object IsTerminalBuffered (Interpreter interpreter, object arg)
+        public static bool IsTerminalBuffered (out object answer, object arg)
         {
-            return interpreter.Return (true);
+            answer = true;
+            return false;
         }
 
-
         [SchemePrimitive ("TERMINAL-COOKED-OUTPUT", 1)]
-        public static object TerminalCookedOutput (Interpreter interpreter, object arg)
+        public static bool TerminalCookedOutput (out object answer, object arg)
         {
-            return interpreter.Return (true);
+            answer = true;
+            return false;
         }
 
         [SchemePrimitive ("TERMINAL-COOKED-OUTPUT?", 1)]
-        public static object TerminalCookedOutputP (Interpreter interpreter, object arg)
+        public static bool TerminalCookedOutputP (out object answer, object arg)
         {
-            return interpreter.Return (true);
+            answer = true;
+            return false;
         }
 
-        [SchemePrimitive("TTY-X-SIZE", 0)]
-        public static object TtyXSize(Interpreter interpreter)
+        [SchemePrimitive ("TTY-X-SIZE", 0)]
+        public static bool TtyXSize (out object answer)
         {
-            return interpreter.Return(80);
+            answer = 80;
+            return false;
         }
 
 
-        [SchemePrimitive ("UNDER-EMACS?", 0)]
-        public static object IsUnderEmacs (Interpreter interpreter)
-        {
-            return interpreter.Return (false);
-        }
+        //[SchemePrimitive ("UNDER-EMACS?", 0)]
+        //public static bool IsUnderEmacs (out object answer)
+        //{
+        //    answer = (false);
+        //    return false;
+        //}
 
         [SchemePrimitive ("WIN32-PREDEFINED-REGISTRY-KEYS", 0)]
-        public static object Win32PredefinedRegistryKeys (Interpreter interpreter)
+        public static bool Win32PredefinedRegistryKeys (out object answer)
         {
-            return interpreter.Return (
+            answer = (
                 new Cons (
                 new Cons (string.Intern ("HKEY_CLASSES_ROOT"), Registry.ClassesRoot),
                 new Cons (
@@ -295,20 +337,22 @@ namespace Microcode
                 new Cons (
                 new Cons (string.Intern ("HKEY_DYNAMIC_DATA"), Registry.DynData),
                 null))))))));
+            return false;
         }
 
         [SchemePrimitive ("WORKING-DIRECTORY-PATHNAME", 0)]
-        public static object WorkingDirectoryPathname (Interpreter interpreter)
+        public static bool WorkingDirectoryPathname (out object answer)
         {
-            return interpreter.Return (System.Environment.CurrentDirectory.ToCharArray ());
+            answer = System.Environment.CurrentDirectory.ToCharArray ();
+            return false;
         }
 
         [SchemePrimitive ("SET-WORKING-DIRECTORY-PATHNAME!", 1)]
-        public static object SetWorkingDirectoryPathname (Interpreter interpreter, object arg)
+        public static bool SetWorkingDirectoryPathname (out object answer, object arg)
         {
-            char [] oldDirectory = System.Environment.CurrentDirectory.ToCharArray ();
+            answer = System.Environment.CurrentDirectory.ToCharArray ();
             System.Environment.CurrentDirectory = new String ((char []) arg);
-            return interpreter.Return (oldDirectory);
+            return false;
         }
     }
 }

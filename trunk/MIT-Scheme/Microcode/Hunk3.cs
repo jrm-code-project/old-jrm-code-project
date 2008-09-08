@@ -12,7 +12,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object cxr2;
 
-        Hunk3 (object cxr0, object cxr1, object cxr2)
+        internal Hunk3 (object cxr0, object cxr1, object cxr2)
         {
             this.cxr0 = cxr0;
             this.cxr1 = cxr1;
@@ -37,11 +37,11 @@ namespace Microcode
             get { return this.cxr2; }
         }
 
-        [SchemePrimitive ("HUNK3-CONS", 3)]
-        public static object Hunk3Cons (Interpreter interpreter, object cxr0, object cxr1, object cxr2)
-        {
-            return interpreter.Return (new Hunk3 (cxr0, cxr1, cxr2));
-        }
+        //[SchemePrimitive ("HUNK3-CONS", 3)]
+        //public static PartialResult Hunk3Cons (object cxr0, object cxr1, object cxr2)
+        //{
+        //    return new PartialResult (new Hunk3 (cxr0, cxr1, cxr2));
+        //}
 
         #region ISystemHunk3 Members
 

@@ -8,13 +8,55 @@ namespace Microcode
 {
     sealed class Record: SchemeObject, ISystemPair
     {
-        object [] slots;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly object [] slots;
 
         public Record (object [] slots)
             : base (TC.RECORD)
         {
-            this.slots = (object []) slots.Clone ();
+            this.slots = slots;
         }
+
+        public object [] Slots
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.slots;
+            }
+        }
+
+        #region ISystemPair Members
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public object SystemPairCar
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return Ref(0);
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public object SystemPairCdr
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
 
         object this [int slot]
         {
@@ -37,55 +79,34 @@ namespace Microcode
         }
 
         [SchemePrimitive ("%RECORD", -1)]
-        public static object PrimitiveRecord (Interpreter interpreter, object [] arglist)
+        public static bool PrimitiveRecord (out object answer, object [] arglist)
         {
-            return interpreter.Return (new Record (arglist));
+            answer = new Record (arglist);
+            return false;
         }
 
         [SchemePrimitive ("%RECORD?", 1)]
-        public static object IsRecord (Interpreter interpreter, object arg0)
+        public static bool IsRecord (out object answer, object arg0)
         {
-            return interpreter.Return (arg0 is Record);
+            answer = arg0 is Record;
+            return false;
         }
 
         [SchemePrimitive ("%RECORD-REF", 2)]
-        public static object RecordRef (Interpreter interpreter, object record, object idx)
+        public static bool RecordRef (out object answer, object record, object idx)
         {
-            return interpreter.Return (((Record) record).Ref ((int) idx));
+            answer = ((Record) record).Ref ((int) idx);
+            return false;
         }
 
         [SchemePrimitive ("%RECORD-SET!", 3)]
-        public static object RecordSet (Interpreter interpreter, object record, object idx, object value)
+        public static bool RecordSet (out object answer, object record, object idx, object value)
         {
-            return interpreter.Return (((Record) record).Set ((int) idx, value));
+            //if ((int)idx == 3)
+            //    Debug.WriteLine ("slot 3");
+            answer = ((Record) record).Set ((int) idx, value);
+            return false;
         }
 
-        #region ISystemPair Members
-
-        public object SystemPairCar
-        {
-            get
-            {
-                return Ref(0);
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public object SystemPairCdr
-        {
-            get
-            {
-                return this;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        #endregion
     }
 }

@@ -221,18 +221,19 @@ namespace Microcode
         }
 
         [SchemePrimitive ("GET-FIXED-OBJECTS-VECTOR", 0)]
-        public static object GetFixedObjectsVector (Interpreter interpreter)
+        public static bool GetFixedObjectsVector (out object answer)
         {
-            return interpreter.Return (theFixedObjectsVector);
+            answer = theFixedObjectsVector;
+            return false;
         }
 
         [SchemePrimitive ("SET-FIXED-OBJECTS-VECTOR!", 1)]
-        public static object SetFixedObjectsVector (Interpreter interpreter, object arg0)
+        public static bool SetFixedObjectsVector (out object answer, object arg0)
         {
-            object oldValue = theFixedObjectsVector;
+            answer = theFixedObjectsVector;
             theFixedObjectsVector = (object []) arg0;
             theFixedObjectsVector [MeMyself] = theFixedObjectsVector;
-            return interpreter.Return (oldValue);
-        }
+            return false;
+        } 
     }
 }

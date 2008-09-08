@@ -117,29 +117,6 @@ namespace Microcode
 
     public sealed class Interpreter
     {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        SCode expression;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        ValueCell [] argvector;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        Environment environment;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        Continuation continuation;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        object [] arguments;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        object primitiveArgument0;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        object primitiveArgument1;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        object primitiveArgument2;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         History history;
@@ -147,294 +124,13 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         int interrupt_mask;
 
+        // If you return this object, the stack will unwind.
+        // You should not return this object from a primitive.   
+        public static readonly object [] UnwindStack = new object [] { };
+        static readonly SCode UnwindStackExpression = Quotation.Make (UnwindStack);
+
         public Interpreter ()
         { }
-
-        public Termination Start (SCode initialForm)
-        {
-            this.continuation = new ExitInterpreter ();
-            this.expression = initialForm.Optimize(new CompileTimeEnvironment(null));
-            this.argvector = null;
-            this.environment = Environment.Global;
-            this.history = FixedObjectsVector.TheDummyHistory;
-
-            try
-            {
-                Run ();
-                return Termination.UNEXPECTED_EXIT;
-            }
-            catch (ExitInterpreterException exit)
-            {
-                return exit.Termination;
-            }
-        }
-
-        void Run ()
-        {
-            // The etc argument isn't used.
-            // We want EvalStep to be an expression rather
-            // than a statement so we chain the return value
-            // around in case we think of a use in the
-            // future.
-            object etc = this.argvector;
-            while (true)
-                etc = this.expression.EvalStep (this, etc);
-        }
-
-        [DebuggerStepThrough]
-        internal object EvalReduction (SCode sCode)
-        {
-            this.expression = sCode;
-            this.history.NewReduction (this.expression, this.environment);
-            return this.argvector;
-        }
-
-        [DebuggerStepThrough]
-        internal object EvalReduction (SCode sCode, Environment environment)
-        {
-            this.expression = sCode;
-            this.argvector = environment.Argvector;
-            this.environment = environment;
-            this.history.NewReduction (this.expression, this.environment);
-            return environment.Argvector;
-        }
-
-        [DebuggerStepThrough]
-        internal object EvalNewSubproblem (SCode sCode, Continuation continuation)
-        {
-            this.expression = sCode;
-            this.continuation = continuation;
-            this.history.NewSubproblem (sCode, this.environment);
-            return this.argvector;
-        }
-
-        [DebuggerStepThrough]
-        internal object EvalNewSubproblem (SCode sCode, Environment environment, Continuation continuation)
-        {
-            this.expression = sCode;
-            this.argvector = environment.Argvector;
-            this.environment = environment;
-            this.continuation = continuation;
-            this.history.NewSubproblem (sCode, environment);
-            return environment.Argvector;
-        }
-
-        [DebuggerStepThrough]
-        internal object EvalReuseSubproblem (SCode sCode, Continuation continuation)
-        {
-            this.expression = sCode;
-            this.continuation = continuation;
-            this.history.ReuseSubproblem (sCode, this.environment);
-            return this.argvector;
-        }
-
-        [DebuggerStepThrough]
-        internal object EvalReuseSubproblem (SCode sCode, Environment environment, Continuation continuation)
-        {
-            this.expression = sCode;
-            this.argvector = environment.Argvector;     
-            this.environment = environment;
-            this.continuation = continuation;
-            this.history.ReuseSubproblem (sCode, environment);
-            return environment.Argvector;
-        }
-
-
-        internal object Apply (object rator, object [] rands)
-        {
-            Primitive primrator = rator as Primitive;
-            if (primrator == null)
-            {
-                this.expression = (SCode) rator;
-                this.arguments = rands;
-                return this.argvector;
-            }
-            else switch (primrator.Arity)
-                {
-                    case 0:
-                        return CallPrimitive ((Primitive0) rator);
-                    case 1:
-                        return CallPrimitive ((Primitive1) rator, rands [0]);
-                    case 2:
-                        return CallPrimitive ((Primitive2) rator, rands [0], rands [1]);
-                    case 3:
-                        return CallPrimitive ((Primitive3) rator, rands [0], rands [1], rands [3]);
-                    default:
-                        this.expression = (SCode) rator;
-                        this.arguments = rands;
-                        return null;
-                }
-        }
-
-        [DebuggerStepThrough]
-        internal object CallPrimitive (Primitive0 rator)
-        {
-            this.expression = rator;
-            return null;
-        }
-
-        [DebuggerStepThrough]
-        internal object CallPrimitive (Primitive1 rator, object argument)
-        {
-            this.expression = rator;
-            this.primitiveArgument0 = argument;
-            return null;
-        }
-
-        [DebuggerStepThrough]
-        internal object CallPrimitive (Primitive2 rator, object argument0, object argument1)
-        {
-            this.expression = rator;
-            this.primitiveArgument0 = argument0;
-            this.primitiveArgument1 = argument1;
-            return null;
-        }
-
-        [DebuggerStepThrough]
-        internal object CallPrimitive (Primitive3 rator, object argument0, object argument1, object argument2)
-        {
-            this.expression = rator;
-            this.primitiveArgument0 = argument0;
-            this.primitiveArgument1 = argument1;
-            this.primitiveArgument2 = argument2;
-            return null;
-        }
-
-        internal object CallProcedure (SCode rator, object rand)
-        {
-            Primitive primval = rator as Primitive;
-            if ((primval == null)
-                || (primval.Arity == -1))
-            {
-                this.expression = rator;
-                this.arguments = new object [] { rand };
-                return null;
-            }
-            else if (primval.Arity == 1)
-                return CallPrimitive ((Primitive1) primval, rand);
-            else
-                throw new NotImplementedException ();
-        }
-
-        internal object CallProcedure (SCode rator, object rand0, object rand1)
-        {
-            Primitive primval = rator as Primitive;
-            if ((primval == null)
-                || (primval.Arity == -1))
-            {
-                this.expression = rator;
-                this.arguments = new object [] { rand0, rand1 };
-                return null;
-            }
-            else if (primval.Arity == 2)
-                return CallPrimitive ((Primitive2) primval, rand0, rand1);
-            else
-                throw new NotImplementedException ();
-        }
-
-        internal object CallProcedure (SCode rator, object rand0, object rand1, object rand2)
-        {
-            Primitive primval = rator as Primitive;
-            if ((primval == null)
-                || (primval.Arity == -1))
-            {
-                this.expression = rator;
-                this.arguments = new object [] { rand0, rand1, rand2 };
-                return null;
-            }
-            else if (primval.Arity == 3)
-                return CallPrimitive ((Primitive3) primval, rand0, rand1, rand2);
-            else
-                throw new NotImplementedException ();
-        }
-
-        internal object Return (object value)
-        {
-            Continuation cont = this.continuation;
-            this.continuation = cont.Parent;
-            return cont.Invoke (this, value);
-        }
-
-        internal object Return ()
-        {
-            return Return (Constant.Unspecific);
-        }
-
-        internal Continuation Continuation
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.continuation;
-            }
-            set
-            {
-                this.continuation = value;
-            }
-        }
-
-        internal SCode Expression
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.expression;
-            }
-        }
-
-        internal ValueCell [] Argvector
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.argvector;
-            }
-        }
-
-        internal Environment Environment
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.environment;
-            }
-        }
-
-        internal object [] Arguments
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.arguments;
-            }
-        }
-
-        internal object PrimitiveArgument0
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.primitiveArgument0;
-            }
-        }
-
-        internal object PrimitiveArgument1
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.primitiveArgument1;
-            }
-        }
-
-        internal object PrimitiveArgument2
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.primitiveArgument2;
-            }
-        }
 
         public int InterruptMask
         {
@@ -463,57 +159,509 @@ namespace Microcode
         }
 
         [SchemePrimitive ("APPLY", 2)]
-        public static object UserApply (Interpreter interpreter, object arg0, object arg1)
+        public static bool UserApply (out object answer, object arg0, object arg1)
         {
-            return interpreter.Apply (arg0, ((Cons) (arg1)).ToVector ());
+            ////Primitive.Noisy = true;
+            IApplicable op = arg0 as IApplicable;
+            Cons rands = arg1 as Cons;
+            if (op == null) throw new NotImplementedException ("Apply non applicable.");
+            if (arg1 != null && rands == null) throw new NotImplementedException ("Bad list to apply.");
+            answer = new TailCallInterpreter (new ApplyFromPrimitive (op, new Cons (op, rands)), null);
+            return true; // special return
         }
 
         [SchemePrimitive ("CALL-WITH-CURRENT-CONTINUATION", 1)]
-        public static object CallWithCurrentContinuation (Interpreter interpreter, object arg)
+        public static bool CallWithCurrentContinuation (out object answer, object arg)
         {
-            return interpreter.Apply (arg,
-                new object [] { new ControlPoint (interpreter.InterruptMask,
-                                                   interpreter.History, 
-                                                   interpreter.Continuation) });
+            // extreme hair ahead
+
+            IApplicable receiver = arg as IApplicable;
+            if (receiver == null) throw new NotImplementedException ("Receiver cannot be applied.");
+            // Create an initial unwinder state.  After reload, we resume at
+            // CWCCFrame0.
+            UnwinderState env = new UnwinderState (new CWCCFrame0 (receiver));
+
+            // Return from the primitive with instructions to unwind the stack.
+            answer = new TailCallInterpreter (Interpreter.UnwindStackExpression, env);
+            return true;
+        }
+
+        [SchemePrimitive ("WITHIN-CONTROL-POINT", 2)]
+        public static bool WithinControlPoint (out object answer, object arg0, object arg1)
+        {
+            // extreme hair ahead
+
+            IApplicable thunk = arg1 as IApplicable;
+            if (thunk == null) throw new NotImplementedException ("Thunk is not applicable.");
+
+            // Create an initial unwinder state.  After reload, we resume at
+            // WithinControlPointFrame.
+            UnwinderState env = new UnwinderState ((ControlPoint) arg0, new WithinControlPointFrame (thunk));
+
+            // Return from the primitive with instructions to unwind the stack.
+            answer = new TailCallInterpreter (Interpreter.UnwindStackExpression, env);
+            return true;
         }
 
         [SchemePrimitive ("GET-INTERRUPT-ENABLES", 0)]
-        public static object GetInterruptEnables (Interpreter interpreter)
+        public static bool GetInterruptEnables (out object answer)
         {
-            return interpreter.Return (0);
+            answer = 0;
+            return false;
         }
 
         [SchemePrimitive ("SCODE-EVAL", 2)]
-        public static object ScodeEval (Interpreter interpreter, object arg0, object arg1)
+        public static bool ScodeEval (out object answer, object arg0, object arg1)
         {
             Environment env = Environment.ToEnvironment (arg1);
-            CompileTimeEnvironment ctenv = (env is InterpreterEnvironment) 
-                ? new CompileTimeEnvironment (((InterpreterEnvironment) env).Closure.Lambda.Formals)
-                : new CompileTimeEnvironment (null);
-            SCode sarg0 = SCode.EnsureSCode (arg0).Optimize(ctenv);
-            return interpreter.EvalReduction (sarg0, env);
+            CompileTimeEnvironment ctenv = new CompileTimeEnvironment (null);
+            //CompileTimeEnvironment ctenv = (env is TopLevelEnvironment)
+            //    ? new CompileTimeEnvironment (((TopLevelEnvironment) env).Closure.Lambda.Formals)
+            //    : new CompileTimeEnvironment (null);
+            SCode sarg0 = SCode.EnsureSCode (arg0).Bind (ctenv);
+            answer = new TailCallInterpreter (sarg0, env);
+            return true;
         }
- 
+
         [SchemePrimitive ("SET-INTERRUPT-ENABLES!", 1)]
-        public static object SetInterruptEnables (Interpreter interpreter, object arg)
+        public static bool SetInterruptEnables (out object answer, object arg)
         {
-            return interpreter.Return (null);
+            answer = null;
+            return false;
+        }
+
+        [SchemePrimitive ("WITH-HISTORY-DISABLED", 1)]
+        public static bool WithHistoryDisabled (out object answer, object arg0)
+        {
+            IApplicable thunk = arg0 as IApplicable;
+            if (thunk == null) throw new NotImplementedException ("Thunk is not applicable.");
+            answer = new TailCallInterpreter (new HistoryDisabled (thunk), null);
+            return true;
         }
 
         [SchemePrimitive ("WITH-INTERRUPT-MASK", 2)]
-        public static object WithInterruptMask (Interpreter interpreter, object arg0, object arg1)
+        public static bool WithInterruptMask (out object answer, object arg0, object arg1)
         {
-            int oldMask = interpreter.InterruptMask;
-            interpreter.InterruptMask = (int) (arg0);
-            interpreter.Continuation = new RestoreInterruptMask (interpreter.Continuation, oldMask);
-            return interpreter.Apply (arg1, new object [] { interpreter.InterruptMask });
+            IApplicable receiver = arg1 as IApplicable;
+            if (receiver == null) throw new NotImplementedException ("Receiver is not applicable.");
+            answer = new TailCallInterpreter (new InterruptMask (arg0, receiver), null);
+            return true;
         }
 
         [SchemePrimitive ("WITH-STACK-MARKER", 3)]
-        public static object WithStackMarker (Interpreter interpreter, object thunk, object mark1, object mark2)
+        public static bool WithStackMarker (out object answer, object thunk, object mark1, object mark2)
         {
-            interpreter.Continuation = new StackMarker (interpreter.Continuation, mark1, mark2);
-            return interpreter.Apply (thunk, new object [] { });
+            IApplicable athunk = thunk as IApplicable;
+            if (athunk == null) throw new NotImplementedException ("Thunk is not applicable.");
+            answer = new TailCallInterpreter (new StackMarker (athunk, mark1, mark2), null);
+            return true;
         }
+
+        internal static bool Apply (out object answer, ref SCode expression, ref Environment environment, object evop, object [] evargs)
+        {
+            IApplicable op = evop as IApplicable;
+            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
+            return op.Apply (out answer, ref expression, ref environment, evargs);
+        }
+
+        internal static bool Call (out object answer, ref SCode expression, ref Environment environment, object evop)
+        {
+            IApplicable op = evop as IApplicable;
+            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
+            return op.Call (out answer, ref expression, ref environment);
+        }
+
+        internal static bool Call (out object answer, ref SCode expression, ref Environment environment, object evop, object evarg)
+        {
+            IApplicable op = evop as IApplicable;
+            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
+            return op.Call (out answer, ref expression, ref environment, evarg);
+        }
+
+        internal static bool Call (out object answer, ref SCode expression, ref Environment environment, object evop, object evarg0, object evarg1)
+        {
+            IApplicable op = evop as IApplicable;
+            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
+            return op.Call (out answer, ref expression, ref environment, evarg0, evarg1);
+        }
+    }
+
+    /// <summary>
+    /// Primitives return one of these objects in order to get
+    /// the interpreter to tail call.
+    /// </summary>
+    sealed class TailCallInterpreter
+    {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly SCode expression;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly Environment environment;
+
+        public TailCallInterpreter (SCode expression, Environment environment)
+        {
+            this.expression = expression;
+            this.environment = environment;
+        }
+
+        public SCode Expression
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.expression;
+            }
+        }
+
+        public Environment Environment
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.environment;
+            }
+        }
+    }
+
+    sealed class CWCCFrame0 : ContinuationFrame
+    {
+        IApplicable receiver;
+
+        public CWCCFrame0 (IApplicable receiver)
+        {
+            this.receiver = receiver;
+        }
+
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+            return this.receiver.Call (out answer, ref expression, ref environment, ((RewindState) environment).ControlPoint);
+        }
+    }
+
+    sealed class WithinControlPointFrame : ContinuationFrame
+    {
+        IApplicable thunk;
+
+        public WithinControlPointFrame (IApplicable thunk)
+        {
+            this.thunk = thunk;
+        }
+
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+            return this.thunk.Call (out answer, ref expression, ref environment);
+        }
+    }
+
+    sealed class ApplyFromPrimitive : SCode
+    {
+        internal IApplicable op;
+        internal Cons rands;
+
+        internal ApplyFromPrimitive (IApplicable op, Cons rands)
+            : base (TC.SPECIAL)
+        {
+            this.op = op;
+            this.rands = rands;
+        }
+
+        public override SCode Bind (CompileTimeEnvironment ctenv)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override HashSet<string> FreeVariables ()
+        {
+            throw new NotImplementedException ();
+        }
+        
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+            return this.op.Apply (out answer, ref expression, ref environment, this.rands.ToVector ());
+        }
+
+        public override bool NeedsTheEnvironment ()
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    sealed class HistoryDisabled : SCode
+    {
+        IApplicable thunk;
+
+        internal HistoryDisabled (IApplicable arg0)
+            : base (TC.SPECIAL)
+        {
+            this.thunk = arg0;
+        }
+
+        public override SCode Bind (CompileTimeEnvironment ctenv)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override HashSet<string> FreeVariables ()
+        {
+            throw new NotImplementedException ();
+        }
+        
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+            object returnValue = null;
+            SCode expr = null;
+            Environment env = null;
+            if (this.thunk.Call (out returnValue, ref expr, ref env)) {
+                while (expr.EvalStep (out returnValue, ref expr, ref env)) { };
+            }
+            if (returnValue == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new HistoryDisabledFrame (this));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+            // re-enable history here
+            answer = returnValue;
+            return false;
+        }
+
+        public override bool NeedsTheEnvironment ()
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    sealed class HistoryDisabledFrame : ContinuationFrame, ISystemVector
+    {
+        HistoryDisabled historyDisabled;
+
+        public HistoryDisabledFrame (HistoryDisabled historyDisabled)
+        {
+            this.historyDisabled = historyDisabled;
+        }
+
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+            SCode expr = ((RewindState) environment).PopFrame ();
+            Environment env = environment;
+            while (expr.EvalStep (out answer, ref expr, ref env)) { };
+            if (answer == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AppendContinuationFrames (this.continuation);
+                //((UnwinderState) env).AppendContinuationFrames ((RewindState) environment.OldFrames);
+                environment = env;
+                return false;
+            }
+
+            return false;
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+    }
+
+    sealed class InterruptMask : SCode
+    {
+        object arg0;
+        IApplicable receiver;
+
+        internal InterruptMask (object arg0, IApplicable receiver)
+            : base (TC.SPECIAL)
+        {
+            this.arg0 = arg0;
+            this.receiver = receiver;
+        }
+
+        public override SCode Bind (CompileTimeEnvironment ctenv)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+            int oldMask = 0;
+            object returnValue = null;
+            SCode expr = null;
+            Environment env = null;
+            if (this.receiver.Call (out returnValue, ref expr, ref env, oldMask)) {
+                while (expr.EvalStep (out returnValue, ref expr, ref env)) { };
+            }
+            if (returnValue == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new InterruptMaskFrame (this, oldMask));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+            // restore mask here
+            answer = returnValue;
+            return false;
+        }
+
+        public override HashSet<string> FreeVariables ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool NeedsTheEnvironment ()
+        {
+            throw new NotImplementedException ();
+        }
+
+
+    }
+
+    sealed class StackMarker : SCode
+    {
+        IApplicable thunk;
+        object mark1;
+        object mark2;
+
+        internal StackMarker (IApplicable thunk, object mark1, object mark2)
+            : base (TC.SPECIAL)
+        {
+            this.thunk = thunk;
+            this.mark1 = mark1;
+            this.mark2 = mark2;
+        }
+
+        public override SCode Bind (CompileTimeEnvironment ctenv)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+            object returnValue = null;
+            SCode expr = null;
+            Environment env = null;
+            if (this.thunk.Call (out returnValue, ref expr, ref env)) {
+                while (expr.EvalStep (out returnValue, ref expr, ref env)) { };
+            }
+            if (returnValue == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new StackMarkerFrame (this));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+            answer = returnValue;
+            return false;
+        }
+
+        public override HashSet<string> FreeVariables ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool NeedsTheEnvironment ()
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    sealed class StackMarkerFrame : ContinuationFrame, ISystemVector
+    {
+        StackMarker stackMarker;
+
+        internal StackMarkerFrame (StackMarker stackMarker)
+        {
+            this.stackMarker = stackMarker;
+        }
+
+        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        {
+            SCode expr = ((RewindState) environment).PopFrame ();
+            Environment env = environment;
+            while (expr.EvalStep (out answer, ref expr, ref env)) { };
+            if (answer == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AppendContinuationFrames (this.continuation);
+                //((UnwinderState) env).AppendContinuationFrames ((RewindState) environment.OldFrames);
+                environment = env;
+                return false;
+            }
+         
+            return false;
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+    }
+
+    sealed class InterruptMaskFrame : ContinuationFrame, ISystemVector
+    {
+        InterruptMask interruptMask;
+
+        internal InterruptMaskFrame (InterruptMask interruptMask, int oldMask)
+        {
+            this.interruptMask = interruptMask;
+        }
+
+        public override bool EvalStep (out object answer, ref SCode tailCall, ref Environment environment)
+        {
+            SCode expr = ((RewindState) environment).PopFrame ();
+            Environment env = environment;
+            while (expr.EvalStep (out answer, ref expr, ref env)) { };
+            if (answer == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AppendContinuationFrames (this.continuation);
+                //((UnwinderState) env).AppendContinuationFrames ((RewindState) environment.OldFrames);
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+// restore mask
+            return false;
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
     }
 }

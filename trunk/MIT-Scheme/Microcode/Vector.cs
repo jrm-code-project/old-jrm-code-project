@@ -8,64 +8,70 @@ namespace Microcode
     static class Vector
     {
         [SchemePrimitive ("VECTOR", -1)]
-        public static object MakeVector (Interpreter interpreter, object [] arglist)
+        public static bool MakeVector (out object answer, object [] arglist)
         {
-            return interpreter.Return (arglist.Clone ());
+            answer = arglist;
+            return false;
         }
 
         [SchemePrimitive ("VECTOR-CONS", 2)]
-        public static object VectorCons (Interpreter interpreter, object size, object init)
+        public static bool VectorCons (out object answer, object size, object init)
         {
             object [] result = new object [(int) size];
             for (int i = 0; i < ((int) size); i++)
                 result [i] = init;
-            return interpreter.Return (result);
+            answer = result;
+            return false;
         }
 
         [SchemePrimitive ("VECTOR?", 1)]
-        public static object IsVector (Interpreter interpreter, object arg)
+        public static bool IsVector (out object answer, object arg)
         {
-            if (arg is object [] && (((object []) arg).Length == 4))
-                return interpreter.Return (true);
-            return interpreter.Return (arg is object []);
+            answer = arg is object [];
+            return false;
         }
 
         [SchemePrimitive ("VECTOR-LENGTH", 1)]
-        public static object VectorLength (Interpreter interpreter, object arg)
+        public static bool VectorLength (out object answer, object arg)
         {
             if (arg is object []) {
-                return interpreter.Return(((object []) arg).Length);
+                answer = ((object []) arg).Length;
+                return false;
             }
-            else if (arg is char []) {
-                return interpreter.Return (((char []) arg).Length);
-            }
+            //else if (arg is char []) {
+            //    return ((char []) arg).Length;
+            //}
             else
-               throw new NotImplementedException();
+                throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("VECTOR-REF", 2)]
-        public static object VectorRef (Interpreter interpreter, object vec, object idx)
+        public static bool VectorRef (out object answer, object vec, object idx)
         {
-            if (vec is object []) {
-                return interpreter.Return (((object []) vec) [(int) idx]);
-            }
-            else if (vec is char []) {
-                return interpreter.Return (((char []) vec) [(int) idx]);
+            object [] ovec = vec as object [];
+            if (ovec != null) {
+                answer = ovec [(int) idx];
+                return false;
             }
             else
                 throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("VECTOR-SET!", 3)]
-        public static object VectorSet (Interpreter interpreter, object vec, object idx, object val)
+        public static bool VectorSet (out object answer, object vec, object idx, object val)
         {
-            object oldValue = ((object []) vec) [(int) idx];
-            ((object []) vec) [(int) idx] = val;
-            return interpreter.Return (oldValue);
+            object [] ovec = vec as object [];
+            if (ovec != null) {
+                answer = ovec [(int) idx];
+                ovec [(int) idx] = val;
+                return false;
+            }
+            else
+                throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("SUBVECTOR-MOVE-RIGHT!", 5)]
-        public static object SubvectorMoveRight (Interpreter interpreter, object [] arglist)
+        public static bool SubvectorMoveRight (out object answer, object [] arglist)
         {
             object [] ptr1 = (object []) (arglist [0]);
             int len1 = ptr1.Length;
@@ -82,11 +88,12 @@ namespace Microcode
             int limit = scan1 - length;
             while (scan1 > limit)
                 ptr2 [--scan2] = ptr1 [--scan1];
-            return interpreter.Return ();
+            answer = false;
+            return false;
         }
 
         [SchemePrimitive ("SUBVECTOR-MOVE-LEFT!", 5)]
-        public static object SubvectorMoveLeft (Interpreter interpreter, object [] arglist)
+        public static bool SubvectorMoveLeft (out object answer, object [] arglist)
         {
             object [] ptr1 = (object []) (arglist [0]);
             int len1 = ptr1.Length;
@@ -103,21 +110,22 @@ namespace Microcode
             int limit = scan1 + length;
             while (scan1 < limit)
                 ptr2 [scan2++] = ptr1 [scan1++];
-            return interpreter.Return ();
+            answer = false;
+            return false;
         }
 
         [SchemePrimitive ("SUBVECTOR->LIST", 3)]
-        public static object SubvectorToList (Interpreter interpreter, object avec, object astart, object aend)
+        public static bool SubvectorToList (out object answer, object avec, object astart, object aend)
         {
             object [] vector = (object []) avec;
             int start = (int) astart;
             int end = (int) aend;
-            Cons answer = null;
-            while (start < end)
-            {
-                answer = new Cons (vector [--end], answer);
+            Cons list = null;
+            while (start < end) {
+                list = new Cons (vector [--end], list);
             }
-            return interpreter.Return (answer);
+            answer = list;
+            return false;
         }
     }
 }

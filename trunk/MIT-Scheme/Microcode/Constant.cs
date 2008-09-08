@@ -6,10 +6,10 @@ namespace Microcode
     sealed class Constant : SchemeObject
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static object sharpT = true;
+        public static object sharpT = true;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static Constant defaultObject;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static Constant eofObject;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static Constant aux;
@@ -24,7 +24,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         static Constant unspecific;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static object sharpF = false;
+        public static object sharpF = false;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         string name;

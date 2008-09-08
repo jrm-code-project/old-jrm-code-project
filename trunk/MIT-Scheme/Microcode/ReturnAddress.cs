@@ -24,31 +24,32 @@ namespace Microcode
         }
 
         [SchemePrimitive ("MAP-MACHINE-ADDRESS-TO-CODE", 2)]
-        public static object MapMachineAddressToCode (Interpreter interpreter, object arg0, object arg1)
+        public static bool MapMachineAddressToCode (out object answer, object arg0, object arg1)
         {
             TC type = (TC) arg0;
-            switch (type)
-            {
+            switch (type) {
                 case TC.RETURN_CODE:
-                    return interpreter.Return ((int) (ReturnCode) arg1);
+                    answer = (int) (ReturnCode) arg1;
+                    break;
+
                 default:
                     throw new NotImplementedException ();
             }
+            return false;
         }
 
         [SchemePrimitive ("MAP-CODE-TO-MACHINE-ADDRESS", 2)]
-        public static object MapCodeToMachineAddress (Interpreter interpreter, object arg0, object arg1)
+        public static bool MapCodeToMachineAddress (out object answer, object arg0, object arg1)
         {
             TC type = (TC) arg0;
-            switch (type)
-            {
+            switch (type) {
                 case TC.RETURN_CODE:
-                    return interpreter.Return (new ReturnAddress ((ReturnCode) arg1));
+                    answer = new ReturnAddress ((ReturnCode) arg1);
+                    break;
                 default:
                     throw new NotImplementedException ();
             }
+            return false;
         }
-
-
     }
 }

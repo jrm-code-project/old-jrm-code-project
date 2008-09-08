@@ -8,9 +8,10 @@ namespace Microcode
     class Cell
     {
         [SchemePrimitive ("CELL?", 1)]
-        public static object IsCell (Interpreter interpreter, object arg)
+        public static bool IsCell (out object answer, object arg)
         {
-            return interpreter.Return (arg is Cell);
+            answer = arg is Cell;
+            return false;
         }
     }
 }

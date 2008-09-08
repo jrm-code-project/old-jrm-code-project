@@ -773,9 +773,10 @@ namespace Microcode
         }
 
         [SchemePrimitive ("BIGNUM?", 1)]
-        public static object IsBignum (Interpreter interpreter, object arg)
+        public static bool IsBignum (out object answer, object arg)
         {
-            return interpreter.Return (arg is Bignum);
+            answer = arg is Bignum;
+            return false;
         }
     }
 }
