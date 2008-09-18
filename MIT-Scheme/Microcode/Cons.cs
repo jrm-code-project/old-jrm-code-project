@@ -3,6 +3,7 @@ using System.Diagnostics;
 
 namespace Microcode
 {
+    [Serializable]
     sealed class Cons: SchemeObject, ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -103,21 +104,21 @@ namespace Microcode
             return result;
         }
 
-        [SchemePrimitive ("CAR", 1)]
+        [SchemePrimitive ("CAR", 1 ,false)]
         public static bool PrimitiveCar (out object answer, object arg0)
         {
             answer = ((Cons) arg0).Car;
             return false;
         }
 
-        [SchemePrimitive ("CDR", 1)]
+        [SchemePrimitive ("CDR", 1, false)]
         public static bool PrimitiveCdr (out object answer, object arg0)
         {
             answer = ((Cons) arg0).Cdr;
             return false;
         }
 
-        [SchemePrimitive ("GENERAL-CAR-CDR", 2)]
+        [SchemePrimitive ("GENERAL-CAR-CDR", 2, false)]
         public static bool GeneralCarCdr (out object answer, object arg0, object arg1)
         {
             object result = arg0;
@@ -136,14 +137,14 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("CONS", 2)]
+        [SchemePrimitive ("CONS", 2, true)]
         public static bool PrimitiveCons (out object answer, object car, object cdr)
         {
             answer = new Cons (car, cdr);
             return false;
         }
 
-        [SchemePrimitive ("LIST->VECTOR", 1)]
+        [SchemePrimitive ("LIST->VECTOR", 1, false)]
         public static bool ToVector (out object answer, object arg0)
         {
             answer = (arg0 == null)
@@ -152,14 +153,14 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("PAIR?", 1)]
+        [SchemePrimitive ("PAIR?", 1, true)]
         public static bool IsPair (out object answer, object arg0)
         {
             answer = arg0 is Cons ? Constant.sharpT : Constant.sharpF;
             return false;
         }
 
-        [SchemePrimitive ("SET-CAR!", 2)]
+        [SchemePrimitive ("SET-CAR!", 2, false)]
         public static bool SetCar (out object answer, object pair, object value)
         {
             answer = ((Cons) pair).Car;
@@ -167,7 +168,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SET-CDR!", 2)]
+        [SchemePrimitive ("SET-CDR!", 2, false)]
         public static bool SetCdr (out object answer, object pair, object value)
         {
             answer = ((Cons) pair).Cdr;

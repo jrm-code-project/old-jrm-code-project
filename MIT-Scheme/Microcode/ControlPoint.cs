@@ -5,7 +5,8 @@ using System.Text;
 
 namespace Microcode
 {
-    class ControlPoint : SchemeObject, ISystemVector
+    [Serializable]
+    public class ControlPoint : SchemeObject, ISystemVector
     {
         // 0 reusable?
         // 1 unused-length

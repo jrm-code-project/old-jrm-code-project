@@ -14,8 +14,8 @@ namespace Microcode
     }
 
 
-
-    class ReferenceTrap
+    [Serializable]
+    sealed class ReferenceTrap
     {
         public static TrapKind GetTrapKind (object value)
         {
@@ -27,7 +27,7 @@ namespace Microcode
             else 
                 return (TrapKind)(((Cons)(reftrap.contents)).Car);
         }
-
+        
         static ReferenceTrap expensive;
         static ReferenceTrap unassigned;
         static ReferenceTrap unbound;
@@ -107,6 +107,13 @@ namespace Microcode
         public static ReferenceTrap Make (Cons arg)
         {
             return new ReferenceTrap (arg);
+        }
+
+        [SchemePrimitive ("REFERENCE-TRAP?", 1, true)]
+        public static bool IsReferenceTrap (out object answer, object arg)
+        {
+            answer = arg is ReferenceTrap;
+            return false;
         }
 
     }

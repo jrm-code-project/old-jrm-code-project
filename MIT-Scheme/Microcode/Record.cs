@@ -6,8 +6,11 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     sealed class Record: SchemeObject, ISystemPair
     {
+        static int [] histogram = new int [128];
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object [] slots;
 
@@ -78,28 +81,54 @@ namespace Microcode
             return old;
         }
 
-        [SchemePrimitive ("%RECORD", -1)]
+        [SchemePrimitive ("%RECORD", -1, true)]
         public static bool PrimitiveRecord (out object answer, object [] arglist)
         {
             answer = new Record (arglist);
             return false;
         }
 
-        [SchemePrimitive ("%RECORD?", 1)]
+        [SchemePrimitive ("%RECORD?", 1, true)]
         public static bool IsRecord (out object answer, object arg0)
         {
             answer = arg0 is Record;
             return false;
         }
 
-        [SchemePrimitive ("%RECORD-REF", 2)]
+        [SchemePrimitive ("%RECORD-REF", 2, false)]
         public static bool RecordRef (out object answer, object record, object idx)
         {
+            histogram [(int) idx] += 1;
             answer = ((Record) record).Ref ((int) idx);
             return false;
         }
 
-        [SchemePrimitive ("%RECORD-SET!", 3)]
+        [SchemePrimitive ("%RECORD-REF0", 1, false)]
+        public static bool RecordRef0 (out object answer, object record)
+        {
+            histogram [0] += 1;
+            answer = ((Record) record).Ref (0);
+            return false;
+        }
+
+        [SchemePrimitive ("%RECORD-REF1", 1, false)]
+        public static bool RecordRef1 (out object answer, object record)
+        {
+            histogram [1] += 1;
+            answer = ((Record) record).Ref (1);
+            return false;
+        }
+
+        [SchemePrimitive ("%RECORD-REF3", 1, false)]
+        public static bool RecordRef3 (out object answer, object record)
+        {
+            histogram [3] += 1;
+            answer = ((Record) record).Ref (3);
+            return false;
+        }
+
+
+        [SchemePrimitive ("%RECORD-SET!", 3, false)]
         public static bool RecordSet (out object answer, object record, object idx, object value)
         {
             //if ((int)idx == 3)

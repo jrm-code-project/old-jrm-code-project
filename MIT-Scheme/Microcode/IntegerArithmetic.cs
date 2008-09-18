@@ -38,7 +38,7 @@ namespace Microcode
                 throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("INTEGER-ZERO?", 1)]
+        [SchemePrimitive ("INTEGER-ZERO?", 1, false)]
         public static bool ZeroP (out object answer, object arg)
         {
             if (arg is int)
@@ -50,7 +50,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-NEGATIVE?", 1)]
+        [SchemePrimitive ("INTEGER-NEGATIVE?", 1, false)]
         public static bool NegativeP (out object answer, object arg)
         {
             if (arg is int)
@@ -62,7 +62,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-POSITIVE?", 1)]
+        [SchemePrimitive ("INTEGER-POSITIVE?", 1, false)]
         public static bool PositiveP (out object answer, object arg)
         {
             if (arg is int)
@@ -74,7 +74,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-EQUAL?", 2)]
+        [SchemePrimitive ("INTEGER-EQUAL?", 2, false)]
         public static bool EqualP (out object answer, object left, object right)
         {
             if (left is int) {
@@ -108,7 +108,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-LESS?", 2)]
+        [SchemePrimitive ("INTEGER-LESS?", 2, false)]
         public static bool LessP (out object answer, object left, object right)
         {
             if (left is int) {
@@ -130,7 +130,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-GREATER?", 2)]
+        [SchemePrimitive ("INTEGER-GREATER?", 2, false)]
         public static bool GreaterP (out object answer, object left, object right)
         {
             if (left is int) {
@@ -154,7 +154,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-ADD", 2)]
+        [SchemePrimitive ("INTEGER-ADD", 2, false)]
         public static bool Add (out object answer, object left, object right)
         {
             if (left is int) {
@@ -176,7 +176,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-SUBTRACT", 2)]
+        [SchemePrimitive ("INTEGER-SUBTRACT", 2, false)]
         public static bool Subtract (out object answer, object left, object right)
         {
             if (left is int) {
@@ -200,7 +200,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-MULTIPLY", 2)]
+        [SchemePrimitive ("INTEGER-MULTIPLY", 2, false)]
         public static bool Multiply (out object answer, object left, object right)
         {
             if (left is int) {
@@ -236,7 +236,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-NEGATE", 1)]
+        [SchemePrimitive ("INTEGER-NEGATE", 1, false)]
         public static bool Negate (out object answer, object arg)
         {
             if (arg is int)
@@ -246,7 +246,7 @@ namespace Microcode
             return false;
         }
 
-        //[SchemePrimitive ("INTEGER-ADD-1", 1)]
+        //[SchemePrimitive ("INTEGER-ADD-1", 1, false)]
         //public static PartialResult Add1 (object arg)
         //{
         //    if (arg is int)
@@ -254,7 +254,7 @@ namespace Microcode
         //    throw new NotImplementedException ();
         //}
 
-        //[SchemePrimitive ("INTEGER-SUBTRACT-1", 1)]
+        //[SchemePrimitive ("INTEGER-SUBTRACT-1", 1, false)]
         //public static PartialResult Subtract1 (object arg)
         //{
         //    if (arg is int)
@@ -267,7 +267,7 @@ namespace Microcode
         //    throw new NotImplementedException ();
         //}
 
-        [SchemePrimitive ("INTEGER-DIVIDE", 2)]
+        [SchemePrimitive ("INTEGER-DIVIDE", 2, false)]
         public static bool Divide (out object answer, object left, object right)
         {
             long w0 = Widen (left);
@@ -279,7 +279,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-QUOTIENT", 2)]
+        [SchemePrimitive ("INTEGER-QUOTIENT", 2, false)]
         public static bool Quotient (out object answer, object left, object right)
         {
             if (left is int) {
@@ -310,7 +310,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-REMAINDER", 2)]
+        [SchemePrimitive ("INTEGER-REMAINDER", 2, false)]
         public static bool Remainder (out object answer, object left, object right)
         {
             if (left is int) {
@@ -347,7 +347,7 @@ namespace Microcode
             return false;
         }
 
-        //[SchemePrimitive ("INTEGER?", 1)]
+        //[SchemePrimitive ("INTEGER?", 1, false)]
         //public static PartialResult IsInteger (object arg)
         //{
         //    if (arg is int)
@@ -356,7 +356,7 @@ namespace Microcode
         //        throw new NotImplementedException ();
         //}
 
-        [SchemePrimitive ("INTEGER->FLONUM", 2)]
+        [SchemePrimitive ("INTEGER->FLONUM", 2, false)]
         public static bool ToFlonum (out object answer, object left, object right)
         {
             if (left is int)
@@ -370,7 +370,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("INTEGER-SHIFT-LEFT", 2)]
+        [SchemePrimitive ("INTEGER-SHIFT-LEFT", 2, false)]
         public static bool ShiftLeft (out object answer, object left, object right)
         {
             answer = Narrow (Widen (left) << (int) right);

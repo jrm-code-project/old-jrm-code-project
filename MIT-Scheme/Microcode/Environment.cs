@@ -20,24 +20,31 @@ namespace Microcode
         Macro
     };
 
+    [Serializable]
     public abstract class Environment : SchemeObject
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Environment global;
+        public static GlobalEnvironment systemGlobalEnvironment;
 
         protected Environment ()
             : base (TC.ENVIRONMENT)
         {
         }
 
-        public static Environment Global
+        public static GlobalEnvironment Global
         {
             [DebuggerStepThrough]
             get
             {
-                if (global == null)
-                    global = new GlobalEnvironment ();
-                return global;
+                if (systemGlobalEnvironment == null)
+                    systemGlobalEnvironment = new GlobalEnvironment ();
+                return systemGlobalEnvironment;
+            }
+
+            [DebuggerStepThrough]
+            set
+            {
+                systemGlobalEnvironment = value;
             }
         }
 
@@ -62,19 +69,29 @@ namespace Microcode
         }
 
 #if DEBUG
+        [NonSerialized]
         static protected int [] foundAtDepth = new int [128];
+        [NonSerialized]
         static protected int [] foundInAuxes = new int [128];
+        [NonSerialized]
         static protected int [] foundInGlobal = new int [128];
-        static protected int [] extendedBy = new int [256];
+        [NonSerialized]
+        static protected int [] extendedBy = new int [1024];
 #endif
 
         // Abstract functions on environments
 
         // Grab the variable at offset in frame.
-        public abstract bool ArgumentValue (out object value, int offset);
+        public abstract object ArgumentValue (int offset);
+        public abstract object Argument0Value {get;}
+        public abstract object Argument1Value {get;}
+
 
         // Deep search for variable location and smash the value.
         public abstract bool Assign (out object oldValue, string name, object newValue);
+
+        // Gets the closure that created this environment
+        public abstract IClosure Closure {get;}
 
         // Define a variable in the topmost frame.  This will shadow
         // other definitions.  Returns false on success, true if there
@@ -88,32 +105,41 @@ namespace Microcode
         internal abstract bool DeepSearch ( out object value, string name, int depth);
         internal abstract bool DeepSearchType (out object value, string name);
 
-        internal abstract Environment Extend (IClosure closure);
-        // Have to use vector because we can't discriminate one arg
-        // that is a vector from one arg only.
-        internal abstract Environment Extend (IClosure closure, object [] args);
-
         // Used to link variables.
         internal abstract ValueCell GetValueCell (string name);
+
+        internal abstract bool LexicalRef (out object value, string name, int depth, int offset);
+        // special case only one level deep.
+        internal abstract bool LexicalRef1 (out object value, string name, int offset);
 
         internal abstract bool SafeDeepSearch (out object value, string name);
         // Used to link variables.
         internal abstract bool SetValueCell (string name, ValueCell newCell);
 
-        internal abstract bool Unreferenceable (string name);
+        internal abstract Dictionary<object, ValueCell> Incrementals { get; }
 
-        [SchemePrimitive ("LEXICAL-UNREFERENCEABLE?", 2)]
+        internal abstract bool IsUnbound (string name);
+        internal abstract bool IsUnreferenceable (string name);
+
+        [SchemePrimitive ("LEXICAL-UNBOUND?", 2, false)]
+        public static bool IsLexicalUnbound (out object answer, object env, object name)
+        {
+            answer = ToEnvironment (env).IsUnbound ((string) name);
+            return false; // copacetic
+        }
+
+        [SchemePrimitive ("LEXICAL-UNREFERENCEABLE?", 2, false)]
         public static bool IsLexicalUnreferenceable (out object answer, object env, object name)
         {
-            answer = ((Environment) env).Unreferenceable ((string) name);
+            answer = ToEnvironment(env).IsUnreferenceable ((string) name);
             return false; // copacetic
         }
 
         // Same as assigning in the interpreter.
-        [SchemePrimitive ("LEXICAL-ASSIGNMENT", 3)]
+        [SchemePrimitive ("LEXICAL-ASSIGNMENT", 3, false)]
         public static bool LexicalAssignment (out object answer, object aenv, object aname, object value)
         {
-            Environment env = (Environment) aenv;
+            Environment env = ToEnvironment(aenv);
             string name = (string) aname;
             object oldValue;
             if (env.Assign (out oldValue, name, value))
@@ -123,33 +149,33 @@ namespace Microcode
         }
 
         // Same as evaluating variable.
-        [SchemePrimitive ("LEXICAL-REFERENCE", 2)]
+        [SchemePrimitive ("LEXICAL-REFERENCE", 2, false)]
         public static bool LexicalReference (out object answer, object env, object name)
         {
-            if (((Environment) env).DeepSearch (out answer, (string) name))
+            if (ToEnvironment(env).DeepSearch (out answer, (string) name))
                 throw new NotImplementedException ("Error during lexical-reference.");
             return false;
         }
 
         // Looks up variable, tells whether it is a macro, unassigned, etc.
-        [SchemePrimitive ("LEXICAL-REFERENCE-TYPE", 2)]
+        [SchemePrimitive ("LEXICAL-REFERENCE-TYPE", 2, false)]
         public static bool LexicalReferenceType (out object answer, object env, object name)
         {
-            if (((Environment) env).DeepSearchType (out answer, (string) name))
+            if (ToEnvironment(env).DeepSearchType (out answer, (string) name))
                 throw new NotImplementedException ("Error during lexical-reference-type.");
             return false;
         }
 
 
-        [SchemePrimitive ("SAFE-LEXICAL-REFERENCE", 2)]
+        [SchemePrimitive ("SAFE-LEXICAL-REFERENCE", 2, false)]
         public static bool SafeLexicalReference (out object answer, object env, object name)
         {
-            if (((Environment) env).SafeDeepSearch (out answer, (string) name))
+            if (ToEnvironment(env).SafeDeepSearch (out answer, (string) name))
                 throw new NotImplementedException ("Error during lexical-reference.");
             return false;
         }
 
-        [SchemePrimitive ("LINK-VARIABLES", 4)]
+        [SchemePrimitive ("LINK-VARIABLES", 4, false)]
         public static bool LinkVariables (out object answer, object [] arglist)
         {
             Environment target_env = ToEnvironment (arglist [0]);
@@ -170,7 +196,7 @@ namespace Microcode
 
 
         // This has the same effect as a DEFINE in the interpreter.
-        [SchemePrimitive ("LOCAL-ASSIGNMENT", 3)]
+        [SchemePrimitive ("LOCAL-ASSIGNMENT", 3, false)]
         public static bool LocalAssignment (out object answer, object env, object aname, object value)
         {
             if ((string)aname == "deferred-unparser-methods")
@@ -181,7 +207,7 @@ namespace Microcode
             return false;
          }
 
-        [SchemePrimitive ("ENVIRONMENT?", 1)]
+        [SchemePrimitive ("ENVIRONMENT?", 1, true)]
         public static bool IsEnvironment (out object answer, object arg)
         {
             answer = arg is Environment || (arg is bool && (bool) arg == false);
@@ -192,13 +218,14 @@ namespace Microcode
     // There are four different kinds of environment.  
     // The null environment doesn't respond to anything yet.
     // A Root environment has no parent and no frame.  It is
-    // used for the global environment.
+    // used for the systemGlobalEnvironment environment.
     // A `Top Level' environment has a frame and incrementals.
     // it can be extended, searched, etc.  A full-feature environment.
 
+    [Serializable]
     class NullEnvironment : Environment
     {
-        public override bool ArgumentValue (out object value, int offset)
+        public override object ArgumentValue (int offset)
         {
             throw new NotImplementedException ();
         }
@@ -218,16 +245,6 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override Environment Extend (IClosure closure)
-        {
-            throw new NotImplementedException ();
-        }
-
-        internal override Environment Extend (IClosure closure, object [] args)
-        {
-            throw new NotImplementedException ();
-        }
-
         public override bool Assign (out object oldValue, string name, object newValue)
         {
             throw new NotImplementedException ();
@@ -243,7 +260,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override bool Unreferenceable (string name)
+        internal override bool IsUnreferenceable (string name)
         {
             throw new NotImplementedException ();
         }
@@ -257,23 +274,65 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
-    }
 
-    class GlobalEnvironment : Environment
-    {
-        public override bool ArgumentValue (out object value, int offset)
+        internal override bool IsUnbound (string name)
         {
             throw new NotImplementedException ();
         }
 
-        Dictionary<string, ValueCell> bindings = new Dictionary<string, ValueCell> ();
+        public override IClosure Closure
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        internal override Dictionary<object, ValueCell> Incrementals
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public override object Argument0Value
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+        public override object Argument1Value
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool LexicalRef1 (out object value, string name, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    public sealed class GlobalEnvironment : Environment
+    {
+        // Object -> value cell so we have EQ semantics
+        // rather than string= semantics.
+        readonly Dictionary<object, ValueCell> globalBindings = new Dictionary<object, ValueCell> ();
+        public override object ArgumentValue (int offset)
+        {
+            throw new NotImplementedException ();
+        }
 
         public override bool Define (string name, object value)
         {
             ValueCell cell = null;
-            if (this.bindings.TryGetValue (name, out cell) == false) {
+            if (this.globalBindings.TryGetValue (name, out cell) == false) {
                 cell = new ValueCell (name, value);
-                this.bindings.Add (name, cell);
+                this.globalBindings.Add (name, cell);
             }
             else {
                 object oldValue;
@@ -290,7 +349,7 @@ namespace Microcode
         internal override bool DeepSearch (out object value, string name, int depth)
         {
             ValueCell cell = null;
-            if (this.bindings.TryGetValue (name, out cell)) {
+            if (this.globalBindings.TryGetValue (name, out cell)) {
 #if DEBUG
                 foundInGlobal [depth] += 1;
 #endif
@@ -301,31 +360,15 @@ namespace Microcode
             throw new NotImplementedException ("Variable not bound");
         }
 
-        internal override Environment Extend (IClosure closure)
-        {
-#if DEBUG
-            extendedBy [closure.Lambda.Formals.Length] += 1;
-#endif
-            return new TopLevelEnvironment (closure);
-        }
-
-        internal override Environment Extend (IClosure closure, object [] args)
-        {
-#if DEBUG
-            extendedBy [args.Length] += 1;
-#endif
-            return new TopLevelEnvironment (closure, args);
-        }
-
-        public override bool Assign (out object oldValue, string name, object newValue)
+         public override bool Assign (out object oldValue, string name, object newValue)
         {
             ValueCell vcell = null;
-            if (this.bindings.TryGetValue (name, out vcell)) {
+            if (this.globalBindings.TryGetValue (name, out vcell)) {
                 if (vcell.Assign (out oldValue, newValue))
                     throw new NotImplementedException ("Error in Assign.");
                 return false;
             }
-            throw new NotImplementedException ("Unbound variable in Assign.");
+            throw new NotImplementedException ("IsUnbound variable in Assign.");
         }
 
         internal override ValueCell GetValueCell (string name)
@@ -337,7 +380,7 @@ namespace Microcode
         internal override bool SafeDeepSearch (out object value, string name)
         {
             ValueCell cell = null;
-            if (this.bindings.TryGetValue (name, out cell)) {
+            if (this.globalBindings.TryGetValue (name, out cell)) {
 
                 if (cell.SafeGetValue (out value))
                     throw new NotImplementedException ("Error getting value from cell");
@@ -349,7 +392,7 @@ namespace Microcode
         internal override bool DeepSearchType (out object value, string name)
         {
             ValueCell cell = null;
-            if (this.bindings.TryGetValue (name, out cell)) {
+            if (this.globalBindings.TryGetValue (name, out cell)) {
 
                 if (cell.GetType (out value))
                     throw new NotImplementedException ("Error getting value from cell");
@@ -363,48 +406,135 @@ namespace Microcode
         internal override bool SetValueCell (string name, ValueCell newCell)
         {                        
             ValueCell cell = null;
-            if (this.bindings.TryGetValue (name, out cell)) {
+            if (this.globalBindings.TryGetValue (name, out cell)) {
                 throw new NotImplementedException ("Value cell already exists.");
             }
-            this.bindings.Add (name, newCell);
+            this.globalBindings.Add (name, newCell);
             return false; // copacetic
         }
 
-        internal override bool Unreferenceable (string name)
+        internal override bool IsUnreferenceable (string name)
         {
             ValueCell vcell;
-            if (this.bindings.TryGetValue (name, out vcell)) {
+            if (this.globalBindings.TryGetValue (name, out vcell)) {
                 return vcell.Unreferenceable ();
             }
             else return true;
         }
+
+        internal override bool IsUnbound (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override IClosure Closure
+        {
+            get { return null; }
+        }
+
+        internal override Dictionary<object, ValueCell> Incrementals
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public override object Argument0Value
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public override object Argument1Value
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool LexicalRef1 (out object value, string name, int offset)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
-    sealed class TopLevelEnvironment : Environment
+    /// <summary>
+    /// A StandardEnvironment supports sharable bindings and incremental
+    /// definition.
+    /// </summary>
+    [Serializable]
+    sealed class StandardEnvironment : Environment
     {
-        IClosure closure;
-        ValueCell [] bindings;
-        Dictionary <string,ValueCell> incrementals;
+#if DEBUG
+        static long creationCount;
+#endif
+                [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly IClosure closure;
+                [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly ValueCell [] bindings;
+                [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        Dictionary <object,ValueCell> incrementals;
 
-        internal TopLevelEnvironment (IClosure closure)
-        {
+        internal StandardEnvironment (IClosure closure)
+        {  
             this.closure = closure;
-        }
-
-        internal TopLevelEnvironment (IClosure closure, object [] initialValues)
-        {
-            this.closure = closure;
-            this.bindings = new ValueCell [initialValues.Length];
+#if DEBUG
+            StandardEnvironment.creationCount += 1;
+            extendedBy [0] += 1;
+            // sanity check.
             String [] formals = closure.Lambda.Formals;
+            if (formals.Length != 0)
+                throw new NotImplementedException ();
+ #endif
+       }
+
+        internal StandardEnvironment (IClosure closure, object [] initialValues)
+        {
+            this.closure = closure;
+            String [] formals = closure.Lambda.Formals;  
+            this.bindings = new ValueCell [initialValues.Length];
             for (int i = 0; i < initialValues.Length; i++)
                 this.bindings [i] = new ValueCell (formals[i], initialValues [i]);
-            //incrementals = new Dictionary<string, ValueCell> ();
+#if DEBUG
+            StandardEnvironment.creationCount += 1;
+            extendedBy [initialValues.Length] += 1; 
+            // sanity check
+            if (formals.Length != initialValues.Length)
+                throw new NotImplementedException ();
+#endif
         }
 
-
-        public override bool ArgumentValue (out object value, int offset)
+        public override object ArgumentValue (int offset)
         {
-            return bindings [offset].GetValue (out value);
+            object answer;
+            if (bindings [offset].GetValue (out answer)) throw new NotImplementedException ();
+            return answer;
+        }
+
+        public override object Argument0Value
+        {
+            get
+            {
+                object answer;
+                if (bindings [0].GetValue (out answer)) throw new NotImplementedException ();
+                return answer;
+            }
+        }
+
+        public override object Argument1Value
+        {
+            get
+            {
+                object answer;
+                if (bindings [1].GetValue (out answer)) throw new NotImplementedException ();
+                return answer;
+            }
         }
         
         public override bool Assign (out object oldValue, string name, object newValue)
@@ -428,7 +558,7 @@ namespace Microcode
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
                 if (this.incrementals == null)
-                    this.incrementals = new Dictionary<string, ValueCell> ();
+                    this.incrementals = new Dictionary<object, ValueCell> ();
                 ValueCell vcell;
                 if (this.incrementals.TryGetValue (name, out vcell)) {
                     // cell exists.
@@ -476,17 +606,26 @@ namespace Microcode
             return bindings [offset].GetValue (out value);
         }
 
-        internal override Environment Extend (IClosure closure)
+        internal override bool LexicalRef (out object value, string name, int depth, int offset)
         {
-            throw new NotImplementedException ();
+            if (depth == 0) return bindings [offset].GetValue (out value);
+            ValueCell vcell;
+            if (this.incrementals != null
+                && this.incrementals.TryGetValue (name, out vcell)) {
+                return vcell.GetValue (out value);
+            }
+            return closure.Environment.LexicalRef (out value, name, depth - 1, offset);
         }
 
-        internal override Environment Extend (IClosure closure, object [] args)
+        internal override bool LexicalRef1 (out object value, string name, int offset)
         {
-#if DEBUG
-            extendedBy [args.Length] += 1;
-#endif
-            return new TopLevelEnvironment (closure, args);
+            ValueCell vcell;
+            if (this.incrementals != null
+                && this.incrementals.TryGetValue (name, out vcell)) {
+                return vcell.GetValue (out value);
+            }
+            value = closure.Environment.ArgumentValue (offset);
+            return false;
         }
 
         internal override ValueCell GetValueCell (string name)
@@ -558,7 +697,7 @@ namespace Microcode
         }
         
         
-        internal override bool Unreferenceable (string name)
+        internal override bool IsUnreferenceable (string name)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
@@ -567,11 +706,361 @@ namespace Microcode
                     && incrementals.TryGetValue (name, out vcell))
                     return vcell.Unreferenceable ();
                 else
-                    return this.closure.Environment.Unreferenceable (name);
+                    return this.closure.Environment.IsUnreferenceable (name);
             }
             return bindings [offset].Unreferenceable ();
         }
 
+
+        internal override bool IsUnbound (string name)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                ValueCell vcell;
+                if (incrementals != null
+                    && incrementals.TryGetValue (name, out vcell))
+                    return vcell.Unbound ();
+                else
+                    return this.closure.Environment.IsUnbound (name);
+            }
+            return bindings [offset].Unbound ();
+        }
+
+        public override IClosure Closure
+        {
+            get { return this.closure; }
+        }
+
+        internal override Dictionary<object, ValueCell> Incrementals
+        {
+            get
+            {
+                if (this.incrementals == null)
+                    this.incrementals = new Dictionary<object, ValueCell> ();
+                return this.incrementals;
+            }
+
+        }
+    }
+
+    [Serializable]
+    sealed class SimpleEnvironment : Environment
+    {
+#if DEBUG
+        static long creationCount;
+#endif
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly IClosure closure;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly object [] bindings;
+
+        internal SimpleEnvironment (IClosure closure)
+        {
+            this.closure = closure;
+#if DEBUG
+            SimpleEnvironment.creationCount += 1;
+            extendedBy [0] += 1;
+            // sanity checks.
+            String [] formals = closure.Lambda.Formals;
+            if (formals.Length != 0)
+                throw new NotImplementedException ();
+#endif
+        }
+
+        internal SimpleEnvironment (IClosure closure, object [] initialValues)
+        {
+            this.closure = closure;
+            String [] formals = closure.Lambda.Formals;
+            this.bindings = initialValues;
+#if DEBUG
+            SimpleEnvironment.creationCount += 1;
+            extendedBy [initialValues.Length] += 1;
+            // sanity check
+            if (formals.Length != initialValues.Length)
+                throw new NotImplementedException ();
+            foreach (object init in initialValues)
+                if (init is ReferenceTrap) throw new NotImplementedException ();
+#endif
+        }
+
+        public override object ArgumentValue (int offset)
+        {
+            return bindings [offset];
+        }
+
+        public override object Argument0Value
+        {
+            get
+            {
+                return bindings [0];
+            }
+        }
+
+        public override object Argument1Value
+        {
+            get
+            {
+                return bindings [1];
+            }
+        }
+
+        public override bool Assign (out object oldValue, string name, object newValue)
+        {
+            //if (name == "deferred-unparser-methods")
+            //    Debugger.Break ();
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                    return closure.Environment.Assign (out oldValue, name, newValue);
+            }
+            oldValue = bindings [offset];
+            bindings [offset] = newValue;
+            return false;
+        }
+
+        public override bool Define (string name, object value)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                throw new NotImplementedException ();
+            }
+            else {
+                bindings [offset] = value;
+                return false;
+            }
+        }
+
+        public override bool DeepSearch (out object value, string name)
+        {
+            return DeepSearch (out value, name, 0);
+        }
+
+        internal override bool DeepSearch (out object value, string name, int depth)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                    return closure.Environment.DeepSearch (out value, name, depth + 1);
+            }
+#if DEBUG
+            foundAtDepth [depth] += 1;
+#endif
+            value = bindings [offset];
+            return false;
+        }
+
+        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        {
+            if (depth == 0) {
+                value = bindings [offset];
+                return false;
+            }
+            else return closure.Environment.LexicalRef (out value, name, depth - 1, offset);
+        }
+
+        internal override bool LexicalRef1 (out object value, string name, int offset)
+        {
+           value = closure.Environment.ArgumentValue (offset);
+           return false;
+        }
+
+        internal override ValueCell GetValueCell (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool SetValueCell (string name, ValueCell newCell)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool SafeDeepSearch (out object value, string name)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                    return closure.Environment.SafeDeepSearch (out value, name);
+            }
+            value = bindings [offset];
+            return false;
+        }
+
+        internal override bool DeepSearchType (out object value, string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+
+        internal override bool IsUnreferenceable (string name)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                    return this.closure.Environment.IsUnreferenceable (name);
+            }
+            return false;
+        }
+
+
+        internal override bool IsUnbound (string name)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                    return this.closure.Environment.IsUnbound (name);
+            }
+            return false;
+        }
+
+        public override IClosure Closure
+        {
+            get { return this.closure; }
+        }
+
+        internal override Dictionary<object, ValueCell> Incrementals
+        {
+            get { throw new NotImplementedException (); }
+        }
+    }
+
+    /// <summary>
+    /// A SmallEnvironment needs no value cells because
+    /// the bindings are never mutated.
+    /// </summary>
+    [Serializable]
+    sealed class SmallEnvironment : Environment
+    {
+#if DEBUG
+        static long creationCount;
+#endif
+        IClosure closure;
+        object value0;
+        object value1;
+
+        internal SmallEnvironment (IClosure closure, object value0)
+        {
+#if DEBUG
+            SmallEnvironment.creationCount += 1;
+            if (value0 is ReferenceTrap) throw new NotImplementedException ();
+#endif
+            this.closure = closure;
+            this.value0 = value0;
+        }
+
+        internal SmallEnvironment (IClosure closure, object value0, object value1)
+        {
+#if DEBUG
+            SmallEnvironment.creationCount += 1;
+            if (value0 is ReferenceTrap) throw new NotImplementedException ();
+            if (value1 is ReferenceTrap) throw new NotImplementedException ();
+#endif
+            this.closure = closure;
+            this.value0 = value0;
+            this.value1 = value1;
+
+        }
+
+        public override object ArgumentValue (int offset)
+        {
+            if (offset == 1) return this.value1;
+            else return this.value0;
+        }
+
+        public override object Argument0Value { get
+        {
+            return this.value0;
+        }
+        }
+
+        public override object Argument1Value
+        {
+            get
+            {
+                return this.value1;
+            }
+        }
+
+        public override bool Assign (out object oldValue, string name, object newValue)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                return closure.Environment.Assign (out oldValue, name, newValue);
+            }
+            throw new NotImplementedException ();
+        }
+
+        public override IClosure Closure
+        {
+            get { return this.closure; }
+        }
+
+        public override bool Define (string name, object value)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool DeepSearch (out object value, string name)
+        {
+            return DeepSearch (out value, name, 0);
+        }
+
+        internal override bool DeepSearch (out object value, string name, int depth)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                return closure.Environment.DeepSearch (out value, name, depth + 1);
+            }
+#if DEBUG
+            foundAtDepth [depth] += 1;
+#endif
+            value = (offset == 1) ? value1: value0;
+            return false;
+        }
+
+        internal override bool DeepSearchType (out object value, string name)
+        {
+            throw new NotImplementedException ();
+        }
+        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        {
+            if (depth == 0) {
+                value = (offset == 1) ? value1 : value0;
+                return false;
+            }
+            else
+                return closure.Environment.LexicalRef (out value, name, depth - 1, offset);
+        }
+
+        internal override bool LexicalRef1 (out object value, string name, int offset)
+        {
+            value = closure.Environment.ArgumentValue (offset);
+            return false;
+        }
+
+        internal override ValueCell GetValueCell (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool SafeDeepSearch (out object value, string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool SetValueCell (string name, ValueCell newCell)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override Dictionary<object, ValueCell> Incrementals
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        internal override bool IsUnbound (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool IsUnreferenceable (string name)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     // These are magic structures that get stuffed in the
@@ -592,7 +1081,7 @@ namespace Microcode
         }
 
 
-        public override bool ArgumentValue (out object value, int offset)
+        public override object ArgumentValue (int offset)
         {
             throw new NotImplementedException ();
         }
@@ -612,16 +1101,6 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override Environment Extend (IClosure closure)
-        {
-            throw new NotImplementedException ();
-        }
-
-        internal override Environment Extend (IClosure closure, object [] args)
-        {
-            throw new NotImplementedException ();
-        }
-
         public override bool Assign (out object oldValue, string name, object newValue)
         {
             throw new NotImplementedException ();
@@ -637,7 +1116,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override bool Unreferenceable (string name)
+        internal override bool IsUnreferenceable (string name)
         {
             throw new NotImplementedException ();
         }
@@ -651,7 +1130,45 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
+
+        internal override bool IsUnbound (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override IClosure Closure
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        internal override Dictionary<object, ValueCell> Incrementals
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public override object Argument0Value { get 
+        {
+            throw new NotImplementedException ();
+        }
+        }
+
+        public override object Argument1Value { get 
+        {
+            throw new NotImplementedException ();
+        }
+        }
+
+        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool LexicalRef1 (out object value, string name, int offset)
+        {
+            throw new NotImplementedException ();
+        }
     }
+
 
     // not really an environment at all, but rather
     // a structure that holds the reified stack as we
@@ -681,7 +1198,7 @@ namespace Microcode
         /// </summary>
         ContinuationFrameList oldFrames;
 
-        SCode receiver;
+        Control receiver;
 
         /// <summary>
         /// Constructor that takes a new continuation to be installed.
@@ -689,7 +1206,7 @@ namespace Microcode
         /// </summary>
         /// <param name="newContinuation"></param>
         /// <param name="receiver"></param>
-        internal UnwinderState (ControlPoint newContinuation, SCode receiver)
+        internal UnwinderState (ControlPoint newContinuation, Control receiver)
         {
             this.newContinuation = newContinuation;
             this.receiver = receiver;
@@ -701,7 +1218,7 @@ namespace Microcode
         /// has been read.
         /// </summary>
         /// <param name="receiver"></param>
-        internal UnwinderState (SCode receiver)
+        internal UnwinderState (Control receiver)
         {
             this.receiver = receiver;
         }
@@ -714,7 +1231,7 @@ namespace Microcode
             }
         }
 
-        internal SCode Receiver
+        internal Control Receiver
         {
             get {
                 return this.receiver;
@@ -765,7 +1282,7 @@ namespace Microcode
 
         // These make us look like an environment.
 
-        public override bool ArgumentValue (out object value, int offset)
+        public override object ArgumentValue ( int offset)
         {
             throw new NotImplementedException ();
         }
@@ -790,16 +1307,6 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override Environment Extend (IClosure closure)
-        {
-            throw new NotImplementedException ();
-        }
-
-        internal override Environment Extend (IClosure closure, object [] args)
-        {
-            throw new NotImplementedException ();
-        }
-
         internal override ValueCell GetValueCell (string name)
         {
             throw new NotImplementedException ();
@@ -810,7 +1317,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override bool Unreferenceable (string name)
+        internal override bool IsUnreferenceable (string name)
         {
             throw new NotImplementedException ();
         }
@@ -824,6 +1331,46 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
+
+        internal override bool IsUnbound (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override IClosure Closure
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        internal override Dictionary<object, ValueCell> Incrementals
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public override object Argument0Value
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+        public override object Argument1Value
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool LexicalRef1 (out object value, string name, int offset)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     // Not an environment, but the state needed to restore the
@@ -831,10 +1378,10 @@ namespace Microcode
     class RewindState : Environment
     {
         ContinuationFrameList reversedFrames;
-        SCode receiver;
+        Control receiver;
         ControlPoint cp;
 
-        internal RewindState (ControlPoint cp, SCode receiver)
+        internal RewindState (ControlPoint cp, Control receiver)
         {
             this.cp = cp;
             this.receiver = receiver;
@@ -849,7 +1396,7 @@ namespace Microcode
             }
         }
 
-        internal SCode PopFrame ()
+        internal Control PopFrame ()
         {
             if (reversedFrames == null) {
                 return this.receiver;
@@ -862,7 +1409,7 @@ namespace Microcode
         }
 
         // We pretend to be an environment!
-        public override bool ArgumentValue (out object value, int offset)
+        public override object ArgumentValue (int offset)
         {
             throw new NotImplementedException ();
         }
@@ -887,16 +1434,6 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override Environment Extend (IClosure closure)
-        {
-            throw new NotImplementedException ();
-        }
-
-        internal override Environment Extend (IClosure closure, object [] args)
-        {
-            throw new NotImplementedException ();
-        }
-
         internal override ValueCell GetValueCell (string name)
         {
             throw new NotImplementedException ();
@@ -907,7 +1444,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override bool Unreferenceable (string name)
+        internal override bool IsUnreferenceable (string name)
         {
             throw new NotImplementedException ();
         }
@@ -918,6 +1455,47 @@ namespace Microcode
         }
 
         internal override bool DeepSearchType (out object answer, string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool IsUnbound (string name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override IClosure Closure
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        internal override Dictionary<object, ValueCell> Incrementals
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public override object Argument0Value
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public override object Argument1Value
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool LexicalRef1 (out object value, string name, int offset)
         {
             throw new NotImplementedException ();
         }

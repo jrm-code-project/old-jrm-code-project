@@ -55,12 +55,13 @@
     <Compile Include="Channel.cs" />
     <Compile Include="Character.cs" />
     <Compile Include="Closure.cs" />
-    <Compile Include="CompileTimeEnvironment.cs" />
+    <Compile Include="BindingTimeEnvironment.cs" />
     <Compile Include="Complex.cs" />
     <Compile Include="Cons.cs" />
     <Compile Include="Constant.cs" />
     <Compile Include="Continuation.cs" />
     <Compile Include="ContinuationFrameList.cs" />
+    <Compile Include="Control.cs" />
     <Compile Include="ControlPoint.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="Environment.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="Vector.cs" />
     <Compile Include="Vector8b.cs" />
     <Compile Include="WeakCons.cs" />
+    <Compile Include="WorldState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LispKeyFile.snk" />

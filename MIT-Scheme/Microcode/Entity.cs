@@ -4,9 +4,11 @@ using System.Diagnostics;
 
 namespace Microcode
 {
+    [Serializable]
     sealed class Entity : SchemeObject, IApplicable, ISystemPair
     {
 #if DEBUG
+        [NonSerialized]
         static long applicationCount = 0;
 #endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -22,15 +24,16 @@ namespace Microcode
             this.second = second;
         }
 
-        //[SchemePrimitive ("ENTITY?", 1)]
-        //public static PartialResult IsEntity (object arg)
-        //{
-        //    return new PartialResult (arg is Entity);
-        //}
+        [SchemePrimitive ("ENTITY?", 1, true)]
+        public static bool IsEntity (out object answer, object arg)
+        {
+            answer = arg is Entity ;
+            return false;
+        }
 
         #region IApplicable Members
 
-        public bool Apply (out object answer, ref SCode expression, ref Environment environment, object [] args)
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
 #if DEBUG
             Entity.applicationCount += 1;
@@ -41,29 +44,56 @@ namespace Microcode
             return Interpreter.Apply (out answer, ref expression, ref environment, this.first, adjustedArgs);
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment)
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Entity.applicationCount += 1;
 #endif
-            return Interpreter.Apply (out answer, ref expression, ref environment, this.first, new object [] { this.first, this });
+            return Interpreter.Call (out answer, ref expression, ref environment, this.first,  this );
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
 #if DEBUG
             Entity.applicationCount += 1;
 #endif
-            return Interpreter.Apply (out answer, ref expression, ref environment, this.first, new object [] { this.first, this, arg0 });
+            return Interpreter.Call (out answer, ref expression, ref environment, this.first, this, arg0);
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0, object arg1)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG
             Entity.applicationCount += 1;
 #endif
-            return Interpreter.Apply (out answer, ref expression, ref environment, this.first, new object [] { this.first, this, arg0, arg1 });
+            return Interpreter.Call (out answer, ref expression, ref environment, this.first, this, arg0, arg1);
         }
+
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+#if DEBUG
+            Entity.applicationCount += 1;
+#endif
+            return Interpreter.Call (out answer, ref expression, ref environment, this.first, this, arg0, arg1, arg2);
+
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        {
+            throw new NotImplementedException ();
+        }
+
+
 
         #endregion
 
@@ -98,5 +128,9 @@ namespace Microcode
         }
 	
 	#endregion
+
+        #region IApplicable Members
+
+        #endregion
     }
 }

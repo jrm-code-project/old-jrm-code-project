@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     public class ContinuationFrameList : ISystemVector
     {
 

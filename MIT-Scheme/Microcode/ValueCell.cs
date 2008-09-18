@@ -3,7 +3,8 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    public class ValueCell
+    [Serializable]
+    sealed public class ValueCell
     {
         //static object unassigned = Constant.Unassigned;
 #if DEBUG
@@ -20,6 +21,8 @@ namespace Microcode
 
         bool ValidValue (object value)
         {
+            if (value == Interpreter.UnwindStack)
+                throw new NotImplementedException ();
             return (value == null)
                 || (value is char)
                 || (value is char [])
@@ -30,10 +33,12 @@ namespace Microcode
                 || (value is object [])
                 || (value is string)
                 || (value is Access)
+                || (value is Assignment)
                 || (value is Bignum)
                 || (value is Boolean)
                 || (value is Closure)
                 || (value is Combination)
+                || (value is Combination0)
                 || (value is Combination1)
                 || (value is Combination2)
                 || (value is Comment)
@@ -41,6 +46,7 @@ namespace Microcode
                 || (value is Cons)
                 || (value is Constant)
                 || (value is ControlPoint)
+                || (value is Definition)
                 || (value is Disjunction)
                 || (value is Entity)
                 || (value is ExtendedClosure)
@@ -62,11 +68,13 @@ namespace Microcode
                 || (value is ReturnCode)
                 || (value is Sequence2)
                 || (value is Sequence3)
-                || (value is TopLevelEnvironment)
+                || (value is SimpleClosure)
+                || (value is SimpleLambda)
+                || (value is TrivialClosure)
+                || (value is StandardEnvironment)
                 || (value is UnmarkedHistory)
                 || (value is Variable)
                 || (value is WeakCons)
-                || (value is Microsoft.Win32.RegistryKey)
                 ;
         }
 
@@ -90,6 +98,13 @@ namespace Microcode
             return this.trapOnReference;
             // throw new NotImplementedException ();
             //return val is ReferenceTrap || this.trapOnReference;
+        }
+
+        public bool Unbound ()
+        {
+            if (!this.trapOnReference)
+                return false;
+            throw new NotImplementedException ();
         }
 
         public bool Assign (out object oldValue, object newValue)

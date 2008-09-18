@@ -4,7 +4,8 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    public abstract class ContinuationFrame : SCode
+    [Serializable]
+    public abstract class ContinuationFrame : Control
     {
         public ContinuationFrameList continuation;
 
@@ -12,25 +13,9 @@ namespace Microcode
             : base (TC.CONTROL_POINT)
         {
         }
-
-        public override SCode Bind (CompileTimeEnvironment ctenv)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override HashSet<string> FreeVariables ()
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool NeedsTheEnvironment ()
-        {
-            throw new NotImplementedException ();
-        }
-
-
     }
 
+    [Serializable]
     public abstract class SubproblemContinuation<T> : ContinuationFrame where T : SCode
     {
         protected T expression;
@@ -42,10 +27,10 @@ namespace Microcode
             this.environment = environment;
         }
 
-        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             object temp;
-            SCode expr = ((RewindState) environment).PopFrame ();
+            Control expr = ((RewindState) environment).PopFrame ();
             Environment env = environment;
             while (expr.EvalStep (out temp, ref expr, ref env)) { };
             if (temp == Interpreter.UnwindStack) {
@@ -59,7 +44,7 @@ namespace Microcode
             return Continue (out answer, ref expression, ref environment, temp);
         }
 
-        public abstract bool Continue (out object answer, ref SCode expression, ref Environment environment, object value);
+        public abstract bool Continue (out object answer, ref Control expression, ref Environment environment, object value);
     }
 
 
@@ -71,7 +56,23 @@ namespace Microcode
         {
         }
 
-        static public object Initial (SCode expression, Environment environment)
+        static public object Initial (WorldState stateToRestore)
+        {
+            Constant.theDefaultObject = stateToRestore.defaultObject;
+            Constant.theEofObject = stateToRestore.eofObject;
+            Constant.theAuxMarker = stateToRestore.aux;
+            Constant.theKeyMarker = stateToRestore.key;
+            Constant.theOptionalMarker = stateToRestore.optional;
+            Constant.theRestMarker = stateToRestore.rest;
+            Constant.theExternalUnassignedObject = stateToRestore.externalUnassigned;
+            Constant.theUnspecificObject = stateToRestore.unspecific;
+            Environment.Global = stateToRestore.ge;
+            Environment environment = new RewindState (stateToRestore.cp, new RestoreBandFrame ());
+            Control expression = ((RewindState) environment).PopFrame ();
+            return Initial (expression, environment);
+        }
+
+        static public object Initial (Control expression, Environment environment)
         {
             object answer;
             bool bounce;
@@ -92,7 +93,7 @@ namespace Microcode
                     ControlPoint stateToRestore = ((UnwinderState) environment).ToControlPoint ();
 
                     // the receiver gets control when the stack is put back.
-                    SCode receiver = ((UnwinderState) environment).Receiver;
+                    Control receiver = ((UnwinderState) environment).Receiver;
 
                     // the rewind state goes in the environment
                     environment = new RewindState (stateToRestore, receiver);

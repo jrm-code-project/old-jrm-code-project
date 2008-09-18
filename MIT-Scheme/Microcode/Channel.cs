@@ -296,7 +296,7 @@ namespace Microcode
     {
 
 
-        [SchemePrimitive ("CHANNEL-BLOCKING", 1)]
+        [SchemePrimitive ("CHANNEL-BLOCKING", 1, false)]
         public static bool ChannelBlocking (out object answer, object arg)
         {
             answer = (Channel.ArgChannel ((int) arg)).IsBlocking;
@@ -304,28 +304,28 @@ namespace Microcode
             return false;
         }
         
-        [SchemePrimitive ("CHANNEL-BLOCKING?", 1)]
+        [SchemePrimitive ("CHANNEL-BLOCKING?", 1, false)]
         public static bool IsChannelBlocking (out object answer, object arg)
         {
             answer = Channel.ArgChannel ((int) arg).IsBlocking;
             return false;
         }
 
-        [SchemePrimitive ("CHANNEL-CLOSE", 1)]
+        [SchemePrimitive ("CHANNEL-CLOSE", 1, false)]
         public static bool ChannelClose (out object answer, object arg)
         {
             answer = Channel.ArgChannel ((int) arg).Close ();
             return false;
         }
 
-        [SchemePrimitive ("CHANNEL-DESCRIPTOR", 1)]
+        [SchemePrimitive ("CHANNEL-DESCRIPTOR", 1, false)]
         public static bool PrimitiveChannelDescriptor (out object answer, object arg)
         {
             answer = arg;
             return false;
         }
 
-        [SchemePrimitive ("CHANNEL-NONBLOCKING", 1)]
+        [SchemePrimitive ("CHANNEL-NONBLOCKING", 1, false)]
         public static bool ChannelNonBlocking (out object answer, object arg)
         {
             bool wasBlocking = Channel.ArgChannel ((int) arg).IsBlocking;
@@ -334,28 +334,28 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("CHANNEL-TYPE-NAME", 1)]
+        [SchemePrimitive ("CHANNEL-TYPE-NAME", 1, false)]
         public static bool ChannelTypeName (out object answer, object arg)
         {
             answer = Channel.ArgChannel ((int) arg).TypeName;
             return false;
         }
 
-        [SchemePrimitive ("CHANNEL-READ", 4)]
+        [SchemePrimitive ("CHANNEL-READ", 4, false)]
         public static bool ChannelRead (out object answer, object [] arglist)
         {
             answer = Channel.ArgChannel ((int) arglist [0]).Read ((char []) arglist [1], (int) arglist [2], (int) arglist [3]);
             return false;
         }
 
-        [SchemePrimitive ("CHANNEL-WRITE", 4)]
+        [SchemePrimitive ("CHANNEL-WRITE", 4, false)]
         public static bool ChannelWrite (out object answer, object [] arglist)
         {
             answer = Channel.ArgChannel ((int) arglist[0]).Write ((char []) (arglist [1]), (int) (arglist [2]), (int) (arglist [3]));
             return false;
         }
 
-        [SchemePrimitive ("NEW-FILE-OPEN-INPUT-CHANNEL", 2)]
+        [SchemePrimitive ("NEW-FILE-OPEN-INPUT-CHANNEL", 2, false)]
         public static bool NewFileOpenInputChannel (out object answer, object arg0, object arg1)
         {
             char [] filename = (char []) arg0;
@@ -366,13 +366,13 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive("TERMINAL-NONBUFFERED", 1)]
+        [SchemePrimitive("TERMINAL-NONBUFFERED", 1, false)]
         public static bool TerminalNonBuffered (out object answer, object arg0)
         {
             throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("TEST-SELECT-DESCRIPTOR", 3)]
+        [SchemePrimitive ("TEST-SELECT-DESCRIPTOR", 3, false)]
         public static bool TestSelectDescriptor (out object answer, object arg0, object arg1, object arg2)
         {
             int channel = (int) arg0;
@@ -383,14 +383,14 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("TTY-INPUT-CHANNEL", 0)]
+        [SchemePrimitive ("TTY-INPUT-CHANNEL", 0, true)]
         public static bool TtyInputChannel (out object answer)
         {
             answer = Channel.TTYInputChannel;
             return false;
         }
 
-        [SchemePrimitive ("TTY-OUTPUT-CHANNEL", 0)]
+        [SchemePrimitive ("TTY-OUTPUT-CHANNEL", 0, true)]
         public static bool TtyOutputChannel (out object answer)
         {
             answer = Channel.TTYOutputChannel;

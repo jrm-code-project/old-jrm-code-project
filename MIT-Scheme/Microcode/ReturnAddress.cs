@@ -5,8 +5,8 @@ using System.Text;
 
 namespace Microcode
 {
-
-    class ReturnAddress
+    [Serializable]
+    sealed class ReturnAddress
     {
         ReturnCode code;
 
@@ -23,7 +23,14 @@ namespace Microcode
             }
         }
 
-        [SchemePrimitive ("MAP-MACHINE-ADDRESS-TO-CODE", 2)]
+        [SchemePrimitive ("RETURN-CODE?", 1, true)]
+        public static bool IsReturnCode (out object answer, object arg)
+        {
+            answer = arg is ReturnCode;
+            return false;
+        }
+
+        [SchemePrimitive ("MAP-MACHINE-ADDRESS-TO-CODE", 2, false)]
         public static bool MapMachineAddressToCode (out object answer, object arg0, object arg1)
         {
             TC type = (TC) arg0;
@@ -38,7 +45,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("MAP-CODE-TO-MACHINE-ADDRESS", 2)]
+        [SchemePrimitive ("MAP-CODE-TO-MACHINE-ADDRESS", 2, false)]
         public static bool MapCodeToMachineAddress (out object answer, object arg0, object arg1)
         {
             TC type = (TC) arg0;

@@ -25,118 +25,56 @@ namespace Microcode
                 throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("&+", 2)]
+        [SchemePrimitive ("&+", 2, false)]
         public static bool Add (out object answer, object left, object right)
         {
-            if (left is int) {
-                if (right is int)
-                    answer = (int) left + (int) right;
-                else
-                    throw new NotImplementedException ();
-            }
-            else if (left is long) {
-                if (right is long)
-                    answer = Narrow ((long) left + (long) right);
-                else
-                    throw new NotImplementedException ();
-            }
-            else {
-                answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericAdd, new Cons (FixedObjectsVector.GenericAdd, new Cons (left, new Cons (right, null)))), null);
-                return true;
-            }
-            // return interpreter.Apply (FixedObjectsVector.GenericAdd, new object [] { left, right });
-            return false;
+            answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericAdd, left, right), null);
+            return true;
         }
 
-        [SchemePrimitive ("&-", 2)]
+        [SchemePrimitive ("&-", 2, false)]
         public static bool Subtract (out object answer, object left, object right)
         {
-            if (left is int) {
-                if (right is int)
-                    answer = Narrow (Widen (left) - Widen (right));
-                else if (right is long)
-                    answer = Narrow (Widen (left) - Widen (right));
-                else if (right is double)
-                    answer = (double) (int) (left) - (double) (right);
-                else
-                    throw new NotImplementedException ();
-            }
-            else if (left is long) {
-                if (right is int)
-                    answer = Narrow (Widen (left) - Widen (right));
-                else if (right is long)
-                    answer = Narrow (Widen (left) - Widen (right));
-                else
-                    throw new NotImplementedException ();
-            }
-            else {
-                answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericSubtract, new Cons (FixedObjectsVector.GenericSubtract, new Cons (left, new Cons (right, null)))), null);
-                return true;
-            }
-            return false;
+            answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericSubtract, left, right), null);
+            return true;
         }
 
-        [SchemePrimitive ("&*", 2)]
+        [SchemePrimitive ("&*", 2, false)]
         public static bool Multiply (out object answer, object left, object right)
         {
-            if (left is int) {
-                if (right is int)
-                    answer = Narrow (Widen (left) * Widen (right));
-                else if (right is long)
-                    answer = Narrow (Widen (left) * (long) right);
-                else if (right is double)
-                    answer = (double) (int) left * (double) right;
-                else
-                    throw new NotImplementedException ();
-            }
-            else if (left is long) {
-                if (right is int)
-                    answer = Bignum.ToInteger ((Bignum) (long) left * (Bignum) (int) right);
-                else
-                    throw new NotImplementedException ();
-            }
-            else {
-                answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericMultiply, new Cons (FixedObjectsVector.GenericMultiply, new Cons (left, new Cons (right, null)))), null);
-                return true;
-            }
-            return false;
-            //return interpreter.Apply (FixedObjectsVector.GenericMultiply, new object [] { left, right });
+            answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericMultiply, left, right), null);
+            return true;
         }
 
-        [SchemePrimitive ("&/", 2)]
+        [SchemePrimitive ("&/", 2, false)]
         public static bool Divide (out object answer, object left, object right)
         {
-            answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericDivide, new Cons (FixedObjectsVector.GenericDivide, new Cons (left, new Cons (right, null)))), null);
+            answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericDivide, left, right), null);
             return true;
         }
 
-        [SchemePrimitive ("QUOTIENT", 2)]
+        [SchemePrimitive ("QUOTIENT", 2, false)]
         public static bool Quotient (out object answer, object left, object right)
         {
-            answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericQuotient, new Cons (FixedObjectsVector.GenericQuotient, new Cons (left, new Cons (right, null)))), null);
+            answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericQuotient, left, right), null);
             return true;
-            //throw new NotImplementedException ();
-            //answer = new TailCallInterpreter ((SCode) , new InterpreterEnvironment (new object [] { FixedObjectsVector.GenericQuotient, left, right }));
-            //return true;
-
-            //return Interpreter.Apply (FixedObjectsVector.GenericQuotient, new object [] { left, right });
         }
 
-        [SchemePrimitive ("REMAINDER", 2)]
+        [SchemePrimitive ("REMAINDER", 2, false)]
         public static bool Remainder (out object answer, object left, object right)
         {
-            answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericRemainder, new Cons (FixedObjectsVector.GenericRemainder, new Cons (left, new Cons (right, null)))), null);
+            answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericRemainder, left, right), null);
             return true;
         }
 
-        [SchemePrimitive ("MODULO", 2)]
+        [SchemePrimitive ("MODULO", 2, false)]
         public static bool Modulo (out object answer, object left, object right)
         {
             throw new NotImplementedException ();
             //return interpreter.Apply (FixedObjectsVector.GenericModulo, new object [] { left, right });
         }
 
-        [SchemePrimitive ("&=", 2)]
+        [SchemePrimitive ("&=", 2, false)]
         public static bool IsEqual (out object answer, object left, object right)
         {
             if (left is int) {
@@ -165,72 +103,35 @@ namespace Microcode
             //return interpreter.Apply (FixedObjectsVector.GenericEqualP, new object [] { left, right });
         }
 
-        [SchemePrimitive ("&<", 2)]
+        [SchemePrimitive ("&<", 2, false)]
         public static bool IsLess (out object answer, object left, object right)
         {
-            if (left is int) {
-                if (right is int)
-                    answer = (int) left < (int) right;
-                else
-                    throw new NotImplementedException ();
-            }
-            else if (left is long) {
-                if (right is long)
-                    answer = (long) left < (long) right;
-                else if (right is int)
-                    answer = (long) left < (int) right;
-                else
-                    throw new NotImplementedException ();
-            }
-            else
-                throw new NotImplementedException ();
-            return false;
-            //return interpreter.Apply (FixedObjectsVector.GenericLessP, new object [] { left, right });
+                answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericLessP, left, right), null);
+                return true;
         }
 
-        [SchemePrimitive ("&>", 2)]
+        [SchemePrimitive ("&>", 2, false)]
         public static bool IsGreater (out object answer, object left, object right)
         {
-            if (left is int) {
-                if (right is int) {
-                    answer = (int) left > (int) right;
-                    return false;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else
-                throw new NotImplementedException ();
-            // return interpreter.Apply (FixedObjectsVector.GenericGreaterP, new object [] { left, right });
+                answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericGreaterP, left, right), null);
+                return true;
         }
 
-        [SchemePrimitive ("ZERO?", 1)]
+        [SchemePrimitive ("ZERO?", 1, false)]
         public static bool IsZero (out object answer, object arg)
         {
-            if (arg is int) {
-                answer = (int) arg == 0;
-                return false;
-            }
-            else {
-                answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericZeroP, new Cons (FixedObjectsVector.GenericZeroP, new Cons (arg,  null))), null);
+            answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericZeroP, arg), null);
             return true;
-            }
         }
 
-        [SchemePrimitive ("POSITIVE?", 1)]
+        [SchemePrimitive ("POSITIVE?", 1, false)]
         public static bool IsPositive (out object answer, object arg)
         {
-            if (arg is int) {
-                answer = (int) arg > 0;
-                return false;
-            }
-            else {
-                 answer = new TailCallInterpreter (new ApplyFromPrimitive ((IApplicable) FixedObjectsVector.GenericPositiveP, new Cons (FixedObjectsVector.GenericPositiveP, new Cons (arg, null))), null);
+            answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericPositiveP, arg), null);
             return true;
-            }
         }
 
-        [SchemePrimitive ("NEGATIVE?", 1)]
+        [SchemePrimitive ("NEGATIVE?", 1, false)]
         public static bool IsNegative (out object answer, object arg)
         {
             if (arg is int)
@@ -241,7 +142,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("1+", 1)]
+        [SchemePrimitive ("1+", 1, false)]
         public static bool Increment (out object answer, object arg)
         {
             if (arg is int)
@@ -252,7 +153,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("-1+", 1)]
+        [SchemePrimitive ("-1+", 1, false)]
         public static bool Decrement (out object answer, object arg)
         {
             if (arg is int)

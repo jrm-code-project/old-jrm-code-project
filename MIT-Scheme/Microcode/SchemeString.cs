@@ -7,28 +7,28 @@ namespace Microcode
 {
     static class SchemeString
     {
-        [SchemePrimitive ("STRING?", 1)]
+        [SchemePrimitive ("STRING?", 1, true)]
         public static bool IsString (out object answer, object arg)
         {
             answer = arg is char [];
             return false;
         }
 
-        [SchemePrimitive ("STRING->SYMBOL", 1)]
+        [SchemePrimitive ("STRING->SYMBOL", 1, false)]
         public static bool StringToSymbol (ref object result, object arg)
         {
             result = String.Intern (new String ((char []) arg));
             return false;
         }
 
-        [SchemePrimitive ("STRING-ALLOCATE", 1)]
+        [SchemePrimitive ("STRING-ALLOCATE", 1, false)]
         public static bool StringAllocate (out object answer, object arg)
         {
             answer = new char [(int) arg];
             return false;
         }
 
-        [SchemePrimitive ("STRING-HASH-MOD", 2)]
+        [SchemePrimitive ("STRING-HASH-MOD", 2, false)]
         public static bool StringHashMod (out object answer, object str, object modulus)
         {
             int tmp = new string ((char []) str).GetHashCode () % (int) modulus;
@@ -37,21 +37,21 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("STRING-LENGTH", 1)]
+        [SchemePrimitive ("STRING-LENGTH", 1, false)]
         public static bool StringLength (out object answer, object arg)
         {
             answer = ((char []) arg).Length;
             return false;
         }
 
-        [SchemePrimitive ("STRING-REF", 2)]
+        [SchemePrimitive ("STRING-REF", 2, false)]
         public static bool StringRef (out object answer, object str, object idx)
         {
             answer = ((char []) str) [(int) idx];
             return false;
         }
 
-        [SchemePrimitive ("STRING-SET!", 3)]
+        [SchemePrimitive ("STRING-SET!", 3, false)]
         public static bool StringSet (out object answer, object str, object idx, object val)
         {
             answer = ((char []) str) [(int) idx];
@@ -59,7 +59,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SUBSTRING-MOVE-RIGHT!", 5)]
+        [SchemePrimitive ("SUBSTRING-MOVE-RIGHT!", 5, false)]
         public static bool SubstringMoveRight (out object answer, object [] arglist)
         {
             char [] ptr1 = (char []) (arglist [0]);
@@ -81,7 +81,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SUBSTRING-MOVE-LEFT!", 5)]
+        [SchemePrimitive ("SUBSTRING-MOVE-LEFT!", 5, false)]
         public static bool SubstringMoveLeft (out object answer, object [] arglist)
         {
             char [] ptr1 = (char []) (arglist [0]);
@@ -103,7 +103,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SUBSTRING=?", 6)]
+        [SchemePrimitive ("SUBSTRING=?", 6, false)]
         public static bool IsSubstringEqual (out object answer, object [] arglist)
         {
             char [] left = (char []) (arglist [0]);
@@ -126,7 +126,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SUBSTRING-DOWNCASE!", 3)]
+        [SchemePrimitive ("SUBSTRING-DOWNCASE!", 3, false)]
         public static bool SubstringDowncase (out object answer, object astr, object astart, object aend)
         {
             char [] str = (char []) astr;
@@ -142,7 +142,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SUBSTRING-FIND-NEXT-CHAR-IN-SET", 4)]
+        [SchemePrimitive ("SUBSTRING-FIND-NEXT-CHAR-IN-SET", 4, false)]
         public static bool SubstringFindNextCharInSet (out object answer, object [] arglist)
         {
             char [] str = (char []) (arglist [0]);

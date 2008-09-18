@@ -7,7 +7,7 @@ namespace Microcode
 {
     class Cell
     {
-        [SchemePrimitive ("CELL?", 1)]
+        [SchemePrimitive ("CELL?", 1, true)]
         public static bool IsCell (out object answer, object arg)
         {
             answer = arg is Cell;
