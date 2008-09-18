@@ -7,14 +7,14 @@ namespace Microcode
 {
     static class Vector
     {
-        [SchemePrimitive ("VECTOR", -1)]
+        [SchemePrimitive ("VECTOR", -1, true)]
         public static bool MakeVector (out object answer, object [] arglist)
         {
             answer = arglist;
             return false;
         }
 
-        [SchemePrimitive ("VECTOR-CONS", 2)]
+        [SchemePrimitive ("VECTOR-CONS", 2, false)]
         public static bool VectorCons (out object answer, object size, object init)
         {
             object [] result = new object [(int) size];
@@ -24,14 +24,14 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("VECTOR?", 1)]
+        [SchemePrimitive ("VECTOR?", 1, true)]
         public static bool IsVector (out object answer, object arg)
         {
             answer = arg is object [];
             return false;
         }
 
-        [SchemePrimitive ("VECTOR-LENGTH", 1)]
+        [SchemePrimitive ("VECTOR-LENGTH", 1, false)]
         public static bool VectorLength (out object answer, object arg)
         {
             if (arg is object []) {
@@ -45,7 +45,7 @@ namespace Microcode
                 throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("VECTOR-REF", 2)]
+        [SchemePrimitive ("VECTOR-REF", 2, false)]
         public static bool VectorRef (out object answer, object vec, object idx)
         {
             object [] ovec = vec as object [];
@@ -56,8 +56,33 @@ namespace Microcode
             else
                 throw new NotImplementedException ();
         }
+        // Specialized version for common case
+        [SchemePrimitive ("VECTOR-REF0", 1, false)]
+        public static bool VectorRef0 (out object answer, object vec)
+        {
+            object [] ovec = vec as object [];
+            if (ovec != null) {
+                answer = ovec [0];
+                return false;
+            }
+            else
+                throw new NotImplementedException ();
+        }
 
-        [SchemePrimitive ("VECTOR-SET!", 3)]
+        // Specialized version for common case
+        [SchemePrimitive ("VECTOR-REF1", 1, false)]
+        public static bool VectorRef1 (out object answer, object vec)
+        {
+            object [] ovec = vec as object [];
+            if (ovec != null) {
+                answer = ovec [1];
+                return false;
+            }
+            else
+                throw new NotImplementedException ();
+        }
+
+        [SchemePrimitive ("VECTOR-SET!", 3, false)]
         public static bool VectorSet (out object answer, object vec, object idx, object val)
         {
             object [] ovec = vec as object [];
@@ -70,7 +95,7 @@ namespace Microcode
                 throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("SUBVECTOR-MOVE-RIGHT!", 5)]
+        [SchemePrimitive ("SUBVECTOR-MOVE-RIGHT!", 5, false)]
         public static bool SubvectorMoveRight (out object answer, object [] arglist)
         {
             object [] ptr1 = (object []) (arglist [0]);
@@ -92,7 +117,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SUBVECTOR-MOVE-LEFT!", 5)]
+        [SchemePrimitive ("SUBVECTOR-MOVE-LEFT!", 5, false)]
         public static bool SubvectorMoveLeft (out object answer, object [] arglist)
         {
             object [] ptr1 = (object []) (arglist [0]);
@@ -114,7 +139,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SUBVECTOR->LIST", 3)]
+        [SchemePrimitive ("SUBVECTOR->LIST", 3, false)]
         public static bool SubvectorToList (out object answer, object avec, object astart, object aend)
         {
             object [] vector = (object []) avec;

@@ -35,21 +35,88 @@ namespace Microcode
             : (UInt32) n;
         }
 
-        [SchemePrimitive ("BATCH-MODE?", 0)]
+        [SchemePrimitive ("BATCH-MODE?", 0, true)]
         public static bool IsBatchMode (out object answer)
         {
             answer = false;
             return false;
         }
 
-        [SchemePrimitive ("CONSTANT?", 1)]
+        [SchemePrimitive ("COMPILED-ENTRY?", 1, true)]
+        public static bool IsCompiledEntry (out object answer, object arg)
+        {
+            answer = false;
+            return false;
+        }
+
+        [SchemePrimitive ("CONSTANT?", 1, true)]
         public static bool IsConstant (out object answer, object arg)
         {
             answer = System.GC.GetGeneration (arg) > 0;
             return false;
         }
 
-        [SchemePrimitive ("FILE-EXISTS?", 1)]
+        [SchemePrimitive ("DECODE-TIME", 2, false)]
+        public static bool DecodeTime (out object answer, object arg0, object arg1)
+        {
+            object [] vec = (object []) arg0;
+            long time = (long) arg1;
+            DateTime ts = DateTime.FromBinary (time);
+            vec [1] = ts.Second;
+            vec [2] = ts.Minute;
+            vec [3] = ts.Hour;
+            vec [4] = ts.Day;
+            vec [5] = ts.Month;
+            vec [6] = ts.Year;
+            vec [7] = (int) ts.DayOfWeek;
+            vec [8] = Constant.sharpF;
+            vec [9] = Constant.sharpF;
+            answer = Constant.Unspecific;
+            return false;
+        }
+
+        [SchemePrimitive ("DUMP-BAND", 2, false)]
+        public static bool DumpBand (out object answer, object arg0, object arg1)
+        {
+            ControlPoint cp = (ControlPoint) arg0;  
+            string filename = new string ((char []) arg1);
+
+            System.IO.FileStream output = System.IO.File.OpenWrite ("C:\\jrm-code-project\\MIT-Scheme\\foo.band");
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bfmt = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter ();
+            bfmt.Serialize (output, new WorldState (cp, Environment.Global));
+            output.Close ();
+
+            // Create an initial unwinder state.  After reload, we resume at
+            // WithinControlPointFrame.
+            //UnwinderState env = new UnwinderState ((ControlPoint) cp, new RestoreBandFrame ());
+
+            // Return from the primitive with instructions to unwind the stack.
+            //answer = new TailCallInterpreter (Interpreter.UnwindStackExpression, env);
+            //return true;
+
+            // copacetic
+            answer = Constant.sharpT;
+            return false;
+        }
+
+        [SchemePrimitive ("ENCODED-TIME", 0, true)]
+        public static bool EncodedTime (out object answer)
+        {
+            DateTime now = DateTime.UtcNow;
+            answer = now.ToBinary ();
+            return false;
+        }
+
+        [SchemePrimitive ("FILE-ACCESS", 2, false)]
+        public static bool FileAccess (out object answer, object arg0, object arg1)
+        {
+            string filename = new String ((char []) arg0);
+            int mode = (int) arg1;
+            answer = System.IO.File.Exists (filename);
+            return false;
+        }
+
+        [SchemePrimitive ("FILE-EXISTS?", 1, false)]
         public static bool IsFileExists (out object answer, object arg)
         {
             answer = System.IO.File.Exists (new String ((char []) arg));
@@ -63,7 +130,7 @@ namespace Microcode
         //    return false;
         //}
 
-        [SchemePrimitive ("FILE-MOD-TIME", 1)]
+        [SchemePrimitive ("FILE-MOD-TIME", 1, false)]
         public static bool FileModTime (out object answer, object arg)
         {
             String filename = new String ((char []) arg);
@@ -71,7 +138,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("FILE-TYPE-INDIRECT", 1)]
+        [SchemePrimitive ("FILE-TYPE-INDIRECT", 1, false)]
         public static bool FileTypeIndirect (out object answer, object arg)
         {
             String filename = new String ((char []) arg);
@@ -91,7 +158,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("GARBAGE-COLLECT", 1)]
+        [SchemePrimitive ("GARBAGE-COLLECT", 1, true)]
         public static bool GarbageCollect (out object answer, object arg)
         {
             // Arg is the safety margin.
@@ -99,7 +166,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("GC-SPACE-STATUS", 0)]
+        [SchemePrimitive ("GC-SPACE-STATUS", 0, true)]
         public static bool GcSpaceStatus (out object answer)
         {
             object [] status =  {4,
@@ -129,7 +196,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("GET-ENVIRONMENT-VARIABLE", 1)]
+        [SchemePrimitive ("GET-ENVIRONMENT-VARIABLE", 1, false)]
         public static bool GetEnvironmentVariable (out object answer, object arg)
         {
             char [] name = (char []) arg;
@@ -148,14 +215,21 @@ namespace Microcode
         //    return false;
         //}
 
-        [SchemePrimitive ("HAVE-SELECT?", 0)]
+        [SchemePrimitive ("GET-UNUSED-COMMAND-LINE", 0, true)]
+        public static bool GetUnusedCommandLine (out object answer)
+        {
+            answer = Constant.sharpF;
+            return false;
+        }
+
+        [SchemePrimitive ("HAVE-SELECT?", 0, true)]
         public static bool HaveSelect (out object answer)
         {
             answer = false;
             return false;
         }
 
-        [SchemePrimitive ("INITIALIZE-C-COMPILED-BLOCK", 1)]
+        [SchemePrimitive ("INITIALIZE-C-COMPILED-BLOCK", 1, false)]
         public static bool InitializeCCompiledBlock (out object answer, object arg)
         {
             // what is arg?
@@ -163,7 +237,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("MICROCODE-IDENTIFY", 0)]
+        [SchemePrimitive ("MICROCODE-IDENTIFY", 0, true)]
         public static bool MicrocodeIdentify (out object answer)
         {
             answer = new object [] {false,
@@ -183,7 +257,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("MICROCODE-LIBRARY-PATH", 0)]
+        [SchemePrimitive ("MICROCODE-LIBRARY-PATH", 0, true)]
         public static bool MicrocodeLibraryPath (out object answer)
         {
             answer = new object [] { "C:\\Program Files\\MIT\\lib\\".ToCharArray () };
@@ -196,14 +270,14 @@ namespace Microcode
         }
 
 
-        [SchemePrimitive ("MICROCODE-SYSTEM-CALL-NAMES", 0)]
+        [SchemePrimitive ("MICROCODE-SYSTEM-CALL-NAMES", 0, true)]
         public static bool MicrocodeSystemCallNames (out object answer)
         {
             answer = FixedObjectsVector.SyscallNames;
             return false;
         }
 
-        [SchemePrimitive ("MICROCODE-SYSTEM-ERROR-NAMES", 0)]
+        [SchemePrimitive ("MICROCODE-SYSTEM-ERROR-NAMES", 0, true)]
         public static bool MicrocodeSystemErrorNames (out object answer)
         {
             answer = FixedObjectsVector.SyserrNames;
@@ -211,14 +285,14 @@ namespace Microcode
         }
 
 
-        [SchemePrimitive ("MICROCODE-TABLES-FILENAME", 0)]
+        [SchemePrimitive ("MICROCODE-TABLES-FILENAME", 0, true)]
         public static bool MicrocodeTablesFilename ( out object answer)
         {
             answer = "utabmd.bin".ToCharArray ();
             return false;
         }
 
-        [SchemePrimitive ("NT-GET-VOLUME-INFORMATION", 1)]
+        [SchemePrimitive ("NT-GET-VOLUME-INFORMATION", 1, false)]
         public static bool NTGetVolumeInformation (out object answer, object arg)
         {
             if (((char []) arg).ToString ().Equals("c:\\", StringComparison.InvariantCultureIgnoreCase))
@@ -241,7 +315,7 @@ namespace Microcode
         //    return false;
         //}
 
-        [SchemePrimitive ("PRIMITIVE-PURIFY", 3)]
+        [SchemePrimitive ("PRIMITIVE-PURIFY", 3, true)]
         public static bool PrimitivePurify (out object answer, object obj, object isPure, object space)
         {
             answer = new Cons (true, 0x1000);
@@ -253,14 +327,21 @@ namespace Microcode
         /// <summary>
         /// Return the current real time in units of milliseconds.
         /// </summary>
-        [SchemePrimitive ("REAL-TIME-CLOCK", 0)]
+        [SchemePrimitive ("REAL-TIME-CLOCK", 0, true)]
         public static bool RealTimeClock (out object answer)
         {
             answer = (long) DateTime.UtcNow.Subtract (UnixEpochStart).TotalMilliseconds;
             return false;
         }
 
-        [SchemePrimitive ("REQUEST-INTERRUPTS!", 1)]
+        [SchemePrimitive ("RELOAD-RETRIEVE-STRING", 0, true)]
+        public static bool ReloadRetrieveString (out object answer)
+        {
+            answer = "I'm the reload retrieve string!".ToCharArray ();
+            return false;
+        }
+
+        [SchemePrimitive ("REQUEST-INTERRUPTS!", 1, false)]
         public static bool RequestInterrupts (out object answer, object arg)
         {
             answer = Constant.Unspecific;
@@ -268,86 +349,85 @@ namespace Microcode
         }
 
         static Stopwatch systemTime = Stopwatch.StartNew ();
-        [SchemePrimitive ("SYSTEM-CLOCK", 0)]
+        [SchemePrimitive ("SYSTEM-CLOCK", 0, true)]
         public static bool SystemClock (out object answer)
         {
             answer = systemTime.ElapsedMilliseconds;
             return false;
         }
 
-        [SchemePrimitive ("TERMINAL-BUFFERED", 1)]
+        [SchemePrimitive ("TERMINAL-BUFFERED", 1, true)]
         public static bool TerminalBuffered (out object answer, object arg)
         {
             answer = true;
             return false;
         }
 
-        [SchemePrimitive ("TERMINAL-BUFFERED?", 1)]
+        [SchemePrimitive ("TERMINAL-BUFFERED?", 1, true)]
         public static bool IsTerminalBuffered (out object answer, object arg)
         {
             answer = true;
             return false;
         }
 
-        [SchemePrimitive ("TERMINAL-COOKED-OUTPUT", 1)]
+        [SchemePrimitive ("TERMINAL-COOKED-OUTPUT", 1, false)]
         public static bool TerminalCookedOutput (out object answer, object arg)
         {
             answer = true;
             return false;
         }
 
-        [SchemePrimitive ("TERMINAL-COOKED-OUTPUT?", 1)]
+        [SchemePrimitive ("TERMINAL-COOKED-OUTPUT?", 1, true)]
         public static bool TerminalCookedOutputP (out object answer, object arg)
         {
             answer = true;
             return false;
         }
 
-        [SchemePrimitive ("TTY-X-SIZE", 0)]
+        [SchemePrimitive ("TTY-X-SIZE", 0, true)]
         public static bool TtyXSize (out object answer)
         {
             answer = 80;
             return false;
         }
 
+        [SchemePrimitive ("UNDER-EMACS?", 0, true)]
+        public static bool IsUnderEmacs (out object answer)
+        {
+            answer = Constant.sharpF;
+            return false;
+        }
 
-        //[SchemePrimitive ("UNDER-EMACS?", 0)]
-        //public static bool IsUnderEmacs (out object answer)
-        //{
-        //    answer = (false);
-        //    return false;
-        //}
-
-        [SchemePrimitive ("WIN32-PREDEFINED-REGISTRY-KEYS", 0)]
+        [SchemePrimitive ("WIN32-PREDEFINED-REGISTRY-KEYS", 0, true)]
         public static bool Win32PredefinedRegistryKeys (out object answer)
         {
             answer = (
                 new Cons (
-                new Cons (string.Intern ("HKEY_CLASSES_ROOT"), Registry.ClassesRoot),
+                new Cons (string.Intern ("HKEY_CLASSES_ROOT"), null), //Registry.ClassesRoot),
                 new Cons (
-                new Cons (string.Intern ("HKEY_CURRENT_USER"), Registry.CurrentUser),
+                new Cons (string.Intern ("HKEY_CURRENT_USER"), null), //Registry.CurrentUser),
                 new Cons (
-                new Cons (string.Intern ("HKEY_LOCAL_MACHINE"), Registry.LocalMachine),
+                new Cons (string.Intern ("HKEY_LOCAL_MACHINE"), null), //Registry.LocalMachine),
                 new Cons (
-                new Cons (string.Intern ("HKEY_USERS"), Registry.Users),
+                new Cons (string.Intern ("HKEY_USERS"), null), //Registry.Users),
                 new Cons (
-                new Cons (string.Intern ("HKEY_PERFORMANCE_DATA"), Registry.PerformanceData),
+                new Cons (string.Intern ("HKEY_PERFORMANCE_DATA"), null), //Registry.PerformanceData),
                 new Cons (
-                new Cons (string.Intern ("HKEY_CURRENT_CONFIG"), Registry.CurrentConfig),
+                new Cons (string.Intern ("HKEY_CURRENT_CONFIG"), null), //Registry.CurrentConfig),
                 new Cons (
-                new Cons (string.Intern ("HKEY_DYNAMIC_DATA"), Registry.DynData),
+                new Cons (string.Intern ("HKEY_DYNAMIC_DATA"), null), //Registry.DynData),
                 null))))))));
             return false;
         }
 
-        [SchemePrimitive ("WORKING-DIRECTORY-PATHNAME", 0)]
+        [SchemePrimitive ("WORKING-DIRECTORY-PATHNAME", 0, true)]
         public static bool WorkingDirectoryPathname (out object answer)
         {
             answer = System.Environment.CurrentDirectory.ToCharArray ();
             return false;
         }
 
-        [SchemePrimitive ("SET-WORKING-DIRECTORY-PATHNAME!", 1)]
+        [SchemePrimitive ("SET-WORKING-DIRECTORY-PATHNAME!", 1, false)]
         public static bool SetWorkingDirectoryPathname (out object answer, object arg)
         {
             answer = System.Environment.CurrentDirectory.ToCharArray ();

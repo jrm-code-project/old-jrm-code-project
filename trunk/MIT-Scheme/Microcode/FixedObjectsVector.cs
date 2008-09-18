@@ -220,14 +220,14 @@ namespace Microcode
             }
         }
 
-        [SchemePrimitive ("GET-FIXED-OBJECTS-VECTOR", 0)]
+        [SchemePrimitive ("GET-FIXED-OBJECTS-VECTOR", 0, true)]
         public static bool GetFixedObjectsVector (out object answer)
         {
             answer = theFixedObjectsVector;
             return false;
         }
 
-        [SchemePrimitive ("SET-FIXED-OBJECTS-VECTOR!", 1)]
+        [SchemePrimitive ("SET-FIXED-OBJECTS-VECTOR!", 1, false)]
         public static bool SetFixedObjectsVector (out object answer, object arg0)
         {
             answer = theFixedObjectsVector;

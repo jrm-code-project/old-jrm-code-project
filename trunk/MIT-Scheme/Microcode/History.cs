@@ -3,6 +3,7 @@ using System.Diagnostics;
 
 namespace Microcode
 {
+    [Serializable]
     class History: ISystemHunk3
     {
         HistoryElement element;
@@ -167,7 +168,7 @@ namespace Microcode
 
         #endregion
 
-        [SchemePrimitive ("SET-CURRENT-HISTORY!", 1)]
+        [SchemePrimitive ("SET-CURRENT-HISTORY!", 1, false)]
         public static bool SetCurrentHistory (out object answer, object arg)
         {
             answer = false;
@@ -176,6 +177,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class MarkedHistory : History
     {
         public MarkedHistory (HistoryElement element)
@@ -184,6 +186,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class UnmarkedHistory : History
     {
         public UnmarkedHistory (HistoryElement element)
@@ -191,14 +194,15 @@ namespace Microcode
         {
         }
 
-        //[SchemePrimitive ("HUNK3B?", 1)]
-        //public static PartialResult IsHunk3b (object arg)
-        //{
-        //    return new PartialResult (arg is UnmarkedHistory);
-        //    // return interpreter.Return (arg == null || (arg is bool && (bool) (arg) == false));
-        //}
+        [SchemePrimitive ("HUNK3-B?", 1, true)]
+        public static bool IsHunk3b (out object answer, object arg)
+        {
+            answer = arg is UnmarkedHistory;
+            return false;
+        }
     }
 
+    [Serializable]
     abstract class HistoryElement : ISystemHunk3
     {
 
@@ -255,6 +259,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class HistoryRib : HistoryElement
     {
         SCode expression;
@@ -382,6 +387,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class HistoryVertebra : HistoryElement
     {
         History rib;

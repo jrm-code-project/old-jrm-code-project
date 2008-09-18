@@ -107,7 +107,7 @@ namespace Microcode
         {
         }
 
-        [SchemePrimitive ("EQ?", 2)]
+        [SchemePrimitive ("EQ?", 2, true)]
         public static bool Eq (out object answer, object arg0, object arg1)
         {
             if (arg0 == null)
@@ -127,21 +127,21 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("HUNK3-CONS", 3)]
+        [SchemePrimitive ("HUNK3-CONS", 3, true)]
         public static bool Hunk3Cons (out object answer, object cxr0, object cxr1, object cxr2)
         {
             answer = new Hunk3 (cxr0, cxr1, cxr2);
             return false;
         }
 
-        [SchemePrimitive ("MAKE-NON-POINTER-OBJECT", 1)]
+        [SchemePrimitive ("MAKE-NON-POINTER-OBJECT", 1, false)]
         public static bool MakeNonPointerObject (out object answer, object arg)
         {
             answer = arg;
             return false;
         }
 
-        [SchemePrimitive ("NOT", 1)]
+        [SchemePrimitive ("NOT", 1, true)]
         public static bool Not (out object answer, object arg)
         {
             if (arg is bool) {
@@ -156,7 +156,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("NULL?", 1)]
+        [SchemePrimitive ("NULL?", 1, true)]
         public static bool IsNull (out object answer, object arg)
         {
             answer = (arg == null  ? Constant.sharpT : Constant.sharpF);
@@ -172,7 +172,7 @@ namespace Microcode
         //public static IDictionary<object, int> objectDatumDictionary = new Dictionary<object, int>();
         //public static IDictionary<int, object> datumObjectDictionary = new Dictionary<int, object> ();
 
-        [SchemePrimitive ("OBJECT-DATUM", 1)]
+        [SchemePrimitive ("OBJECT-DATUM", 1, true)]
         public static bool ObjectDatum (out object answer, object arg)
         {
             Primitive prim = arg as Primitive;
@@ -220,37 +220,44 @@ namespace Microcode
         }
 
 
-        [SchemePrimitive ("OBJECT-GC-TYPE", 1)]
+        [SchemePrimitive ("OBJECT-GC-TYPE", 1, true)]
         public static bool ObjectGCType (out object answer, object arg)
         {
             //Primitive.Noisy = false;
-            if (arg == null)
+            if (arg == null
+                || arg is bool
+                || arg is char
+                || arg is double
+                || arg is int
+                || arg is long
+                || arg is Constant)
                 answer = 0;
             // '#(COMPILED-ENTRY VECTOR GC-INTERNAL UNDEFINED NON-POINTER
             //	CELL PAIR TRIPLE QUADRUPLE)
-            else if (arg is bool)
-                answer = 0;
-            else if (arg is Constant)
-                answer = 0;
+            else if (arg is ISystemPair)
+                answer = 2;
+            else if (arg is ISystemVector
+                || arg is object [])
+                answer = -3;
             else
-                throw new NotImplementedException ();
+                throw new NotImplementedException ("Object-gc-type: " + arg.ToString());
             return false;
         }
 
-        [SchemePrimitive ("OBJECT-TYPE", 1)]
+        [SchemePrimitive ("OBJECT-TYPE", 1, true)]
         public static bool ObjectType (out object answer, object arg)
         {
             return PrimitiveObjectType (out answer, arg);
         }
 
-        [SchemePrimitive ("OBJECT-TYPE?", 2)]
+        [SchemePrimitive ("OBJECT-TYPE?", 2, false)]
         public static bool IsObjectType (out object answer, object arg0, object arg1)
         {
             return IsPrimitiveObjectType (out answer, arg0, arg1);
         }
 
 
-        [SchemePrimitive ("OBJECT-SET-TYPE", 2)]
+        [SchemePrimitive ("OBJECT-SET-TYPE", 2, false)]
         public static bool ObjectSetType (out object answer, object arg0, object arg1)
         {
             TC newType = (TC) (int) arg0;
@@ -282,7 +289,12 @@ namespace Microcode
                     break;
 
                 case TC.ENVIRONMENT:
-                    answer = new TopLevelEnvironment ((IClosure)((object[])arg1)[0], (object []) arg1);
+                    object [] args = (object[]) arg1;
+                    IClosure closure = (IClosure) args [0];
+                    object [] actualArgs = new object [args.Length - 1];
+                    for (int i = 0; i < actualArgs.Length; i++)
+                        actualArgs [i] = args [i + 1];
+                    answer = new StandardEnvironment (closure, actualArgs);
                     break;
 
                      // throw new NotImplementedException ();
@@ -337,14 +349,14 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("PRIMITIVE-OBJECT-EQ?", 2)]
+        [SchemePrimitive ("PRIMITIVE-OBJECT-EQ?", 2, true)]
         public static bool PrimitiveObjectEq (out object answer, object arg0, object arg1)
         {
             answer = (Object.ReferenceEquals (arg0, arg1));
             return false;
         }
 
-        [SchemePrimitive ("PRIMITIVE-OBJECT-TYPE", 1)]
+        [SchemePrimitive ("PRIMITIVE-OBJECT-TYPE", 1, true)]
         public static bool PrimitiveObjectType (out object answer, object arg)
         {
             if (arg == null)
@@ -359,7 +371,7 @@ namespace Microcode
                 answer = (int) TC.CHARACTER_STRING;
             else if (arg is double)
                 answer = (int) TC.BIG_FLONUM;
-            else if (arg is int)
+            else if (arg is int || arg is long)
                 answer = (int) TC.FIXNUM;
             else if (arg is string)
                 answer = Misc.IsGensym ((string) arg) ? (int) TC.UNINTERNED_SYMBOL : (int) TC.INTERNED_SYMBOL;
@@ -371,203 +383,209 @@ namespace Microcode
         }
 
 
-        [SchemePrimitive ("PRIMITIVE-OBJECT-TYPE?", 2)]
+        [SchemePrimitive ("PRIMITIVE-OBJECT-TYPE?", 2, false)]
         public static bool IsPrimitiveObjectType (out object answer, object arg0, object arg1)
         {
             TC targetType = (TC) arg0;
+            bool banswer;
             switch (targetType) {
                 case TC.ACCESS:
-                    answer = arg1 is Access;
+                    banswer = arg1 is Access;
                     break;
 
                 case TC.BIG_FIXNUM:
-                    answer = arg1 is Int64;
+                    banswer = arg1 is Int64;
                     break;
 
                 case TC.BIG_FLONUM:
-                    answer = arg1 is double;
+                    banswer = arg1 is double;
                     break;
 
                 case TC.BROKEN_HEART:
-                    answer = false;
+                    banswer = false;
                     break;
 
                 case TC.CHARACTER:
-                    answer = arg1 is char;
+                    banswer = arg1 is char;
                     break;
 
                 case TC.CHARACTER_STRING:
-                    answer = arg1 is char [];
+                    banswer = arg1 is char [];
                     break;
 
                 case TC.COMBINATION:
-                    answer = arg1 is Combination;
+                    banswer = arg1 is Combination || arg1 is Combination0;
                     break;
 
                 case TC.COMBINATION_1:
-                    answer = arg1 is Combination1;
+                    banswer = arg1 is Combination1;
                     break;
 
                 case TC.COMBINATION_2:
-                    answer = arg1 is Combination2;
+                    banswer = arg1 is Combination2;
                     break;
+
                 case TC.COMMENT:
-                    answer = arg1 is Comment;
+                    banswer = arg1 is Comment;
                     break;
+
                 case TC.COMPILED_ENTRY:
-                    answer = false;
+                    banswer = false;
                     break;
 
                 case TC.COMPLEX:
-                    answer = arg1 is Complex;
+                    banswer = arg1 is Complex;
                     break;
 
                 case TC.CONDITIONAL:
-                    answer = arg1 is Conditional;
+                    banswer = arg1 is Conditional;
                     break;
 
                 case TC.CONSTANT:
-                    answer = arg1 == null
+                    banswer = arg1 == null
                                                || arg1 is Constant
                                                || ((arg1 is bool) && ((bool) arg1 == true));
                     break;
 
                 case TC.DEFINITION:
-                    answer = arg1 is Definition;
+                    banswer = arg1 is Definition;
                     break;
 
                 case TC.DELAY:
-                    answer = arg1 is Delay;
+                    banswer = arg1 is Delay;
                     break;
 
                 case TC.DELAYED:
-                    answer = arg1 is Promise;
+                    banswer = arg1 is Promise;
                     break;
 
                 case TC.DISJUNCTION:
-                    answer = arg1 is Disjunction;
+                    banswer = arg1 is Disjunction;
                     break;
 
                 case TC.ENTITY:
-                    answer = arg1 is Entity;
+                    banswer = arg1 is Entity;
                     break;
 
                 case TC.ENVIRONMENT:
-                    answer = arg1 is Environment;
+                    banswer = arg1 is Environment;
                     break;
 
                 case TC.EXTENDED_LAMBDA:
-                    answer = arg1 is ExtendedLambda;
+                    banswer = arg1 is ExtendedLambda;
                     break;
 
                 case TC.EXTENDED_PROCEDURE:
-                    answer = arg1 is ExtendedClosure;
+                    banswer = arg1 is ExtendedClosure;
                     break;
 
                 case TC.FIXNUM:
-                    answer = arg1 is Int32;
+                    banswer = arg1 is Int32;
                     break;
 
                 case TC.FUTURE:
-                    answer = false;
+                    banswer = false;
                     break;
 
                 case TC.HUNK3_B:
-                    answer = arg1 is MarkedHistory;
+                    banswer = arg1 is MarkedHistory;
                     break;
 
                 case TC.INTERNED_SYMBOL:
-                    answer = arg1 is string;
+                    banswer = arg1 is string;
                     break;
                 //        //return (arg1 is string)
                 //        //&& (!Misc.IsGensym ((string) arg1)));
 
                 case TC.LAMBDA:
-                    answer = arg1 is Lambda;
+                    banswer = arg1 is Lambda || arg1 is SimpleLambda || arg1 is TrivialLambda;
                     break;
 
                 case TC.LIST:
-                    answer = arg1 is Cons;
+                    banswer = arg1 is Cons;
                     break;
 
                 case TC.LEXPR:
-                    answer = false;
+                    banswer = false;
                     break;
+
                 case TC.MANIFEST_NM_VECTOR:
-                    answer = false;
+                    banswer = false;
                     break;
+
                 case TC.NULL:
-                    answer = (arg1 is bool) && ((bool) arg1 == false);
+                    banswer = (arg1 is bool) && ((bool) arg1 == false);
                     break;
 
                 case TC.PCOMB0:
-                    answer = arg1 is PrimitiveCombination0;
+                    banswer = arg1 is PrimitiveCombination0;
                     break;
 
                 case TC.PCOMB1:
-                    answer = arg1 is PrimitiveCombination1;
+                    banswer = arg1 is PrimitiveCombination1;
                     break;
 
                 case TC.PCOMB2:
-                    answer = arg1 is PrimitiveCombination2;
+                    banswer = arg1 is PrimitiveCombination2;
                     break;
 
                 case TC.PCOMB3:
-                    answer = arg1 is PrimitiveCombination3;
+                    banswer = arg1 is PrimitiveCombination3;
                     break;
 
                 case TC.PRIMITIVE:
-                    answer = arg1 is Primitive;
+                    banswer = arg1 is Primitive;
                     break;
 
                 case TC.PROCEDURE:
-                    answer = arg1 is Closure;
+                    banswer = arg1 is Closure || arg1 is SimpleClosure || arg1 is TrivialClosure;
                     break;
 
                 case TC.RATNUM:
-                    answer = arg1 is Ratnum;
+                    banswer = arg1 is Ratnum;
                     break;
 
                 case TC.RECORD:
-                    answer = arg1 is Record;
+                    banswer = arg1 is Record;
                     break;
 
                 case TC.REFERENCE_TRAP:
-                    answer = arg1 is ReferenceTrap;
+                    banswer = arg1 is ReferenceTrap;
                     break;
 
                 case TC.RETURN_CODE:
-                    answer = arg1 is ReturnCode;
+                    banswer = arg1 is ReturnCode;
                     break;
 
                 case TC.SEQUENCE_2:
-                    answer = arg1 is Sequence2;
+                    banswer = arg1 is Sequence2;
                     break;
 
                 case TC.SEQUENCE_3:
-                    answer = arg1 is Sequence3;
+                    banswer = arg1 is Sequence3;
                     break;
 
                 case TC.UNINTERNED_SYMBOL:
-                    answer = (arg1 is string)
+                    banswer = (arg1 is string)
                         && Misc.IsGensym ((string) arg1);
                     break;
 
                 case TC.VECTOR:
-                    answer = arg1 is object [];
+                    banswer = arg1 is object [];
                     break;
 
                 case TC.WEAK_CONS:
-                    answer = arg1 is WeakCons;
+                    banswer = arg1 is WeakCons;
                     break;
 
                 default:
                     throw new NotImplementedException ();
             }
+            answer = banswer ? Constant.sharpT : Constant.sharpF;
             return false;
         }
 
-        [SchemePrimitive ("PRIMITIVE-OBJECT-REF", 2)]
+        [SchemePrimitive ("PRIMITIVE-OBJECT-REF", 2, false)]
         public static bool PrimitiveObjectRef (ref object answer, object arg0, object arg1)
         {
             ReferenceTrap reftrap = arg0 as ReferenceTrap;
@@ -586,7 +604,7 @@ namespace Microcode
         }
 
 
-        [SchemePrimitive ("PRIMITIVE-OBJECT-SET-TYPE", 2)]
+        [SchemePrimitive ("PRIMITIVE-OBJECT-SET-TYPE", 2, false)]
         public static bool PrimitiveObjectSetType (out object answer, object arg0, object arg1)
         {
             TC newType = (TC) (int) arg0;
@@ -622,7 +640,23 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SYSTEM-HUNK3-CXR0", 1)]
+        [SchemePrimitive ("SYMBOL?", 1, true)]
+        public static bool IsSymbol (out object answer, object arg)
+        {
+            string sym = arg as string;
+            answer = (sym != null && string.IsInterned(sym) == sym);
+            return false;
+        }
+
+        [SchemePrimitive ("UNINTERNED-SYMBOL?", 1, true)]
+        public static bool IsUninternedSymbol (out object answer, object arg)
+        {
+            string sym = arg as string;
+            answer = (sym != null && string.IsInterned (sym) == null);
+            return false;
+        }
+
+        [SchemePrimitive ("SYSTEM-HUNK3-CXR0", 1, false)]
         public static bool SystemHunk3Cxr0 (out object answer, object arg)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
@@ -634,7 +668,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SYSTEM-HUNK3-CXR1", 1)]
+        [SchemePrimitive ("SYSTEM-HUNK3-CXR1", 1, false)]
         public static bool SystemHunk3Cxr1 (out object answer, object arg)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
@@ -646,7 +680,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SYSTEM-HUNK3-CXR2", 1)]
+        [SchemePrimitive ("SYSTEM-HUNK3-CXR2", 1, false)]
         public static bool SystemHunk3Cxr2 (out object answer, object arg)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
@@ -658,7 +692,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR0!", 2)]
+        [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR0!", 2, false)]
         public static bool SystemHunk3SetCxr0 (out object answer, object arg, object newValue)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
@@ -671,7 +705,7 @@ namespace Microcode
 
                 throw new NotImplementedException ();
         }
-        [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR1!", 2)]
+        [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR1!", 2, false)]
         public static bool SystemHunk3SetCxr1 (out object answer, object arg, object newValue)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
@@ -684,7 +718,7 @@ namespace Microcode
 
                 throw new NotImplementedException ();
         }
-        [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR2!", 2)]
+        [SchemePrimitive ("SYSTEM-HUNK3-SET-CXR2!", 2, false)]
         public static bool SystemHunk3SetCxr2 (out object answer, object arg, object newValue)
         {
             ISystemHunk3 hunk = arg as ISystemHunk3;
@@ -698,18 +732,23 @@ namespace Microcode
                 throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("SYSTEM-LIST-TO-VECTOR", 2)]
+        [SchemePrimitive ("SYSTEM-LIST-TO-VECTOR", 2, false)]
         public static bool SystemListToVector (out object answer, object arg0, object arg1)
         {
             TC code = (TC) arg0;
             switch ((TC) arg0) {
                 case TC.COMBINATION:
-                    answer = new Combination ((Cons) arg1);
+                    answer = Combination.FromList ((Cons) arg1);
                     break;
 
                 case TC.ENVIRONMENT:
-                    object [] initialValues = ((Cons) arg1).ToVector ();
-                    answer = new TopLevelEnvironment ((IClosure) initialValues[0], initialValues);
+                    IClosure closure = (IClosure) ((Cons) arg1).Car;
+                    object tail = ((Cons) arg1).Cdr;
+                    object [] initialValues = 
+                        tail == null 
+                        ? new object [0]
+                        : ((Cons) tail).ToVector ();
+                    answer = new StandardEnvironment (closure, initialValues);
                     break;
 
                 default:
@@ -720,7 +759,7 @@ namespace Microcode
 
 
 
-        [SchemePrimitive ("SYSTEM-SUBVECTOR-TO-LIST", 3)]
+        [SchemePrimitive ("SYSTEM-SUBVECTOR-TO-LIST", 3, false)]
         public static bool SystemSubvectorToList (out object answer, object arg, object start, object end)
         {
             ISystemVector sysVec = arg as ISystemVector;
@@ -735,7 +774,7 @@ namespace Microcode
             else throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("SYSTEM-VECTOR-REF", 2)]
+        [SchemePrimitive ("SYSTEM-VECTOR-REF", 2, false)]
         public static bool SystemVectorRef (out object answer, object arg, object offset)
         {
             ISystemVector sysVec = arg as ISystemVector;
@@ -746,7 +785,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SYSTEM-VECTOR-SIZE", 1)]
+        [SchemePrimitive ("SYSTEM-VECTOR-SIZE", 1, false)]
         public static bool SystemVectorSize (out object answer, object arg)
         {
             ISystemVector sysVec = arg as ISystemVector;

@@ -3,7 +3,8 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    class WeakCons : ISystemPair
+    [Serializable]
+    sealed class WeakCons : ISystemPair
     {
         // WeakReference car;
         object car;

@@ -378,6 +378,16 @@ namespace Microcode
             return result;
         }
 
+        public void ReadFormals (uint location, out string name, out string [] formals)
+        {
+            object [] names = (object []) ReadObject (location);
+            name = (string) names [0];
+            formals = new string [names.Length-1];
+            for (int i = 1; i < names.Length; i++)
+                formals [i-1] = (string) names [i];
+            return;
+        }
+
         public Assignment ReadAssignment (uint location)
         {
             return new Assignment (((Variable) ReadObject (location)).name,
@@ -386,13 +396,15 @@ namespace Microcode
 
         public ExtendedLambda ReadExtendedLambda (uint location)
         {
-            string [] second = ReadFormals (location + 4);
+            string name;
+            string [] formals;
+            ReadFormals (location + 4, out name, out formals);
             object third = ReadObject (location + 8);
             EncodedObject argcount = new EncodedObject ((uint) (int) third);
             uint optional = (argcount.Datum & 0x00FF);
             uint required = (argcount.Datum & 0xFF00) >> 8;
             bool rest = ((argcount.Datum & 0x10000) == 0x10000);
-            return new ExtendedLambda (second, ReadObject (location), required, optional, rest);
+            return new ExtendedLambda (name, formals, ReadObject (location), required, optional, rest);
         }
 
         static int gensymCounter;
@@ -431,10 +443,10 @@ namespace Microcode
                     return heapSection.ReadString (encoded.Datum);
 
                 case TC.COMBINATION:
-                    return new Combination (ReadVector (encoded.Datum));
+                    return Combination.Make (ReadVector (encoded.Datum));
 
                 case TC.COMBINATION_1:
-                    return new Combination1 (ReadObject (encoded.Datum),
+                    return Combination1.Make (ReadObject (encoded.Datum),
                                              ReadObject (encoded.Datum + 4));
 
                 case TC.COMBINATION_2:
@@ -481,8 +493,10 @@ namespace Microcode
                     return String.Intern (new String ((char []) ReadObject (encoded.Datum)));
 
                 case TC.LAMBDA:
-                    return new Lambda (ReadFormals (encoded.Datum + 4),
-                                       ReadObject (encoded.Datum));
+                    string name;
+                    string [] formals;
+                    ReadFormals (encoded.Datum + 4, out name, out formals);
+                    return Lambda.Make (name, formals, ReadObject (encoded.Datum));
 
                 case TC.LIST:
                     object second = ReadObject (encoded.Datum + 4);
@@ -631,7 +645,7 @@ namespace Microcode
             }
         }
 
-        [SchemePrimitive ("BINARY-FASLOAD", 1)]
+        [SchemePrimitive ("BINARY-FASLOAD", 1, false)]
         public static bool BinaryFasload (out object answer, object arg)
         {
             string filename = new String ((char []) arg);

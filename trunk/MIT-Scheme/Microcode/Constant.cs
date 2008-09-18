@@ -3,26 +3,27 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    sealed class Constant : SchemeObject
+    [Serializable]
+    public sealed class Constant : SchemeObject
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public static object sharpT = true;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Constant defaultObject;
+        public static Constant theDefaultObject;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Constant eofObject;
+        public static Constant theEofObject;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Constant aux;
+        public static Constant theAuxMarker;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Constant key;
+        public static Constant theKeyMarker;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Constant optional;
+        public static Constant theOptionalMarker;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Constant rest;
+        public static Constant theRestMarker;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Constant externalUnassigned;
+        public static Constant theExternalUnassignedObject;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        static Constant unspecific;
+        public static Constant theUnspecificObject;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public static object sharpF = false;
 
@@ -74,9 +75,9 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (defaultObject == null)
-                    defaultObject = new Constant ("default");
-                return defaultObject;
+                if (theDefaultObject == null)
+                    theDefaultObject = new Constant ("default");
+                return theDefaultObject;
             }
         }
 
@@ -85,9 +86,9 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (eofObject == null)
-                    eofObject = new Constant("eof");
-                return eofObject;
+                if (theEofObject == null)
+                    theEofObject = new Constant("eof");
+                return theEofObject;
             }
         }
 
@@ -96,9 +97,9 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (aux == null)
-                    aux = new Constant ("aux");
-                return aux;
+                if (theAuxMarker == null)
+                    theAuxMarker = new Constant ("theAuxMarker");
+                return theAuxMarker;
             }
         }
 
@@ -107,9 +108,9 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (key == null)
-                    key = new Constant ("key");
-                return key;
+                if (theKeyMarker == null)
+                    theKeyMarker = new Constant ("theKeyMarker");
+                return theKeyMarker;
             }
         }
 
@@ -119,9 +120,9 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (optional == null)
-                    optional = new Constant ("optional");
-                return optional;
+                if (theOptionalMarker == null)
+                    theOptionalMarker = new Constant ("theOptionalMarker");
+                return theOptionalMarker;
             }
         }
 
@@ -130,9 +131,9 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (rest == null)
-                    rest = new Constant ("rest");
-                return rest;
+                if (theRestMarker == null)
+                    theRestMarker = new Constant ("theRestMarker");
+                return theRestMarker;
             }
         }
 
@@ -141,9 +142,9 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (externalUnassigned == null)
-                    externalUnassigned = new Constant ("Unassigned");
-                return externalUnassigned;
+                if (theExternalUnassignedObject == null)
+                    theExternalUnassignedObject = new Constant ("Unassigned");
+                return theExternalUnassignedObject;
             }
         }
 
@@ -152,9 +153,9 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (unspecific == null)
-                    unspecific = new Constant ("Unspecific");
-                return unspecific;
+                if (theUnspecificObject == null)
+                    theUnspecificObject = new Constant ("Unspecific");
+                return theUnspecificObject;
             }
         }
    }

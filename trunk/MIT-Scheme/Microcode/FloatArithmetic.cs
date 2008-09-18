@@ -185,35 +185,42 @@ namespace Microcode
                 return (x);
         }
 
-        [SchemePrimitive ("FLONUM?", 1)]
+        [SchemePrimitive ("FLONUM?", 1, true)]
         public static bool IsFlonum (out object answer, object arg0)
         {
             answer = arg0 is double;
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-ADD", 2)]
+        [SchemePrimitive ("BIG-FLONUM?", 1, true)]
+        public static bool IsBigFlonum (out object answer, object arg0)
+        {
+            answer = arg0 is double;
+            return false;
+        }
+
+        [SchemePrimitive ("FLONUM-ADD", 2, false)]
         public static bool Add (out object answer, object left, object right)
         {
             answer = (double) left + (double) right;
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-SUBTRACT", 2)]
+        [SchemePrimitive ("FLONUM-SUBTRACT", 2, false)]
         public static bool Subtract (out object answer, object left, object right)
         {
             answer = (double) left - (double) right;
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-MULTIPLY", 2)]
+        [SchemePrimitive ("FLONUM-MULTIPLY", 2, false)]
         public static bool Multiply (out object answer, object left, object right)
         {
             answer = (double) left * (double) right;
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-DIVIDE", 2)]
+        [SchemePrimitive ("FLONUM-DIVIDE", 2, false)]
         public static bool Divide (out object answer, object left, object right)
         {
             answer = (double) left / (double) right;
@@ -232,42 +239,42 @@ namespace Microcode
         //    throw new NotImplementedException ();
         //}
 
-        [SchemePrimitive ("FLONUM-EQUAL?", 2)]
+        [SchemePrimitive ("FLONUM-EQUAL?", 2, false)]
         public static bool IsEqual (out object answer, object left, object right)
         {
             answer = (double) left == (double) right;
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-LESS?", 2)]
+        [SchemePrimitive ("FLONUM-LESS?", 2, false)]
         public static bool IsLess (out object answer, object left, object right)
         {
             answer = (double) left < (double) right;
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-GREATER?", 2)]
+        [SchemePrimitive ("FLONUM-GREATER?", 2, false)]
         public static bool IsGreater (out object answer, object left, object right)
         {
             answer = (double) left > (double) right;
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-ZERO?", 1)]
+        [SchemePrimitive ("FLONUM-ZERO?", 1, false)]
         public static bool IsZero (out object answer, object arg)
         {
             answer = (double) arg == 0.0;
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-POSITIVE?", 1)]
+        [SchemePrimitive ("FLONUM-POSITIVE?", 1, false)]
         public static bool IsPositive (out object answer, object arg)
         {
             answer = (double) arg > 0.0;
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-NEGATIVE?", 1)]
+        [SchemePrimitive ("FLONUM-NEGATIVE?", 1, false)]
         public static bool IsNegative (out object answer, object arg)
         {
             answer = (double) arg < 0.0;
@@ -280,14 +287,14 @@ namespace Microcode
         //    throw new NotImplementedException ();
         //}
 
-        [SchemePrimitive ("FLONUM-LOG", 1)]
+        [SchemePrimitive ("FLONUM-LOG", 1, false)]
         public static bool Log (out object answer, object arg)
         {
             answer = Math.Log ((double) arg);
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-SIN", 1)]
+        [SchemePrimitive ("FLONUM-SIN", 1, false)]
         public static bool Sin (out object answer, object arg)
         {
             answer = Math.Sin ((double) arg);
@@ -348,60 +355,60 @@ namespace Microcode
         //    throw new NotImplementedException ();
         //}
 
-        [SchemePrimitive ("FLONUM-FLOOR", 1)]
+        [SchemePrimitive ("FLONUM-FLOOR", 1, false)]
         public static bool Floor (out object answer, object arg)
         {
             throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("FLONUM-CEILING", 1)]
+        [SchemePrimitive ("FLONUM-CEILING", 1, false)]
         public static bool Ceiling (out object answer, object arg)
         {
             throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("FLONUM-TRUNCATE", 1)]
+        [SchemePrimitive ("FLONUM-TRUNCATE", 1, false)]
         public static bool Truncate (out object answer, object arg)
         {
             answer = Math.Truncate ((double) arg);
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-ROUND", 1)]
+        [SchemePrimitive ("FLONUM-ROUND", 1, false)]
         public static bool Round (out object answer, object arg)
         {
             throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("FLONUM-TRUNCATE->EXACT", 1)]
+        [SchemePrimitive ("FLONUM-TRUNCATE->EXACT", 1, false)]
         public static bool TruncateToExact (out object answer, object arg)
         {
             answer = Narrow ((long) (Math.Truncate ((double) arg)));
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-FLOOR->EXACT", 1)]
+        [SchemePrimitive ("FLONUM-FLOOR->EXACT", 1, false)]
         public static bool FloorToExact (out object answer, object arg)
         {
             answer = Narrow ((long) (Math.Floor ((double) arg)));
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-CEILING->EXACT", 1)]
+        [SchemePrimitive ("FLONUM-CEILING->EXACT", 1, false)]
         public static bool CeilingToExact (out object answer, object arg)
         {
             answer = Narrow ((long) (Math.Ceiling ((double) arg)));
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-ROUND->EXACT", 1)]
+        [SchemePrimitive ("FLONUM-ROUND->EXACT", 1, false)]
         public static bool RoundToExact (out object answer, object arg)
         {
             answer = Narrow ((long) (Math.Round ((double) arg)));
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-NORMALIZE", 1)]
+        [SchemePrimitive ("FLONUM-NORMALIZE", 1, false)]
         public static bool Normalize (out object answer, object arg)
         {
             int exponent;
@@ -410,7 +417,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("FLONUM-DENORMALIZE", 2)]
+        [SchemePrimitive ("FLONUM-DENORMALIZE", 2, false)]
         public static bool Denormalize (out object answer, object left, object right)
         {
             answer = LdExp ((double) left, (int) right);

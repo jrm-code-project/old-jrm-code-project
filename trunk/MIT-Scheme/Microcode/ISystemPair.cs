@@ -2,7 +2,7 @@
 
 namespace Microcode
 {
-    interface ISystemPair
+    public interface ISystemPair
     {
         object SystemPairCar
         {
@@ -19,7 +19,7 @@ namespace Microcode
 
     static class SystemPair
     {
-        [SchemePrimitive ("SYSTEM-PAIR-CONS", 3)]
+        [SchemePrimitive ("SYSTEM-PAIR-CONS", 3, false)]
         public static bool SystemPairCons (out object answer, object acode, object car, object cdr)
         {
             TC typeCode = (TC) (int) acode; // for debugging porpoises
@@ -34,7 +34,7 @@ namespace Microcode
                     break;
 
                 case TC.COMBINATION_1:
-                    answer = new Combination1 (car, cdr);
+                    answer = Combination1.Make (car, cdr);
                     break;
 
                 case TC.DEFINITION:
@@ -51,11 +51,14 @@ namespace Microcode
 
                 case TC.LAMBDA:
                     // passed in backwards.
-                    answer = new Lambda (cdr, car);
+                    object [] names = (object []) cdr;
+                    object [] formals = new object [names.Length - 1];
+                    Array.Copy (names, 1, formals, 0, formals.Length);
+                    answer = Lambda.Make (names[0], formals, car);
                     break;
 
                 case TC.PROCEDURE:
-                    answer = new Closure ((Lambda) car, (cdr is bool && (bool) cdr == false) ? Environment.Global : (Environment) cdr);
+                    answer = Closure.Make (car, (cdr is bool && (bool) cdr == false) ? Environment.Global : (Environment) cdr);
                     break;
 
                 case TC.RATNUM:
@@ -80,7 +83,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SYSTEM-PAIR-CAR", 1)]
+        [SchemePrimitive ("SYSTEM-PAIR-CAR", 1, false)]
         public static bool SystemPairCar (out object answer, object arg)
         {
             ISystemPair systemPair = arg as ISystemPair;
@@ -97,7 +100,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SYSTEM-PAIR-CDR", 1)]
+        [SchemePrimitive ("SYSTEM-PAIR-CDR", 1, false)]
         public static bool SystemPairCdr (out object answer, object arg)
         {
             ISystemPair systemPair = arg as ISystemPair;
@@ -109,7 +112,7 @@ namespace Microcode
             }
         }
 
-        [SchemePrimitive ("SYSTEM-PAIR-SET-CAR!", 2)]
+        [SchemePrimitive ("SYSTEM-PAIR-SET-CAR!", 2, false)]
         public static bool SystemPairSetCar (out object answer, object arg, object newValue)
         {
             ISystemPair systemPair = arg as ISystemPair;
@@ -118,7 +121,7 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("SYSTEM-PAIR-SET-CDR!", 2)]
+        [SchemePrimitive ("SYSTEM-PAIR-SET-CDR!", 2, false)]
         public static bool SystemPairSetCdr (out object answer, object arg, object newValue)
         {
             ISystemPair systemPair = arg as ISystemPair;

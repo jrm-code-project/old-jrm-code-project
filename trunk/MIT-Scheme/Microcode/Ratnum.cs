@@ -6,6 +6,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     sealed class Ratnum : ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -52,7 +53,7 @@ namespace Microcode
 
         #endregion
 
-        [SchemePrimitive ("RATNUM?", 1)]
+        [SchemePrimitive ("RATNUM?", 1, true)]
         public static bool IsRatnum (out object answer, object arg)
         {
             answer = arg is Ratnum;

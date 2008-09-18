@@ -6,6 +6,7 @@ namespace Microcode
 {
     // Root of any object that isn't just lifted from
     // the underlying runtime.
+    [Serializable]
     public class SchemeObject
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]

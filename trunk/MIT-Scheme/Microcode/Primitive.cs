@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
@@ -13,21 +15,23 @@ namespace Microcode
     delegate bool PrimitiveMethod2 (out object answer, object argument0, object argument1);
     delegate bool PrimitiveMethod3 (out object answer, object argument0, object argument1, object argument2);
 
+    [Serializable]
     public abstract class Primitive : SchemeObject //SCode
     {
 #if DEBUG
+        [NonSerialized]
         public static bool Noisy = false;
-        protected long invocationCount;    
+        [NonSerialized]
+        public long invocationCount;    
 #endif
 
         // Global table mapping names to primitive procedures.
+        [NonSerialized]
         static Dictionary<string, Primitive> primitiveTable = new Dictionary<string, Primitive> ();
 
         protected readonly string name;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly int arity;
-
-
 
         internal Primitive (string name, int arity)
             : base (TC.PRIMITIVE)
@@ -49,6 +53,25 @@ namespace Microcode
         {
             return "#<PRIMITIVE " + this.name + " " + this.arity.ToString (CultureInfo.InvariantCulture) + ">";
         }
+#if DEBUG
+        static public SortedList<long, List<Primitive>> HotPrimitives
+        {
+            get
+            {
+                SortedList<long, List<Primitive>> hotties = new SortedList<long, List<Primitive>> ();
+                foreach (Primitive entry in primitiveTable.Values) {
+                    List<Primitive> probe = null;
+                    if (!hotties.TryGetValue (entry.invocationCount, out probe)) {
+                        probe = new List<Primitive> ();
+                        hotties.Add (entry.invocationCount, probe);
+                    }
+
+                    probe.Add (entry);
+                }
+                return hotties;
+            }
+        }
+#endif
 
         static string CanonicalizeName (string name)
         {
@@ -57,22 +80,26 @@ namespace Microcode
 
         static void AddPrimitive (string name, int arity, PrimitiveMethod method)
         {
-            primitiveTable.Add (CanonicalizeName (name), new PrimitiveN (String.Intern (name), arity, method));
+            string cname = CanonicalizeName (name);
+            primitiveTable.Add (cname, new PrimitiveN (String.Intern (name), arity, method));
         }
 
         static void AddPrimitive (string name, PrimitiveMethod0 method)
         {
-            primitiveTable.Add (CanonicalizeName (name), new Primitive0 (String.Intern (name), method));
+            string cname = CanonicalizeName (name);
+            primitiveTable.Add (cname, new Primitive0 (String.Intern (name), method));
         }
 
         static void AddPrimitive (string name, PrimitiveMethod1 method)
         {
-            primitiveTable.Add (CanonicalizeName (name), new Primitive1 (String.Intern (name), method));
+            string cname = CanonicalizeName (name);
+            primitiveTable.Add (cname, new Primitive1 (String.Intern (name), method));
         }
 
         static void AddPrimitive (string name, PrimitiveMethod2 method)
         {
-            primitiveTable.Add (CanonicalizeName (name), new Primitive2 (String.Intern (name), method));
+            string cname = CanonicalizeName (name);
+            primitiveTable.Add (cname, new Primitive2 (String.Intern (name), method));
         }
 
         static void AddPrimitive (string name, PrimitiveMethod3 method)
@@ -116,43 +143,60 @@ namespace Microcode
 
         public static void Initialize ()
         {
-            AddPrimitives (typeof (Bignum));
-            AddPrimitives (typeof (BitString));
-            AddPrimitives (typeof (Cell));
-            AddPrimitives (typeof (IOPrims));
-            AddPrimitives (typeof (Character));
-            AddPrimitives (typeof (Complex));
-            AddPrimitives (typeof (ControlPoint));
-            AddPrimitives (typeof (Cons));
-            AddPrimitives (typeof (Entity));
-            AddPrimitives (typeof (Environment));
-            AddPrimitives (typeof (Fasl));
-            AddPrimitives (typeof (FixedObjectsVector));
-            AddPrimitives (typeof (FixnumArithmetic));
-            AddPrimitives (typeof (FloatArithmetic));
-            AddPrimitives (typeof (FloatingVector));
-            AddPrimitives (typeof (GenericArithmetic));
-            AddPrimitives (typeof (History));
-            AddPrimitives (typeof (Hunk3));
-            AddPrimitives (typeof (IntegerArithmetic));
-            AddPrimitives (typeof (Interpreter));
-            AddPrimitives (typeof (Misc));
-            AddPrimitives (typeof (ObjectModel));
-            AddPrimitives (typeof (Primitive));
-            AddPrimitives (typeof (Promise));
-            AddPrimitives (typeof (Ratnum));
-            AddPrimitives (typeof (Record));
-            AddPrimitives (typeof (ReturnAddress));
-            AddPrimitives (typeof (SchemeString));
-            AddPrimitives (typeof (SystemPair));
-            AddPrimitives (typeof (Vector));
-            AddPrimitives (typeof (Vector8b));
+            Assembly asm = Assembly.GetExecutingAssembly ();
+            foreach (Type type in asm.GetTypes ())
+                AddPrimitives (type);
+            //AddPrimitives (typeof (Bignum));
+            //AddPrimitives (typeof (BitString));
+            //AddPrimitives (typeof (Cell));
+            //AddPrimitives (typeof (IOPrims));
+            //AddPrimitives (typeof (Character));
+            //AddPrimitives (typeof (Closure));
+            //AddPrimitives (typeof (Combination));
+            //AddPrimitives (typeof (Combination1));
+            //AddPrimitives (typeof (Combination2));
+            //AddPrimitives (typeof (Complex));
+            //AddPrimitives (typeof (ControlPoint));
+            //AddPrimitives (typeof (Cons));
+            //AddPrimitives (typeof (Entity));
+            //AddPrimitives (typeof (Environment));
+            //AddPrimitives (typeof (ExtendedClosure));
+            //AddPrimitives (typeof (Fasl));
+            //AddPrimitives (typeof (FixedObjectsVector));
+            //AddPrimitives (typeof (FixnumArithmetic));
+            //AddPrimitives (typeof (FloatArithmetic));
+            //AddPrimitives (typeof (FloatingVector));
+            //AddPrimitives (typeof (GenericArithmetic));
+            //AddPrimitives (typeof (History));
+            //AddPrimitives (typeof (Hunk3));
+            //AddPrimitives (typeof (IntegerArithmetic));
+            //AddPrimitives (typeof (Interpreter));
+            //AddPrimitives (typeof (Lambda));
+            //AddPrimitives (typeof (Misc));
+            //AddPrimitives (typeof (NonMarkedVector));
+            //AddPrimitives (typeof (ObjectModel));
+            //AddPrimitives (typeof (Primitive));
+            //AddPrimitives (typeof (PrimitiveCombination0));
+            //AddPrimitives (typeof (PrimitiveCombination1));
+            //AddPrimitives (typeof (PrimitiveCombination2));
+            //AddPrimitives (typeof (PrimitiveCombination3));
+            //AddPrimitives (typeof (Promise));
+            //AddPrimitives (typeof (Ratnum));
+            //AddPrimitives (typeof (Record));
+            //AddPrimitives (typeof (ReferenceTrap));
+            //AddPrimitives (typeof (ReturnAddress));
+            //AddPrimitives (typeof (SchemeString));
+            //AddPrimitives (typeof (SystemPair));
+            //AddPrimitives (typeof (UnmarkedHistory));
+            //AddPrimitives (typeof (Vector));
+            //AddPrimitives (typeof (Vector8b));
         }
 
         internal static Primitive Find (string name)
         {
+            string cname = CanonicalizeName (name);
             Primitive value;
-            if (primitiveTable.TryGetValue (CanonicalizeName (name), out value) == true) {
+            if (primitiveTable.TryGetValue (cname, out value)) {
                 return value;
             }
             throw new NotImplementedException ();
@@ -160,8 +204,9 @@ namespace Microcode
 
         internal static Primitive Find (string name, int arity)
         {
+            string cname = CanonicalizeName (name);
             Primitive value;
-            if (primitiveTable.TryGetValue (CanonicalizeName (name), out value) == true) {
+            if (primitiveTable.TryGetValue (cname, out value)) {
                 // found one, but wrong arity
                 if (value.Arity == arity)
                     return value;
@@ -218,7 +263,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        [SchemePrimitive ("GET-PRIMITIVE-ADDRESS", 2)]
+        [SchemePrimitive ("GET-PRIMITIVE-ADDRESS", 2, false)]
         public static bool GetPrimitiveAddress (out object answer, object arg0, object arg1)
         {
             answer = arg1 is int
@@ -227,14 +272,22 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("GET-PRIMITIVE-NAME", 1)]
+        [SchemePrimitive ("GET-PRIMITIVE-NAME", 1, false)]
         public static bool GetPrimitiveName (out object answer, object arg)
         {
             answer = ((Primitive) arg).name.ToCharArray ();
             return false;
         }
 
-        [SchemePrimitive ("PRIMITIVE-PROCEDURE-ARITY", 1)]
+        [SchemePrimitive ("PRIMITIVE?", 1, true)]
+        public static bool IsPrimitive (out object answer, object arg)
+        {
+            answer = arg is Primitive;
+            return false;
+        }
+
+
+        [SchemePrimitive ("PRIMITIVE-PROCEDURE-ARITY", 1, false)]
         public static bool PrimitiveProcedureArity (out object answer, object arg)
         {
             answer = ((Primitive) arg).Arity;
@@ -243,7 +296,8 @@ namespace Microcode
 
     }
 
-    sealed class Primitive0 : Primitive, IApplicable
+    [Serializable]
+    sealed class Primitive0 : Primitive, IApplicable, ISerializable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod0 method;
@@ -263,16 +317,24 @@ namespace Microcode
             }
         }
 
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (PrimitiveDeserializer));
+            info.AddValue ("name", this.name);
+            info.AddValue ("arity", 0);
+        }
+
         #region IApplicable Members
 
-        public bool Apply (out object answer, ref SCode expression, ref Environment environment, object [] args)
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
-            if (args.Length != 1)
+            if (args.Length != 0)
                 throw new NotImplementedException ("Wrong number of args to primitive.");
             return this.Call (out answer, ref expression, ref environment);
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment)
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
@@ -281,21 +343,46 @@ namespace Microcode
             if (this.method (out answer)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci == null) throw new NotImplementedException ();
+                answer = null;      
                 expression = tci.Expression;
                 environment = tci.Environment;
-                answer = null;
                 return true;
             }
 
             return false; // no problems
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0, object arg1)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        #region IApplicable Members
+
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
         {
             throw new NotImplementedException ();
         }
@@ -303,7 +390,8 @@ namespace Microcode
         #endregion
     }
 
-    sealed class Primitive1 : Primitive, IApplicable
+    [Serializable]
+    sealed class Primitive1 : Primitive, IApplicable, ISerializable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod1 method;
@@ -324,19 +412,27 @@ namespace Microcode
             }
         }
 
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (PrimitiveDeserializer));
+            info.AddValue ("name", this.name);
+            info.AddValue ("arity", 1);
+        }
+
         #region IApplicable Members
 
-        public bool Apply (out object answer, ref SCode expression, ref Environment environment, object [] args)
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment)
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
@@ -347,7 +443,32 @@ namespace Microcode
             return false; // no problems
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0, object arg1)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        #region IApplicable Members
+
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
         {
             throw new NotImplementedException ();
         }
@@ -355,7 +476,8 @@ namespace Microcode
         #endregion
     }
 
-    sealed class Primitive2 : Primitive, IApplicable
+    [Serializable]
+    sealed class Primitive2 : Primitive, IApplicable, ISerializable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod2 method;
@@ -375,24 +497,32 @@ namespace Microcode
             }
         }
 
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (PrimitiveDeserializer));
+            info.AddValue ("name", this.name);
+            info.AddValue ("arity", 2);
+        }
+
         #region IApplicable Members
 
-        public bool Apply (out object answer, ref SCode expression, ref Environment environment,object [] args)
+        public bool Apply (out object answer, ref Control expression, ref Environment environment,object [] args)
         {
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment)
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0, object arg1)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
@@ -401,6 +531,7 @@ namespace Microcode
             if (this.method (out answer, arg0, arg1)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci == null) throw new NotImplementedException ();
+                answer = null;
                 expression = tci.Expression;
                 environment = tci.Environment;
                 return true;
@@ -410,9 +541,35 @@ namespace Microcode
         }
 
         #endregion
+
+        #region IApplicable Members
+
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
     }
 
-    sealed class Primitive3 : Primitive, IApplicable
+    [Serializable]
+    sealed class Primitive3 : Primitive, IApplicable, ISerializable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod3 method;
@@ -432,24 +589,57 @@ namespace Microcode
             }
         }
 
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (PrimitiveDeserializer));
+            info.AddValue ("name", this.name);
+            info.AddValue ("arity", 3);
+        }
+
         #region IApplicable Members
 
-        public bool Apply (out object answer, ref SCode expression, ref Environment environment, object [] args)
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object anwswer, ref SCode expression, ref Environment environment)
+        public bool Call (out object anwswer, ref Control expression, ref Environment environment)
         {
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0, object arg1)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        #region IApplicable Members
+
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
         {
             throw new NotImplementedException ();
         }
@@ -457,7 +647,8 @@ namespace Microcode
         #endregion
     }
 
-    sealed class PrimitiveN : Primitive, IApplicable
+    [Serializable]
+    sealed class PrimitiveN : Primitive, IApplicable, ISerializable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod method;
@@ -477,29 +668,46 @@ namespace Microcode
             }
         }
 
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (PrimitiveDeserializer));
+            info.AddValue ("name", this.name);
+            info.AddValue ("arity", this.Arity);
+        }
+
         #region IApplicable members
 
-        public bool Apply (out object answer, ref SCode expression, ref Environment environment, object [] args)
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
             this.invocationCount += 1;
 #endif
-            // gotta remove the procedure from the front of the arglist.
-            object [] args1 = new object [args.Length - 1];
-            Array.Copy (args, 1, args1, 0, args1.Length);
+            //// gotta remove the procedure from the front of the arglist.
+            //object [] args1 = new object [args.Length - 1];
+            //Array.Copy (args, 1, args1, 0, args1.Length);
+            if (args != null && args.Length > 0 && args [0] == this)
+                throw new NotImplementedException ();
 
-            if (this.method (out answer, args1))
+            if (this.method (out answer, args))
                 throw new NotImplementedException ();
             return false; // no problems
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment)
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
-            throw new NotImplementedException ();
+#if DEBUG
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
+            this.invocationCount += 1;
+#endif
+            object [] arguments = new object [] { };
+            if (this.method (out answer, arguments))
+                throw new NotImplementedException ();
+            return false; // no problems
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
@@ -511,7 +719,7 @@ namespace Microcode
             return false; // no problems
         }
 
-        public bool Call (out object answer, ref SCode expression, ref Environment environment, object arg0, object arg1)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
@@ -523,6 +731,58 @@ namespace Microcode
             return false; // no problems
         }
 
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+#if DEBUG
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
+            this.invocationCount += 1;
+#endif
+            object [] arguments = new object [] { arg0, arg1, arg2 };
+            if (this.method (out answer, arguments))
+                throw new NotImplementedException ();
+            return false; // no problems
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        {
+            throw new NotImplementedException ();
+        }
+
+
+        #endregion
+
+        #region IApplicable Members
+
+
+
         #endregion
     }
+
+    [Serializable]
+    internal sealed class PrimitiveDeserializer : IObjectReference
+    {
+        // This object has no fields (although it could).
+        string name;
+        int arity;
+
+        // GetRealObject is called after this object is deserialized.
+        public Object GetRealObject (StreamingContext context)
+        {
+            return Primitive.Find (this.name, this.arity);
+        }
+
+        public void SetName (string value) { this.name = value; }
+        public void SetArity (int value) { this.arity = value; }
+    }
+
 }

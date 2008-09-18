@@ -5,9 +5,10 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     class Promise : SchemeObject, ISystemPair
     {
-                object bodyOrValue;
+        object bodyOrValue;
         object environmentOrTrue;
 
         public Promise (SCode body, object environment)
@@ -87,14 +88,14 @@ namespace Microcode
             }
         }
 
-        [SchemePrimitive ("DELAYED?", 1)]
+        [SchemePrimitive ("DELAYED?", 1, true)]
         public static bool IsDelayed (out object answer, object arg)
         {
             answer = arg is Promise;
             return false;
         }
 
-        [SchemePrimitive ("FORCE", 1)]
+        [SchemePrimitive ("FORCE", 1, false)]
         public static bool Force (out object answer, object arg)
         {
             Promise p = (Promise) arg;
@@ -102,7 +103,7 @@ namespace Microcode
                 answer = p.bodyOrValue;
             else {
                 object value = null;
-                SCode expression = (SCode) p.bodyOrValue;
+                Control expression = (SCode) p.bodyOrValue;
                 Environment env = (Environment) p.environmentOrTrue;
                 while (expression.EvalStep (out value, ref expression, ref env)) { };
                 if (value == Interpreter.UnwindStack) throw new NotImplementedException ();

@@ -97,7 +97,7 @@ namespace Microcode
 
     public sealed class ExitInterpreterException : Exception
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly Termination termination;
 
         public ExitInterpreterException (Termination termination)
@@ -127,7 +127,7 @@ namespace Microcode
         // If you return this object, the stack will unwind.
         // You should not return this object from a primitive.   
         public static readonly object [] UnwindStack = new object [] { };
-        static readonly SCode UnwindStackExpression = Quotation.Make (UnwindStack);
+        public static readonly SCode UnwindStackExpression = Quotation.Make (UnwindStack);
 
         public Interpreter ()
         { }
@@ -158,7 +158,7 @@ namespace Microcode
             }
         }
 
-        [SchemePrimitive ("APPLY", 2)]
+        [SchemePrimitive ("APPLY", 2, false)]
         public static bool UserApply (out object answer, object arg0, object arg1)
         {
             ////Primitive.Noisy = true;
@@ -166,11 +166,11 @@ namespace Microcode
             Cons rands = arg1 as Cons;
             if (op == null) throw new NotImplementedException ("Apply non applicable.");
             if (arg1 != null && rands == null) throw new NotImplementedException ("Bad list to apply.");
-            answer = new TailCallInterpreter (new ApplyFromPrimitive (op, new Cons (op, rands)), null);
+            answer = new TailCallInterpreter (new ApplyFromPrimitive (op, rands), null);
             return true; // special return
         }
 
-        [SchemePrimitive ("CALL-WITH-CURRENT-CONTINUATION", 1)]
+        [SchemePrimitive ("CALL-WITH-CURRENT-CONTINUATION", 1, false)]
         public static bool CallWithCurrentContinuation (out object answer, object arg)
         {
             // extreme hair ahead
@@ -186,7 +186,7 @@ namespace Microcode
             return true;
         }
 
-        [SchemePrimitive ("WITHIN-CONTROL-POINT", 2)]
+        [SchemePrimitive ("WITHIN-CONTROL-POINT", 2, false)]
         public static bool WithinControlPoint (out object answer, object arg0, object arg1)
         {
             // extreme hair ahead
@@ -203,34 +203,34 @@ namespace Microcode
             return true;
         }
 
-        [SchemePrimitive ("GET-INTERRUPT-ENABLES", 0)]
+        [SchemePrimitive ("GET-INTERRUPT-ENABLES", 0, true)]
         public static bool GetInterruptEnables (out object answer)
         {
             answer = 0;
             return false;
         }
 
-        [SchemePrimitive ("SCODE-EVAL", 2)]
+        [SchemePrimitive ("SCODE-EVAL", 2, false)]
         public static bool ScodeEval (out object answer, object arg0, object arg1)
         {
             Environment env = Environment.ToEnvironment (arg1);
-            CompileTimeEnvironment ctenv = new CompileTimeEnvironment (null);
-            //CompileTimeEnvironment ctenv = (env is TopLevelEnvironment)
-            //    ? new CompileTimeEnvironment (((TopLevelEnvironment) env).Closure.Lambda.Formals)
+            BindingTimeEnvironment ctenv = new RootBindingEnvironment (env);
+            //CompileTimeEnvironment ctenv = (env is StandardEnvironment)
+            //    ? new CompileTimeEnvironment (((StandardEnvironment) env).Closure.Lambda.Formals)
             //    : new CompileTimeEnvironment (null);
             SCode sarg0 = SCode.EnsureSCode (arg0).Bind (ctenv);
             answer = new TailCallInterpreter (sarg0, env);
             return true;
         }
 
-        [SchemePrimitive ("SET-INTERRUPT-ENABLES!", 1)]
+        [SchemePrimitive ("SET-INTERRUPT-ENABLES!", 1, false)]
         public static bool SetInterruptEnables (out object answer, object arg)
         {
             answer = null;
             return false;
         }
 
-        [SchemePrimitive ("WITH-HISTORY-DISABLED", 1)]
+        [SchemePrimitive ("WITH-HISTORY-DISABLED", 1, false)]
         public static bool WithHistoryDisabled (out object answer, object arg0)
         {
             IApplicable thunk = arg0 as IApplicable;
@@ -239,7 +239,7 @@ namespace Microcode
             return true;
         }
 
-        [SchemePrimitive ("WITH-INTERRUPT-MASK", 2)]
+        [SchemePrimitive ("WITH-INTERRUPT-MASK", 2, false)]
         public static bool WithInterruptMask (out object answer, object arg0, object arg1)
         {
             IApplicable receiver = arg1 as IApplicable;
@@ -248,7 +248,7 @@ namespace Microcode
             return true;
         }
 
-        [SchemePrimitive ("WITH-STACK-MARKER", 3)]
+        [SchemePrimitive ("WITH-STACK-MARKER", 3, false)]
         public static bool WithStackMarker (out object answer, object thunk, object mark1, object mark2)
         {
             IApplicable athunk = thunk as IApplicable;
@@ -257,32 +257,60 @@ namespace Microcode
             return true;
         }
 
-        internal static bool Apply (out object answer, ref SCode expression, ref Environment environment, object evop, object [] evargs)
+        internal static bool Apply (out object answer, ref Control expression, ref Environment environment, object evop, object [] evargs)
         {
             IApplicable op = evop as IApplicable;
             if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
             return op.Apply (out answer, ref expression, ref environment, evargs);
         }
 
-        internal static bool Call (out object answer, ref SCode expression, ref Environment environment, object evop)
+        internal static bool Call (out object answer, ref Control expression, ref Environment environment, object evop)
         {
             IApplicable op = evop as IApplicable;
             if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
             return op.Call (out answer, ref expression, ref environment);
         }
 
-        internal static bool Call (out object answer, ref SCode expression, ref Environment environment, object evop, object evarg)
+        internal static bool Call (out object answer, ref Control expression, ref Environment environment, object evop, object evarg)
         {
             IApplicable op = evop as IApplicable;
             if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
             return op.Call (out answer, ref expression, ref environment, evarg);
         }
 
-        internal static bool Call (out object answer, ref SCode expression, ref Environment environment, object evop, object evarg0, object evarg1)
+        internal static bool Call (out object answer, ref Control expression, ref Environment environment, object evop, object evarg0, object evarg1)
         {
             IApplicable op = evop as IApplicable;
             if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
             return op.Call (out answer, ref expression, ref environment, evarg0, evarg1);
+        }
+
+        internal static bool Call (out object answer, ref Control expression, ref Environment environment, object evop, object evarg0, object evarg1, object evarg2)
+        {
+            IApplicable op = evop as IApplicable;
+            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
+            return op.Call (out answer, ref expression, ref environment, evarg0, evarg1, evarg2);
+        }
+
+        internal static bool Call (out object answer, ref Control expression, ref Environment environment, object evop, object evarg0, object evarg1, object evarg2, object evarg3)
+        {
+            IApplicable op = evop as IApplicable;
+            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
+            return op.Call (out answer, ref expression, ref environment, evarg0, evarg1, evarg2, evarg3);
+        }
+
+        internal static bool Call (out object answer, ref Control expression, ref Environment environment, object evop, object evarg0, object evarg1, object evarg2, object evarg3, object evarg4)
+        {
+            IApplicable op = evop as IApplicable;
+            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
+            return op.Call (out answer, ref expression, ref environment, evarg0, evarg1, evarg2, evarg3, evarg4);
+        }
+
+        internal static bool Call (out object answer, ref Control expression, ref Environment environment, object evop, object evarg0, object evarg1, object evarg2, object evarg3, object evarg4, object evarg5)
+        {
+            IApplicable op = evop as IApplicable;
+            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
+            return op.Call (out answer, ref expression, ref environment, evarg0, evarg1, evarg2, evarg3, evarg4, evarg5);
         }
     }
 
@@ -293,18 +321,18 @@ namespace Microcode
     sealed class TailCallInterpreter
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode expression;
+        readonly Control expression;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly Environment environment;
 
-        public TailCallInterpreter (SCode expression, Environment environment)
+        public TailCallInterpreter (Control expression, Environment environment)
         {
             this.expression = expression;
             this.environment = environment;
         }
 
-        public SCode Expression
+        public Control Expression
         {
             [DebuggerStepThrough]
             get
@@ -323,6 +351,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class CWCCFrame0 : ContinuationFrame
     {
         IApplicable receiver;
@@ -332,12 +361,13 @@ namespace Microcode
             this.receiver = receiver;
         }
 
-        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             return this.receiver.Call (out answer, ref expression, ref environment, ((RewindState) environment).ControlPoint);
         }
     }
 
+    [Serializable]
     sealed class WithinControlPointFrame : ContinuationFrame
     {
         IApplicable thunk;
@@ -347,13 +377,14 @@ namespace Microcode
             this.thunk = thunk;
         }
 
-        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             return this.thunk.Call (out answer, ref expression, ref environment);
         }
     }
 
-    sealed class ApplyFromPrimitive : SCode
+    [Serializable]
+    sealed class ApplyFromPrimitive : Control
     {
         internal IApplicable op;
         internal Cons rands;
@@ -365,30 +396,95 @@ namespace Microcode
             this.rands = rands;
         }
 
-        public override SCode Bind (CompileTimeEnvironment ctenv)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override HashSet<string> FreeVariables ()
-        {
-            throw new NotImplementedException ();
-        }
-        
-        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             return this.op.Apply (out answer, ref expression, ref environment, this.rands.ToVector ());
         }
+    }
 
-        public override bool NeedsTheEnvironment ()
+    abstract class CallFromPrimitive : Control
+    {
+        internal CallFromPrimitive (TC code) : base (code) { }
+
+        public static CallFromPrimitive Make (IApplicable op)
+        {
+            return new CallFromPrimitive0 (op);
+        }
+
+        public static CallFromPrimitive Make (IApplicable op, object arg0)
+        {
+            return new CallFromPrimitive1 (op, arg0);
+        }
+
+        public static CallFromPrimitive Make (IApplicable op, object arg0, object arg1)
+        {
+            return new CallFromPrimitive2(op, arg0, arg1);
+        }
+
+        //public static CallFromPrimitive Make (IApplicable op);
+        //public static CallFromPrimitive Make (IApplicable op);
+        //public static CallFromPrimitive Make (IApplicable op);
+
+    }
+
+    sealed class CallFromPrimitive0 : CallFromPrimitive
+    {
+        IApplicable op;
+
+        internal CallFromPrimitive0 (IApplicable op)
+            : base (TC.SPECIAL)
+        {
+            this.op = op;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             throw new NotImplementedException ();
         }
     }
 
-    sealed class HistoryDisabled : SCode
+    sealed class CallFromPrimitive1 : CallFromPrimitive
     {
-        IApplicable thunk;
+        IApplicable op;
+        object arg0;
+
+        internal CallFromPrimitive1 (IApplicable op, object arg0)
+            : base (TC.SPECIAL)
+        {
+            this.op = op;
+            this.arg0 = arg0;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            return this.op.Call (out answer, ref expression, ref environment, arg0);
+        }
+    }
+
+    class CallFromPrimitive2 : CallFromPrimitive
+    {
+        IApplicable op;
+        object arg0;
+        object arg1;
+
+        internal CallFromPrimitive2 (IApplicable op, object arg0, object arg1)
+            : base (TC.SPECIAL)
+        {
+            this.op = op;
+            this.arg0 = arg0;
+            this.arg1 = arg1;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            return this.op.Call (out answer, ref expression, ref environment, arg0, arg1);
+        }
+    }
+
+    [Serializable]
+    sealed class HistoryDisabled : Control
+    {
+        readonly IApplicable thunk;
 
         internal HistoryDisabled (IApplicable arg0)
             : base (TC.SPECIAL)
@@ -396,20 +492,10 @@ namespace Microcode
             this.thunk = arg0;
         }
 
-        public override SCode Bind (CompileTimeEnvironment ctenv)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override HashSet<string> FreeVariables ()
-        {
-            throw new NotImplementedException ();
-        }
-        
-        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             object returnValue = null;
-            SCode expr = null;
+            Control expr = null;
             Environment env = null;
             if (this.thunk.Call (out returnValue, ref expr, ref env)) {
                 while (expr.EvalStep (out returnValue, ref expr, ref env)) { };
@@ -424,25 +510,21 @@ namespace Microcode
             answer = returnValue;
             return false;
         }
-
-        public override bool NeedsTheEnvironment ()
-        {
-            throw new NotImplementedException ();
-        }
     }
 
+    [Serializable]
     sealed class HistoryDisabledFrame : ContinuationFrame, ISystemVector
     {
-        HistoryDisabled historyDisabled;
+        readonly HistoryDisabled historyDisabled;
 
         public HistoryDisabledFrame (HistoryDisabled historyDisabled)
         {
             this.historyDisabled = historyDisabled;
         }
 
-        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            SCode expr = ((RewindState) environment).PopFrame ();
+            Control expr = ((RewindState) environment).PopFrame ();
             Environment env = environment;
             while (expr.EvalStep (out answer, ref expr, ref env)) { };
             if (answer == Interpreter.UnwindStack) {
@@ -475,10 +557,11 @@ namespace Microcode
         #endregion
     }
 
-    sealed class InterruptMask : SCode
+    [Serializable]
+    sealed class InterruptMask : Control
     {
-        object arg0;
-        IApplicable receiver;
+        readonly object arg0;
+        readonly IApplicable receiver;
 
         internal InterruptMask (object arg0, IApplicable receiver)
             : base (TC.SPECIAL)
@@ -487,16 +570,11 @@ namespace Microcode
             this.receiver = receiver;
         }
 
-        public override SCode Bind (CompileTimeEnvironment ctenv)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             int oldMask = 0;
             object returnValue = null;
-            SCode expr = null;
+            Control expr = null;
             Environment env = null;
             if (this.receiver.Call (out returnValue, ref expr, ref env, oldMask)) {
                 while (expr.EvalStep (out returnValue, ref expr, ref env)) { };
@@ -511,23 +589,12 @@ namespace Microcode
             answer = returnValue;
             return false;
         }
-
-        public override HashSet<string> FreeVariables ()
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool NeedsTheEnvironment ()
-        {
-            throw new NotImplementedException ();
-        }
-
-
     }
 
-    sealed class StackMarker : SCode
+    [Serializable]
+    sealed class StackMarker : Control
     {
-        IApplicable thunk;
+        readonly IApplicable thunk;
         object mark1;
         object mark2;
 
@@ -539,15 +606,10 @@ namespace Microcode
             this.mark2 = mark2;
         }
 
-        public override SCode Bind (CompileTimeEnvironment ctenv)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             object returnValue = null;
-            SCode expr = null;
+            Control expr = null;
             Environment env = null;
             if (this.thunk.Call (out returnValue, ref expr, ref env)) {
                 while (expr.EvalStep (out returnValue, ref expr, ref env)) { };
@@ -561,30 +623,21 @@ namespace Microcode
             answer = returnValue;
             return false;
         }
-
-        public override HashSet<string> FreeVariables ()
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool NeedsTheEnvironment ()
-        {
-            throw new NotImplementedException ();
-        }
     }
 
+    [Serializable]
     sealed class StackMarkerFrame : ContinuationFrame, ISystemVector
     {
-        StackMarker stackMarker;
+        readonly StackMarker stackMarker;
 
         internal StackMarkerFrame (StackMarker stackMarker)
         {
             this.stackMarker = stackMarker;
         }
 
-        public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            SCode expr = ((RewindState) environment).PopFrame ();
+            Control expr = ((RewindState) environment).PopFrame ();
             Environment env = environment;
             while (expr.EvalStep (out answer, ref expr, ref env)) { };
             if (answer == Interpreter.UnwindStack) {
@@ -618,18 +671,19 @@ namespace Microcode
 
     }
 
+    [Serializable]
     sealed class InterruptMaskFrame : ContinuationFrame, ISystemVector
     {
-        InterruptMask interruptMask;
+        readonly InterruptMask interruptMask;
 
         internal InterruptMaskFrame (InterruptMask interruptMask, int oldMask)
         {
             this.interruptMask = interruptMask;
         }
 
-        public override bool EvalStep (out object answer, ref SCode tailCall, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control tailCall, ref Environment environment)
         {
-            SCode expr = ((RewindState) environment).PopFrame ();
+            Control expr = ((RewindState) environment).PopFrame ();
             Environment env = environment;
             while (expr.EvalStep (out answer, ref expr, ref env)) { };
             if (answer == Interpreter.UnwindStack) {
@@ -641,6 +695,40 @@ namespace Microcode
             }
 
 // restore mask
+            return false;
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+    }
+
+    sealed class RestoreBandFrame : ContinuationFrame, ISystemVector
+    {
+
+        internal RestoreBandFrame ()
+        {
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            answer = Constant.sharpF;
             return false;
         }
 

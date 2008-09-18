@@ -5,7 +5,8 @@ using System.Text;
 
 namespace Microcode
 {
-    class Complex
+    [Serializable]
+    sealed class Complex
     {
         object realPart;
         object imagPart;
@@ -16,7 +17,7 @@ namespace Microcode
             this.imagPart = imagPart;
         }
 
-        [SchemePrimitive ("COMPLEX?", 1)]
+        [SchemePrimitive ("COMPLEX?", 1, true)]
         public static bool IsComplex (out object answer, object arg)
         {
             answer = arg is Complex;

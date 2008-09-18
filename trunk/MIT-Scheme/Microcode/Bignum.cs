@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     struct BignumDigit
     {
         // A bignum digit is a positive integer 62 bits long.
@@ -160,6 +161,7 @@ namespace Microcode
         greater
     }
 
+    [Serializable]
     sealed class Bignum
     {
         const int BIGNUM_DIGIT_LENGTH = 62; // (8 * 8) - 2;
@@ -772,7 +774,7 @@ namespace Microcode
                 target [i] = this [i];
         }
 
-        [SchemePrimitive ("BIGNUM?", 1)]
+        [SchemePrimitive ("BIGNUM?", 1, true)]
         public static bool IsBignum (out object answer, object arg)
         {
             answer = arg is Bignum;
