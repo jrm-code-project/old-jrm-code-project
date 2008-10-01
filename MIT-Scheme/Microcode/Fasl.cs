@@ -390,11 +390,11 @@ namespace Microcode
 
         public Assignment ReadAssignment (uint location)
         {
-            return new Assignment (((Variable) ReadObject (location)).name,
+            return new Assignment (((Variable) ReadObject (location)),
                                    ReadObject (location + 4));
         }
 
-        public ExtendedLambda ReadExtendedLambda (uint location)
+        public SCode ReadExtendedLambda (uint location)
         {
             string name;
             string [] formals;
@@ -404,7 +404,7 @@ namespace Microcode
             uint optional = (argcount.Datum & 0x00FF);
             uint required = (argcount.Datum & 0xFF00) >> 8;
             bool rest = ((argcount.Datum & 0x10000) == 0x10000);
-            return new ExtendedLambda (name, formals, ReadObject (location), required, optional, rest);
+            return ExtendedLambda.Make (name, formals, ReadObject (location), required, optional, rest);
         }
 
         static int gensymCounter;
@@ -544,7 +544,7 @@ namespace Microcode
                     return (ReturnCode) (encoded.Datum);
 
                 case TC.SEQUENCE_2:
-                    return new Sequence2 (ReadObject (encoded.Datum),
+                    return Sequence2.Make (ReadObject (encoded.Datum),
                                           ReadObject (encoded.Datum + 4));
 
                 case TC.SEQUENCE_3:
@@ -584,7 +584,7 @@ namespace Microcode
 
 
                 case TC.THE_ENVIRONMENT:
-                    return new TheEnvironment ();
+                    return TheEnvironment.Make ();
 
                 case TC.UNINTERNED_SYMBOL:
                     // KLUDGE!!  Make sure that all uninterned strings within a file
@@ -601,7 +601,7 @@ namespace Microcode
                     }
 
                 case TC.VARIABLE:
-                    return new Variable ((string) ReadObject (encoded.Datum));
+                    return Variable.Make ((string) ReadObject (encoded.Datum));
 
                 case TC.VECTOR:
                     return ReadVector (encoded.Datum);

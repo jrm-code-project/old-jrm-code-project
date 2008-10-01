@@ -12,23 +12,31 @@ namespace Listener
             try {
                 // System.Environment.CurrentDirectory = System.Environment.CurrentDirectory + "\\..\\..\\..\\Runtime7\\";
                 Channel.Initialize (Console.In, Console.Out);
-
+                Object answer;
                 if (true) {
-                    // Scheme runtime
-                    System.Environment.CurrentDirectory = "C:\\Program Files\\MIT\\src\\runtime\\";
-                    //SCode bootstrap = Fasl.Fasload ("make.bin") as SCode;
-                    //Microcode.Environment initial = Microcode.Environment.Global;
-                    Object answer = Continuation.Initial (Fasl.Fasload ("make.bin") as SCode, Microcode.Environment.Global);
+                    // Load a band
+                    System.Environment.CurrentDirectory = "C:\\jrm-code-project\\MIT-Scheme\\Runtime\\";
+                    try {
+                        System.IO.FileStream input = System.IO.File.OpenRead ("C:\\jrm-code-project\\MIT-Scheme\\foo.band");
+                        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bfmt = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter ();
+                        WorldState ws = (WorldState) bfmt.Deserialize (input);
+                        answer = Continuation.Initial (ws);
+                    }
 
+                    catch (System.IO.FileNotFoundException) {
+                        // Cold load the Scheme runtime
+                        SCode bootstrap = Fasl.Fasload ("make.bin") as SCode;
+                        Microcode.Environment initial = Microcode.Environment.Global;
+                       answer = Continuation.Initial (bootstrap.Bind(new RootBindingEnvironment (initial)), initial);
+                    }
                     Console.WriteLine ("Evaluation exited with {0}", answer);
-
                 }
                 else {
                     // Tak
                     System.Environment.CurrentDirectory = "C:\\jrm-code-project\\TakTest\\";
                     SCode tak = Fasl.Fasload ("tak.bin") as SCode;
-                    SCode tak1 = tak.Bind (new CompileTimeEnvironment (null));
                     Microcode.Environment initial = Microcode.Environment.Global;
+                    SCode tak1 = tak.Bind (new RootBindingEnvironment (initial));
 
                     //for (int i = 0; i < 20; i++) {
                     //    ControlState ctl = new ControlState (tak, initial);
@@ -45,9 +53,9 @@ namespace Listener
                     //Console.WriteLine ("e");
 
                     for (int i = 0; i < 20; i++) {
-                        SCode expr = tak1;
+                        Control expr = tak1;
                         Microcode.Environment env = initial;
-                        object answer = null;
+                        answer = null;
                         Stopwatch takWatch = Stopwatch.StartNew ();
                         while (expr.EvalStep (out answer, ref expr, ref env)) { };
                         if (answer == Interpreter.UnwindStack) throw new NotImplementedException ();
@@ -80,7 +88,7 @@ namespace Listener
             }
         }
 
-        private static void TakLoop (SCode tak, Microcode.Environment initial)
+        private static void TakLoop (Control tak, Microcode.Environment initial)
         {
             object answer = null;
             while (tak.EvalStep (out answer, ref tak, ref initial)) { };

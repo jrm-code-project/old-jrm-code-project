@@ -6,218 +6,66 @@ using System.Linq;
 
 namespace Microcode
 {
-    public interface ILambda
+    /// <summary>
+    /// Base class for lambda expressions.
+    /// </summary>
+    abstract class LambdaBase : SCode
     {
-        int LexicalOffset (string name); 
-        string [] Formals { get; }
-        SCode Body { get; }
-        string Name { get; }
-    }
-
-    [Serializable]
-    sealed class Lambda : SCode, ILambda, ISystemPair
-    {
-#if DEBUG
-        [NonSerialized]
-        static long creationCount;
-        [NonSerialized]
-        static long evaluationCount;
-#endif
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string [] formals;
+        static public readonly string internalLambda = String.Intern ("#[internal-lambda]");
+        static public readonly string unnamed = String.Intern ("#[unnamed-procedure]");
+        static public readonly string let = String.Intern ("#[let-procedure]");
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode body;
+        protected readonly string name; 
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string name;
+        protected readonly string [] formals;
 
-        Lambda (string name, string [] formals, SCode body)
-            : base (TC.LAMBDA)
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        protected readonly SCode body;     
+ 
+        protected LambdaBase (TC typeCode, string name, string [] formals, SCode body)
+            : base (typeCode)
         {
-#if DEBUG
-            Lambda.creationCount += 1;
-#endif
-
+            this.name = name;
             this.formals = formals;
             this.body = body;
-            this.name = name;
         }
 
-        public static SCode Make (string name, string [] formals, SCode body)
-        {
-            if (body == null)
-                throw new ArgumentNullException ("body");
-            if (formals == null)
-                throw new ArgumentNullException ("formals");
+        public string Name { [DebuggerStepThrough] get { return this.name; } }
+        public string [] Formals { [DebuggerStepThrough] get { return this.formals; } }
+        public SCode Body { [DebuggerStepThrough] get { return this.body; } }
 
-            if (body.NeedsValueCells (formals))
-                return new Lambda (name, formals, body);
-            else
-                return SimpleLambda.Make (name, formals, body);
-        }
-
-        public static SCode Make (object name, object formals, object body)
-        {
-
-            if (formals == null)
-                throw new ArgumentNullException ("formals");
-
-            string sname = (string) name;
-            object [] cdrArray = (object []) formals;
-            string [] sformals = new string [cdrArray.Length];
-
-            for (int i = 0; i < sformals.Length; i++)
-                sformals [i] = (string) cdrArray [i];
-            return Make (sname, sformals, EnsureSCode (body));
-        }
-
-        public string Name
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.name;
-            }
-        }
-
-        [SchemePrimitive ("LAMBDA?", 1, true)]
-        public static bool IsLambda (out object answer, object arg)
-        {
-            answer = arg is Lambda || arg is SimpleLambda || arg is TrivialLambda;
-            return false;
-        }
-
-        [SchemePrimitive ("LEXPR?", 1, true)]
-        public static bool IsLexpr (out object answer, object arg)
-        {
-            answer = false;
-            return false;
-        }
-
-        [NonSerialized]
-        static int [] formalOffsetCount = new int [512 + 256];
         public int LexicalOffset (string name)
         {
             for (int i = 0; i < formals.Length; i++)
-                if ((object) name == (object) formals [i]) {
-                    formalOffsetCount [i] += 1;
+                if ((object) name == (object) formals [i])
                     return i;
-                }
             return -1;
         }
-        
-        public override SCode Bind (BindingTimeEnvironment ctenv)
-        {
-            SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
-            return this.body == optimizedBody
-                ? this
-                : new Lambda (this.name, this.formals, optimizedBody);
-        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Lambda.evaluationCount += 1;
-#endif
-            answer = new Closure (this, environment);
-            return false;
-        }
-
-        public override IList<object> FreeVariables ()
-        {
-            IList<object> answer = new List<object> ();
-            foreach (object var in this.body.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            foreach (object var in this.formals)
-                if (answer.Contains (var)) answer.Remove (var);
-            return answer;
-        }
-
-        #region ILambda Members
-
-        public string [] Formals
-        {
-            [DebuggerStepThrough]
-            get { return this.formals; }
-        }
-
-        public SCode Body
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.body;
-            }
-        }
-
-        #endregion
-
-        #region ISystemPair Members
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCar
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return UnwrapQuoted (this.body);
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCdr
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                string [] fakeFormals = new string [this.formals.Length + 1];
-                fakeFormals [0] = this.name;
-                Array.Copy (this.formals, 0, fakeFormals, 1, formals.Length);
-                return fakeFormals;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        #endregion
-
-        public override bool NeedsValueCells (object [] formals)
+        public override bool MutatesAny (object [] formals)
         {
             // Should check for shadowing.
-            return this.body.NeedsValueCells (formals);
+            return this.body.MutatesAny (formals);
         }
-#if DEBUG
-        public override string Key ()
+
+        public override bool UsesAny (object [] formals)
         {
-            throw new NotImplementedException ();
+            // Should check for shadowing.
+            return this.body.UsesAny (formals);
         }
-#endif
+
     }
 
+    /// <summary>
+    /// ExtendedLambda supports optional, rest, and aux args.
+    /// </summary>
     [Serializable]
-    sealed class ExtendedLambda : SCode, ILambda, ISystemHunk3
+    sealed class ExtendedLambda : LambdaBase, ISystemHunk3
     {
-#if DEBUG
-        [NonSerialized]
-        static long creationCount;
-        [NonSerialized]
-        static long evaluationCount;
-#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string [] formals;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode body;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string name;
+        readonly bool callsTheEnvironment;
 
         public readonly uint required;
 
@@ -225,63 +73,38 @@ namespace Microcode
 
         public readonly bool rest;
 
-        public ExtendedLambda (string name, string [] formals, object body, uint required, uint optional, bool rest)
-            : base (TC.EXTENDED_LAMBDA)
+        ExtendedLambda (string name, string [] formals, SCode body, uint required, uint optional, bool rest)
+            : base (TC.EXTENDED_LAMBDA, name, formals, body)
         {
-#if DEBUG
-            ExtendedLambda.creationCount += 1;
-#endif
-
-            this.name = name;
-            this.body = EnsureSCode (body);
-            this.formals = formals;
+            this.callsTheEnvironment = body.CallsTheEnvironment ();
             this.required = required;
             this.optional = optional;
             this.rest = rest;
         }
 
-        public ExtendedLambda (Hunk3 init)
-            : base (TC.EXTENDED_LAMBDA)
+        public static SCode Make (string name, string [] formals, object body, uint required, uint optional, bool rest)
         {
-#if DEBUG
-            ExtendedLambda.creationCount += 1;
-#endif
+            return new ExtendedLambda (name, formals, EnsureSCode (body), required, optional, rest);
+        }
+
+        public static SCode Make (Hunk3 init)
+        {
 
             object [] cdrArray = (object []) init.Cxr1;
-            string [] sformals = new string [cdrArray.Length];
-            for (int i = 0; i < sformals.Length; i++)
-                sformals [i] = (string) cdrArray [i];
-            this.body = EnsureSCode (init.Cxr0);
-            this.formals = sformals;
-            uint code = (uint) (int) (init.Cxr2);
-            this.optional = code & 0xFF;
-            this.required = (code >> 8) & 0xFF;
-            this.rest = ((code >> 16) & 0x1) == 0x1;
-        }
-        
-        public string Name
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.name;
-            }
-        }
-
-        [NonSerialized]
-        static int [] formalOffsetCount = new int [16];
-        public int LexicalOffset (string name)
-        {
+            string name = (string) cdrArray [0];
+            string [] formals = new string [cdrArray.Length - 1];
             for (int i = 0; i < formals.Length; i++)
-                if ((object) name == (object) formals [i]) {
-                    formalOffsetCount [i] += 1;
-                    return i;
-                }
-            //if (theirs != ours)
-            //    throw new NotImplementedException ();
-            return -1;
+                formals [i] = (string) cdrArray [i + 1];
+            uint code = (uint) (int) (init.Cxr2);
+            return Make (name, formals, EnsureSCode (init.Cxr0), (code >> 8) & 0xFF, code & 0xFF, ((code >> 16) & 0x1) == 0x1);
         }
 
+        [SchemePrimitive ("EXTENDED-LAMBDA?", 1, true)]
+        public static bool IsExtendedLambda (out object answer, object arg)
+        {
+            answer = arg is ExtendedLambda;
+            return false;
+        }
 
         public override SCode Bind (BindingTimeEnvironment ctenv)
         {
@@ -291,51 +114,26 @@ namespace Microcode
                 : new ExtendedLambda (this.name, this.formals, optimized, this.required, this.optional, this.rest);
         }
 
+        public override bool CallsTheEnvironment ()
+        {
+            return this.callsTheEnvironment;
+        }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            ExtendedLambda.evaluationCount += 1;
+            Warm ();
 #endif
             answer = new ExtendedClosure (this, environment);
             return false;
         }
-
-        public override IList<object> FreeVariables ()
-        {
-            IList<object> answer = new List<object> ();
-            foreach (object var in this.body.FreeVariables())
-                if (! answer.Contains(var)) answer.Add(var);
-            foreach (object var in this.formals)
-                if (answer.Contains (var)) answer.Remove (var);
-            return answer;
-        }
-
-
-        #region ILambda Members
-
-        public string [] Formals
-        {
-            [DebuggerStepThrough]
-            get { return this.formals; }
-        }
-
-        public SCode Body
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.body;
-            }
-        }
-
-        #endregion
 
         #region ISystemHunk3 Members
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr0
         {
+            [DebuggerStepThrough]
             get
             {
                 return UnwrapQuoted (this.body);
@@ -352,21 +150,27 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                return this.formals;
+                string [] fakeFormals = new string [this.formals.Length + 1];
+                fakeFormals [0] = this.name;
+                Array.Copy (this.formals, 0, fakeFormals, 1, formals.Length);
+                return fakeFormals;
             }
             set
             {
                 throw new NotImplementedException ();
             }
         }
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr2
         {
+            [DebuggerStepThrough]
             get
             {
                 return this.optional + (256 * (this.required + (this.rest ? 256 : 0)));
 
             }
+
             set
             {
                 throw new NotImplementedException ();
@@ -375,81 +179,116 @@ namespace Microcode
 
         #endregion
 
-        public override bool NeedsValueCells (object [] formals)
-        {
-            //Should check for shadowing names, but...
-            return this.body.NeedsValueCells (formals);
-        }
-#if DEBUG
-        public override string Key ()
-        {
-            throw new NotImplementedException ();
-        }
-#endif
     }
 
+    /// <summary>
+    /// Lambda is the abstract base class for Lambda expressions with
+    /// fixed argument lists (no optional, rest, or aux).
+    /// </summary>
     [Serializable]
-    sealed class SimpleLambda : SCode, ILambda, ISystemPair
+    abstract class Lambda : LambdaBase, ISystemPair
     {
-#if DEBUG
-        [NonSerialized]
-        static long creationCount;
-        [NonSerialized]
-        static long evaluationCount;
-#endif
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string [] formals;
-
-        IList<object> free;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode body;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string name;
-
-        SimpleLambda (string name, string [] formals, IList<object> free, SCode body)
-            : base (TC.LAMBDA)
+        protected Lambda (string name, string [] formals, SCode body)
+            : base (TC.LAMBDA, name, formals, body)
         {
-#if DEBUG
-            SimpleLambda.creationCount += 1;
-#endif
-            this.formals = formals;
-            this.free = free;
-            this.body = body;
-            this.name = name;
-        }
-
-        public string Name
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.name;
-            }
         }
 
         public static SCode Make (string name, string [] formals, SCode body)
         {
-            IList<object> freeInBody = new List<object>();
-            foreach (object var in body.FreeVariables ())
-                if (!formals.Contains<object> (var)) freeInBody.Add (var);
-            if (freeInBody.Count == 0)
-                return new TrivialLambda (name, formals, body);
+            if (body == null)
+                throw new ArgumentNullException ("body");
+            if (formals == null)
+                throw new ArgumentNullException ("formals");
+            if (name == null)
+                throw new ArgumentNullException ("name");
+
+            if (Configuration.EnableLexicalAddressing)
+                return
+                    // If someone in the body calls `the-environment', then we
+                    // *must* create a first-class enabled environment.
+                    body.CallsTheEnvironment () ? (Lambda) new StandardLambda (name, formals, body)
+                    : (body.MutatesAny (formals) || formals.Length == 0) ? (Lambda) new StaticLambda (name, formals, body)
+                    : (Lambda) new SimpleLambda (name, formals, body);
             else
-                return new SimpleLambda (name, formals, freeInBody, body);
+                return new StandardLambda (name, formals, body);
         }
 
-        [NonSerialized]
-        static int [] formalOffsetCount = new int [512 + 256];
-        public int LexicalOffset (string name)
+        public static SCode Make (object name, object formals, object body)
         {
-            for (int i = 0; i < formals.Length; i++)
-                if ((object) name == (object) formals [i]) {
-                    formalOffsetCount [i] += 1;
-                    return i;
-                }
-            return -1;
+
+            if (formals == null)
+                throw new ArgumentNullException ("formals");
+
+            string sname = (string) name;
+            object [] cdrArray = (object []) formals;
+            string [] sformals = new string [cdrArray.Length];
+
+            for (int i = 0; i < sformals.Length; i++)
+                sformals [i] = (string) cdrArray [i];
+
+            return Make (sname, sformals, EnsureSCode (body));
+        }
+
+        [SchemePrimitive ("LAMBDA?", 1, true)]
+        public static bool IsLambda (out object answer, object arg)
+        {
+            answer = arg is Lambda;
+            return false;
+        }
+
+        public abstract Closure Close (Environment environment);
+
+        #region ISystemPair Members
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        object ISystemPair.SystemPairCar
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return UnwrapQuoted (this.body);
+            }
+
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        object ISystemPair.SystemPairCdr
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                string [] fakeFormals = new string [this.formals.Length + 1];
+                fakeFormals [0] = this.name;
+                Array.Copy (this.formals, 0, fakeFormals, 1, formals.Length);
+                return fakeFormals;
+            }
+
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// A StandardLambda creates StandardClosures.  These support first-class
+    /// environments that allow incremental definition and variable sharing.
+    /// </summary>
+    [Serializable]
+    sealed class StandardLambda : Lambda
+    {
+        internal StandardLambda (string name, string [] formals, SCode body)
+            : base (name, formals, body)
+        { }
+
+        public override Closure Close (Environment environment)
+        {
+            return new StandardClosure (this, environment);
         }
 
         public override SCode Bind (BindingTimeEnvironment ctenv)
@@ -457,230 +296,114 @@ namespace Microcode
             SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
             return this.body == optimizedBody
                 ? this
-                : new SimpleLambda (this.name, this.formals, this.free, optimizedBody);
+                : new StandardLambda (this.name, this.formals, optimizedBody);
+        }
+
+        public override bool CallsTheEnvironment ()
+        {
+            return true;
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            SimpleLambda.evaluationCount += 1;
+            Warm ();
+#endif
+            answer = new StandardClosure (this, environment);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// This is the abstract base class for all lambdas that do not support
+    /// incremental definition.  This allows us to optimize for the case
+    /// where we know the lexical addresses of free variables and don't
+    /// have to worry about shadowing definition.
+    /// </summary>
+    abstract class StaticLambdaBase : Lambda
+    {
+        protected StaticLambdaBase (string name, string [] formals, SCode body)
+            : base (name, formals, body)
+        { }
+
+        public override bool CallsTheEnvironment ()
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A Static lambda does not support incremental definition, but it does
+    /// support assignment and unassigned variables.
+    /// </summary>
+    [Serializable]
+    sealed class StaticLambda : StaticLambdaBase
+    {
+        internal StaticLambda (string name, string [] formals, SCode body)
+            : base (name, formals, body)
+        { }
+
+        public override Closure Close (Environment environment)
+        {
+            return new StaticClosure (this, environment);
+        }
+
+        public override SCode Bind (BindingTimeEnvironment ctenv)
+        {
+            SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
+            return this.body == optimizedBody
+                ? this
+                : new StaticLambda (this.name, this.formals, optimizedBody);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+#endif
+            answer = new StaticClosure (this, environment);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A SimpleLambda creates SimpleClosures.  There can be no incremental
+    /// definition, no assignment, and no unassigned variables.  Despite these
+    /// restrictions, this is the most popular kind of lambda.
+    /// </summary>
+    [Serializable]
+    sealed class SimpleLambda : Lambda
+    {
+        internal SimpleLambda (string name, string [] formals, SCode body)
+            : base (name, formals, body)
+        {
+        }
+
+        public override Closure Close (Environment environment)
+        {
+            return new SimpleClosure (this, environment);
+        }
+
+        public override SCode Bind (BindingTimeEnvironment ctenv)
+        {
+            SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
+            return this.body == optimizedBody
+                ? this
+                : new SimpleLambda (this.name, this.formals, optimizedBody);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
 #endif
             answer = new SimpleClosure (this, environment);
             return false;
         }
 
-        public override IList<object> FreeVariables ()
+        public override bool CallsTheEnvironment ()
         {
-            return this.free;
-        }
-
-        #region ILambda Members
-
-        public string [] Formals
-        {
-            [DebuggerStepThrough]
-            get { return this.formals; }
-        }
-
-        public SCode Body
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.body;
-            }
-        }
-
-        #endregion
-
-        #region ISystemPair Members
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCar
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return UnwrapQuoted (this.body);
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCdr
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                string [] fakeFormals = new string [this.formals.Length + 1];
-                fakeFormals [0] = this.name;
-                Array.Copy (this.formals, 0, fakeFormals, 1, formals.Length);
-                return fakeFormals;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        #endregion
-
-        public override bool NeedsValueCells (object [] formals)
-        {
-            return this.body.NeedsValueCells (formals);
-        }
-#if DEBUG
-        public override string Key ()
-        {
-            return "lambda-" + this.serialNumber.ToString ();
-        }
-#endif
-    }
-
-    [Serializable]
-    sealed class TrivialLambda : SCode, ILambda, ISystemPair
-    {
-#if DEBUG
-        [NonSerialized]
-        static long creationCount;
-        [NonSerialized]
-        static long evaluationCount;
-#endif
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string [] formals;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode body;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string name;
-
-        internal TrivialLambda (string name, string [] formals, SCode body)
-            : base (TC.LAMBDA)
-        {
-#if DEBUG
-            TrivialLambda.creationCount += 1;
-#endif
-            this.formals = formals;
-            this.body = body;
-            this.name = name;
-        }
-
-        public string Name
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.name;
-            }
-        }
-
-        [NonSerialized]
-        static int [] formalOffsetCount = new int [512 + 256];
-        public int LexicalOffset (string name)
-        {
-            for (int i = 0; i < formals.Length; i++)
-                if ((object) name == (object) formals [i]) {
-                    formalOffsetCount [i] += 1;
-                    return i;
-                }
-            return -1;
-        }
-
-        public override SCode Bind (BindingTimeEnvironment ctenv)
-        {
-            SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
-            return this.body == optimizedBody
-                ? this
-                : new TrivialLambda (this.name, this.formals, optimizedBody);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            TrivialLambda.evaluationCount += 1;
-#endif
-            answer = new TrivialClosure (this, environment);
             return false;
         }
-
-        public override IList<object> FreeVariables ()
-        {
-            IList<object> answer = new List<object> ();
-            foreach (object var in this.body.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            foreach (object var in this.formals)
-                if (answer.Contains (var)) answer.Remove (var);
-            return answer;
-        }
-
-        #region ILambda Members
-
-        public string [] Formals
-        {
-            [DebuggerStepThrough]
-            get { return this.formals; }
-        }
-
-        public SCode Body
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.body;
-            }
-        }
-
-        #endregion
-
-        #region ISystemPair Members
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCar
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return UnwrapQuoted (this.body);
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCdr
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                string [] fakeFormals = new string [this.formals.Length + 1];
-                fakeFormals [0] = this.name;
-                Array.Copy (this.formals, 0, fakeFormals, 1, formals.Length);
-                return fakeFormals;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        #endregion
-
-        public override bool NeedsValueCells (object [] formals)
-        {
-            return this.body.NeedsValueCells (formals);
-        }
-#if DEBUG
-        public override string Key ()
-        {
-            return "tlambda-" + this.serialNumber.ToString ();
-        }
-#endif
     }
-
 }

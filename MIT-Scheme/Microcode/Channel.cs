@@ -194,7 +194,6 @@ namespace Microcode
             this.output = output;
         }
 
-
         public override int Write (char [] buffer, int start, int end)
         {
             for (int i = start; i < end; i++) {
@@ -294,8 +293,6 @@ namespace Microcode
 
     static class IOPrims
     {
-
-
         [SchemePrimitive ("CHANNEL-BLOCKING", 1, false)]
         public static bool ChannelBlocking (out object answer, object arg)
         {
@@ -352,6 +349,55 @@ namespace Microcode
         public static bool ChannelWrite (out object answer, object [] arglist)
         {
             answer = Channel.ArgChannel ((int) arglist[0]).Write ((char []) (arglist [1]), (int) (arglist [2]), (int) (arglist [3]));
+            return false;
+        }
+
+        static object [] directories = new object [32];
+
+        [SchemePrimitive ("NEW-DIRECTORY-OPEN", 1, false)]
+        public static bool NewDirectoryOpen (out object answer, object arg0)
+        {
+            string pathAndPattern = new string ((char []) arg0);
+            int x = pathAndPattern.LastIndexOf ('\\');
+            string path = pathAndPattern.Substring (0, x + 1);
+            string pattern = pathAndPattern.Substring (x + 1, pathAndPattern.Length - (x + 1));
+            for (int i = 0; i < directories.Length; i++) {
+                if (directories [i] == null) {
+                    directories [i] = Directory.GetFiles (path, pattern);
+                    answer = i;
+                    return false;
+                }
+            }
+            throw new NotImplementedException ();
+        }
+
+        [SchemePrimitive ("NEW-DIRECTORY-READ", 1, false)]
+        public static bool NewDirectoryRead (out object answer, object arg0)
+        {
+            int dir = (int) arg0;
+            string [] files = directories [dir] as string [];
+            if (files == null)
+                throw new NotImplementedException ();
+            else if (files.Length == 0) {
+                directories [dir] = null;
+                answer = Constant.sharpF;
+                return false;
+            }
+            else {
+                answer = files [0].ToCharArray ();
+                string [] newFiles = new string [files.Length - 1];
+                Array.Copy (files, 1, newFiles, 0, files.Length - 1);
+                directories [dir] = newFiles;
+                return false;
+            }
+        }
+
+        [SchemePrimitive ("NEW-DIRECTORY-CLOSE", 1, false)]
+        public static bool NewDirectoryClose (out object answer, object arg0)
+        {
+            int dir = (int) arg0;
+            directories [dir] = null;
+            answer = Constant.Unspecific;
             return false;
         }
 

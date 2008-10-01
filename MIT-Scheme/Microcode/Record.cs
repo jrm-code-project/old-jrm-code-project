@@ -127,7 +127,6 @@ namespace Microcode
             return false;
         }
 
-
         [SchemePrimitive ("%RECORD-SET!", 3, false)]
         public static bool RecordSet (out object answer, object record, object idx, object value)
         {
