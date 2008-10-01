@@ -57,6 +57,8 @@
     <Compile Include="Closure.cs" />
     <Compile Include="BindingTimeEnvironment.cs" />
     <Compile Include="Complex.cs" />
+    <Compile Include="Conditional.cs" />
+    <Compile Include="Configuration.cs" />
     <Compile Include="Cons.cs" />
     <Compile Include="Constant.cs" />
     <Compile Include="Continuation.cs" />
@@ -72,6 +74,7 @@
     <Compile Include="FloatArithmetic.cs" />
     <Compile Include="FloatingVector.cs" />
     <Compile Include="GenericArithmetic.cs" />
+    <Compile Include="Histogram.cs" />
     <Compile Include="History.cs" />
     <Compile Include="Hunk3.cs" />
     <Compile Include="IApplicable.cs" />
@@ -85,6 +88,8 @@
     <Compile Include="ObjectModel.cs" />
     <Compile Include="OSIO.cs" />
     <Compile Include="OSScheme.cs" />
+    <Compile Include="PComb1.cs" />
+    <Compile Include="PComb2.cs" />
     <Compile Include="Primitive.cs" />
     <Compile Include="Promise.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -97,6 +102,8 @@
     <Compile Include="SchemeString.cs" />
     <Compile Include="SCode.cs" />
     <Compile Include="SComb.cs" />
+    <Compile Include="SComb1.cs" />
+    <Compile Include="SComb2.cs" />
     <Compile Include="Termination.cs" />
     <Compile Include="ValueCell.cs" />
     <Compile Include="Variable.cs" />

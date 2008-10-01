@@ -9,7 +9,7 @@ namespace Microcode
     {
         public ContinuationFrameList continuation;
 
-        public ContinuationFrame ()
+        protected ContinuationFrame ()
             : base (TC.CONTROL_POINT)
         {
         }
@@ -27,6 +27,8 @@ namespace Microcode
             this.environment = environment;
         }
 
+        public abstract bool Continue (out object answer, ref Control expression, ref Environment environment, object value);
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             object temp;
@@ -43,10 +45,7 @@ namespace Microcode
             environment = this.environment;
             return Continue (out answer, ref expression, ref environment, temp);
         }
-
-        public abstract bool Continue (out object answer, ref Control expression, ref Environment environment, object value);
     }
-
 
     public class Continuation : SchemeObject
     {
@@ -107,39 +106,5 @@ namespace Microcode
             return answer;
         }
     }
-
-    //abstract class Subproblem<T> : Continuation
-    //{
-    //    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-    //    readonly T expression;
-
-    //    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-    //    readonly Environment environment;
-
-    //    [DebuggerStepThrough]
-    //    public Subproblem (Continuation next, T expression, Environment environment)
-    //        : base (next)
-    //    {
-    //        this.expression = expression;
-    //        this.environment = environment;
-    //    }
-
-    //    public T Expression
-    //    {
-    //        [DebuggerStepThrough]
-    //        get
-    //        {
-    //            return this.expression;
-    //        }
-    //    }
-
-    //    public Environment Environment
-    //    {
-    //        [DebuggerStepThrough]
-    //        get
-    //        {
-    //            return this.environment;
-    //        }
-    //    }
     
 }

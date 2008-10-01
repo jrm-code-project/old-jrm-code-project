@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    class Hunk3 : ISystemHunk3
+    public class Hunk3 : ISystemHunk3
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object cxr0;

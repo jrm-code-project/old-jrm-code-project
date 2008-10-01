@@ -9,54 +9,49 @@ namespace Microcode
     public abstract class SCode: Control
     {
 #if DEBUG
-        protected static Dictionary<string,SCode> hashConsTable = new Dictionary<string, SCode> ();
-        protected static long counter;
-        protected readonly long serialNumber;
 
-        static Dictionary<SCode,long> hotCode = new Dictionary<SCode,long>();
+        static int evaluations;
+        static Histogram<Type> scodeHistogram = new Histogram<Type>();
+
+        static Histogram<SCode> hotSCode = new Histogram<SCode>();
+
+        static Dictionary<Type,Histogram<Type>> callerTable = new Dictionary<Type, Histogram<Type>> ();
+
+        protected void noteCalls (SCode callee)
+        {
+            Type calleeType = callee.GetType ();
+            Histogram<Type> histogram;
+            if (!callerTable.TryGetValue (calleeType, out histogram)) {
+                histogram = new Histogram<Type> ();
+                callerTable.Add (calleeType, histogram);
+            }
+            histogram.Note (this.GetType ());
+        }
 
         protected void Warm ()
         {
-            if (hotCode.ContainsKey (this))
-                hotCode [this] += 1;
-            else
-                hotCode [this] = 1;
-        }
-
-        static public SortedList<long, List<SCode>> HotCode
-        {
-            get
-            {
-                SortedList<long, List<SCode>> hotties = new SortedList<long, List<SCode>> ();
-                foreach (KeyValuePair<SCode,long> entry in hotCode) {
-                    List<SCode> probe = null;
-                    if (!hotties.TryGetValue (entry.Value, out probe)) {
-                        probe = new List<SCode> ();
-                        hotties.Add (entry.Value, probe);
-                    }
-
-                    probe.Add (entry.Key);
-                }
-                return hotties;
-            }
+            evaluations += 1;
+            hotSCode.Note (this);
+            scodeHistogram.Note (this.GetType ());
         }
 #endif
 
         protected SCode (TC typeCode) : base (typeCode) { 
-#if DEBUG
-            this.serialNumber = SCode.counter++;
-#endif
         }
 
 	// Abstract functions that define the SCode API
         public abstract SCode Bind (BindingTimeEnvironment ctenv);
+        public abstract bool CallsTheEnvironment ();
+        public abstract bool MutatesAny (object [] formals);
+        public abstract bool UsesAny (object [] formals);
 
-        public abstract IList<object> FreeVariables ();
 #if DEBUG
         // for hash consing
-        public abstract string Key ();
+        public virtual string Key ()
+        {
+            return this.GetType ().Name.ToString () + "-" + this.SerialNumber;
+        }
 #endif
-        public abstract bool NeedsValueCells (object [] formals);
 
         static bool SelfEvaluating (object obj)
         {
@@ -111,10 +106,6 @@ namespace Microcode
     [Serializable]
     sealed class Comment : SCode, ISystemPair
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object text;
 
@@ -142,29 +133,33 @@ namespace Microcode
             SCode optimizedCode = this.code.Bind (ctenv);
             return optimizedCode == this.code
                 ? this
-                : new Comment (optimizedCode,
-                                this.text);
+                : new Comment (optimizedCode, this.text);
+        }
+
+        public override bool CallsTheEnvironment ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool UsesAny (object [] formals)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool MutatesAny (object [] formals)
+        {
+            throw new NotImplementedException ();
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Comment.evaluationCount += 1;
             Warm ();
+            noteCalls (this.code);
 #endif
             expression = this.code;
-            answer = null;
+            answer = null; // happy compiler
             return true;
-        }
-
-        public override IList<object> FreeVariables ()
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool NeedsValueCells (object [] formals)
-        {
-            throw new NotImplementedException ();
         }
 
         #region ISystemPair Members
@@ -196,250 +191,11 @@ namespace Microcode
 
         #endregion
 
-#if DEBUG
-
-        public override string Key ()
-        {
-            throw new NotImplementedException ();
-        }
-#endif
     }
 
-    [Serializable]
-    sealed class Conditional : SCode, ISystemHunk3
-    {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-        [NonSerialized]
-        static long disjunctions;
-#endif
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode predicate;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode consequent;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode alternative;
-
-        Conditional (SCode predicate, SCode consequent, SCode alternative)
-            : base (TC.CONDITIONAL)
-        {
-            if (predicate == null) throw new ArgumentNullException ("predicate");
-            if (consequent == null) throw new ArgumentNullException ("consequent");
-            if (alternative == null) throw new ArgumentNullException ("alternative");
-            this.predicate = predicate;
-            this.consequent = consequent;
-            this.alternative = alternative;
-        }
-
-        public static SCode Make (object predicate, object consequent, object alternative)
-        {
-            SCode pred = EnsureSCode (predicate);
-            SCode cons = EnsureSCode (consequent);
-            if (pred is Variable
-                && cons is Variable
-                && ((Variable) pred).name == ((Variable) cons).name) {
-#if DEBUG
-                Conditional.disjunctions += 1;
-#endif
-                return new Disjunction (pred, alternative);
-            }
-            else
-                return new Conditional (EnsureSCode (predicate), EnsureSCode (consequent), EnsureSCode (alternative));
-        }
-
-        public static SCode Make (Hunk3 elements)
-        {
-            if (elements == null) throw new ArgumentNullException ("elements");
-            return new Conditional (SCode.EnsureSCode (elements.Cxr0), 
-                SCode.EnsureSCode (elements.Cxr1), 
-                SCode.EnsureSCode (elements.Cxr2));
-        }
-
-        public SCode Predicate
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.predicate;
-            }
-        }
-
-        public SCode Consequent
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.consequent;
-            }
-        }
-
-        public SCode Alternative
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.alternative;
-            }
-        }
-        [SchemePrimitive ("CONDITIONAL?", 1, true)]
-        public static bool IsConditional (out object answer, object arg)
-        {
-            answer = arg is Conditional;
-            return false;
-        }
-        public override SCode Bind (BindingTimeEnvironment ctenv)
-        {
-            SCode optPred = this.predicate.Bind (ctenv);
-            SCode optCons = this.consequent.Bind (ctenv);
-            SCode optAlt = this.alternative.Bind (ctenv);
-            return optPred == this.predicate
-                && optCons == this.consequent
-                && optAlt == this.alternative
-                ? this
-                : new Conditional (optPred, optCons, optAlt);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Conditional.evaluationCount += 1;
-            Warm ();
-#endif
-            Control unev = this.predicate;
-            Environment env = environment;
-            while (unev.EvalStep (out answer, ref unev, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-
-            }
-
-            expression = (answer is bool) && (bool) answer == false
-                ? this.alternative
-                : this.consequent;
-            return true;
-        }
-
-        public override IList<object> FreeVariables ()
-        {
-            IList<object> answer = new List<object> ();
-            foreach (object var in this.predicate.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            foreach (object var in this.consequent.FreeVariables())
-                if (!answer.Contains (var)) answer.Add (var);
-            foreach (object var in this.alternative.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            return answer;
-        }
-
-       public override bool NeedsValueCells (object [] formals)
-        {
-            return this.predicate.NeedsValueCells (formals)
-                || this.consequent.NeedsValueCells (formals)
-                || this.alternative.NeedsValueCells (formals);
-        }
- 
-        #region ISystemHunk3 Members
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemHunk3Cxr0
-        {
-            get
-            {
-                return UnwrapQuoted (this.predicate);
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemHunk3Cxr1
-        {
-            get
-            {
-                return UnwrapQuoted(this.consequent);
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemHunk3Cxr2
-        {
-            get
-            {
-                return UnwrapQuoted(this.alternative);
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        #endregion
-
-#if DEBUG
-        public override string Key ()
-        {
-            return "cond-" + this.serialNumber.ToString ();
-        }
-#endif
-    }
-
-    [Serializable]
-    sealed class ConditionalFrame : SubproblemContinuation<Conditional>, ISystemVector
-    {
-        public ConditionalFrame (Conditional conditional, Environment environment)
-            : base (conditional, environment)
-        {
-        }
-
-        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
-        {
-            expression = (value is bool) && (bool) value == false
-                  ? this.expression.Alternative
-                  : this.expression.Consequent;
-            answer = value;
-            return true;
-        }
-
-        #region ISystemVector Members
-
-        public int SystemVectorSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        public object SystemVectorRef (int index)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public object SystemVectorSet (int index, object newValue)
-        {
-            throw new NotImplementedException ();
-        }
-
-        #endregion
-
-
-    }
-
-    [Serializable]
+     [Serializable]
     sealed class Definition : SCode, ISystemPair
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly string name;
 
@@ -490,13 +246,17 @@ namespace Microcode
 
         public override SCode Bind (BindingTimeEnvironment ctenv)
         {
-            return new Definition (this.name, this.value.Bind (ctenv));
+            SCode boundValue = this.value.Bind (ctenv);
+            return boundValue == this.value
+                ? this
+                : new Definition (this.name, boundValue);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Definition.evaluationCount += 1;
+            Warm ();
+            noteCalls (this.value);
 #endif
             Control expr = this.value;
             Environment env = environment;
@@ -504,20 +264,23 @@ namespace Microcode
             while (expr.EvalStep (out value, ref expr, ref env)) { };
             if (value == Interpreter.UnwindStack) throw new NotImplementedException();
 
-            //if (name == "copy-record")
-            //    Debugger.Break ();
             if (environment.Define (this.name, value))
                 throw new NotImplementedException ();
             answer = this.name;
             return false;
         }
 
-        public override IList<object> FreeVariables ()
+        public override bool MutatesAny (object [] formals)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool NeedsValueCells (object [] formals)
+        public override bool CallsTheEnvironment ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool UsesAny (object [] formals)
         {
             throw new NotImplementedException ();
         }
@@ -552,22 +315,11 @@ namespace Microcode
 
         #endregion
 
-#if DEBUG
-
-        public override string Key ()
-        {
-            throw new NotImplementedException ();
-        }
-#endif
     }
 
     [Serializable]
     sealed class Delay : SCode
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
         readonly SCode body;
 
@@ -589,39 +341,34 @@ namespace Microcode
             return new Delay (this.body.Bind (ctenv));
         }
 
+        public override bool CallsTheEnvironment ()
+        {
+            return this.body.CallsTheEnvironment ();
+        }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Delay.evaluationCount += 1;
-            Warm ();
+             Warm ();
 #endif
             answer = new Promise (this.body, environment);
             return false;
         }
-        public override IList<object> FreeVariables ()
+
+        public override bool MutatesAny (object [] formals)
         {
-            return this.body.FreeVariables ();
+            return this.body.MutatesAny (formals);
         }
 
-        public override bool NeedsValueCells (object [] formals)
+        public override bool UsesAny (object [] formals)
         {
-            return this.body.NeedsValueCells (formals);
+            throw new NotImplementedException ();
         }
-#if DEBUG
-        public override string Key ()
-        {
-            return "(delay " + this.serialNumber.ToString () + ")";
-        }
-#endif
     }
 
     [Serializable]
     sealed class Disjunction : SCode, ISystemPair
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode predicate;
 
@@ -659,41 +406,51 @@ namespace Microcode
                                     this.alternative.Bind (ctenv));
         }
 
+        public override bool CallsTheEnvironment ()
+        {
+            return this.predicate.CallsTheEnvironment ()
+                || this.alternative.CallsTheEnvironment ();
+        }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Disjunction.evaluationCount += 1;
             Warm ();
+            noteCalls (this.predicate);
 #endif
             Environment env = environment;
             Control pred = this.predicate;
             while (pred.EvalStep (out answer, ref pred, ref env)) { };
-            if (answer == Interpreter.UnwindStack) throw new NotImplementedException ();
+            if (answer == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new DisjunctionFrame (this, environment));
+                environment = env;
+                return false;
+            } 
 
             if (answer is bool && (bool) answer == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+#endif
                 // tail call alternative
                 expression = this.alternative;
                 return true;
             }
             else {
-                // return thing
+                // return answer
                 return false;
             }
         }
-        public override IList<object> FreeVariables ()
+
+        public override bool MutatesAny (object [] formals)
         {
-            IList<object> answer = new List<object> ();
-            foreach (object var in this.predicate.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            foreach (object var in this.alternative.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            return answer;
+            return this.predicate.MutatesAny (formals)
+                || this.alternative.MutatesAny (formals);
         }
 
-        public override bool NeedsValueCells (object [] formals)
+        public override bool UsesAny (object [] formals)
         {
-            return this.predicate.NeedsValueCells (formals)
-                || this.alternative.NeedsValueCells (formals);
+            return this.predicate.UsesAny (formals)
+                || this.alternative.UsesAny (formals);
         }
 
          #region ISystemPair Members
@@ -724,23 +481,53 @@ namespace Microcode
 
         #endregion
 
+    }
 
-#if DEBUG
-
-        public override string Key ()
+    [Serializable]
+    sealed class DisjunctionFrame : SubproblemContinuation<Disjunction>, ISystemVector
+    {
+        public DisjunctionFrame (Disjunction disjunction, Environment environment)
+            : base (disjunction, environment)
         {
-            return "disjunction-" + this.serialNumber.ToString();
         }
-#endif
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
+        {
+            answer = value;
+            if (value is bool && (bool) value == false) {
+                // tail call alternative
+                expression = this.expression.Alternative;
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
     }
 
     [Serializable]
     sealed class Quotation : SCode, ISystemPair
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
         // Space optimization.
         [NonSerialized]
         static Dictionary<object, Quotation> table = new Dictionary<object, Quotation> (8000);
@@ -751,8 +538,6 @@ namespace Microcode
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object item;
-
-
 
         Quotation (object item)
             : base (TC.SCODE_QUOTE)
@@ -768,6 +553,7 @@ namespace Microcode
                 || (item is string)
                 || (item is Constant)
                 || (item is Primitive)
+                || item == ReferenceTrap.Unassigned
                 ;
         }
 
@@ -814,23 +600,26 @@ namespace Microcode
             return this;
         }
 
+        public override bool CallsTheEnvironment ()
+        {
+            return false;
+        }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Quotation.evaluationCount += 1;
             Warm ();
-            //if (this.item is int && (int) this.item == 1) Debugger.Break ();
 #endif
             answer = this.item;
             return false;
         }
 
-        public override IList<object> FreeVariables ()
+        public override bool MutatesAny (object [] formals)
         {
-            return new List<object>();
+            return false;
         }
 
-        public override bool NeedsValueCells (object [] formals)
+        public override bool UsesAny (object [] formals)
         {
             return false;
         }
@@ -862,34 +651,36 @@ namespace Microcode
         }
 
         #endregion
-#if DEBUG
-        public override string Key ()
-        {
-            return "(Quotation " + serialNumber.ToString();
-        }
-#endif
     }
 
     [Serializable]
-    sealed class Sequence2 : SCode, ISystemPair
+    class Sequence2 : SCode, ISystemPair
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode first;
+        protected readonly SCode first;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode second;
+        protected readonly SCode second;
 
-        public Sequence2 (object first, object second)
+        protected Sequence2 (SCode first, SCode second)
             : base (TC.SEQUENCE_2)
         {
             if (first == null)
                 throw new ArgumentNullException ("first");
-            this.first = EnsureSCode(first);
-            this.second = EnsureSCode(second);
+            if (second == null)
+                throw new ArgumentNullException ("second");
+            this.first = first;
+            this.second = second;
+        }
+
+        static public SCode Make (SCode first, SCode second)
+        {
+            return new Sequence2 (first, second);
+        }
+
+        static public SCode Make (object first, object second)
+        {
+            return Make (EnsureSCode (first), EnsureSCode (second));
         }
 
         public SCode First
@@ -919,15 +710,26 @@ namespace Microcode
 
         public override SCode Bind (BindingTimeEnvironment ctenv)
         {
-            return new Sequence2 (this.first.Bind (ctenv),
-                                  this.second.Bind (ctenv));
+            SCode optFirst = this.first.Bind (ctenv);
+            SCode optSecond = this.second.Bind (ctenv);
+            return
+                (optSecond is Argument) ? Sequence2SA.Make (optFirst, (Argument) optSecond)
+                : (optFirst == this.first && optSecond == this.second) ? this
+                : Sequence2.Make (optFirst, optSecond);
+        }
+
+        public override bool CallsTheEnvironment ()
+        {
+            return this.first.CallsTheEnvironment ()
+                || this.second.CallsTheEnvironment ();
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Sequence2.evaluationCount += 1;
             Warm ();
+            noteCalls (this.first);
+            noteCalls (this.second);
 #endif
             Control first = this.first;
             Environment env = environment;
@@ -943,23 +745,20 @@ namespace Microcode
             return true; //tailcall  to second
         }
 
-        public override IList<object> FreeVariables ()
+        public override bool MutatesAny (object [] formals)
         {
-            IList<object> answer = new List<object> ();
-            foreach (object var in this.first.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            foreach (object var in this.second.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            return answer;
+            return this.first.MutatesAny (formals)
+                || this.second.MutatesAny (formals);
         }
 
-        public override bool NeedsValueCells (object [] formals)
+        public override bool UsesAny (object [] formals)
         {
-            return this.first.NeedsValueCells (formals)
-                || this.second.NeedsValueCells (formals);
+            return this.first.UsesAny (formals)
+                || this.second.UsesAny (formals);
         }
 
-#region ISystemPair Members
+
+        #region ISystemPair Members
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
@@ -988,21 +787,65 @@ namespace Microcode
         }
 
         #endregion
-#if DEBUG
-        public override string Key ()
+
+    }
+
+    [Serializable]
+    sealed class Sequence2SA : Sequence2
+    {
+        int a2offset;
+
+        Sequence2SA (SCode first, Argument second)
+            : base (first, second)
         {
-            throw new NotImplementedException ();
+            this.a2offset = second.Offset;
         }
+
+        static public SCode Make (SCode first, Argument second)
+        {
+            return new Sequence2SA (first, second);
+        }
+ 
+        public override SCode Bind (BindingTimeEnvironment ctenv)
+        {
+            throw new NotImplementedException ("Unnecessary");
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            noteCalls (this.first);
 #endif
+            Control first = this.first;
+            Environment env = environment;
+            while (first.EvalStep (out answer, ref first, ref env)) { };
+            if (answer == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+            }
+
+            answer = environment.ArgumentValue (this.a2offset);
+            return false;
+        }
     }
 
     [Serializable]
     sealed class Sequence2Frame0 : SubproblemContinuation<Sequence2>, ISystemVector
     {
-
-        internal Sequence2Frame0 (Sequence2 expression, Environment environment)
+        public Sequence2Frame0 (Sequence2 expression, Environment environment)
             :base (expression, environment)
         {
+        }
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
+        {
+            answer = value;
+            expression = this.expression.Second;
+            return true; //tailcall  to second
         }
 
         #region ISystemVector Members
@@ -1027,22 +870,11 @@ namespace Microcode
         }
 
         #endregion
-
-        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
-        {
-            answer = value;
-            expression = this.expression.Second;
-            return true; //tailcall  to second
-        }
     }
 
     [Serializable]
     sealed class Sequence3 : SCode, ISystemHunk3
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode first;
 
@@ -1094,6 +926,7 @@ namespace Microcode
                 return this.third;
             }
         }
+
         [SchemePrimitive ("SEQUENCE3?", 1, true)]
         public static bool IsSequence3 (out object answer, object arg)
         {
@@ -1115,8 +948,10 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Sequence3.evaluationCount += 1;
             Warm ();
+            noteCalls (this.first);
+            noteCalls (this.second);
+            noteCalls (this.third);
 #endif
 
             Control expr = this.first;
@@ -1142,23 +977,25 @@ namespace Microcode
             return true;
         }
 
-        public override IList<object> FreeVariables ()
+        public override bool MutatesAny (object [] formals)
         {
-            IList<object> answer = new List<object> ();
-            foreach (object var in this.first.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            foreach (object var in this.second.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            foreach (object var in this.third.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            return answer;
+            return this.first.MutatesAny (formals)
+                || this.second.MutatesAny (formals)
+                || this.third.MutatesAny (formals);
         }
 
-        public override bool NeedsValueCells (object [] formals)
+        public override bool UsesAny (object [] formals)
         {
-            return this.first.NeedsValueCells (formals)
-                || this.second.NeedsValueCells (formals)
-                || this.third.NeedsValueCells (formals);
+            return this.first.UsesAny (formals)
+                || this.second.UsesAny (formals)
+                || this.third.UsesAny (formals);
+        }
+
+        public override bool CallsTheEnvironment ()
+        {
+            return this.first.CallsTheEnvironment ()
+                || this.second.CallsTheEnvironment ()
+                || this.third.CallsTheEnvironment ();
         }
 
         #region ISystemHunk3 Members
@@ -1175,6 +1012,7 @@ namespace Microcode
                 throw new NotImplementedException ();
             }
         }
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr1
         {
@@ -1187,6 +1025,7 @@ namespace Microcode
                 throw new NotImplementedException ();
             }
         }
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr2
         {
@@ -1201,21 +1040,33 @@ namespace Microcode
         }
 
         #endregion
-#if DEBUG
-        public override string Key ()
-        {
-            throw new NotImplementedException ();
-        }
-#endif
+
     }
 
     [Serializable]
     sealed class Sequence3Frame0 : SubproblemContinuation<Sequence3>, ISystemVector
     {
-        internal Sequence3Frame0 (Sequence3 expression, Environment environment)
+        public Sequence3Frame0 (Sequence3 expression, Environment environment)
             : base (expression, environment)
         {
         }
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
+        {
+            Control expr = this.expression.Second;
+            Environment env = this.environment;
+            while (expr.EvalStep (out answer, ref expr, ref env)) { };
+            if (answer == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this.expression, this.environment));
+                environment = env;
+                return false;
+            }
+
+            // Tail call into third part.
+            expression = this.expression.Third;
+            return true;
+        }
+
         #region ISystemVector Members
 
         public int SystemVectorSize
@@ -1235,29 +1086,12 @@ namespace Microcode
 
         #endregion
 
-
-
-        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
-        {
-            Control expr = this.expression.Second;
-            Environment env = this.environment;
-            while (expr.EvalStep (out answer, ref expr, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this.expression, this.environment));
-                environment = env;
-                return false;
-            }
-
-            // Tail call into third part.
-            expression = this.expression.Third;
-            return true;
-        }
     }
 
     [Serializable]
     sealed class Sequence3Frame1 : SubproblemContinuation<Sequence3>, ISystemVector
     {
-        internal Sequence3Frame1 (Sequence3 expression, Environment environment)
+        public Sequence3Frame1 (Sequence3 expression, Environment environment)
             :base (expression, environment)
         {
         }
@@ -1298,13 +1132,18 @@ namespace Microcode
     [Serializable]
     sealed class TheEnvironment : SCode
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
-        public TheEnvironment ()
+        static TheEnvironment singleton;
+
+        TheEnvironment ()
             : base (TC.THE_ENVIRONMENT)
         {
+        }
+
+        public static SCode Make ()
+        {
+            if (singleton == null)
+                singleton = new TheEnvironment();
+            return singleton;
         }
 
         public override SCode Bind (BindingTimeEnvironment ctenv)
@@ -1312,30 +1151,28 @@ namespace Microcode
             return this;
         }
 
+        public override bool CallsTheEnvironment ()
+        {
+            return true;
+        }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            TheEnvironment.evaluationCount += 1;
+            Warm ();
 #endif
             answer = environment;
             return false;
         }
 
-        public override IList<object> FreeVariables ()
+        public override bool MutatesAny (object [] formals)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool NeedsValueCells (object [] formals)
+        public override bool UsesAny (object [] formals)
         {
             throw new NotImplementedException ();
         }
-#if DEBUG
-        public override string Key ()
-        {
-            throw new NotImplementedException ();
-        }
-#endif
     }
-
 }

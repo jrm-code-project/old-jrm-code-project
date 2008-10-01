@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Diagnostics;
 
 
@@ -9,6 +10,12 @@ namespace Microcode
     [Serializable]
     public class SchemeObject
     {
+#if DEBUG
+        static long counter;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        protected readonly long objectSerialNumber;
+#endif
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         TC typeCode;
 
@@ -16,6 +23,9 @@ namespace Microcode
         protected SchemeObject (TC typeCode)
         {
             this.typeCode = typeCode;
+#if DEBUG
+            this.objectSerialNumber = SCode.counter++;
+#endif
         }
 
         public TC TypeCode
@@ -26,5 +36,13 @@ namespace Microcode
                 return this.typeCode;
             }
         }
+#if DEBUG
+        public long SerialNumber {
+            [DebuggerStepThrough]
+            get {
+                return this.objectSerialNumber;
+            }
+        }
+#endif
     }
 }

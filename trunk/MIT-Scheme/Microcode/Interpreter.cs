@@ -218,8 +218,9 @@ namespace Microcode
             //CompileTimeEnvironment ctenv = (env is StandardEnvironment)
             //    ? new CompileTimeEnvironment (((StandardEnvironment) env).Closure.Lambda.Formals)
             //    : new CompileTimeEnvironment (null);
-            SCode sarg0 = SCode.EnsureSCode (arg0).Bind (ctenv);
-            answer = new TailCallInterpreter (sarg0, env);
+            SCode sarg0 = SCode.EnsureSCode (arg0);
+            SCode xarg0 = sarg0.Bind (ctenv);
+            answer = new TailCallInterpreter (xarg0, env);
             return true;
         }
 
@@ -668,7 +669,6 @@ namespace Microcode
         }
 
         #endregion
-
     }
 
     [Serializable]
@@ -716,7 +716,6 @@ namespace Microcode
         }
 
         #endregion
-
     }
 
     sealed class RestoreBandFrame : ContinuationFrame, ISystemVector
@@ -750,6 +749,5 @@ namespace Microcode
         }
 
         #endregion
-
     }
 }

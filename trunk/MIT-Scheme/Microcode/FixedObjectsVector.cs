@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Microcode
 {
-    public class FixedObjectsVector
+    public static class FixedObjectsVector
     {
         const int SystemInterruptVector = 0x01;
         const int SystemCallNames = 0x09;

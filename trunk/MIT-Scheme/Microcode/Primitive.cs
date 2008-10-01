@@ -21,8 +21,9 @@ namespace Microcode
 #if DEBUG
         [NonSerialized]
         public static bool Noisy = false;
+
         [NonSerialized]
-        public long invocationCount;    
+        internal static Histogram<Primitive> hotPrimitives = new Histogram<Primitive> ();
 #endif
 
         // Global table mapping names to primitive procedures.
@@ -53,25 +54,6 @@ namespace Microcode
         {
             return "#<PRIMITIVE " + this.name + " " + this.arity.ToString (CultureInfo.InvariantCulture) + ">";
         }
-#if DEBUG
-        static public SortedList<long, List<Primitive>> HotPrimitives
-        {
-            get
-            {
-                SortedList<long, List<Primitive>> hotties = new SortedList<long, List<Primitive>> ();
-                foreach (Primitive entry in primitiveTable.Values) {
-                    List<Primitive> probe = null;
-                    if (!hotties.TryGetValue (entry.invocationCount, out probe)) {
-                        probe = new List<Primitive> ();
-                        hotties.Add (entry.invocationCount, probe);
-                    }
-
-                    probe.Add (entry);
-                }
-                return hotties;
-            }
-        }
-#endif
 
         static string CanonicalizeName (string name)
         {
@@ -338,7 +320,7 @@ namespace Microcode
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
-            this.invocationCount += 1;
+            Primitive.hotPrimitives.Note (this);
 #endif
             if (this.method (out answer)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -436,7 +418,7 @@ namespace Microcode
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
-            this.invocationCount += 1;
+            hotPrimitives.Note (this);
 #endif
             if (this.method (out answer, arg0))
                 throw new NotImplementedException ();
@@ -526,7 +508,7 @@ namespace Microcode
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
-            this.invocationCount += 1;
+            hotPrimitives.Note (this);
 #endif
             if (this.method (out answer, arg0, arg1)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -682,7 +664,7 @@ namespace Microcode
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
-            this.invocationCount += 1;
+            Primitive.hotPrimitives.Note (this);
 #endif
             //// gotta remove the procedure from the front of the arglist.
             //object [] args1 = new object [args.Length - 1];
@@ -699,7 +681,7 @@ namespace Microcode
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
-            this.invocationCount += 1;
+            hotPrimitives.Note (this);
 #endif
             object [] arguments = new object [] { };
             if (this.method (out answer, arguments))
@@ -711,7 +693,7 @@ namespace Microcode
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
-            this.invocationCount += 1;
+            hotPrimitives.Note (this);
 #endif
             object [] arguments = new object [] { arg0 };
             if (this.method (out answer, arguments))
@@ -723,7 +705,7 @@ namespace Microcode
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
-            this.invocationCount += 1;
+            hotPrimitives.Note (this);
 #endif
             object [] arguments = new object [] { arg0, arg1 };
             if (this.method (out answer, arguments))
@@ -735,7 +717,7 @@ namespace Microcode
         {
 #if DEBUG
             Debug.WriteLineIf (Primitive.Noisy, this.name);
-            this.invocationCount += 1;
+            hotPrimitives.Note (this);
 #endif
             object [] arguments = new object [] { arg0, arg1, arg2 };
             if (this.method (out answer, arguments))
@@ -745,7 +727,14 @@ namespace Microcode
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
         {
-            throw new NotImplementedException ();
+#if DEBUG
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
+            hotPrimitives.Note (this);
+#endif
+            object [] arguments = new object [] { arg0, arg1, arg2, arg3};
+            if (this.method (out answer, arguments))
+                throw new NotImplementedException ();
+            return false; // no problems   
         }
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)

@@ -11,10 +11,6 @@ namespace Microcode
     [Serializable]
     sealed class Access : SCode, ISystemPair
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly string var;
 
@@ -33,6 +29,46 @@ namespace Microcode
         {
             answer = arg0 is Access;
             return false;
+        }
+
+        public override SCode Bind (BindingTimeEnvironment ctenv)
+        {
+            SCode optEnv = this.env.Bind (ctenv);
+            return optEnv == this.env
+                ? this
+                : new Access (optEnv, this.var);
+        }
+
+        public override bool CallsTheEnvironment ()
+        {
+            return this.env.CallsTheEnvironment ();
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            noteCalls (this.env);
+#endif           
+            Control expr = this.env;
+            Environment env = environment;
+            object ev = null;
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+            if (ev == Interpreter.UnwindStack) throw new NotImplementedException ();
+
+            Environment accessenv = Environment.ToEnvironment (ev);
+            if (accessenv.DeepSearch (out answer, this.var)) throw new NotImplementedException ();
+            return false;
+        }
+
+        public override bool MutatesAny (object [] formals)
+        {
+            return this.env.MutatesAny (formals);
+        }
+
+        public override bool UsesAny (object [] formals)
+        {
+            return this.env.UsesAny (formals);
         }
 
         #region ISystemPair Members
@@ -63,61 +99,18 @@ namespace Microcode
 
         #endregion
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
-        {
-            return new Access (this.env.Bind (ctenv),
-                               this.var);
-        }
-#if DEBUG
-        public override string Key ()
-        {
-            throw new NotImplementedException ();
-        }
-#endif
-
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Access.evaluationCount += 1;
-#endif
-            Control expr = this.env;
-            Environment env = environment;
-            object ev = null;
-            while (expr.EvalStep (out ev, ref expr, ref env)) { };
-            if (ev == Interpreter.UnwindStack) throw new NotImplementedException ();
-
-            Environment accessenv = Environment.ToEnvironment (ev);
-            if (accessenv.DeepSearch (out answer, this.var)) throw new NotImplementedException ();
-            return false;
-        }
-
-        public override IList<object> FreeVariables ()
-        {
-            return this.env.FreeVariables ();
-        }
-
-        public override bool NeedsValueCells (object [] formals)
-        {
-            return this.env.NeedsValueCells (formals);
-        }
     }
 
     [Serializable]
     sealed class Assignment : SCode, ISystemPair
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
-
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string target;
+        readonly Variable target;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode value;
 
-        public Assignment (string target, SCode value)
+        public Assignment (Variable target, SCode value)
             : base (TC.ASSIGNMENT)
         {
             if (target == null) throw new ArgumentNullException ("target");
@@ -131,18 +124,12 @@ namespace Microcode
         {
             Variable vtarget = target as Variable;
             if (vtarget != null) {
-                this.target = vtarget.name;
+                this.target = vtarget;
                 this.value = EnsureSCode (value);
             }
-            else {
-                string starget = target as string;
-                if (starget != null) {
-                    this.target = starget;
-                    this.value = EnsureSCode (value);
-                }
-                else
-                    throw new NotImplementedException ();
-            }
+            else
+                throw new NotImplementedException ();
+
         }
 
         public string Name
@@ -150,7 +137,16 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                return this.target;
+                return this.target.name;
+            }
+        }
+
+        public SCode Value
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.value;
             }
         }
 
@@ -172,7 +168,7 @@ namespace Microcode
         {
             get
             {
-                return  new Variable (this.target);
+                return this.target;
             }
             set
             {
@@ -203,15 +199,20 @@ namespace Microcode
                 : new Assignment (this.target, optVal);
         }
 
+        public override bool CallsTheEnvironment ()
+        {
+            return this.value.CallsTheEnvironment ();
+        }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Assignment.evaluationCount += 1;
             Warm ();
+            noteCalls (this.value);
 #endif
             Control expr = this.value;
             Environment env = environment;
-            object newValue = null;
+            object newValue;
             while (expr.EvalStep (out newValue, ref expr, ref env)) { };
             if (newValue == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
@@ -220,32 +221,21 @@ namespace Microcode
                 return false;
             }
 
-            if (environment.Assign (out answer, this.target, newValue)) throw new NotImplementedException ();
+            if (environment.Assign (out answer, this.target.name, newValue)) throw new NotImplementedException ();
             return false;
         }
 
-        public override IList<object> FreeVariables ()
+        public override bool MutatesAny (object [] formals)
         {
-            IList<object> answer = new List<object> ();
-            foreach (object var in this.value.FreeVariables ())
-                if (!answer.Contains (var)) answer.Add (var);
-            if (!answer.Contains (this.target)) answer.Add (this.target);
-            return answer;
+            return formals.Contains<object> (this.target.name)
+                || this.value.MutatesAny (formals);
         }
 
-
- 
-        public override bool NeedsValueCells (object [] formals)
+        public override bool UsesAny (object [] formals)
         {
-            return formals.Contains<object> (this.target)
-                || this.value.NeedsValueCells (formals);
+            return formals.Contains<object> (this.target.name)
+                || this.value.UsesAny (formals);
         }
-#if DEBUG
-        public override string Key ()
-        {
-            throw new NotImplementedException ();
-        }
-#endif
     }
 
     [Serializable]
@@ -293,14 +283,14 @@ namespace Microcode
     {
 #if DEBUG
         [NonSerialized]
-        static long evaluationCount;
-        [NonSerialized]
         protected readonly bool breakOnReference;
 #endif
+        static Dictionary<object,Variable> variableTable = new Dictionary<object, Variable> ();
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public readonly string name;
 
-        public Variable (string name)
+        protected Variable (string name)
             : base (TC.VARIABLE)
         {
             if (name == null)
@@ -308,6 +298,10 @@ namespace Microcode
             this.name = name;
 #if DEBUG
            if (name == "no symbol has this name"
+               || name == "syntax*"
+               || name == "hash-table/get"
+            //   || name == "error"
+            //   || name == "loop"
             //   || name == "copy-record"
             //   || name == "deferred-unparser-methods"
             //   || name == "microcode-identification"
@@ -317,10 +311,19 @@ namespace Microcode
 #endif
         }
 
-        public Variable (Hunk3 init)
-            : base (TC.VARIABLE)
+        static public Variable Make (string name)
         {
-            this.name = (string) init.Cxr0;
+            Variable answer;
+            if (!variableTable.TryGetValue (name, out answer)) {
+                answer = new Variable (name);
+                variableTable.Add (name, answer);
+            }
+            return answer;
+        }
+
+        static public Variable Make (Hunk3 init)
+        {
+            return Variable.Make ((string) init.Cxr0);
         }
 
         protected string Name
@@ -342,7 +345,6 @@ namespace Microcode
             answer = arg0 is Variable;
             return false;
         }
-
 
         #region ISystemHunk3 Members
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -386,56 +388,233 @@ namespace Microcode
 
         public override SCode Bind (BindingTimeEnvironment ctenv)
         {
-            VariableInfo info = ctenv.Lookup (this.name);
-            GlobalVariableInfo ginfo = info as GlobalVariableInfo;
-            if (ginfo != null) 
-                return new GlobalVariable (this.name);
-            FreeVariableInfo fvinfo = info as FreeVariableInfo;
-            if (fvinfo != null) {
-                return new FreeVariable (this.name, fvinfo.Environment);
-            }
-            else {
-                TopLevelVariableInfo tlinfo = info as TopLevelVariableInfo;
-                if (tlinfo != null)
-                    return new TopLevelVariable (this.name, tlinfo.ValueCell);
-                LexicalVariableInfo lvinfo = info as LexicalVariableInfo;
-                if (lvinfo != null)
-                    return LexicalVariable.Make (this.name, lvinfo);
-            }
-            return this;
+            return Configuration.EnableLexicalAddressing
+                ? ctenv.BindVariable (this.name)
+                : this;
+        }
+
+        public override bool CallsTheEnvironment ()
+        {
+            return false;
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Variable.evaluationCount += 1;
             Warm ();
             Debug.WriteLineIf (Primitive.Noisy, this.Name);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
 #endif
-            if (environment.DeepSearch (out value, this.name)) throw new NotImplementedException ();
-            return false;
+            if (Configuration.EnableLexicalAddressing)
+                throw new NotImplementedException ("Should not happen, variables should all be bound.");
+            else if (environment.DeepSearch (out value, this.name)) throw new NotImplementedException ();
+            else return false;
         }
 
-        public override IList<object> FreeVariables ()
-        {
-            return new List<object> { this.name };
-        }
-
-        public override bool NeedsValueCells (object [] formals)
+        public override bool MutatesAny (object [] formals)
         {
             return false;
         }
 
-#if DEBUG
-        public override string Key ()
+        public override bool UsesAny (object [] formals)
         {
-            return "(variable " + this.name + ")";
+            for (int i = 0; i < formals.Length; i++)
+                if ((object) this.name == (object) formals [i])
+                    return true;
+            return false;
         }
-#endif
     }
+
+    /// <summary>
+    /// A Bound variable has some idea of how to get at the value cell
+    /// other than by using a deep search.
+    /// </summary>
+    abstract class BoundVariable : Variable
+    {
+        protected BoundVariable (string name)
+            : base (name)
+        {
+        }
+
+        public override SCode Bind (BindingTimeEnvironment ctenv)
+        {
+            throw new NotImplementedException ("already bound");
+        }
+
+    }
+
+    /// <summary>
+    /// An argument variable is bound in the immediately enclosing lambda.
+    /// We can access it by simply grabbing it from the topmost frame
+    /// in the environment.
+    /// </summary>
+    [Serializable]
+    class Argument : BoundVariable
+    {
+        protected readonly int offset;
+
+        protected Argument (string name, int offset)
+            : base (name)
+        {
+            this.offset = offset;
+        }
+
+        internal int Offset
+        {
+            get { return this.offset; }
+        }
+
+        static public Variable Make (string name, int offset)
+        {
+            switch (offset) {
+                case 0: return new Argument0 (name);
+                case 1: return new Argument1 (name);
+                default: return new Argument (name, offset);
+            }
+        }
+
+        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            if (this.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            value = environment.ArgumentValue (offset);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Argument zero is the most popular argument.
+    /// </summary>
+    [Serializable]
+    sealed class Argument0 : Argument
+    {
+        internal Argument0 (string name)
+            : base (name, 0)
+        {
+        }
+
+        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            if (this.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            value = environment.Argument0Value;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Argument1 is the second most popular argument.
+    /// </summary>
+    [Serializable]
+    sealed class Argument1 : Argument
+    {
+        internal Argument1 (string name)
+            : base (name, 1)
+        {
+        }
+
+        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            if (this.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            value = environment.Argument1Value;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A LexicalVariable is one where we know where the binding cell will
+    /// be, and we know it cannot move.  We simply go fetch it.
+    /// </summary>
+    [Serializable]
+    class LexicalVariable : BoundVariable
+    {
+        readonly int depth;
+        readonly int offset;
+
+        LexicalVariable (string name, int depth, int offset)
+            : base (name)
+        {
+            this.depth = depth;
+            this.offset = offset;
+        }
+
+        public int Depth { get { return this.depth; } }
+        public int Offset { get { return this.offset; } }
+
+        public static Variable Make (string name, int depth, int offset)
+        {
+            return new LexicalVariable (name, depth, offset);
+        }
+
+        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            Debug.WriteLineIf (Primitive.Noisy, this.Name);
+            if (this.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.FastLexicalRef (out value, this.name, this.depth, this.offset))
+                throw new NotImplementedException ("Error on lookup of " + this.name);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A DangerousLexicalVariable is one where we know where the binding cell
+    /// is, but it could be shadowed.
+    /// </summary>
+    [Serializable]
+    class DangerousLexicalVariable : Variable
+    {
+        readonly int shadowDepth;
+        readonly int depth;
+        readonly int offset;
+
+        DangerousLexicalVariable (string name, int shadowDepth, int depth, int offset)
+            : base (name)
+        {
+            this.shadowDepth = shadowDepth;
+            this.depth = depth;
+            this.offset = offset;
+        }
+
+        public static Variable Make (string name, int shadowDepth, int depth, int offset)
+        {
+            return new DangerousLexicalVariable (name, shadowDepth, depth, offset);
+        }
+
+        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            Debug.WriteLineIf (Primitive.Noisy, this.Name);
+            if (this.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.DangerousLexicalRef (out value, this.name, this.shadowDepth, this.depth, this.offset))
+                throw new NotImplementedException ("Error on lookup of " + this.name);
+            return false;
+        }
+    }
+
 
     /// <summary>
     /// A FreeVariable is one that we know is not lexically visible at
@@ -446,36 +625,23 @@ namespace Microcode
     [Serializable]
     sealed class FreeVariable : Variable
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount = 0;
-        [NonSerialized]
-        static long cacheMisses = 0;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly Environment environment;
 
-        static long CacheHits
-        {
-            get
-            {
-                return evaluationCount - cacheMisses;
-            }
-        }
-#endif
-        ValueCell cell;
-        Dictionary <object,ValueCell> incrementals;
-        Environment parentEnvironment;
-
-        public FreeVariable (string name, Environment bindingEnvironment)
+        FreeVariable (string name, Environment environment)
             : base (name)
         {
-            this.parentEnvironment = bindingEnvironment.Closure.Environment;
-            this.incrementals = bindingEnvironment.Incrementals;
-            this.incrementals.TryGetValue (this.name, out this.cell);
+            this.environment = environment;
+        }
+
+        public static Variable Make (string name, Environment environment)
+        {
+            return new FreeVariable (name, environment);
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            FreeVariable.evaluationCount += 1;
             Warm ();
             Debug.WriteLineIf (Primitive.Noisy, this.name);
             if (this.breakOnReference) {
@@ -483,208 +649,52 @@ namespace Microcode
             }
 
 #endif
-            if (this.cell != null 
-                || this.incrementals.TryGetValue (this.name, out this.cell)) {
-                if (this.cell.GetValue (out value)) throw new NotImplementedException ();
-                return false;
-            }
-#if DEBUG
-            FreeVariable.cacheMisses += 1;
-#endif
-            if (this.parentEnvironment.DeepSearch (out value, this.name)) throw new NotImplementedException ();
+            // couldn't this be a lexical?
+            if (this.environment.FreeRef (out value, this.name))
+                throw new NotImplementedException ();
             return false;
         }
-#if DEBUG
-        public override string Key ()
-        {
-            return "(free-variable " + this.name + ")";
-        }
-#endif
+
     }
 
+    /// <summary>
+    /// A DangerousFreeVariable is one that we know is not lexically visible at
+    /// binding time, and could be shadowed.
+    /// </summary>
     [Serializable]
-    sealed class GlobalVariable : Variable
+    sealed class DangerousFreeVariable : Variable
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
+        readonly int shadowDepth;
+        readonly int depth;
 
-
-        public GlobalVariable (string name)
+        DangerousFreeVariable (string name, int shadowingFrame, int depth)
             : base (name)
         {
+            this.shadowDepth = shadowingFrame;
+            this.depth = depth;
         }
 
-
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+        public static Variable Make (string name, int shadowingFrame, int depth)
         {
 #if DEBUG
-            GlobalVariable.evaluationCount += 1;
-            Warm ();
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
+            // sanity check
+            if (shadowingFrame >= depth) throw new NotImplementedException ();
 #endif
-            if (environment.DeepSearch (out value, this.name)) throw new NotImplementedException ();
-            return false;
-        }
-
-        public override IList<object> FreeVariables ()
-        {
-            return new List<object> { this.name };
-        }
-
-        public override bool NeedsValueCells (object [] formals)
-        {
-            return false;
-        }
-#if DEBUG
-        public override string Key ()
-        {
-            return "(global " + this.name + ")";
-        }
-#endif
-    }
-
-    [Serializable]
-    class LexicalVariable : Variable
-    {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-        static long [] histogram = new long [32];
-#endif
-        int depth;
-        protected int offset;
-
-        public LexicalVariable (string name, LexicalVariableInfo lvinfo)
-            : base (name)
-        {
-            this.depth = lvinfo.Depth;
-            this.offset = lvinfo.Offset;
-        }
-
-        public static SCode Make (string name, LexicalVariableInfo lvinfo)
-        {
-            if (lvinfo.Depth == 0)
-                return Argument.Make (name, lvinfo.Offset);
-            if (lvinfo.Depth == 1)
-                return LexicalVariable1.Make (name, lvinfo);
-            else {
-                SCode answer;
-#if DEBUG
-                string key = "(LexicalVariable " + name + " " + lvinfo.Depth.ToString () + " " + lvinfo.Offset.ToString () + ")";
-                if (SCode.hashConsTable.TryGetValue (key, out answer)) return answer;
-#endif
-                answer = new LexicalVariable (name, lvinfo);
-#if DEBUG
-                SCode.hashConsTable.Add (key, answer);
-#endif
-                return answer;
-            }
+            return new DangerousFreeVariable (name, shadowingFrame, depth);
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            LexicalVariable.evaluationCount += 1;
-            LexicalVariable.histogram [this.depth] += 1;
             Warm ();
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
+
 #endif
-            //if (environment.DeepSearch (out value, this.name)) throw new NotImplementedException ();
-
-            //object otherValue;
-
-            //if (environment.LexicalRef (out otherValue, this.name, this.depth, this.offset))
-            //    throw new NotImplementedException ();
-            //if (otherValue != value)
-            //    throw new NotImplementedException ("Values did not match!");
-            if (environment.LexicalRef (out value, this.name, this.depth, this.offset))
+            if (environment.DangerousFreeRef(out value, this.name, this.shadowDepth, this.depth))
                 throw new NotImplementedException ("Error on lookup of " + this.name);
-            return false;
-        }
-
-        public override IList<object> FreeVariables ()
-        {
-            return new List<object> { this.name };
-        }
-
-        public override bool NeedsValueCells (object [] formals)
-        {
-            return false;
-        }
-#if DEBUG
-        public override string Key ()
-        {
-            return "(LexicalVariable " + this.name + " " + this.depth.ToString () + " " + this.offset.ToString () + ")";
-        }
-#endif
-    }
- 
-    sealed class LexicalVariable1 : LexicalVariable
-    {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount;
-#endif
-
-        LexicalVariable1 (string name, LexicalVariableInfo lvinfo)
-            : base (name, lvinfo)
-        {
-        }
-
-        public static new SCode Make (string name, LexicalVariableInfo lvinfo)
-        {
-            SCode answer; 
-#if DEBUG
-            string key = "LexicalVariable1 " + name + lvinfo.Offset.ToString ();
-
-            if (SCode.hashConsTable.TryGetValue (key, out answer)) return answer;
-#endif
-            answer = new LexicalVariable1 (name, lvinfo);
-#if DEBUG
-            SCode.hashConsTable.Add (key, answer);
-#endif
-            return answer;
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            LexicalVariable1.evaluationCount += 1;
-            Warm ();
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            //if (environment.DeepSearch (out value, this.name)) throw new NotImplementedException ();
-
-            //object otherValue;
-
-            //if (environment.LexicalRef (out otherValue, this.name, this.depth, this.offset))
-            //    throw new NotImplementedException ();
-            //if (otherValue != value)
-            //    throw new NotImplementedException ("Values did not match!");
-            if (environment.LexicalRef1 (out value, this.name, this.offset))
-                throw new NotImplementedException ("Error on lookup of " + this.name);
-            return false;
-        }
-
-        public override IList<object> FreeVariables ()
-        {
-            return new List<object> { this.name };
-        }
-
-        public override bool NeedsValueCells (object [] formals)
-        {
             return false;
         }
     }
@@ -696,22 +706,58 @@ namespace Microcode
     [Serializable]
     sealed class TopLevelVariable : Variable
     {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount = 0;
-#endif
-        ValueCell cell;
+        readonly ValueCell cell;
 
-        public TopLevelVariable (string name, ValueCell cell)
+        TopLevelVariable (string name, ValueCell cell)
             : base (name)
         {
             this.cell = cell;
         }
 
+        static public Variable Make (string name, ValueCell cell)
+        {
+            return new TopLevelVariable (name, cell);
+        }
+
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            TopLevelVariable.evaluationCount += 1;
+            Warm ();
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
+            if (this.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            return this.cell.GetValue (out value);
+        }
+    }
+
+    [Serializable]
+    sealed class GlobalVariable : Variable
+    {
+        ValueCell cell;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly Environment environment;
+
+        GlobalVariable (string name, Environment environment)
+            : base (name)
+        {
+            this.environment = environment;
+        }
+
+        public static Variable Make (string name, Environment environment)
+        {
+            return new GlobalVariable (name, environment);
+        }
+
+        public override SCode Bind (BindingTimeEnvironment ctenv)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
             Warm ();
             Debug.WriteLineIf (Primitive.Noisy, this.name);
             if (this.breakOnReference) {
@@ -719,118 +765,10 @@ namespace Microcode
             }
 
 #endif
-            if (this.cell.GetValue (out value)) throw new NotImplementedException ();
-            return false;
-        }
-#if DEBUG
-        public override string Key ()
-        {
-            return "(top-level-variable " + this.name + ")";
-        }
-#endif
-    }
-
-    [Serializable]
-    class Argument : Variable
-    {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount = 0;
-        [NonSerialized]
-        static int [] histogram = new int [53];
-#endif
-        int offset;
-
-        protected Argument (string name, int offset)
-            : base (name)
-        {
-            this.offset = offset;
-        }
-
-        static public Variable Make (string name, int offset)
-        {
-#if DEBUG
-            if (offset >= histogram.Length)
-                throw new NotImplementedException ();
-#endif
-            if (offset == 0)
-                return new Argument0 (name);
-            else if (offset == 1)
-                return new Argument1 (name);
-            else
-                return new Argument (name, offset);
-        }
-
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Argument.evaluationCount += 1;
-            Warm ();
-            Argument.histogram [offset] += 1;
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            value = environment.ArgumentValue (offset);
-            return false;
-        }
-#if DEBUG
-        public override string Key ()
-        {
-            return "(argument " + this.offset.ToString () + " " + this.name + ")";
-        }
-#endif
-    }
-
-    [Serializable]
-    sealed class Argument0 : Argument
-    {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount = 0;
-#endif
-        internal Argument0 (string name)
-            : base (name, 0)
-        {
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Argument0.evaluationCount += 1;
-            Warm ();
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            value = environment.Argument0Value;
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class Argument1 : Argument
-    {
-#if DEBUG
-        [NonSerialized]
-        static long evaluationCount = 0;
-#endif
-        internal Argument1 (string name)
-            : base (name, 1)
-        {
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Argument1.evaluationCount += 1;
-            Warm ();
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            value = environment.Argument1Value;
+            if (this.cell == null)
+                this.cell = this.environment.GetValueCell (this.name);
+            if (this.cell.GetValue(out value))
+                throw new NotImplementedException ("Error on lookup of " + this.name);
             return false;
         }
     }

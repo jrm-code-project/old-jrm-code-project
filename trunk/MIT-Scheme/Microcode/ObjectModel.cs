@@ -230,6 +230,7 @@ namespace Microcode
                 || arg is double
                 || arg is int
                 || arg is long
+                || arg is string
                 || arg is Constant)
                 answer = 0;
             // '#(COMPILED-ENTRY VECTOR GC-INTERNAL UNDEFINED NON-POINTER
@@ -263,12 +264,12 @@ namespace Microcode
             TC newType = (TC) (int) arg0;
             // kludge!!!!
             if ((int) arg0 == 0 && (int) arg1 == 1)
-                answer = new NullEnvironment ();
+                answer = new NullEnvironment (null);
             else
             switch (newType)
             {
                 case TC.COMBINATION_2:
-                    answer = new Combination2 ((Hunk3) arg1);
+                    answer = Combination2.Make ((Hunk3) arg1);
                     break;
 
                 case TC.CONDITIONAL:
@@ -290,7 +291,7 @@ namespace Microcode
 
                 case TC.ENVIRONMENT:
                     object [] args = (object[]) arg1;
-                    IClosure closure = (IClosure) args [0];
+                    ClosureBase closure = (ClosureBase) args [0];
                     object [] actualArgs = new object [args.Length - 1];
                     for (int i = 0; i < actualArgs.Length; i++)
                         actualArgs [i] = args [i + 1];
@@ -301,7 +302,7 @@ namespace Microcode
         //            // answer = (new InterpreterEnvironment ((object []) arg1));
 
                 case TC.EXTENDED_LAMBDA:
-                    answer = new ExtendedLambda ((Hunk3) arg1);
+                    answer = ExtendedLambda.Make ((Hunk3) arg1);
                     break;
 
                 case TC.PCOMB2:
@@ -317,11 +318,11 @@ namespace Microcode
                     break;
 
                 case TC.THE_ENVIRONMENT:
-                    answer = new TheEnvironment ();
+                    answer = TheEnvironment.Make();
                     break;
 
                 case TC.VARIABLE:
-                    answer = new Variable ((Hunk3) arg1);
+                    answer =  Variable.Make ((Hunk3) arg1);
                     break;
 
                 case TC.VECTOR:
@@ -414,7 +415,7 @@ namespace Microcode
                     break;
 
                 case TC.COMBINATION:
-                    banswer = arg1 is Combination || arg1 is Combination0;
+                    banswer = arg1 is Combination;
                     break;
 
                 case TC.COMBINATION_1:
@@ -443,8 +444,8 @@ namespace Microcode
 
                 case TC.CONSTANT:
                     banswer = arg1 == null
-                                               || arg1 is Constant
-                                               || ((arg1 is bool) && ((bool) arg1 == true));
+                           || arg1 is Constant
+                           || ((arg1 is bool) && ((bool) arg1 == true));
                     break;
 
                 case TC.DEFINITION:
@@ -492,13 +493,11 @@ namespace Microcode
                     break;
 
                 case TC.INTERNED_SYMBOL:
-                    banswer = arg1 is string;
+                    banswer = arg1 is string && (!Misc.IsGensym ((string) arg1));
                     break;
-                //        //return (arg1 is string)
-                //        //&& (!Misc.IsGensym ((string) arg1)));
 
                 case TC.LAMBDA:
-                    banswer = arg1 is Lambda || arg1 is SimpleLambda || arg1 is TrivialLambda;
+                    banswer = arg1 is Lambda;
                     break;
 
                 case TC.LIST:
@@ -538,7 +537,7 @@ namespace Microcode
                     break;
 
                 case TC.PROCEDURE:
-                    banswer = arg1 is Closure || arg1 is SimpleClosure || arg1 is TrivialClosure;
+                    banswer = arg1 is Closure;
                     break;
 
                 case TC.RATNUM:
@@ -567,7 +566,7 @@ namespace Microcode
 
                 case TC.UNINTERNED_SYMBOL:
                     banswer = (arg1 is string)
-                        && Misc.IsGensym ((string) arg1);
+                            && Misc.IsGensym ((string) arg1);
                     break;
 
                 case TC.VECTOR:
@@ -611,7 +610,13 @@ namespace Microcode
             switch (newType) {
 
                 case TC.FIXNUM:
+#if DEBUG
+                    answer = (arg1 == null) ? 9
+                        : (arg1 is SchemeObject) ? (int)((SchemeObject)arg1).SerialNumber 
+                        : arg1.GetHashCode();
+#else
                     answer = arg1.GetHashCode ();
+#endif
                     break;
 
                 case TC.MANIFEST_NM_VECTOR:
@@ -742,7 +747,7 @@ namespace Microcode
                     break;
 
                 case TC.ENVIRONMENT:
-                    IClosure closure = (IClosure) ((Cons) arg1).Car;
+                    ClosureBase closure = (ClosureBase) ((Cons) arg1).Car;
                     object tail = ((Cons) arg1).Cdr;
                     object [] initialValues = 
                         tail == null 

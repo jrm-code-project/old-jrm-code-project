@@ -58,7 +58,7 @@ namespace Microcode
                     break;
 
                 case TC.PROCEDURE:
-                    answer = Closure.Make (car, (cdr is bool && (bool) cdr == false) ? Environment.Global : (Environment) cdr);
+                    answer = ((Lambda) car).Close ((cdr is bool && (bool) cdr == false) ? Environment.Global : (Environment) cdr);
                     break;
 
                 case TC.RATNUM:
@@ -66,7 +66,7 @@ namespace Microcode
                     break;
 
                 case TC.SEQUENCE_2:
-                    answer = new Sequence2 (car, cdr);
+                    answer = Sequence2.Make (car, cdr);
                     break;
 
                 case TC.UNINTERNED_SYMBOL:

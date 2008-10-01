@@ -1,158 +1,229 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Microcode
 {
-    public class VariableInfo
-    {
-    }
-
-    public class FreeVariableInfo : VariableInfo
-    {
-        Environment bindingEnvironment;
-
-        public FreeVariableInfo (Environment bindingEnvironment)
-        {
-            this.bindingEnvironment = bindingEnvironment;
-        }
-
-        public Environment Environment
-        {
-            get
-            {
-                return this.bindingEnvironment;
-            }
-        }
-    }
-
-    public class GlobalVariableInfo : VariableInfo
-    {
-        Environment bindingEnvironment;
-
-        public GlobalVariableInfo (Environment bindingEnvironment)
-        {
-            this.bindingEnvironment = bindingEnvironment;
-        }
-
-        public Environment Environment
-        {
-            get
-            {
-                return this.bindingEnvironment;
-            }
-        }
-    }
-
-    public class TopLevelVariableInfo : VariableInfo
-    {
-        ValueCell cell;
-
-        public TopLevelVariableInfo (ValueCell binding)
-        {
-            this.cell = binding;
-        }
-
-        public ValueCell ValueCell
-        {
-            get
-            {
-                return this.cell;
-            }
-        }
-    }
-
-    public class LexicalVariableInfo : VariableInfo
-    {
-        int depth;
-        int offset;
-        ILambda binder;
-        public LexicalVariableInfo (int depth, int offset, ILambda binder)
-        {
-            this.depth = depth;
-            this.offset = offset;
-            this.binder = binder;
-        }
-
-        public int Depth { get { return this.depth; } }
-        public int Offset { get { return this.offset; } }
-        public ILambda Binder { get { return this.binder; } }
-    }
-
+ /// <summary>
+ /// Simulates the effect of looking up a variable.  We can often find shortcuts
+ /// to the full deep search and thus speed up the interpreter.
+ /// </summary>
     public abstract class BindingTimeEnvironment
     {
-        public BindingTimeEnvironment Extend (ILambda lambda)
+        protected BindingTimeEnvironment ()
         {
-            return new LambdaBindingEnvironment (lambda, this);
         }
 
-        public abstract VariableInfo Lookup (string name);
-        public abstract VariableInfo Lookup (string name, int depth);
+        internal abstract Variable BindLexical (string name, int depth);
+
+        internal abstract Variable BindVariable (string name);
+
+        internal abstract Variable BindShadow (string name, int depth, int shadowingFrame);
+
+        internal BindingTimeEnvironment Extend (SimpleLambda lambda)
+        {
+            return new SimpleLambdaBindingEnvironment (lambda, this);
+        }
+
+        internal BindingTimeEnvironment Extend (StandardLambda lambda)
+        {
+            return new StandardLambdaBindingEnvironment (lambda, this);
+        }
+
+        internal BindingTimeEnvironment Extend (StaticLambda lambda)
+        {
+            return new StaticLambdaBindingEnvironment (lambda, this);
+        }
+
+        internal BindingTimeEnvironment Extend (ExtendedLambda lambda)
+        {
+            return new ExtendedLambdaBindingEnvironment (lambda, this);
+        }
     }
 
-    public class RootBindingEnvironment : BindingTimeEnvironment
+    sealed public class RootBindingEnvironment : BindingTimeEnvironment
     {
-        Environment bindingEnvironment;
-        Dictionary<object, VariableInfo> infoCache;
+        readonly Environment bindingEnvironment;
 
         public RootBindingEnvironment (Environment bindingEnvironment)
         {
             this.bindingEnvironment = bindingEnvironment;
-            this.infoCache = new Dictionary<object, VariableInfo> ();
         }
 
-        public override VariableInfo Lookup (string name)
+        internal override Variable BindVariable (string name)
         {
-            return Lookup (name, 0);
+            ClosureBase closure = this.bindingEnvironment.Closure;
+
+            if (closure == null)
+                // We know it can only be in the global environment.
+                return GlobalVariable.Make (name, this.bindingEnvironment);
+            else {
+                int offset = this.bindingEnvironment.Closure.FormalOffset (name);
+                // If it isn't bound in the binding time environment, then we
+                // call it `Free' and search the incrementals and then the environment.
+                return (offset != -1)
+                    ? Argument.Make (name, offset)
+                    : FreeVariable.Make (name, bindingEnvironment);
+            }
         }
 
-        public override VariableInfo Lookup (string name, int depth)
+        internal override Variable BindShadow (string name, int depth, int shadowingFrame)
         {
-            VariableInfo answer;
-            if (infoCache.TryGetValue (name, out answer)) return answer;
-            IClosure closure = this.bindingEnvironment.Closure;
-            if (closure == null) // global environment
-                answer = new GlobalVariableInfo (bindingEnvironment);
+            ClosureBase closure = this.bindingEnvironment.Closure;
+            if (closure == null) {
+                // Same as free.  We have no clue where the variable is.
+                // Hope it shows up before we need it, though.
+                return DangerousFreeVariable.Make (name, shadowingFrame, depth);
+            }
             else {
                 int offset = closure.FormalOffset (name);
-                if (offset == -1)
-                    answer = new FreeVariableInfo (bindingEnvironment);
-                else
-                    answer = new TopLevelVariableInfo (bindingEnvironment.GetValueCell (name));
+                return (offset == -1)
+                    ? DangerousFreeVariable.Make (name, shadowingFrame, depth)
+                    : DangerousLexicalVariable.Make (name, shadowingFrame, depth, offset);
             }
-            infoCache.Add (name, answer);
-            return answer;
+        }
+
+        internal override Variable BindLexical (string name, int depth)
+        {
+            ClosureBase closure = this.bindingEnvironment.Closure;
+            if (closure == null) {
+                // Root environment and cannot be shadowed.
+                return GlobalVariable.Make (name, this.bindingEnvironment);
+            }
+            else {
+                int offset = closure.FormalOffset (name);
+                return (offset == -1)
+                    ? FreeVariable.Make (name, this.bindingEnvironment)
+                    : TopLevelVariable.Make (name, this.bindingEnvironment.GetValueCell (name));
+            }
         }
     }
 
-    public class LambdaBindingEnvironment : BindingTimeEnvironment
+    abstract class LambdaBindingEnvironment : BindingTimeEnvironment
     {
-        ILambda lambda;
-        string [] formals;
-        BindingTimeEnvironment parent;
+        protected readonly Lambda lambda;
+        protected readonly BindingTimeEnvironment parent;
 
-        public LambdaBindingEnvironment (ILambda lambda, BindingTimeEnvironment parent)
+        public LambdaBindingEnvironment (Lambda lambda, BindingTimeEnvironment parent)
         {
             this.lambda = lambda;
-            this.formals = lambda.Formals;
             this.parent = parent;
         }
+    }
 
-        public override VariableInfo Lookup (string name)
+    abstract class SafeLambdaBindingEnvironment : LambdaBindingEnvironment
+    {
+        protected SafeLambdaBindingEnvironment (Lambda lambda, BindingTimeEnvironment parent)
+            : base (lambda, parent)
+        { }
+
+        internal override Variable BindVariable (string name)
         {
-            return Lookup (name, 0);
+            int offset = this.lambda.LexicalOffset (name);
+            return (offset == -1)
+                ? parent.BindLexical (name, 1)  // Search deeper.
+                : Argument.Make (name, offset);
         }
 
-        public override VariableInfo Lookup (string name, int depth)
+        internal override Variable BindShadow (string name, int depth, int shadowingFrame)
         {
-            VariableInfo answer;
             int offset = this.lambda.LexicalOffset (name);
-            if (offset == -1) {
-                answer = parent.Lookup (name, depth + 1);
-            }
-            else
-                answer = new LexicalVariableInfo (depth, offset, this.lambda);
-            return answer;
+            return (offset == -1)
+                ? parent.BindShadow (name, depth + 1, shadowingFrame)
+                : DangerousLexicalVariable.Make (name, shadowingFrame, depth, offset);
+        }
+
+        internal override Variable BindLexical (string name, int depth)
+        {
+            int offset = this.lambda.LexicalOffset (name);
+            return (offset == -1)
+              ? parent.BindLexical (name, depth + 1)  // Search deeper.
+              : LexicalVariable.Make (name, depth, offset);
+        }
+    }
+
+    sealed class SimpleLambdaBindingEnvironment : SafeLambdaBindingEnvironment
+    {
+        public SimpleLambdaBindingEnvironment (SimpleLambda lambda, BindingTimeEnvironment parent)
+            : base (lambda, parent)
+        {
+        }
+    }
+
+    sealed class StaticLambdaBindingEnvironment : SafeLambdaBindingEnvironment
+    {
+        public StaticLambdaBindingEnvironment (StaticLambda lambda, BindingTimeEnvironment parent)
+            : base (lambda, parent)
+        {
+        }
+    }
+
+    sealed class StandardLambdaBindingEnvironment : LambdaBindingEnvironment
+    {
+        public StandardLambdaBindingEnvironment (StandardLambda lambda, BindingTimeEnvironment parent)
+            : base (lambda, parent)
+        {
+        }
+
+        internal override Variable BindLexical (string name, int depth)
+        {
+            int offset = this.lambda.LexicalOffset (name);
+            return (offset == -1)
+                ? parent.BindShadow (name, depth + 1, depth) // ***
+                : LexicalVariable.Make (name, depth, offset);
+        }
+
+        internal override Variable BindShadow (string name, int depth, int shadowingFrame)
+        {
+            int offset = this.lambda.LexicalOffset (name);
+            return (offset == -1)
+                ? parent.BindShadow (name, depth + 1, shadowingFrame)
+                : DangerousLexicalVariable.Make (name, shadowingFrame, depth, offset);
+        }
+
+        internal override Variable BindVariable (string name)
+        {
+            int offset = this.lambda.LexicalOffset (name);
+            return (offset == -1)
+                ? parent.BindShadow (name, 1, 0)
+                : Argument.Make (name, offset);
+        }
+    }
+
+    sealed class ExtendedLambdaBindingEnvironment : BindingTimeEnvironment
+    {
+        readonly ExtendedLambda lambda;
+        readonly BindingTimeEnvironment parent;
+
+        public ExtendedLambdaBindingEnvironment (ExtendedLambda lambda, BindingTimeEnvironment parent)
+        {
+            this.lambda = lambda;
+            this.parent = parent;
+        }
+ 
+        internal override Variable BindLexical (string name, int depth)
+        {
+            int offset = this.lambda.LexicalOffset (name);
+            return (offset == -1)
+                ? parent.BindShadow (name, depth + 1, depth)
+                : LexicalVariable.Make (name, depth, offset);
+        }
+
+        internal override Variable BindShadow (string name, int depth, int shadowingFrame)
+        {
+            int offset = this.lambda.LexicalOffset (name);
+            return (offset == -1)
+                ? parent.BindShadow (name, depth + 1, shadowingFrame)
+                : DangerousLexicalVariable.Make (name, shadowingFrame, depth, offset);
+        }
+
+        internal override Variable BindVariable (string name)
+        {
+            int offset = this.lambda.LexicalOffset (name);
+            return (offset == -1)
+                ? parent.BindShadow (name, 1, 0)
+                : Argument.Make (name, offset); 
         }
     }
 }

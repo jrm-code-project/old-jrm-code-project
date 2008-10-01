@@ -315,6 +315,12 @@ namespace Microcode
         //    return false;
         //}
 
+        [SchemePrimitive ("PRIMITIVE-FASDUMP", 3, false)]
+        public static bool PrimitiveFasdump (out object answer, object arg0, object arg1, object arg2)
+        {
+            throw new NotImplementedException ();
+        }
+
         [SchemePrimitive ("PRIMITIVE-PURIFY", 3, true)]
         public static bool PrimitivePurify (out object answer, object obj, object isPure, object space)
         {
