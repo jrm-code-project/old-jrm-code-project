@@ -1,4 +1,6 @@
-﻿using System;
+﻿
+using System;
+using System.Collections.Generic;
 
 namespace Microcode
 {
@@ -37,6 +39,10 @@ namespace Microcode
                     answer = Combination1.Make (car, cdr);
                     break;
 
+                case TC.COMMENT:
+                    answer = new Comment (car, cdr);
+                    break;
+
                 case TC.DEFINITION:
                     answer = new Definition (car, cdr);
                     break;
@@ -57,6 +63,10 @@ namespace Microcode
                     answer = Lambda.Make (names[0], formals, car);
                     break;
 
+                case TC.PCOMB1:
+                    answer = PrimitiveCombination1.Make ((Primitive1) car, cdr);
+                    break;
+
                 case TC.PROCEDURE:
                     answer = ((Lambda) car).Close ((cdr is bool && (bool) cdr == false) ? Environment.Global : (Environment) cdr);
                     break;
@@ -70,7 +80,9 @@ namespace Microcode
                     break;
 
                 case TC.UNINTERNED_SYMBOL:
-                    answer = new String ((char []) car);
+                    // What gives?  Uninterned strings are squirrely on the CLR.
+                    // We put them in a class object to have more control.
+                    answer = new UninternedSymbol (new String ((char []) car));
                     break;
 
                 case TC.WEAK_CONS:
@@ -87,16 +99,17 @@ namespace Microcode
         public static bool SystemPairCar (out object answer, object arg)
         {
             ISystemPair systemPair = arg as ISystemPair;
-            if (systemPair == null) {
-                if (arg is string) {
-                    // symbol name is stored in the system-pair-car
-                    answer = ((string) arg).ToCharArray ();
-                    return false;
-                }
-                else
+            if (systemPair != null)
+                answer = systemPair.SystemPairCar;
+            else {
+                // special case strings to act like symbols
+                // with a print varname in the system pair car.
+                string sarg = arg as string;
+                if (sarg == null)
                     throw new NotImplementedException ();
+                else
+                    answer = sarg.ToCharArray ();
             }
-            answer = systemPair.SystemPairCar;
             return false;
         }
 

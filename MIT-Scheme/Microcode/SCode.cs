@@ -9,8 +9,8 @@ namespace Microcode
     public abstract class SCode: Control
     {
 #if DEBUG
+        static long evaluations;
 
-        static int evaluations;
         static Histogram<Type> scodeHistogram = new Histogram<Type>();
 
         static Histogram<SCode> hotSCode = new Histogram<SCode>();
@@ -40,8 +40,10 @@ namespace Microcode
         }
 
 	// Abstract functions that define the SCode API
-        public abstract SCode Bind (BindingTimeEnvironment ctenv);
+        public abstract SCode Alpha (object from, object to);
+        public abstract SCode Bind (LexicalMap ctenv);
         public abstract bool CallsTheEnvironment ();
+        public abstract bool IsLetrecBody (object [] formals, object [] remainingFormals);
         public abstract bool MutatesAny (object [] formals);
         public abstract bool UsesAny (object [] formals);
 
@@ -128,7 +130,7 @@ namespace Microcode
             return false;
         }
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             SCode optimizedCode = this.code.Bind (ctenv);
             return optimizedCode == this.code
@@ -191,21 +193,31 @@ namespace Microcode
 
         #endregion
 
+
+        public override SCode Alpha (object from, object to)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
      [Serializable]
     sealed class Definition : SCode, ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string name;
+        readonly object name;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode value;
 
-        public Definition (string name, SCode value)
+        public Definition (object name, SCode value)
             : base (TC.DEFINITION)
         {
-            if (name == null) throw new ArgumentNullException ("name");
+            if (name == null) throw new ArgumentNullException ("varname");
             if (value == null) throw new ArgumentNullException ("value");
             this.name = name;
             this.value = value;
@@ -214,12 +226,12 @@ namespace Microcode
         public Definition (object name, object value)
             :base (TC.DEFINITION)
         {
-            if (name == null) throw new ArgumentNullException ("name");
-            this.name = (string) name;
+            if (name == null) throw new ArgumentNullException ("varname");
+            this.name = name;
             this.value = EnsureSCode (value);
         }
 
-        public string Name
+        public object Name
         {
             [DebuggerStepThrough]
             get
@@ -244,7 +256,7 @@ namespace Microcode
             return false;
         }
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             SCode boundValue = this.value.Bind (ctenv);
             return boundValue == this.value
@@ -258,14 +270,12 @@ namespace Microcode
             Warm ();
             noteCalls (this.value);
 #endif
+            object value;    
             Control expr = this.value;
             Environment env = environment;
-            object value = null;
             while (expr.EvalStep (out value, ref expr, ref env)) { };
             if (value == Interpreter.UnwindStack) throw new NotImplementedException();
-
-            if (environment.Define (this.name, value))
-                throw new NotImplementedException ();
+            if (environment.Define (this.name, value)) throw new NotImplementedException ();
             answer = this.name;
             return false;
         }
@@ -315,6 +325,16 @@ namespace Microcode
 
         #endregion
 
+
+        public override SCode Alpha (object from, object to)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     [Serializable]
@@ -336,7 +356,7 @@ namespace Microcode
             return false;
         }
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             return new Delay (this.body.Bind (ctenv));
         }
@@ -364,165 +384,16 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
-    }
 
-    [Serializable]
-    sealed class Disjunction : SCode, ISystemPair
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode predicate;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode alternative;
-
-        public Disjunction (object predicate, object alternative)
-            : base (TC.DISJUNCTION)
-        {
-            this.predicate = EnsureSCode (predicate);
-            this.alternative = EnsureSCode (alternative);
-        }
-
-        public SCode Predicate
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.predicate;
-            }
-        }
-
-        public SCode Alternative
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.alternative;
-            }
-        }
-
-        public override SCode Bind (BindingTimeEnvironment ctenv)
-        {
-            return new Disjunction (this.predicate.Bind (ctenv),
-                                    this.alternative.Bind (ctenv));
-        }
-
-        public override bool CallsTheEnvironment ()
-        {
-            return this.predicate.CallsTheEnvironment ()
-                || this.alternative.CallsTheEnvironment ();
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-            noteCalls (this.predicate);
-#endif
-            Environment env = environment;
-            Control pred = this.predicate;
-            while (pred.EvalStep (out answer, ref pred, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new DisjunctionFrame (this, environment));
-                environment = env;
-                return false;
-            } 
-
-            if (answer is bool && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-#endif
-                // tail call alternative
-                expression = this.alternative;
-                return true;
-            }
-            else {
-                // return answer
-                return false;
-            }
-        }
-
-        public override bool MutatesAny (object [] formals)
-        {
-            return this.predicate.MutatesAny (formals)
-                || this.alternative.MutatesAny (formals);
-        }
-
-        public override bool UsesAny (object [] formals)
-        {
-            return this.predicate.UsesAny (formals)
-                || this.alternative.UsesAny (formals);
-        }
-
-         #region ISystemPair Members
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCar
-        {
-            get
-            {
-                return this.predicate;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public object SystemPairCdr
-        {
-            get
-            {
-                return this.alternative;
-            }
-            set
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        #endregion
-
-    }
-
-    [Serializable]
-    sealed class DisjunctionFrame : SubproblemContinuation<Disjunction>, ISystemVector
-    {
-        public DisjunctionFrame (Disjunction disjunction, Environment environment)
-            : base (disjunction, environment)
-        {
-        }
-
-        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
-        {
-            answer = value;
-            if (value is bool && (bool) value == false) {
-                // tail call alternative
-                expression = this.expression.Alternative;
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-
-        #region ISystemVector Members
-
-        public int SystemVectorSize
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        public object SystemVectorRef (int index)
+        public override SCode Alpha (object from, object to)
         {
             throw new NotImplementedException ();
         }
 
-        public object SystemVectorSet (int index, object newValue)
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
         {
             throw new NotImplementedException ();
         }
-
-        #endregion
-
     }
 
     [Serializable]
@@ -531,10 +402,18 @@ namespace Microcode
         // Space optimization.
         [NonSerialized]
         static Dictionary<object, Quotation> table = new Dictionary<object, Quotation> (8000);
+
+        [NonSerialized]
+        static int cacheHits;
+
+        // We need to special case this.
         [NonSerialized]
         static Quotation QuoteNull;
 
-        static int cacheHits;
+        // We don't need to special case this, but it makes it much
+        // easier to detect LETREC.
+        [NonSerialized]
+        static Quotation QuoteUnassigned;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object item;
@@ -553,17 +432,15 @@ namespace Microcode
                 || (item is string)
                 || (item is Constant)
                 || (item is Primitive)
-                || item == ReferenceTrap.Unassigned
                 ;
         }
 
         public static Quotation Make (object item)
         {
-            if (item == null) {
-                if (QuoteNull == null)
-                    QuoteNull = new Quotation (null);
-                return QuoteNull;
-            }
+            if (item == null)
+                return Quotation.Null;
+            else if (item == ReferenceTrap.Unassigned)
+                return Quotation.Unassigned;
             else if (cacheItem (item)) {
                 Quotation probe;
                 cacheHits++;
@@ -595,7 +472,28 @@ namespace Microcode
                 return "#<SCODE-QUOTE " + this.item.ToString () + ">";
         }
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public static Quotation Null
+        {
+            get
+            {
+                if (QuoteNull == null)
+                    QuoteNull = new Quotation (null);
+                return QuoteNull;
+            }
+        }
+
+
+        public static Quotation Unassigned
+        {
+            get
+            {
+                if (QuoteUnassigned == null)
+                    QuoteUnassigned = new Quotation (ReferenceTrap.Unassigned);
+                return QuoteUnassigned;
+            }
+        }
+
+        public override SCode Bind (LexicalMap ctenv)
         {
             return this;
         }
@@ -651,6 +549,16 @@ namespace Microcode
         }
 
         #endregion
+
+        public override SCode Alpha (object from, object to)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     [Serializable]
@@ -675,7 +583,10 @@ namespace Microcode
 
         static public SCode Make (SCode first, SCode second)
         {
-            return new Sequence2 (first, second);
+            if (first is Argument)
+                throw new NotImplementedException ();
+            return (Configuration.EnableSuperOperators && second is Argument) ? Sequence2SA.Make (first, (Argument) second)
+                : new Sequence2 (first, second);
         }
 
         static public SCode Make (object first, object second)
@@ -708,13 +619,16 @@ namespace Microcode
             return false;
         }
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             SCode optFirst = this.first.Bind (ctenv);
             SCode optSecond = this.second.Bind (ctenv);
             return
-                (optSecond is Argument) ? Sequence2SA.Make (optFirst, (Argument) optSecond)
-                : (optFirst == this.first && optSecond == this.second) ? this
+
+                // (Configuration.EnableSuperOperators && optSecond is Argument) ? Sequence2SA.Make (optFirst, (Argument) optSecond)
+                // :(Configuration.EnableSuperOperators && optSecond is Quotation) ? Sequence2SQ.Make (optFirst, (Quotation) optSecond)
+                //: 
+                (optFirst == this.first && optSecond == this.second) ? this
                 : Sequence2.Make (optFirst, optSecond);
         }
 
@@ -731,10 +645,11 @@ namespace Microcode
             noteCalls (this.first);
             noteCalls (this.second);
 #endif
+            Object ev;
             Control first = this.first;
             Environment env = environment;
-            while (first.EvalStep (out answer, ref first, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
+            while (first.EvalStep (out ev, ref first, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
                 environment = env;
                 answer = Interpreter.UnwindStack;
@@ -742,6 +657,7 @@ namespace Microcode
             } 
 
             expression = this.second;
+            answer = null;
             return true; //tailcall  to second
         }
 
@@ -788,14 +704,37 @@ namespace Microcode
 
         #endregion
 
+
+        public override SCode Alpha (object from, object to)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        {
+            Assignment s1 = this.first as Assignment;
+            if (s1 == null)
+                return false;
+            if (s1.Value is LambdaBase) {
+                object [] newRemaining = Misc.Remove (s1.Name, remainingFormals);
+                if (newRemaining.Length == 0)
+                    return ! this.second.MutatesAny (formals);
+                if (newRemaining == remainingFormals)
+                    return false;
+                return this.second.IsLetrecBody (formals, newRemaining);
+            }
+            else
+                return false;
+    
+        }
     }
 
     [Serializable]
-    sealed class Sequence2SA : Sequence2
+    class Sequence2SA : Sequence2
     {
         int a2offset;
 
-        Sequence2SA (SCode first, Argument second)
+        protected Sequence2SA (SCode first, Argument second)
             : base (first, second)
         {
             this.a2offset = second.Offset;
@@ -803,10 +742,12 @@ namespace Microcode
 
         static public SCode Make (SCode first, Argument second)
         {
-            return new Sequence2SA (first, second);
+            return
+                (second is Argument0) ? Sequence2SA0.Make (first, (Argument0) second)
+                : new Sequence2SA (first, second);
         }
- 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+
+        public override SCode Bind (LexicalMap ctenv)
         {
             throw new NotImplementedException ("Unnecessary");
         }
@@ -832,6 +773,47 @@ namespace Microcode
             return false;
         }
     }
+
+    [Serializable]
+    class Sequence2SA0 : Sequence2SA
+    {
+        Sequence2SA0 (SCode first, Argument0 second)
+            : base (first, second)
+        {
+        }
+
+        static public SCode Make (SCode first, Argument0 second)
+        {
+            return new Sequence2SA0 (first, second);
+        }
+
+        public override SCode Bind (LexicalMap ctenv)
+        {
+            throw new NotImplementedException ("Unnecessary");
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            noteCalls (this.first);
+#endif
+            Control first = this.first;
+            Environment env = environment;
+            while (first.EvalStep (out answer, ref first, ref env)) { };
+            if (answer == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+            }
+
+            answer = environment.Argument0Value;
+            return false;
+        }
+    }
+
 
     [Serializable]
     sealed class Sequence2Frame0 : SubproblemContinuation<Sequence2>, ISystemVector
@@ -871,6 +853,87 @@ namespace Microcode
 
         #endregion
     }
+
+//    [Serializable]
+//    class Sequence2SQ : Sequence2
+//    {
+//        public object quoted;
+
+//        protected Sequence2SQ (SCode first, Quotation second)
+//            : base (first, second)
+//        {
+//            this.quoted = second.Quoted;
+//        }
+
+//        static public SCode Make (SCode first, Quotation second)
+//        {
+//            return new Sequence2SQ (first, second);
+//        }
+
+//        public override SCode Bind (LexicalMap ctenv)
+//        {
+//            throw new NotImplementedException ("Unnecessary");
+//        }
+
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//            noteCalls (this.first);
+//#endif
+//            Control first = this.first;
+//            Environment env = environment;
+//            while (first.EvalStep (out answer, ref first, ref env)) { };
+//            if (answer == Interpreter.UnwindStack) {
+//                ((UnwinderState) env).AddFrame (new Sequence2SQFrame0 (this, environment));
+//                environment = env;
+//                answer = Interpreter.UnwindStack;
+//                return false;
+//            }
+
+//            answer = this.quoted;
+//            return false;
+//        }
+//    }
+
+//    [Serializable]
+//    sealed class Sequence2SQFrame0 : SubproblemContinuation<Sequence2SQ>, ISystemVector
+//    {
+//        public Sequence2SQFrame0 (Sequence2SQ expression, Environment environment)
+//            : base (expression, environment)
+//        {
+//        }
+
+//        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
+//        {
+//            answer = this.expression.quoted;
+//            return false; 
+//        }
+
+//        #region ISystemVector Members
+
+//        public int SystemVectorSize
+//        {
+//            get { return 3; }
+//        }
+
+//        public object SystemVectorRef (int index)
+//        {
+//            switch (index) {
+//                case 0: return ReturnCode.SEQ_2_DO_2;
+//                default:
+//                    throw new NotImplementedException ();
+//            }
+//        }
+
+//        public object SystemVectorSet (int index, object newValue)
+//        {
+//            throw new NotImplementedException ();
+//        }
+
+//        #endregion
+//    }
+
 
     [Serializable]
     sealed class Sequence3 : SCode, ISystemHunk3
@@ -933,7 +996,7 @@ namespace Microcode
             answer = arg is Sequence3;
             return false;
         }
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             SCode optFirst = this.first.Bind (ctenv);
             SCode optSecond = this.second.Bind (ctenv);
@@ -954,26 +1017,31 @@ namespace Microcode
             noteCalls (this.third);
 #endif
 
+            object ev;
             Control expr = this.first;
             Environment env = environment;
-            while (expr.EvalStep (out answer, ref expr, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
+
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Sequence3Frame0 (this, environment));
                 environment = env;
+                answer = Interpreter.UnwindStack;
                 return false;
             }
 
             expr = this.second;
             env = environment;
-            while (expr.EvalStep (out answer, ref expr, ref env)) { };
-            if (answer  == Interpreter.UnwindStack) {
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+            if (ev  == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this, environment));
                 environment = env;
+                answer = Interpreter.UnwindStack;
                 return false;
             } 
 
             // Tail call into third part.
             expression = this.third;
+            answer = null;
             return true;
         }
 
@@ -1041,6 +1109,46 @@ namespace Microcode
 
         #endregion
 
+
+        public override SCode Alpha (object from, object to)
+        {
+            throw new NotImplementedException ();
+        }
+
+
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        {
+            Assignment s1 = this.first as Assignment;
+            if (s1 == null)
+                return false;
+            if (s1.Value is LambdaBase) {
+                object [] newRemaining = Misc.Remove (s1.Name, remainingFormals);
+                if (newRemaining.Length == 0)
+                    return !this.second.MutatesAny (formals)
+                        && !this.third.MutatesAny (formals);
+                if (newRemaining == remainingFormals)
+                    return false;
+
+                Assignment s2 = this.second as Assignment;
+                if (s2 == null)
+                    return false;
+                if (s2.Value is LambdaBase) {
+                    object [] newnewRemaining = Misc.Remove (s2.Name, newRemaining);
+                    if (newnewRemaining.Length == 0)
+                        return !this.third.MutatesAny (formals);
+                    if (newnewRemaining == newRemaining)
+                        return false;
+                    return this.third.IsLetrecBody (formals, newnewRemaining);
+                }
+                else return false;
+
+
+            }
+            else
+                return false;
+    
+
+        }
     }
 
     [Serializable]
@@ -1146,7 +1254,7 @@ namespace Microcode
             return singleton;
         }
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             return this;
         }
@@ -1171,6 +1279,16 @@ namespace Microcode
         }
 
         public override bool UsesAny (object [] formals)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override SCode Alpha (object from, object to)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
         {
             throw new NotImplementedException ();
         }

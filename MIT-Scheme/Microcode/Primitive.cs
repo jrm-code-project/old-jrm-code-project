@@ -303,7 +303,7 @@ namespace Microcode
         void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("name", this.name);
+            info.AddValue ("varname", this.name);
             info.AddValue ("arity", 0);
         }
 
@@ -398,7 +398,7 @@ namespace Microcode
         void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("name", this.name);
+            info.AddValue ("varname", this.name);
             info.AddValue ("arity", 1);
         }
 
@@ -483,7 +483,7 @@ namespace Microcode
         void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("name", this.name);
+            info.AddValue ("varname", this.name);
             info.AddValue ("arity", 2);
         }
 
@@ -575,7 +575,7 @@ namespace Microcode
         void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("name", this.name);
+            info.AddValue ("varname", this.name);
             info.AddValue ("arity", 3);
         }
 
@@ -601,14 +601,22 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        #endregion
-
-        #region IApplicable Members
-
-
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
-            throw new NotImplementedException ();
+#if DEBUG
+            Debug.WriteLineIf (Primitive.Noisy, this.name);
+            hotPrimitives.Note (this);
+#endif
+            if (this.method (out answer, arg0, arg1, arg2)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci == null) throw new NotImplementedException ();
+                answer = null;
+                expression = tci.Expression;
+                environment = tci.Environment;
+                return true;
+            }
+
+            return false;
         }
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
@@ -654,7 +662,7 @@ namespace Microcode
         void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("name", this.name);
+            info.AddValue ("varname", this.name);
             info.AddValue ("arity", this.Arity);
         }
 

@@ -381,6 +381,12 @@ namespace Microcode
         public void ReadFormals (uint location, out string name, out string [] formals)
         {
             object [] names = (object []) ReadObject (location);
+            for (int i = 0; i < names.Length - 1; i++)
+                for (int j = i + 1; j < names.Length; j++)
+                    if (names [i] == names [j])
+                        Debugger.Break ();
+
+
             name = (string) names [0];
             formals = new string [names.Length-1];
             for (int i = 1; i < names.Length; i++)
@@ -404,7 +410,7 @@ namespace Microcode
             uint optional = (argcount.Datum & 0x00FF);
             uint required = (argcount.Datum & 0xFF00) >> 8;
             bool rest = ((argcount.Datum & 0x10000) == 0x10000);
-            return ExtendedLambda.Make (name, formals, ReadObject (location), required, optional, rest);
+            return ExtendedLambda.Make (name, formals, SCode.EnsureSCode(ReadObject (location)), required, optional, rest);
         }
 
         static int gensymCounter;
@@ -595,7 +601,7 @@ namespace Microcode
                         return first;
                     else
                     {
-                        string result = new String ((char []) first) + (gensymCounter++).ToString();
+                        string result = "#:" + new String ((char []) first) + "-" + (gensymCounter++).ToString();
                         this.sharingTable.Add (encoded.Datum, result);
                         return result;
                     }

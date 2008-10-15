@@ -24,6 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <NoWarn>0162</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,6 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <NoWarn>0162</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -50,12 +52,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bignum.cs" />
+    <Compile Include="StaticBinding.cs" />
     <Compile Include="BitString.cs" />
     <Compile Include="Cell.cs" />
     <Compile Include="Channel.cs" />
     <Compile Include="Character.cs" />
     <Compile Include="Closure.cs" />
-    <Compile Include="BindingTimeEnvironment.cs" />
+    <Compile Include="LexicalMap.cs" />
     <Compile Include="Complex.cs" />
     <Compile Include="Conditional.cs" />
     <Compile Include="Configuration.cs" />
@@ -105,6 +108,7 @@
     <Compile Include="SComb1.cs" />
     <Compile Include="SComb2.cs" />
     <Compile Include="Termination.cs" />
+    <Compile Include="UninternedSymbol.cs" />
     <Compile Include="ValueCell.cs" />
     <Compile Include="Variable.cs" />
     <Compile Include="Vector.cs" />
