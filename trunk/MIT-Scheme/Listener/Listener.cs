@@ -27,7 +27,7 @@ namespace Listener
                         // Cold load the Scheme runtime
                         SCode bootstrap = Fasl.Fasload ("make.bin") as SCode;
                         Microcode.Environment initial = Microcode.Environment.Global;
-                       answer = Continuation.Initial (bootstrap.Bind(new RootBindingEnvironment (initial)), initial);
+                       answer = Continuation.Initial (bootstrap.Bind(LexicalMap.Make(initial)), initial);
                     }
                     Console.WriteLine ("Evaluation exited with {0}", answer);
                 }
@@ -36,7 +36,7 @@ namespace Listener
                     System.Environment.CurrentDirectory = "C:\\jrm-code-project\\TakTest\\";
                     SCode tak = Fasl.Fasload ("tak.bin") as SCode;
                     Microcode.Environment initial = Microcode.Environment.Global;
-                    SCode tak1 = tak.Bind (new RootBindingEnvironment (initial));
+                    SCode tak1 = tak.Bind (LexicalMap.Make (initial));
 
                     //for (int i = 0; i < 20; i++) {
                     //    ControlState ctl = new ControlState (tak, initial);

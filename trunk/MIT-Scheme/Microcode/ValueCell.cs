@@ -8,7 +8,7 @@ namespace Microcode
     {
         //static object unassigned = Constant.Unassigned;
 #if DEBUG
-        string name;
+        object name;
 #endif
         bool trapOnReference;
         object val;
@@ -71,26 +71,25 @@ namespace Microcode
                 //|| (value is SimpleClosure)
                 //|| (value is SimpleLambda)
                 || (value is StandardEnvironment)
-                || (value is StaticEnvironment)
+                //|| (value is StaticEnvironment)
+                || (value is TheEnvironment)
+                || (value is UninternedSymbol)
                 || (value is UnmarkedHistory)
                 || (value is Variable)
                 || (value is WeakCons)
                 ;
         }
 
-        public ValueCell (string name, object initialValue)
+        public ValueCell (object name, object initialValue)
         {
 #if DEBUG   
             this.name = name;
             if (!ValidValue(initialValue)) throw new ArgumentException ("Illegal value cell contents.", "initialValue");
 #endif
-            if (initialValue == Constant.ExternalUnassigned) {
-                throw new NotImplementedException ("map unassigned");
-            }
-            else {
-                this.trapOnReference = initialValue is ReferenceTrap;
-                this.val = initialValue;
-            }
+            this.val = (initialValue == Constant.ExternalUnassigned)
+    ? ReferenceTrap.Unassigned
+    : initialValue; 
+            this.trapOnReference = this.val is ReferenceTrap;
         }
 
         public bool Unreferenceable ()
@@ -112,23 +111,15 @@ namespace Microcode
 #if DEBUG
             if (!ValidValue(newValue)) throw new ArgumentException ("Illegal value cell contents.", "newValue");
 #endif
-            if (this.trapOnReference) {
-                if (this.val == ReferenceTrap.Unassigned)
-                    oldValue = Constant.ExternalUnassigned;
-                else
-                    oldValue = this.val;
-            }
-            else
-                oldValue = this.val;
+            oldValue = (this.trapOnReference && this.val == ReferenceTrap.Unassigned)
+                ? Constant.ExternalUnassigned
+                : this.val;
 
-            if (newValue == Constant.ExternalUnassigned) {
-                this.trapOnReference = true;
-                this.val = ReferenceTrap.Unassigned;
-                return false;
-            }
+            this.val = (newValue == Constant.ExternalUnassigned)
+                ? ReferenceTrap.Unassigned
+                : newValue;
 
-            this.val = newValue;
-            this.trapOnReference = newValue is ReferenceTrap;
+            this.trapOnReference = this.val is ReferenceTrap;
             return false;
         }
 

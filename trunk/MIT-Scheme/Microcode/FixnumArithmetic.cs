@@ -70,7 +70,7 @@ namespace Microcode
         [SchemePrimitive ("GREATER-THAN-FIXNUM?", 2, false)]
         public static bool GreaterP (out object answer, object left, object right)
         {
-            answer = (int) left > (int) right;
+            answer = (int) left > (int) right ? Constant.sharpT : Constant.sharpF;
             return false;
         }
 

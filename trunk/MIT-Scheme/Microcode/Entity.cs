@@ -80,7 +80,10 @@ namespace Microcode
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
         {
-            throw new NotImplementedException ();
+#if DEBUG
+            Entity.applicationCount += 1;
+#endif
+            return Interpreter.Call (out answer, ref expression, ref environment, this.first, this, arg0, arg1, arg2, arg3);
         }
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)

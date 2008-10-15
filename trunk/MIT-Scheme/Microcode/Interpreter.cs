@@ -214,12 +214,12 @@ namespace Microcode
         public static bool ScodeEval (out object answer, object arg0, object arg1)
         {
             Environment env = Environment.ToEnvironment (arg1);
-            BindingTimeEnvironment ctenv = new RootBindingEnvironment (env);
+            LexicalMap ctenv = LexicalMap.Make (env);
             //CompileTimeEnvironment ctenv = (env is StandardEnvironment)
             //    ? new CompileTimeEnvironment (((StandardEnvironment) env).Closure.Lambda.Formals)
             //    : new CompileTimeEnvironment (null);
             SCode sarg0 = SCode.EnsureSCode (arg0);
-            SCode xarg0 = sarg0.Bind (ctenv);
+            SCode xarg0 = sarg0.Bind (LexicalMap.Make (env));
             answer = new TailCallInterpreter (xarg0, env);
             return true;
         }
@@ -609,7 +609,7 @@ namespace Microcode
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            object returnValue = null;
+            object returnValue;
             Control expr = null;
             Environment env = null;
             if (this.thunk.Call (out returnValue, ref expr, ref env)) {

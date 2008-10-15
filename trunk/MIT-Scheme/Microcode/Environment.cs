@@ -5,7 +5,7 @@ using System.Diagnostics;
 namespace Microcode
 {
     [Serializable]
-    public abstract class Environment : SchemeObject
+    public abstract class Environment : SchemeObject, ISystemVector
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public static GlobalEnvironment systemGlobalEnvironment;
@@ -61,13 +61,13 @@ namespace Microcode
 
 #if DEBUG
         [NonSerialized]
-        static protected int [] foundAtDepth = new int [128];
+        static protected long [] foundAtDepth = new long [128];
         [NonSerialized]
-        static protected int [] foundInAuxes = new int [128];
+        static protected long [] foundInAuxes = new long [128];
         [NonSerialized]
-        static protected int [] foundInGlobal = new int [128];
+        static protected long [] foundInGlobal = new long [128];
         [NonSerialized]
-        static protected int [] extendedBy = new int [1024];
+        static protected long [] extendedBy = new long [1024];
 #endif
 
         // Abstract functions on environments
@@ -78,40 +78,43 @@ namespace Microcode
         public abstract object Argument1Value { get; }
 
         // Deep search for variable location and smash the value.
-        public abstract bool Assign (out object oldValue, string name, object newValue);
+        public abstract bool Assign (out object oldValue, object name, object newValue);
 
 
         // Define a variable in the topmost frame.  This will shadow
         // other definitions.  Returns false on success, true if there
         // is a problem.
-        public abstract bool Define (string name, object value);
+        public abstract bool Define (object name, object value);
 
         // Deep search the lexical environment for the variable.
         // returns false on success, true if there is a problem.
-        public abstract bool DeepSearch (out object value, string name);
+        public abstract bool DeepSearch (out object value, object name);
         // internal call tracks depth.
-        internal abstract bool DeepSearch (out object value, string name, int depth);
-        internal abstract bool DeepSearchType (out object value, string name);
+        internal abstract bool DeepSearch (out object value, object name, int depth);
+        internal abstract bool DeepSearchType (out object value, object name);
 
         // Used to link variables.
-        internal abstract ValueCell GetValueCell (string name);
+        internal abstract ValueCell GetValueCell (object name);
 
-        internal abstract bool FreeRef (out object value, string name);
-        internal abstract bool FreeRef (out object value, string name, int depth);
-        internal abstract bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth);
-        internal abstract bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset);
-        internal abstract bool LexicalRef (out object value, string name, int depth, int offset);
+        internal abstract bool FreeRef (out object value, object name);
+        internal abstract bool FreeRef (out object value, object name, int depth);
+        internal abstract bool DangerousFreeRef (out object value, object name, int shadowDepth, int depth);
+        internal abstract bool DangerousLexicalRef (out object value, object name, int shadowDepth, int depth, int offset);
+        internal abstract bool LexicalRef (out object value, object name, int depth, int offset);
         // Fast lexical ref does not check the incrementals.
-        internal abstract bool FastLexicalRef (out object value, string name, int depth, int offset);
+        internal abstract bool FastLexicalRef (out object value, object name, int depth, int offset);
+        internal abstract bool FastLexicalRef1 (out object value, object name, int offset);
         // walk up the chain.  Zero steps means stay here.
         internal abstract Environment GetAncestorEnvironment (int depth);
 
-        internal abstract bool SafeDeepSearch (out object value, string name);
+        internal abstract bool SafeDeepSearch (out object value, object name);
         // Used to link variables.
-        internal abstract bool SetValueCell (string name, ValueCell newCell);
-
-        internal abstract bool IsUnbound (string name);
-        internal abstract bool IsUnreferenceable (string name);
+        internal abstract bool SetValueCell (object name, ValueCell newCell);
+        //internal abstract BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth);
+        //internal abstract BoundVariable SimulateLookup (object name);
+        //internal abstract BoundVariable SimulateStaticLookup (object name, int depth);
+        internal abstract bool IsUnbound (object name);
+        internal abstract bool IsUnreferenceable (object name);
 
         [SchemePrimitive ("LEXICAL-UNBOUND?", 2, false)]
         public static bool IsLexicalUnbound (out object answer, object env, object name)
@@ -132,7 +135,7 @@ namespace Microcode
         public static bool LexicalAssignment (out object answer, object aenv, object aname, object value)
         {
             Environment env = ToEnvironment (aenv);
-            string name = (string) aname;
+            object name = (string) aname;
             object oldValue;
             if (env.Assign (out oldValue, name, value))
                 throw new NotImplementedException ("error during assignment");
@@ -153,7 +156,6 @@ namespace Microcode
         [SchemePrimitive ("LEXICAL-REFERENCE-TYPE", 2, false)]
         public static bool LexicalReferenceType (out object answer, object env, object name)
         {
-            Primitive.hotPrimitives = new Histogram<Primitive> ();
             if (ToEnvironment (env).DeepSearchType (out answer, (string) name))
                 throw new NotImplementedException ("Error during lexical-reference-type.");
             return false;
@@ -176,9 +178,6 @@ namespace Microcode
             string target_name = (string) arglist [1];
             Environment source_env = ToEnvironment (arglist [2]);
             string source_name = (string) arglist [3];
-            if (source_name == "deferred-unparser-methods"
-                || target_name == "deferred-unparser-methods")
-                Debugger.Break ();
             if (target_env.SetValueCell (target_name, source_env.GetValueCell (source_name)))
                 throw new NotImplementedException ("Error during link-variables.");
             else {
@@ -204,6 +203,26 @@ namespace Microcode
             answer = arg is Environment || (arg is bool && (bool) arg == false);
             return false;
         }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public virtual object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
     }
 
     // There are four different kinds of environment.  
@@ -226,52 +245,52 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override bool Define (string name, object value)
+        public override bool Assign (out object oldValue, object name, object newValue)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool Define (object name, object value)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        public override bool DeepSearch (out object value, object name)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
+        internal override bool DeepSearch (out object value, object name, int depth)
         {
             throw new NotImplementedException ();
         }
 
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object name, ValueCell newCell)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SafeDeepSearch (out object value, string name)
+        internal override bool SafeDeepSearch (out object value, object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DeepSearchType (out object value, string name)
+        internal override bool DeepSearchType (out object value, object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object name)
         {
             throw new NotImplementedException ();
         }
@@ -291,7 +310,7 @@ namespace Microcode
             }
         }
 
-        internal override bool FastLexicalRef (out object value, string name, int depth, int offset)
+        internal override bool FastLexicalRef (out object value, object name, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
@@ -302,32 +321,52 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        //internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        //internal override bool LexicalRef (out object value, object varname, int depth, int offset)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object name, int shadowDepth, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object name, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool FreeRef (out object value, string name)
+        internal override bool FreeRef (out object value, object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool DangerousFreeRef (out object value, object name, int shadowDepth, int depth)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool FreeRef (out object value, object name, int depth)
+        {
+            throw new NotImplementedException ();
+        }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
         {
             throw new NotImplementedException ();
         }
@@ -350,7 +389,20 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override bool Define (string name, object value)
+
+        public override bool Assign (out object oldValue, object name, object newValue)
+        {
+            ValueCell vcell = null;
+            if (this.globalBindings.TryGetValue (name, out vcell)) {
+                if (vcell.Assign (out oldValue, newValue))
+                    throw new NotImplementedException ("Error in Assign.");
+                return false;
+            }
+            throw new NotImplementedException ("IsUnbound variable in Assign.");
+        }
+
+
+        public override bool Define (object name, object value)
         {
             ValueCell cell = null;
             if (this.globalBindings.TryGetValue (name, out cell) == false) {
@@ -359,17 +411,18 @@ namespace Microcode
             }
             else {
                 object oldValue;
+                Debug.WriteLine ("Redefining " + name);
                 cell.Assign (out oldValue, value);
             }
             return false; // no problems
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool DeepSearch (out object value, object name)
         {
             return DeepSearch (out value, name, 0);
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        internal override bool DeepSearch (out object value, object name, int depth)
         {
             ValueCell cell = null;
             if (this.globalBindings.TryGetValue (name, out cell)) {
@@ -383,18 +436,7 @@ namespace Microcode
             throw new NotImplementedException ("Variable not bound: " + name);
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
-        {
-            ValueCell vcell = null;
-            if (this.globalBindings.TryGetValue (name, out vcell)) {
-                if (vcell.Assign (out oldValue, newValue))
-                    throw new NotImplementedException ("Error in Assign.");
-                return false;
-            }
-            throw new NotImplementedException ("IsUnbound variable in Assign.");
-        }
-
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object name)
         {
             ValueCell cell = null;
             this.globalBindings.TryGetValue (name, out cell);
@@ -402,7 +444,7 @@ namespace Microcode
         }
 
 
-        internal override bool SafeDeepSearch (out object value, string name)
+        internal override bool SafeDeepSearch (out object value, object name)
         {
             ValueCell cell = null;
             if (this.globalBindings.TryGetValue (name, out cell)) {
@@ -414,7 +456,7 @@ namespace Microcode
             throw new NotImplementedException ("Variable not bound");
         }
 
-        internal override bool DeepSearchType (out object value, string name)
+        internal override bool DeepSearchType (out object value, object name)
         {
             ValueCell cell = null;
             if (this.globalBindings.TryGetValue (name, out cell)) {
@@ -428,7 +470,7 @@ namespace Microcode
             return false;
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object name, ValueCell newCell)
         {
             ValueCell cell = null;
             if (this.globalBindings.TryGetValue (name, out cell)) {
@@ -438,7 +480,7 @@ namespace Microcode
             return false; // copacetic
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object name)
         {
             ValueCell vcell;
             if (this.globalBindings.TryGetValue (name, out vcell)) {
@@ -447,7 +489,7 @@ namespace Microcode
             else return true;
         }
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object name)
         {
             throw new NotImplementedException ();
         }
@@ -468,7 +510,7 @@ namespace Microcode
             }
         }
 
-        internal override bool FastLexicalRef (out object value, string name, int depth, int offset)
+        internal override bool FastLexicalRef (out object value, object name, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
@@ -479,32 +521,32 @@ namespace Microcode
             else throw new NotImplementedException ("Global environments have no ancestor.");
         }
 
-        //internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        //internal override bool LexicalRef (out object value, object varname, int depth, int offset)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object name, int shadowDepth, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object name, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool FreeRef (out object value, string name)
+        internal override bool FreeRef (out object value, object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool DangerousFreeRef (out object value, object name, int shadowDepth, int depth)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool FreeRef (out object value, object name, int depth)
         {
             ValueCell cell = null;
             if (this.globalBindings.TryGetValue (name, out cell)) {
@@ -514,22 +556,44 @@ namespace Microcode
             }
             throw new NotImplementedException ("Variable not bound: " + name); 
         }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    return GlobalVariable.Make (name, this);
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    // The variable is known not to be shadowed in the lexical
+        //    // environment, so we can treat it as a global.
+        //    return GlobalVariable.Make (name, this);
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    return DangerousGlobalVariable.Make (name, this, safeDepth, depth);
+        //}
+
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     [Serializable]
     abstract class LexicalEnvironment : Environment
     {
+#if DEBUG
         static long lexicalCacheHits;
-        int transitCount;
+#endif
+        long transitCount;
         Environment [] lexicalCache;
 
         protected LexicalEnvironment (ClosureBase closure)
             : base (closure)
         { }
 
-        public static Stopwatch ancestorLookupStopwach = new Stopwatch ();
-
-        internal override bool FastLexicalRef (out object value, string name, int depth, int offset)
+        internal override bool FastLexicalRef (out object value, object name, int depth, int offset)
         {
             if (depth == 1) {
                 value = this.closure.Environment.ArgumentValue (offset);
@@ -567,15 +631,109 @@ namespace Microcode
 
                 Environment env = this.lexicalCache [depth];
                 if (env == null) {
+#if DEBUG
                     lexicalCacheHits -= 1;
+#endif
                     env = this.Closure.Environment.GetAncestorEnvironment (depth-1);
                     this.lexicalCache [depth] = env;
                 }
+#if DEBUG
                 lexicalCacheHits += 1;
+#endif
                 return env;
             }
         }
 
+
+        public override object ArgumentValue (int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override object Argument0Value
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public override object Argument1Value
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public override bool Assign (out object oldValue, object name, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Define (object name, object value)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool DeepSearch (out object value, object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool DeepSearch (out object value, object name, int depth)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool DeepSearchType (out object value, object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override ValueCell GetValueCell (object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool FreeRef (out object value, object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool FreeRef (out object value, object name, int depth)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool DangerousFreeRef (out object value, object name, int shadowDepth, int depth)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool DangerousLexicalRef (out object value, object name, int shadowDepth, int depth, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool LexicalRef (out object value, object name, int depth, int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool SafeDeepSearch (out object value, object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool SetValueCell (object name, ValueCell newCell)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool IsUnbound (object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool IsUnreferenceable (object name)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
 
@@ -597,7 +755,7 @@ namespace Microcode
 #if DEBUG
             extendedBy [0] += 1;
             // sanity check.
-            String [] formals = closure.Lambda.Formals;
+            object [] formals = closure.Lambda.Formals;
             if (formals.Length != 0)
                 throw new NotImplementedException ();
 #endif
@@ -606,7 +764,7 @@ namespace Microcode
         internal StandardEnvironment (ClosureBase closure, object [] initialValues)
             : base (closure)
         {
-            String [] formals = closure.Lambda.Formals;
+            object [] formals = closure.Lambda.Formals;
             this.bindings = new ValueCell [initialValues.Length];
             for (int i = 0; i < initialValues.Length; i++)
                 this.bindings [i] = new ValueCell (formals [i], initialValues [i]);
@@ -645,10 +803,8 @@ namespace Microcode
             }
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
+        public override bool Assign (out object oldValue, object name, object newValue)
         {
-            //if (name == "deferred-unparser-methods")
-            //    Debugger.Break ();
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
                 ValueCell vcell;
@@ -661,7 +817,7 @@ namespace Microcode
             return bindings [offset].Assign (out oldValue, newValue);
         }
 
-        public override bool Define (string name, object value)
+        public override bool Define (object name, object value)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
@@ -688,12 +844,12 @@ namespace Microcode
             }
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool DeepSearch (out object value, object name)
         {
             return DeepSearch (out value, name, 0);
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        internal override bool DeepSearch (out object value, object name, int depth)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
@@ -714,20 +870,20 @@ namespace Microcode
             return bindings [offset].GetValue (out value);
         }
 
-        internal override bool FastLexicalRef (out object value, string name, int depth, int offset)
+        internal override bool FastLexicalRef (out object value, object name, int depth, int offset)
         {
             throw new NotImplementedException ();
         //    if (depth == 0) return bindings [offset].GetValue (out value);
         //    ValueCell vcell;
         //    if (this.incrementals != null
-        //        && this.incrementals.TryGetValue (name, out vcell)) {
+        //        && this.incrementals.TryGetValue (varname, out vcell)) {
         //        return vcell.GetValue (out value);
         //    }
 
-        //    return closure.Environment.FastLexicalRef (out value, name, depth - 1, offset);
+        //    return closure.Environment.FastLexicalRef (out value, varname, depth - 1, offset);
         }
 
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object name)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
@@ -742,7 +898,7 @@ namespace Microcode
             return bindings [offset];
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object name, ValueCell newCell)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
@@ -765,7 +921,7 @@ namespace Microcode
             return false;
         }
 
-        internal override bool SafeDeepSearch (out object value, string name)
+        internal override bool SafeDeepSearch (out object value, object name)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
@@ -780,7 +936,7 @@ namespace Microcode
             return bindings [offset].SafeGetValue (out value);
         }
 
-        internal override bool DeepSearchType (out object value, string name)
+        internal override bool DeepSearchType (out object value, object name)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
@@ -795,7 +951,7 @@ namespace Microcode
             return bindings [offset].GetType (out value);
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object name)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
@@ -810,7 +966,7 @@ namespace Microcode
         }
 
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object name)
         {
             int offset = this.closure.FormalOffset (name);
             if (offset == -1) {
@@ -824,7 +980,7 @@ namespace Microcode
             return bindings [offset].Unbound ();
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object name, int depth, int offset)
         {
             if (depth == 0) return bindings [offset].GetValue (out value);
             ValueCell vcell;
@@ -836,12 +992,12 @@ namespace Microcode
             return closure.Environment.LexicalRef (out value, name, depth - 1, offset);
         }
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object name, int shadowDepth, int depth, int offset)
         {
-            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, name, depth - shadowDepth, offset);
+            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, name, depth +1 , offset);
         }
 
-        internal override bool FreeRef (out object value, string name)
+        internal override bool FreeRef (out object value, object name)
         {
             // we know it isn't lexical
             ValueCell vcell;
@@ -852,12 +1008,12 @@ namespace Microcode
             return closure.Environment.DeepSearch (out value, name);
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool DangerousFreeRef (out object value, object name, int shadowDepth, int depth)
         {
             return GetAncestorEnvironment (shadowDepth).FreeRef (out value, name, depth - shadowDepth);
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool FreeRef (out object value, object name, int depth)
         {
             // We know it isn't in our argument vector, but we could be
             // shadowing it.
@@ -871,6 +1027,76 @@ namespace Microcode
                 return closure.Environment.DeepSearch (out value, name);
             else
                 return closure.Environment.FreeRef (out value, name, depth - 1);
+        }
+
+        public override object SystemVectorRef (int index)
+        {
+            if (index == 0)
+                return this.Closure;
+            else {
+                object answer;
+                if (this.bindings [index - 1].GetValue (out answer))
+                    throw new NotImplementedException ();
+                return answer;
+            }
+        }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    int offset = this.closure.FormalOffset (name);
+        //    if (offset == -1) {
+        //        if (this.incrementals == null)
+        //            return FreeVariable.Make (name, this);
+        //        else {
+        //            ValueCell vcell;
+        //            if (this.incrementals.TryGetValue (name, out vcell))
+        //                return TopLevelVariable.Make (name, vcell);
+        //            else
+        //                return FreeVariable.Make (name, this);
+        //        }
+        //    }
+        //    return TopLevelVariable.Make (name, this.bindings [offset]);
+            
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    int offset = this.closure.FormalOffset (name);
+        //    if (offset == -1) {
+        //        if (this.incrementals == null)
+        //            return FreeVariable.Make (name, this);
+        //        else {
+        //            ValueCell vcell;
+        //            if (this.incrementals.TryGetValue (name, out vcell))
+        //                return TopLevelVariable.Make (name, vcell);
+        //            else
+        //                return FreeVariable.Make (name, this);
+        //        }
+        //    }
+        //    return TopLevelVariable.Make (name, this.bindings [offset]); 
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    int offset = this.closure.FormalOffset (name);
+        //    if (offset == -1) {
+        //        if (this.incrementals == null)
+        //            return DangerousFreeVariable.Make (name, this, safeDepth);
+        //        else {
+        //            ValueCell vcell;
+        //            if (this.incrementals.TryGetValue (name, out vcell))
+        //                return DangerousTopLevelVariable.Make (name, vcell, safeDepth);
+        //            else
+        //                return DangerousFreeVariable.Make (name, this, safeDepth);
+        //        }
+        //    }
+        //    return DangerousTopLevelVariable.Make (name, this.bindings [offset], safeDepth); 
+  
+        //}
+
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
+        {
+            throw new NotImplementedException ();
         }
     }
 
@@ -890,7 +1116,7 @@ namespace Microcode
 #if DEBUG
             extendedBy [0] += 1;
             // sanity check.
-            String [] formals = closure.Lambda.Formals;
+            object [] formals = closure.Lambda.Formals;
             if (formals.Length != 0)
                 throw new NotImplementedException ();
 #endif
@@ -935,44 +1161,44 @@ namespace Microcode
             }
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
+        public override bool Assign (out object oldValue, object varname, object newValue)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1)
-                return closure.Environment.Assign (out oldValue, name, newValue);
-            object temp = bindings[offset];
-            bindings[offset] = (newValue == Constant.ExternalUnassigned)
+                return closure.Environment.Assign (out oldValue, varname, newValue);
+            object temp = bindings [offset];
+            bindings [offset] = (newValue == Constant.ExternalUnassigned)
                 ? ReferenceTrap.Unassigned
                 : newValue;
             oldValue = (temp == ReferenceTrap.Unassigned) ? Constant.ExternalUnassigned : temp;
             return false;
         }
 
-        public override bool Define (string name, object value)
+        public override bool Define (object varname, object value)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1)
                 throw new NotImplementedException ("Incremental define not supported in static environment.");
             object temp = bindings [offset];
             bindings [offset] = (value == Constant.ExternalUnassigned)
                 ? ReferenceTrap.Unassigned
                 : value;
-           return false;
+            return false;
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool DeepSearch (out object value, object varname)
         {
-            return DeepSearch (out value, name, 0);
+            return DeepSearch (out value, varname, 0);
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        internal override bool DeepSearch (out object value, object varname, int depth)
         {
             if (Configuration.EnableLexicalAddressing)
                 throw new NotImplementedException ("Deep search should not be necessary");
             else {
-                int offset = this.closure.FormalOffset (name);
+                int offset = this.closure.FormalOffset (varname);
                 if (offset == -1)
-                    return this.closure.Environment.DeepSearch (out value, name, depth + 1);
+                    return this.closure.Environment.DeepSearch (out value, varname, depth + 1);
                 else {
                     value = bindings [offset];
                     return false;
@@ -980,69 +1206,96 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object varname, ValueCell newCell)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SafeDeepSearch (out object value, string name)
+        internal override bool SafeDeepSearch (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DeepSearchType (out object value, string name)
+        internal override bool DeepSearchType (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object varname, int shadowDepth, int depth, int offset)
         {
-            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, name, depth - shadowDepth, offset);
+            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, varname, depth + 1, offset);
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object varname, int depth, int offset)
         {
             if (depth == 0) {
                 value = bindings [offset];
                 return false;
             }
 
-            return closure.Environment.LexicalRef (out value, name, depth - 1, offset);
+            return this.closure.Environment.LexicalRef (out value, varname, depth - 1, offset);
         }
-
-        internal override bool FreeRef (out object value, string name)
+        
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
         {
-            return this.Closure.Environment.DeepSearch (out value, name);
+            value = this.closure.Environment.ArgumentValue (offset);
+            return false;
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool FreeRef (out object value, object varname)
         {
-             return GetAncestorEnvironment (shadowDepth).FreeRef (out value, name, depth - shadowDepth);
+            return this.closure.Environment.DeepSearch (out value, varname);
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool DangerousFreeRef (out object value, object varname, int shadowDepth, int depth)
+        {
+            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, varname, depth - shadowDepth);
+        }
+
+        internal override bool FreeRef (out object value, object varname, int depth)
         {
             if (depth == 1)
-                return this.Closure.Environment.DeepSearch (out value, name);
+                return this.Closure.Environment.DeepSearch (out value, varname);
             else
-                return this.Closure.Environment.FreeRef (out value, name, depth - 1);
+                return this.Closure.Environment.FreeRef (out value, varname, depth - 1);
         }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
     }
+
+    /// <summary>
+    /// A SimpleEnvironment prohibits sharable bindings and incremental
+    /// definition, assignment, and redefinition.
+    /// </summary>
 
     [Serializable]
     sealed class SimpleEnvironment : LexicalEnvironment
@@ -1057,7 +1310,7 @@ namespace Microcode
 #if DEBUG
             extendedBy [0] += 1;
             // sanity check.
-            String [] formals = closure.Lambda.Formals;
+            object [] formals = closure.Lambda.Formals;
             if (formals.Length != 0)
                 throw new NotImplementedException ();
 #endif
@@ -1096,95 +1349,117 @@ namespace Microcode
             }
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
+        public override bool Assign (out object oldValue, object varname, object newValue)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1)
-                return closure.Environment.Assign (out oldValue, name, newValue);
+                return closure.Environment.Assign (out oldValue, varname, newValue);
             throw new NotImplementedException ();
         }
 
-        public override bool Define (string name, object value)
+        public override bool Define (object varname, object value)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool DeepSearch (out object value, object varname)
         {
-            return DeepSearch (out value, name, 0);
+            return DeepSearch (out value, varname, 0);
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        internal override bool DeepSearch (out object value, object varname, int depth)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1)
-                return this.closure.Environment.DeepSearch (out value, name, depth + 1);
+                return this.closure.Environment.DeepSearch (out value, varname, depth + 1);
             value = this.bindings [offset];
             return value is ReferenceTrap;
         }
 
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object varname, ValueCell newCell)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SafeDeepSearch (out object value, string name)
+        internal override bool SafeDeepSearch (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DeepSearchType (out object value, string name)
+        internal override bool DeepSearchType (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object varname, int shadowDepth, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object varname, int depth, int offset)
         {
             if (depth == 0) {
                 value = this.bindings [offset];
                 return value is ReferenceTrap;
             }
             else
-                return this.closure.Environment.LexicalRef (out value, name, depth - 1, offset);
+                return this.closure.Environment.LexicalRef (out value, varname, depth - 1, offset);
         }
 
-        internal override bool FreeRef (out object value, string name)
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
+        {
+            value = this.closure.Environment.ArgumentValue (offset);
+            return false;
+        }
+
+        internal override bool FreeRef (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool DangerousFreeRef (out object value, object varname, int shadowDepth, int depth)
         {
-            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, name, depth - shadowDepth);
+            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, varname, depth - shadowDepth);
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool FreeRef (out object value, object varname, int depth)
         {
             if (depth == 1)
-                return this.closure.Environment.DeepSearch (out value, name);
+                return this.closure.Environment.DeepSearch (out value, varname);
             else
-                return this.closure.Environment.FreeRef (out value, name, depth - 1);
+                return this.closure.Environment.FreeRef (out value, varname, depth - 1);
         }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
     }
 
     /// <summary>
@@ -1227,30 +1502,30 @@ namespace Microcode
             }
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
+        public override bool Assign (out object oldValue, object varname, object newValue)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1) {
-                return closure.Environment.Assign (out oldValue, name, newValue);
+                return closure.Environment.Assign (out oldValue, varname, newValue);
             }
             throw new NotImplementedException ();
         }
 
-        public override bool Define (string name, object value)
+        public override bool Define (object varname, object value)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool DeepSearch (out object value, object varname)
         {
-            return DeepSearch (out value, name, 0);
+            return DeepSearch (out value, varname, 0);
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        internal override bool DeepSearch (out object value, object varname, int depth)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1) {
-                return closure.Environment.DeepSearch (out value, name, depth + 1);
+                return closure.Environment.DeepSearch (out value, varname, depth + 1);
             }
 #if DEBUG
             foundAtDepth [depth] += 1;
@@ -1259,42 +1534,42 @@ namespace Microcode
             return false;
         }
 
-        internal override bool DeepSearchType (out object value, string name)
+        internal override bool DeepSearchType (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SafeDeepSearch (out object value, string name)
+        internal override bool SafeDeepSearch (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object varname, ValueCell newCell)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object varname, int shadowDepth, int depth, int offset)
         {
-            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, name, depth - shadowDepth, offset);
+            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, varname, depth - shadowDepth, offset);
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object varname, int depth, int offset)
         {
             if (depth == 0) {
                 if (offset == 0) {
@@ -1304,26 +1579,48 @@ namespace Microcode
                 else
                     throw new NotImplementedException ();
             }
-            return this.Closure.Environment.LexicalRef (out value, name, depth - 1, offset);
+            return this.Closure.Environment.LexicalRef (out value, varname, depth - 1, offset);
         }
 
-        internal override bool FreeRef (out object value, string name)
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
+        {
+            value = this.closure.Environment.ArgumentValue (offset);
+            return false;
+        }
+
+        internal override bool FreeRef (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool DangerousFreeRef (out object value, object varname, int shadowDepth, int depth)
         {
-            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, name, depth);
+            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, varname, depth);
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool FreeRef (out object value, object varname, int depth)
         {
             if (depth == 1)
-                return this.Closure.Environment.DeepSearch (out value, name);
+                return this.Closure.Environment.DeepSearch (out value, varname);
             else
-                return this.Closure.Environment.FreeRef (out value, name, depth - 1); 
+                return this.Closure.Environment.FreeRef (out value, varname, depth - 1); 
         }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
     }
 
     [Serializable]
@@ -1366,30 +1663,30 @@ namespace Microcode
             }
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
+        public override bool Assign (out object oldValue, object varname, object newValue)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1) {
-                return closure.Environment.Assign (out oldValue, name, newValue);
+                return closure.Environment.Assign (out oldValue, varname, newValue);
             }
             throw new NotImplementedException ();
         }
 
-        public override bool Define (string name, object value)
+        public override bool Define (object varname, object value)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool DeepSearch (out object value, object varname)
         {
-            return DeepSearch (out value, name, 0);
+            return DeepSearch (out value, varname, 0);
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        internal override bool DeepSearch (out object value, object varname, int depth)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1) {
-                return closure.Environment.DeepSearch (out value, name, depth + 1);
+                return closure.Environment.DeepSearch (out value, varname, depth + 1);
             }
 #if DEBUG
             foundAtDepth [depth] += 1;
@@ -1398,42 +1695,42 @@ namespace Microcode
             return false;
         }
 
-        internal override bool DeepSearchType (out object value, string name)
+        internal override bool DeepSearchType (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SafeDeepSearch (out object value, string name)
+        internal override bool SafeDeepSearch (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object varname, ValueCell newCell)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object varname, int shadowDepth, int depth, int offset)
         {
-            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, name, depth - shadowDepth, offset);
+            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, varname, depth - shadowDepth, offset);
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object varname, int depth, int offset)
         {
             if (depth == 0) {
                 if (offset == 0) {
@@ -1448,26 +1745,48 @@ namespace Microcode
                     throw new NotImplementedException ();
             }
             else
-                return this.Closure.Environment.LexicalRef (out value, name, depth - 1, offset);
+                return this.Closure.Environment.LexicalRef (out value, varname, depth - 1, offset);
         }
 
-        internal override bool FreeRef (out object value, string name)
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
+        {
+            value = this.closure.Environment.ArgumentValue (offset);
+            return false;
+        }
+
+        internal override bool FreeRef (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool DangerousFreeRef (out object value, object varname, int shadowDepth, int depth)
         {
-            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, name, depth - shadowDepth);
+            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, varname, depth - shadowDepth);
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool FreeRef (out object value, object varname, int depth)
         {
             if (depth == 1)
-                return this.Closure.Environment.DeepSearch (out value, name);
+                return this.Closure.Environment.DeepSearch (out value, varname);
             else
-                return this.Closure.Environment.FreeRef (out value, name, depth - 1); 
+                return this.Closure.Environment.FreeRef (out value, varname, depth - 1); 
         }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
     }
 
     [Serializable]
@@ -1517,30 +1836,30 @@ namespace Microcode
             }
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
+        public override bool Assign (out object oldValue, object varname, object newValue)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1) {
-                return closure.Environment.Assign (out oldValue, name, newValue);
+                return closure.Environment.Assign (out oldValue, varname, newValue);
             }
             throw new NotImplementedException ();
         }
 
-        public override bool Define (string name, object value)
+        public override bool Define (object varname, object value)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool DeepSearch (out object value, object varname)
         {
-            return DeepSearch (out value, name, 0);
+            return DeepSearch (out value, varname, 0);
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        internal override bool DeepSearch (out object value, object varname, int depth)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1) {
-                return closure.Environment.DeepSearch (out value, name, depth + 1);
+                return closure.Environment.DeepSearch (out value, varname, depth + 1);
             }
 #if DEBUG
             foundAtDepth [depth] += 1;
@@ -1549,68 +1868,90 @@ namespace Microcode
             return false;
         }
 
-        internal override bool DeepSearchType (out object value, string name)
+        internal override bool DeepSearchType (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SafeDeepSearch (out object value, string name)
+        internal override bool SafeDeepSearch (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object varname, ValueCell newCell)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object varname, int shadowDepth, int depth, int offset)
         {
-            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, name, depth - shadowDepth, offset);
+            return GetAncestorEnvironment (shadowDepth).LexicalRef (out value, varname, depth - shadowDepth, offset);
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object varname, int depth, int offset)
         {
             if (depth == 0) {
                 value = ArgumentValue (offset);
                 return false;
             }
             else
-                return this.closure.Environment.LexicalRef (out value, name, depth - 1, offset);
+                return this.closure.Environment.LexicalRef (out value, varname, depth - 1, offset);
         }
 
-        internal override bool FreeRef (out object value, string name)
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
+        {
+            value = this.closure.Environment.ArgumentValue (offset);
+            return false;
+        }
+
+        internal override bool FreeRef (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool DangerousFreeRef (out object value, object varname, int shadowDepth, int depth)
         {
-            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, name, depth - shadowDepth);
+            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, varname, depth - shadowDepth);
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool FreeRef (out object value, object varname, int depth)
         {
             if (depth == 0)
                 throw new NotImplementedException ();
             else
-                return this.closure.Environment.FreeRef (out value, name, depth - 1);
+                return this.closure.Environment.FreeRef (out value, varname, depth - 1);
         }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
     }
 
     [Serializable]
@@ -1664,30 +2005,30 @@ namespace Microcode
             }
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
+        public override bool Assign (out object oldValue, object varname, object newValue)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1) {
-                return closure.Environment.Assign (out oldValue, name, newValue);
+                return closure.Environment.Assign (out oldValue, varname, newValue);
             }
             throw new NotImplementedException ();
         }
 
-        public override bool Define (string name, object value)
+        public override bool Define (object varname, object value)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool DeepSearch (out object value, object varname)
         {
-            return DeepSearch (out value, name, 0);
+            return DeepSearch (out value, varname, 0);
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        internal override bool DeepSearch (out object value, object varname, int depth)
         {
-            int offset = this.closure.FormalOffset (name);
+            int offset = this.closure.FormalOffset (varname);
             if (offset == -1) {
-                return closure.Environment.DeepSearch (out value, name, depth + 1);
+                return closure.Environment.DeepSearch (out value, varname, depth + 1);
             }
 #if DEBUG
             foundAtDepth [depth] += 1;
@@ -1696,74 +2037,94 @@ namespace Microcode
             return false;
         }
 
-        internal override bool DeepSearchType (out object value, string name)
+        internal override bool DeepSearchType (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SafeDeepSearch (out object value, string name)
+        internal override bool SafeDeepSearch (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object varname, ValueCell newCell)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object varname, int shadowDepth, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object varname, int depth, int offset)
         {
             if (depth == 0) {
                 value = ArgumentValue (offset);
                 return false;
             }
             else
-                return this.closure.Environment.LexicalRef (out value, name, depth - 1, offset);
+                return this.closure.Environment.LexicalRef (out value, varname, depth - 1, offset);
 
         }
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
+        {
+            value = this.closure.Environment.ArgumentValue (offset);
+            return false;
+        }
 
-        internal override bool FreeRef (out object value, string name)
+        internal override bool FreeRef (out object value, object varname)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool DangerousFreeRef (out object value, object varname, int shadowDepth, int depth)
         {
-            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, name, depth - shadowDepth);
+            return GetAncestorEnvironment (shadowDepth).FreeRef (out value, varname, depth - shadowDepth);
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool FreeRef (out object value, object varname, int depth)
         {
             if (depth == 0)
                 throw new NotImplementedException ();
             else
-                return this.closure.Environment.FreeRef (out value, name, depth - 1);
+                return this.closure.Environment.FreeRef (out value, varname, depth - 1);
         }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
     }
 
-    // These are magic structures that get stuffed in the
-    // environment register when unwinding the stack.  They are
-    // not actually environments, but need to be of that type.
+     //These are magic structures that get stuffed in the
+     //environment register when unwinding the stack.  They are
+     //not actually environments, but need to be of that type.
     abstract class FakeEnvironment : Environment
     {
         protected FakeEnvironment ()
@@ -1775,52 +2136,52 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override bool Define (string name, object value)
+        public override bool Assign (out object oldValue, object name, object newValue)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool DeepSearch (out object value, string name)
+        public override bool Define (object name, object value)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DeepSearch (out object value, string name, int depth)
+        public override bool DeepSearch (out object value, object name)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool Assign (out object oldValue, string name, object newValue)
+        internal override bool DeepSearch (out object value, object name, int depth)
         {
             throw new NotImplementedException ();
         }
 
-        internal override ValueCell GetValueCell (string name)
+        internal override ValueCell GetValueCell (object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SetValueCell (string name, ValueCell newCell)
+        internal override bool SetValueCell (object name, ValueCell newCell)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnreferenceable (string name)
+        internal override bool IsUnreferenceable (object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool SafeDeepSearch (out object answer, string name)
+        internal override bool SafeDeepSearch (out object answer, object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DeepSearchType (out object answer, string name)
+        internal override bool DeepSearchType (out object answer, object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool IsUnbound (string name)
+        internal override bool IsUnbound (object name)
         {
             throw new NotImplementedException ();
         }
@@ -1841,7 +2202,7 @@ namespace Microcode
             }
         }
 
-        internal override bool FastLexicalRef (out object value, string name, int depth, int offset)
+        internal override bool FastLexicalRef (out object value, object name, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
@@ -1851,27 +2212,47 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousLexicalRef (out object value, string name, int shadowDepth, int depth, int offset)
+        internal override bool DangerousLexicalRef (out object value, object name, int shadowDepth, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool LexicalRef (out object value, string name, int depth, int offset)
+        internal override bool LexicalRef (out object value, object name, int depth, int offset)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool FreeRef (out object value, string name)
+        internal override bool FreeRef (out object value, object name)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool DangerousFreeRef (out object value, string name, int shadowDepth, int depth)
+        internal override bool DangerousFreeRef (out object value, object name, int shadowDepth, int depth)
         {
             throw new NotImplementedException ();
         }
 
-        internal override bool FreeRef (out object value, string name, int depth)
+        internal override bool FreeRef (out object value, object name, int depth)
+        {
+            throw new NotImplementedException ();
+        }
+
+        //internal override BoundVariable SimulateLookup (object name)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //{
+        //    throw new NotImplementedException ();
+        //}
+
+        internal override bool FastLexicalRef1 (out object value, object name, int offset)
         {
             throw new NotImplementedException ();
         }
@@ -1890,8 +2271,6 @@ namespace Microcode
             this.controlPoint = controlPoint;
             this.thunk = thunk;
         }
-
-
     }
 
     // not really an environment at all, but rather
@@ -1928,8 +2307,8 @@ namespace Microcode
         /// Constructor that takes a new continuation to be installed.
         /// Stack is destroyed as we unwind and we reload the new one.
         /// </summary>
-        /// <param name="newContinuation"></param>
-        /// <param name="receiver"></param>
+        /// <param varname="newContinuation"></param>
+        /// <param varname="receiver"></param>
         internal UnwinderState (ControlPoint newContinuation, Control receiver)
         {
             this.newContinuation = newContinuation;
@@ -1941,7 +2320,7 @@ namespace Microcode
         /// installed.  Stack is reloaded with the continuation that
         /// has been read.
         /// </summary>
-        /// <param name="receiver"></param>
+        /// <param varname="receiver"></param>
         internal UnwinderState (Control receiver)
         {
             this.receiver = receiver;

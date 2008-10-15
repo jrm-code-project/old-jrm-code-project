@@ -9,10 +9,6 @@ namespace Microcode
 {
     static class Misc
     {
-        public static bool IsGensym (string thing)
-        {
-            return !Object.ReferenceEquals (thing, String.IsInterned (thing));
-        }
 
         public static UInt64 Abs64 (long n)
         {
@@ -34,6 +30,27 @@ namespace Microcode
             ? (UInt32) (~n) + 1U
             : (UInt32) n;
         }
+
+        public static object [] Remove (object item, object [] collection)
+        {
+            int count = 0;
+            for (int i = 0; i < collection.Length; i++)
+                if (collection [i] == item)
+                    count += 1;
+            if (count == 0)
+                return collection;
+            if (count == collection.Length)
+                return new object [0];
+            else {
+                object [] answer = new object [collection.Length - count];
+                int ptr = 0;
+                for (int i = 0; i < collection.Length; i++)
+                    if (collection [i] != item)
+                        answer [ptr++] = collection [i];
+                return answer;
+            }
+        }
+     
 
         [SchemePrimitive ("BATCH-MODE?", 0, true)]
         public static bool IsBatchMode (out object answer)

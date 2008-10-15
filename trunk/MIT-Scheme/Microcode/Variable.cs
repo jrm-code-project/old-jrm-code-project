@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-
 // Variable lookup is the most time critical thing
 // in the interpreter after continuation management.
 namespace Microcode
@@ -31,7 +30,7 @@ namespace Microcode
             return false;
         }
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             SCode optEnv = this.env.Bind (ctenv);
             return optEnv == this.env
@@ -99,6 +98,16 @@ namespace Microcode
 
         #endregion
 
+
+        public override SCode Alpha (object from, object to)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     [Serializable]
@@ -132,12 +141,12 @@ namespace Microcode
 
         }
 
-        public string Name
+        public object Name
         {
             [DebuggerStepThrough]
             get
             {
-                return this.target.name;
+                return this.target.Name;
             }
         }
 
@@ -191,7 +200,7 @@ namespace Microcode
 
         #endregion
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             SCode optVal = this.value.Bind (ctenv);
             return optVal == this.value
@@ -221,20 +230,30 @@ namespace Microcode
                 return false;
             }
 
-            if (environment.Assign (out answer, this.target.name, newValue)) throw new NotImplementedException ();
+            if (environment.Assign (out answer, this.target.Name, newValue)) throw new NotImplementedException ();
             return false;
         }
 
         public override bool MutatesAny (object [] formals)
         {
-            return formals.Contains<object> (this.target.name)
+            return formals.Contains<object> (this.target.Name)
                 || this.value.MutatesAny (formals);
         }
 
         public override bool UsesAny (object [] formals)
         {
-            return formals.Contains<object> (this.target.name)
+            return formals.Contains<object> (this.target.Name)
                 || this.value.UsesAny (formals);
+        }
+
+        public override SCode Alpha (object from, object to)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        {
+            throw new NotImplementedException ();
         }
     }
 
@@ -279,7 +298,7 @@ namespace Microcode
     }
 
     [Serializable]
-    class Variable : SCode, ISystemHunk3
+    public class Variable : SCode, ISystemHunk3
     {
 #if DEBUG
         [NonSerialized]
@@ -288,18 +307,20 @@ namespace Microcode
         static Dictionary<object,Variable> variableTable = new Dictionary<object, Variable> ();
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public readonly string name;
+        protected readonly object varname;
 
-        protected Variable (string name)
+        protected Variable (object name)
             : base (TC.VARIABLE)
         {
             if (name == null)
-                throw new ArgumentNullException ("name");
-            this.name = name;
+                throw new ArgumentNullException ("varname");
+            this.varname = name;
 #if DEBUG
-           if (name == "no symbol has this name"
-               || name == "syntax*"
-               || name == "hash-table/get"
+           if (name is string &&
+               (((string) name) == "no symbol has this name"
+               || ((string)name) == "lambda-wrap-body!")
+               //|| name == "syntax*"
+               //|| name == "hash-table/get"
             //   || name == "error"
             //   || name == "loop"
             //   || name == "copy-record"
@@ -308,10 +329,10 @@ namespace Microcode
             //   || name == "extend-package-environment"
                )
                 breakOnReference = true;
-#endif
+#endif  
         }
 
-        static public Variable Make (string name)
+        static public Variable Make (object name)
         {
             Variable answer;
             if (!variableTable.TryGetValue (name, out answer)) {
@@ -323,14 +344,14 @@ namespace Microcode
 
         static public Variable Make (Hunk3 init)
         {
-            return Variable.Make ((string) init.Cxr0);
+            return Variable.Make (init.Cxr0);
         }
 
-        protected string Name
+        public object Name
         {
             get
             {
-                return this.name;
+                return this.varname;
             }
         }
 
@@ -352,7 +373,7 @@ namespace Microcode
         {
             get
             {
-                return this.name;
+                return this.varname;
             }
             set
             {
@@ -386,11 +407,9 @@ namespace Microcode
 
         #endregion
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap btenv)
         {
-            return Configuration.EnableLexicalAddressing
-                ? ctenv.BindVariable (this.name)
-                : this;
+            return btenv.Bind (this.Name);
         }
 
         public override bool CallsTheEnvironment ()
@@ -402,17 +421,17 @@ namespace Microcode
         {
 #if DEBUG
             Warm ();
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
+            Debug.WriteIf (Primitive.Noisy, this.Name);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
 #endif
             if (Configuration.EnableLexicalAddressing)
                 throw new NotImplementedException ("Should not happen, variables should all be bound.");
-            else if (environment.DeepSearch (out value, this.name)) throw new NotImplementedException ();
+            else if (environment.DeepSearch (out value, this.varname)) throw new NotImplementedException ();
             else return false;
         }
-
+    
         public override bool MutatesAny (object [] formals)
         {
             return false;
@@ -421,9 +440,22 @@ namespace Microcode
         public override bool UsesAny (object [] formals)
         {
             for (int i = 0; i < formals.Length; i++)
-                if ((object) this.name == (object) formals [i])
+                if ((object) this.varname == (object) formals [i])
                     return true;
             return false;
+        }
+
+        public override SCode Alpha (object from, object to)
+        {
+            if (this.varname != from)
+                return this;
+            else
+                return new Variable (to);
+        }
+
+        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        {
+            throw new NotImplementedException ();
         }
     }
 
@@ -431,18 +463,94 @@ namespace Microcode
     /// A Bound variable has some idea of how to get at the value cell
     /// other than by using a deep search.
     /// </summary>
-    abstract class BoundVariable : Variable
+    public abstract class BoundVariable : Variable
     {
-        protected BoundVariable (string name)
+        protected BoundVariable (object name)
             : base (name)
         {
         }
 
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             throw new NotImplementedException ("already bound");
         }
 
+
+        internal abstract BoundVariable IncreaseStaticLexicalDepth ();
+    }
+
+//    class NonArgument : BoundVariable
+//    {
+//        NonArgument (object name)
+//            : base (name)
+//        { }
+
+//        public static new NonArgument Make (object name)
+//        {
+//            return new NonArgument (name);
+//        }
+
+//        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//            Debug.WriteLineIf (Primitive.Noisy, this.Name);
+//            if (this.breakOnReference) {
+//                Debugger.Break ();
+//            }
+//#endif
+//            //if (environment.DeepSearch (out value, this.Name))
+//                throw new NotImplementedException ("Error on lookup of " + this.Name);
+//            return false;
+//        }
+//    }
+
+    /// <summary>
+    /// A LexicalVariable is one where we know where the binding cell will
+    /// be, and we know it cannot move.  We simply go fetch it.
+    /// </summary>
+    [Serializable]
+    class LexicalVariable : BoundVariable
+    {
+        protected readonly int depth;
+        protected readonly int offset;
+
+        protected LexicalVariable (object name, int depth, int offset)
+            : base (name)
+        {
+            this.depth = depth;
+            this.offset = offset;
+        }
+
+        public int Depth { get { return this.depth; } }
+        public int Offset { get { return this.offset; } }
+
+        public static LexicalVariable Make (object name, int depth, int offset)
+        {
+            if (Configuration.EnableLexical1 && depth == 1)
+                return LexicalVariable1.Make (name, offset);
+            else
+                return new LexicalVariable (name, depth, offset);
+        }
+
+        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            Debug.WriteLineIf (Primitive.Noisy, this.Name);
+            if (this.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.FastLexicalRef (out value, this.Name, this.depth, this.offset))
+                throw new NotImplementedException ("Error on lookup of " + this.Name);
+            return false;
+        }
+
+        internal override BoundVariable IncreaseStaticLexicalDepth ()
+        {
+            return Make (this.Name, this.depth + 1, this.offset);
+        }
     }
 
     /// <summary>
@@ -451,22 +559,14 @@ namespace Microcode
     /// in the environment.
     /// </summary>
     [Serializable]
-    class Argument : BoundVariable
+    class Argument : LexicalVariable
     {
-        protected readonly int offset;
-
-        protected Argument (string name, int offset)
-            : base (name)
+        protected Argument (object name, int offset)
+            : base (name, 0, offset)
         {
-            this.offset = offset;
         }
 
-        internal int Offset
-        {
-            get { return this.offset; }
-        }
-
-        static public Variable Make (string name, int offset)
+        static public Argument Make (object name, int offset)
         {
             switch (offset) {
                 case 0: return new Argument0 (name);
@@ -494,7 +594,7 @@ namespace Microcode
     [Serializable]
     sealed class Argument0 : Argument
     {
-        internal Argument0 (string name)
+        internal Argument0 (object name)
             : base (name, 0)
         {
         }
@@ -518,7 +618,7 @@ namespace Microcode
     [Serializable]
     sealed class Argument1 : Argument
     {
-        internal Argument1 (string name)
+        internal Argument1 (object name)
             : base (name, 1)
         {
         }
@@ -536,29 +636,61 @@ namespace Microcode
         }
     }
 
+
+//    /// <summary>
+//    /// A DangerousLexicalVariable is one where we know where the binding cell
+//    /// is, but it could be shadowed.
+//    /// </summary>
+//    [Serializable]
+//    class DangerousLexicalVariable : BoundVariable
+//    {
+//        readonly int shadowDepth;
+//        readonly int depth;
+//        readonly int offset;
+
+//        DangerousLexicalVariable (object name, int shadowDepth, int depth, int offset)
+//            : base (name)
+//        {
+//            this.shadowDepth = shadowDepth;
+//            this.depth = depth;
+//            this.offset = offset;
+//        }
+
+//        public static DangerousLexicalVariable Make (object name, int shadowDepth, int depth, int offset)
+//        {
+//            return new DangerousLexicalVariable (name, shadowDepth, depth, offset);
+//        }
+
+//        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//            Debug.WriteLineIf (Primitive.Noisy, this.Name);
+//            if (this.breakOnReference) {
+//                Debugger.Break ();
+//            }
+//#endif
+//            if (environment.DangerousLexicalRef (out value, this.varname, this.shadowDepth, this.depth, this.offset))
+//                throw new NotImplementedException ("Error on lookup of " + this.varname);
+//            return false;
+//        }
+//    }
+
     /// <summary>
-    /// A LexicalVariable is one where we know where the binding cell will
-    /// be, and we know it cannot move.  We simply go fetch it.
+    /// A LexicalVariable1 is one where we know where the binding cell will
+    /// be in the parent environment.  Just grab it.
     /// </summary>
     [Serializable]
-    class LexicalVariable : BoundVariable
+    sealed class LexicalVariable1 : LexicalVariable
     {
-        readonly int depth;
-        readonly int offset;
-
-        LexicalVariable (string name, int depth, int offset)
-            : base (name)
+        LexicalVariable1 (object name, int offset)
+            : base (name, 1, offset)
         {
-            this.depth = depth;
-            this.offset = offset;
         }
 
-        public int Depth { get { return this.depth; } }
-        public int Offset { get { return this.offset; } }
-
-        public static Variable Make (string name, int depth, int offset)
+        public static LexicalVariable1 Make (object name, int offset)
         {
-            return new LexicalVariable (name, depth, offset);
+            return new LexicalVariable1 (name, offset);
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
@@ -570,51 +702,11 @@ namespace Microcode
                 Debugger.Break ();
             }
 #endif
-            if (environment.FastLexicalRef (out value, this.name, this.depth, this.offset))
-                throw new NotImplementedException ("Error on lookup of " + this.name);
+            if (environment.FastLexicalRef1 (out value, this.Name, this.offset))
+                throw new NotImplementedException ("Error on lookup of " + this.Name);
             return false;
         }
     }
-
-    /// <summary>
-    /// A DangerousLexicalVariable is one where we know where the binding cell
-    /// is, but it could be shadowed.
-    /// </summary>
-    [Serializable]
-    class DangerousLexicalVariable : Variable
-    {
-        readonly int shadowDepth;
-        readonly int depth;
-        readonly int offset;
-
-        DangerousLexicalVariable (string name, int shadowDepth, int depth, int offset)
-            : base (name)
-        {
-            this.shadowDepth = shadowDepth;
-            this.depth = depth;
-            this.offset = offset;
-        }
-
-        public static Variable Make (string name, int shadowDepth, int depth, int offset)
-        {
-            return new DangerousLexicalVariable (name, shadowDepth, depth, offset);
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            if (environment.DangerousLexicalRef (out value, this.name, this.shadowDepth, this.depth, this.offset))
-                throw new NotImplementedException ("Error on lookup of " + this.name);
-            return false;
-        }
-    }
-
 
     /// <summary>
     /// A FreeVariable is one that we know is not lexically visible at
@@ -623,134 +715,199 @@ namespace Microcode
     /// it becomes an incremental in the bindingEnvironment.
     /// </summary>
     [Serializable]
-    sealed class FreeVariable : Variable
+    sealed class FreeVariable : BoundVariable
     {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Environment environment;
-
-        FreeVariable (string name, Environment environment)
+        public FreeVariable (object name)
             : base (name)
         {
-            this.environment = environment;
-        }
-
-        public static Variable Make (string name, Environment environment)
-        {
-            return new FreeVariable (name, environment);
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ();
-            Debug.WriteLineIf (Primitive.Noisy, this.name);
+            Debug.WriteLineIf (Primitive.Noisy, this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
 
 #endif
-            // couldn't this be a lexical?
-            if (this.environment.FreeRef (out value, this.name))
-                throw new NotImplementedException ();
-            return false;
+            // Don't know where it is.
+            if (environment.DeepSearch (out value, this.varname)) throw new NotImplementedException ();
+            else return false;
         }
 
+
+        internal override BoundVariable IncreaseStaticLexicalDepth ()
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     /// <summary>
-    /// A DangerousFreeVariable is one that we know is not lexically visible at
-    /// binding time, and could be shadowed.
+    /// A FreeVariable is one that we know is not lexically visible at
+    /// binding time.  This means that we must deep search for it, but we
+    /// can skip the lexical frames.  We cannot cache the value cell unless
+    /// it becomes an incremental in the bindingEnvironment.
     /// </summary>
     [Serializable]
-    sealed class DangerousFreeVariable : Variable
+    sealed class DeepVariable : BoundVariable
     {
-        readonly int shadowDepth;
-        readonly int depth;
+        Environment baseEnvironment;
 
-        DangerousFreeVariable (string name, int shadowingFrame, int depth)
+        public DeepVariable (object name, Environment baseEnvironment)
             : base (name)
         {
-            this.shadowDepth = shadowingFrame;
-            this.depth = depth;
-        }
-
-        public static Variable Make (string name, int shadowingFrame, int depth)
-        {
-#if DEBUG
-            // sanity check
-            if (shadowingFrame >= depth) throw new NotImplementedException ();
-#endif
-            return new DangerousFreeVariable (name, shadowingFrame, depth);
+            this.baseEnvironment = baseEnvironment;
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ();
-            Debug.WriteLineIf (Primitive.Noisy, this.name);
+            Debug.WriteLineIf (Primitive.Noisy, this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
 
 #endif
-            if (environment.DangerousFreeRef(out value, this.name, this.shadowDepth, this.depth))
-                throw new NotImplementedException ("Error on lookup of " + this.name);
-            return false;
+            // Don't know where it is.
+            if (baseEnvironment.DeepSearch (out value, this.varname)) throw new NotImplementedException ();
+            else return false;
+        }
+
+
+        internal override BoundVariable IncreaseStaticLexicalDepth ()
+        {
+            return this;
         }
     }
+
+
+//    /// <summary>
+//    /// A DangerousFreeVariable is one that we know is not lexically visible at
+//    /// binding time, and could be shadowed.
+//    /// </summary>
+//    [Serializable]
+//    sealed class DangerousFreeVariable : BoundVariable
+//    {
+//        readonly Environment env;
+//        readonly int depth;
+
+//        DangerousFreeVariable (object name, Environment env, int depth)
+//            : base (name)
+//        {
+//            this.env = env;
+//            this.depth = depth;
+//        }
+
+//        public static DangerousFreeVariable Make (object name, Environment env, int depth)
+//        {
+//            return new DangerousFreeVariable (name, env, depth);
+//        }
+
+//        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//            Debug.WriteLineIf (Primitive.Noisy, this.varname);
+//            if (this.breakOnReference) {
+//                Debugger.Break ();
+//            }
+
+//#endif
+//            throw new NotImplementedException ();
+//        }
+//    }
 
     /// <summary>
     /// A TopLevelVariable is one that we find in the binding-time environment.
     /// It cannot be shadowed (except by us), so we can cache the value cell.
     /// </summary>
     [Serializable]
-    sealed class TopLevelVariable : Variable
+    sealed class TopLevelVariable : BoundVariable
     {
-        readonly ValueCell cell;
+        public readonly ValueCell cell;
 
-        TopLevelVariable (string name, ValueCell cell)
+        public TopLevelVariable (object name, ValueCell cell)
             : base (name)
         {
             this.cell = cell;
-        }
-
-        static public Variable Make (string name, ValueCell cell)
-        {
-            return new TopLevelVariable (name, cell);
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ();
-            Debug.WriteLineIf (Primitive.Noisy, this.name);
+            Debug.WriteLineIf (Primitive.Noisy, this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
 #endif
             return this.cell.GetValue (out value);
         }
+
+        internal override BoundVariable IncreaseStaticLexicalDepth ()
+        {
+            return this;
+        }
     }
 
+//    /// <summary>
+//    /// A TopLevelVariable is one that we find in the binding-time environment.
+//    /// It cannot be shadowed (except by us), so we can cache the value cell.
+//    /// </summary>
+//    [Serializable]
+//    sealed class DangerousTopLevelVariable : BoundVariable
+//    {
+//        readonly ValueCell cell;
+//        int safeDepth;
+
+//        DangerousTopLevelVariable (object name, ValueCell cell, int safeDepth)
+//            : base (name)
+//        {
+//            this.cell = cell;
+//            this.safeDepth = safeDepth;
+//        }
+
+//        static public DangerousTopLevelVariable Make (object name, ValueCell cell, int safeDepth)
+//        {
+//            return new DangerousTopLevelVariable (name, cell, safeDepth);
+//        }
+
+//        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//            Debug.WriteLineIf (Primitive.Noisy, this.varname);
+//            if (this.breakOnReference) {
+//                Debugger.Break ();
+//            }
+//#endif
+//            throw new NotImplementedException ();
+//        }
+//    }
+
+
+    /// <summary>
+    /// A global variable is one we know is bound in the global environment
+    /// and cannot be shadowed.  If we have a binding cell, we can just fetch
+    /// the value from there.
+    /// </summary>
     [Serializable]
-    sealed class GlobalVariable : Variable
+    sealed class GlobalVariable : BoundVariable
     {
         ValueCell cell;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly Environment environment;
 
-        GlobalVariable (string name, Environment environment)
+        public GlobalVariable (object name, Environment environment)
             : base (name)
         {
             this.environment = environment;
         }
 
-        public static Variable Make (string name, Environment environment)
-        {
-            return new GlobalVariable (name, environment);
-        }
-
-        public override SCode Bind (BindingTimeEnvironment ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             throw new NotImplementedException ();
         }
@@ -759,17 +916,74 @@ namespace Microcode
         {
 #if DEBUG
             Warm ();
-            Debug.WriteLineIf (Primitive.Noisy, this.name);
+            Debug.WriteLineIf (Primitive.Noisy, this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
 
 #endif
             if (this.cell == null)
-                this.cell = this.environment.GetValueCell (this.name);
-            if (this.cell.GetValue(out value))
-                throw new NotImplementedException ("Error on lookup of " + this.name);
+                this.cell = this.environment.GetValueCell (this.varname);
+            if (this.cell.GetValue (out value))
+                throw new NotImplementedException ("Error on lookup of " + this.varname);
             return false;
         }
+
+        internal override BoundVariable IncreaseStaticLexicalDepth ()
+        {
+            // Global variables are just fetched from the value cell,
+            // so we need do nothing.
+            return this;
+        }
     }
+
+//    /// <summary>
+//    /// A dangerous global variable is one we know is bound in the global environment
+//    /// but could be shadowed.  If we have a binding cell, we can just fetch
+//    /// the value from there once we test the incrementals in the outer environments.
+//    /// </summary>
+//    [Serializable]
+//    sealed class DangerousGlobalVariable : BoundVariable
+//    {
+//        //ValueCell cell;
+//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+//        readonly Environment environment;
+//        readonly int safeDepth;
+//        readonly int depth;
+
+//        DangerousGlobalVariable (object name, Environment environment, int safeDepth, int depth)
+//            : base (name)
+//        {
+//            this.environment = environment;
+//            this.safeDepth = safeDepth;
+//            this.depth = depth;
+//        }
+
+//        public static DangerousGlobalVariable Make (object name, Environment environment, int safeDepth, int depth)
+//        {
+//            return new DangerousGlobalVariable (name, environment, safeDepth, depth);
+//        }
+
+//        public override SCode Bind (LexicalMap ctenv)
+//        {
+//            throw new NotImplementedException ();
+//        }
+
+//        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//            Debug.WriteLineIf (Primitive.Noisy, this.varname);
+//            if (this.breakOnReference) {
+//                Debugger.Break ();
+//            }
+
+//#endif
+//            //if (this.cell == null)
+//            //    this.cell = this.environment.GetValueCell (this.varname);
+//            //if (this.cell.GetValue (out value))
+//                throw new NotImplementedException ("Error on lookup of " + this.varname);
+//        }
+//    }
+
 }

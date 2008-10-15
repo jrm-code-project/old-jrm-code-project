@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Microcode
 {
@@ -111,19 +112,19 @@ namespace Microcode
         public static bool Eq (out object answer, object arg0, object arg1)
         {
             if (arg0 == null)
-                answer = (arg1 == null) ? Constant.sharpT : Constant.sharpF;
+                answer = (arg1 == null);
             else if (arg1 == null)
-                answer = Constant.sharpF;
+                answer = false;
             else if (arg0 == arg1)
-                answer = Constant.sharpT;
+                answer = true;
             else if (arg0 is Int32 && arg1 is Int32)
-                answer = ((int) arg0 == (int) arg1 ? Constant.sharpT : Constant.sharpF);
+                answer = ((int) arg0 == (int) arg1);
             else if (arg0 is char && arg1 is char)
-                answer = ((char) arg0 == (char) arg1 ? Constant.sharpT : Constant.sharpF);
+                answer = ((char) arg0 == (char) arg1);
             else if (arg0 is bool && arg1 is bool)
-                answer = ((bool) arg0 == (bool) arg1 ? Constant.sharpT : Constant.sharpF);
+                answer = ((bool) arg0 == (bool) arg1);
             else
-                answer = Constant.sharpF;
+                answer = false;
             return false;
         }
 
@@ -144,15 +145,9 @@ namespace Microcode
         [SchemePrimitive ("NOT", 1, true)]
         public static bool Not (out object answer, object arg)
         {
-            if (arg is bool) {
-                bool val = (bool) arg;
-                if (val == false)
-                    answer = true;
-                else
-                    answer = false;
-            }
-            else
-                answer = false;
+            answer = ((arg is bool) && (bool) arg == false)
+                ? Constant.sharpT
+                : Constant.sharpF;
             return false;
         }
 
@@ -216,6 +211,7 @@ namespace Microcode
             }
             else
                 answer = arg.GetHashCode ();
+            if (answer is int && (int)answer < 0) Debugger.Break ();
             return false;
         }
 
@@ -223,25 +219,27 @@ namespace Microcode
         [SchemePrimitive ("OBJECT-GC-TYPE", 1, true)]
         public static bool ObjectGCType (out object answer, object arg)
         {
-            //Primitive.Noisy = false;
-            if (arg == null
-                || arg is bool
-                || arg is char
-                || arg is double
-                || arg is int
-                || arg is long
-                || arg is string
-                || arg is Constant)
-                answer = 0;
             // '#(COMPILED-ENTRY VECTOR GC-INTERNAL UNDEFINED NON-POINTER
-            //	CELL PAIR TRIPLE QUADRUPLE)
+            //	CELL PAIR TRIPLE QUADRUPLE)   
+            if (arg is ISystemVector
+                            || arg is object []
+                || arg is char [])
+                answer = -3;
+            else if (arg == null
+                            || arg is bool
+                            || arg is char
+                            || arg is double
+                            || arg is int
+                            || arg is long
+                            || arg is string
+                            || arg is Constant)
+                answer = 0;
             else if (arg is ISystemPair)
                 answer = 2;
-            else if (arg is ISystemVector
-                || arg is object [])
-                answer = -3;
+            else if (arg is ISystemHunk3)
+                answer = 3;
             else
-                throw new NotImplementedException ("Object-gc-type: " + arg.ToString());
+                throw new NotImplementedException ("Object-gc-type: " + arg.ToString ());
             return false;
         }
 
@@ -375,7 +373,7 @@ namespace Microcode
             else if (arg is int || arg is long)
                 answer = (int) TC.FIXNUM;
             else if (arg is string)
-                answer = Misc.IsGensym ((string) arg) ? (int) TC.UNINTERNED_SYMBOL : (int) TC.INTERNED_SYMBOL;
+                answer = (int) TC.INTERNED_SYMBOL;
             else if (arg is SchemeObject)
                 answer = (int) ((SchemeObject) arg).TypeCode;
             else
@@ -415,7 +413,7 @@ namespace Microcode
                     break;
 
                 case TC.COMBINATION:
-                    banswer = arg1 is Combination;
+                    banswer = arg1 is Combination || arg1 is Combination0 || arg1 is Combination3 || arg1 is Combination4;
                     break;
 
                 case TC.COMBINATION_1:
@@ -493,7 +491,7 @@ namespace Microcode
                     break;
 
                 case TC.INTERNED_SYMBOL:
-                    banswer = arg1 is string && (!Misc.IsGensym ((string) arg1));
+                    banswer = arg1 is string;
                     break;
 
                 case TC.LAMBDA:
@@ -565,8 +563,7 @@ namespace Microcode
                     break;
 
                 case TC.UNINTERNED_SYMBOL:
-                    banswer = (arg1 is string)
-                            && Misc.IsGensym ((string) arg1);
+                    banswer = arg1 is UninternedSymbol;
                     break;
 
                 case TC.VECTOR:
@@ -610,13 +607,10 @@ namespace Microcode
             switch (newType) {
 
                 case TC.FIXNUM:
-#if DEBUG
+
                     answer = (arg1 == null) ? 9
-                        : (arg1 is SchemeObject) ? (int)((SchemeObject)arg1).SerialNumber 
+                        : (arg1 is SchemeObject) ? (int)((SchemeObject)arg1).GetHashCode()
                         : arg1.GetHashCode();
-#else
-                    answer = arg1.GetHashCode ();
-#endif
                     break;
 
                 case TC.MANIFEST_NM_VECTOR:
@@ -656,8 +650,7 @@ namespace Microcode
         [SchemePrimitive ("UNINTERNED-SYMBOL?", 1, true)]
         public static bool IsUninternedSymbol (out object answer, object arg)
         {
-            string sym = arg as string;
-            answer = (sym != null && string.IsInterned (sym) == null);
+            answer = (arg is UninternedSymbol) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
 
