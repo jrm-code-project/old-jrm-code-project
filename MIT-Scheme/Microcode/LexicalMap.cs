@@ -12,7 +12,11 @@ namespace Microcode
  /// 
     public abstract class LexicalMap
     {
-        internal abstract LexicalMap Extend (LambdaBase lambda);
+        internal LexicalMap Extend (LambdaBase lambda)
+        {
+            return new LambdaLexicalMap (lambda, this);
+        }
+        internal abstract LexicalMap AddSubstitution (object name, BoundVariable value);
         public  static LexicalMap Make (Environment environment)
         {
             return (environment is GlobalEnvironment)
@@ -20,9 +24,9 @@ namespace Microcode
                 : (LexicalMap) new TopLevelLexicalMap (environment);
         }
         internal abstract BoundVariable Bind (object name);
-        //internal abstract BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth);
-        //internal abstract BoundVariable SimulateLookup (object name);
-        //internal abstract BoundVariable SimulateStaticLookup (object name, int depth);
+        //internal abstract BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth);
+        //internal abstract BoundVariable SimulateLookup (object lambdaName);
+        //internal abstract BoundVariable SimulateStaticLookup (object lambdaName, int argDepth);
     }
 
     /// <summary>
@@ -39,24 +43,20 @@ namespace Microcode
             this.bindingEnvironment = bindingEnvironment;
         }
 
-        internal override LexicalMap Extend (LambdaBase lambda)
-        {
-            return new LambdaLexicalMap (lambda, this);
-        }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
-        //    return bindingEnvironment.SimulateLookup (name);
+        //    return bindingEnvironment.SimulateLookup (lambdaName);
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
-        //    return bindingEnvironment.SimulateStaticLookup (name, depth);
+        //    return bindingEnvironment.SimulateStaticLookup (lambdaName, argDepth);
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
-        //    return bindingEnvironment.SimulateDangerousLookup (name, safeDepth, depth);
+        //    return bindingEnvironment.SimulateDangerousLookup (lambdaName, safeDepth, argDepth);
         //}
 
         internal override BoundVariable Bind (object name)
@@ -77,6 +77,11 @@ namespace Microcode
             }
                 
         }
+
+        internal override LexicalMap AddSubstitution (object name, BoundVariable value)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
 
@@ -94,24 +99,20 @@ namespace Microcode
                 this.bindingEnvironment = bindingEnvironment;
             }
 
-           internal override LexicalMap Extend (LambdaBase lambda)
-           {
-               return new LambdaLexicalMap (lambda, this);
-           }
 
-           //internal override BoundVariable SimulateLookup (object name)
+           //internal override BoundVariable SimulateLookup (object lambdaName)
            //{
-           //    return bindingEnvironment.SimulateLookup (name);
+           //    return bindingEnvironment.SimulateLookup (lambdaName);
            //}
 
-           //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+           //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
            //{
-           //    return bindingEnvironment.SimulateStaticLookup (name, depth);
+           //    return bindingEnvironment.SimulateStaticLookup (lambdaName, argDepth);
            //}
 
-           //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+           //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
            //{
-           //    return bindingEnvironment.SimulateDangerousLookup (name, safeDepth, depth);
+           //    return bindingEnvironment.SimulateDangerousLookup (lambdaName, safeDepth, argDepth);
            //}
 
            internal override BoundVariable Bind (object name)
@@ -131,6 +132,11 @@ namespace Microcode
                return answer;
 
            }
+
+           internal override LexicalMap AddSubstitution (object name, BoundVariable value)
+           {
+               throw new NotImplementedException ();
+           }
     }
 
     /// <summary>
@@ -148,24 +154,20 @@ namespace Microcode
             this.parent = parent;
         }
 
-        internal override LexicalMap Extend (LambdaBase lambda)
-        {
-            return new LambdaLexicalMap (lambda, this);
-        }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
-        //    return this.lambda.SimulateLookup (name, this.parent);
+        //    return this.lambda.SimulateLookup (lambdaName, this.parent);
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
-        //    return this.lambda.SimulateStaticLookup (name, this.parent, depth);
+        //    return this.lambda.SimulateStaticLookup (lambdaName, this.parent, argDepth);
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
-        //    return this.lambda.SimulateDangerousLookup (name, this.parent, safeDepth, depth);
+        //    return this.lambda.SimulateDangerousLookup (lambdaName, this.parent, safeDepth, argDepth);
         //}
 
         internal override BoundVariable Bind (object name)
@@ -177,7 +179,7 @@ namespace Microcode
             if (Configuration.EnableArgumentBinding) {
                 int offset = this.lambda.LexicalOffset (name);
                 if (offset != -1) {
-                    answer = Argument.Make (name, offset);
+                    answer = Argument.Make (name, this.lambda, offset);
                     bindingCache.Add (name, answer);
                     return answer;
                 }
@@ -185,7 +187,7 @@ namespace Microcode
             if (Configuration.EnableLexicalAddressing) {
                 int offset = this.lambda.LexicalOffset (name);
                 if (offset != -1) {
-                    answer = LexicalVariable.Make (name, 0, offset);
+                    answer = LexicalVariable.Make (name, this.lambda, 0, offset);
                     bindingCache.Add (name, answer);
                     return answer;
                 }
@@ -200,20 +202,49 @@ namespace Microcode
             bindingCache.Add (name, answer);
             return answer;
         }
+
+        internal override LexicalMap AddSubstitution (object name, BoundVariable value)
+        {
+            return new SubstitutionLexicalMap (name, value, this);
+        }
     }
 
+    class SubstitutionLexicalMap : LexicalMap
+    {
+        protected readonly object name;
+        protected readonly BoundVariable value;
+        protected readonly LexicalMap parent;
 
+        public SubstitutionLexicalMap (object name, BoundVariable value, LexicalMap parent)
+        {
+            this.name = name;
+            this.value = value;
+            this.parent = parent;
+        }
+
+        internal override LexicalMap AddSubstitution (object name, BoundVariable value)
+        {
+            return new SubstitutionLexicalMap (name, value, this);
+        }
+
+        internal override BoundVariable Bind (object name)
+        {
+            if (name == this.name)
+                return this.value;
+            return parent.Bind (name);
+        }
+    }
     //public abstract class LexicalMap
     //{
     //    protected LexicalMap ()
     //    {
     //    }
 
-    //    internal abstract Variable BindLexical (object varname, int depth);
+    //    internal abstract Variable BindLexical (object varname, int argDepth);
 
     //    internal abstract Variable BindVariable (object varname);
 
-    //    internal abstract Variable BindShadow (object varname, int depth, int shadowingFrame);
+    //    internal abstract Variable BindShadow (object varname, int argDepth, int shadowingFrame);
 
     //    //internal LexicalMap Extend (SimpleLambda lambda)
     //    //{
@@ -253,32 +284,32 @@ namespace Microcode
     //            // We know it can only be in the global environment.
     //            return GlobalVariable.Make (varname, this.bindingEnvironment);
     //        else {
-    //            int offset = this.bindingEnvironment.Closure.FormalOffset (varname);
+    //            int argOffset = this.bindingEnvironment.Closure.FormalOffset (varname);
     //            // If it isn't bound in the binding time environment, then we
     //            // call it `Free' and search the incrementals and then the environment.
-    //            return (offset != -1)
-    //                ? Argument.Make (varname, offset)
+    //            return (argOffset != -1)
+    //                ? Argument.Make (varname, argOffset)
     //                : FreeVariable.Make (varname, bindingEnvironment);
     //        }
     //    }
 
-    //    internal override Variable BindShadow (object varname, int depth, int shadowingFrame)
+    //    internal override Variable BindShadow (object varname, int argDepth, int shadowingFrame)
     //    {
     //        ClosureBase closure = this.bindingEnvironment.Closure;
     //        if (closure == null) {
     //            // Same as free.  We have no clue where the variable is.
     //            // Hope it shows up before we need it, though.
-    //            return DangerousFreeVariable.Make (varname, shadowingFrame, depth);
+    //            return DangerousFreeVariable.Make (varname, shadowingFrame, argDepth);
     //        }
     //        else {
-    //            int offset = closure.FormalOffset (varname);
-    //            return (offset == -1)
-    //                ? DangerousFreeVariable.Make (varname, shadowingFrame, depth)
-    //                : DangerousLexicalVariable.Make (varname, shadowingFrame, depth, offset);
+    //            int argOffset = closure.FormalOffset (varname);
+    //            return (argOffset == -1)
+    //                ? DangerousFreeVariable.Make (varname, shadowingFrame, argDepth)
+    //                : DangerousLexicalVariable.Make (varname, shadowingFrame, argDepth, argOffset);
     //        }
     //    }
 
-    //    internal override Variable BindLexical (object varname, int depth)
+    //    internal override Variable BindLexical (object varname, int argDepth)
     //    {
     //        ClosureBase closure = this.bindingEnvironment.Closure;
     //        if (closure == null) {
@@ -286,8 +317,8 @@ namespace Microcode
     //            return GlobalVariable.Make (varname, this.bindingEnvironment);
     //        }
     //        else {
-    //            int offset = closure.FormalOffset (varname);
-    //            return (offset == -1)
+    //            int argOffset = closure.FormalOffset (varname);
+    //            return (argOffset == -1)
     //                ? FreeVariable.Make (varname, this.bindingEnvironment)
     //                : TopLevelVariable.Make (varname, this.bindingEnvironment.GetValueCell (varname));
     //        }
@@ -314,26 +345,26 @@ namespace Microcode
 
     //    internal override Variable BindVariable (object varname)
     //    {
-    //        int offset = this.lambda.LexicalOffset (varname);
-    //        return (offset == -1)
+    //        int argOffset = this.lambda.LexicalOffset (varname);
+    //        return (argOffset == -1)
     //            ? parent.BindLexical (varname, 1)  // Search deeper.
-    //            : Argument.Make (varname, offset);
+    //            : Argument.Make (varname, argOffset);
     //    }
 
-    //    internal override Variable BindShadow (object varname, int depth, int shadowingFrame)
+    //    internal override Variable BindShadow (object varname, int argDepth, int shadowingFrame)
     //    {
-    //        int offset = this.lambda.LexicalOffset (varname);
-    //        return (offset == -1)
-    //            ? parent.BindShadow (varname, depth + 1, shadowingFrame)
-    //            : DangerousLexicalVariable.Make (varname, shadowingFrame, depth, offset);
+    //        int argOffset = this.lambda.LexicalOffset (varname);
+    //        return (argOffset == -1)
+    //            ? parent.BindShadow (varname, argDepth + 1, shadowingFrame)
+    //            : DangerousLexicalVariable.Make (varname, shadowingFrame, argDepth, argOffset);
     //    }
 
-    //    internal override Variable BindLexical (object varname, int depth)
+    //    internal override Variable BindLexical (object varname, int argDepth)
     //    {
-    //        int offset = this.lambda.LexicalOffset (varname);
-    //        return (offset == -1)
-    //          ? parent.BindLexical (varname, depth + 1)  // Search deeper.
-    //          : LexicalVariable.Make (varname, depth, offset);
+    //        int argOffset = this.lambda.LexicalOffset (varname);
+    //        return (argOffset == -1)
+    //          ? parent.BindLexical (varname, argDepth + 1)  // Search deeper.
+    //          : LexicalVariable.Make (varname, argDepth, argOffset);
     //    }
     //}
 
@@ -360,28 +391,28 @@ namespace Microcode
     //    {
     //    }
 
-    //    internal override Variable BindLexical (object varname, int depth)
+    //    internal override Variable BindLexical (object varname, int argDepth)
     //    {
-    //        int offset = this.lambda.LexicalOffset (varname);
-    //        return (offset == -1)
-    //            ? parent.BindShadow (varname, depth + 1, depth) // ***
-    //            : LexicalVariable.Make (varname, depth, offset);
+    //        int argOffset = this.lambda.LexicalOffset (varname);
+    //        return (argOffset == -1)
+    //            ? parent.BindShadow (varname, argDepth + 1, argDepth) // ***
+    //            : LexicalVariable.Make (varname, argDepth, argOffset);
     //    }
 
-    //    internal override Variable BindShadow (object varname, int depth, int shadowingFrame)
+    //    internal override Variable BindShadow (object varname, int argDepth, int shadowingFrame)
     //    {
-    //        int offset = this.lambda.LexicalOffset (varname);
-    //        return (offset == -1)
-    //            ? parent.BindShadow (varname, depth + 1, shadowingFrame)
-    //            : DangerousLexicalVariable.Make (varname, shadowingFrame, depth, offset);
+    //        int argOffset = this.lambda.LexicalOffset (varname);
+    //        return (argOffset == -1)
+    //            ? parent.BindShadow (varname, argDepth + 1, shadowingFrame)
+    //            : DangerousLexicalVariable.Make (varname, shadowingFrame, argDepth, argOffset);
     //    }
 
     //    internal override Variable BindVariable (object varname)
     //    {
-    //        int offset = this.lambda.LexicalOffset (varname);
-    //        return (offset == -1)
+    //        int argOffset = this.lambda.LexicalOffset (varname);
+    //        return (argOffset == -1)
     //            ? parent.BindShadow (varname, 1, 0)
-    //            : Argument.Make (varname, offset);
+    //            : Argument.Make (varname, argOffset);
     //    }
     //}
 
@@ -396,28 +427,28 @@ namespace Microcode
     //        this.parent = parent;
     //    }
  
-    //    internal override Variable BindLexical (object varname, int depth)
+    //    internal override Variable BindLexical (object varname, int argDepth)
     //    {
-    //        int offset = this.lambda.LexicalOffset (varname);
-    //        return (offset == -1)
-    //            ? parent.BindShadow (varname, depth + 1, depth)
-    //            : LexicalVariable.Make (varname, depth, offset);
+    //        int argOffset = this.lambda.LexicalOffset (varname);
+    //        return (argOffset == -1)
+    //            ? parent.BindShadow (varname, argDepth + 1, argDepth)
+    //            : LexicalVariable.Make (varname, argDepth, argOffset);
     //    }
 
-    //    internal override Variable BindShadow (object varname, int depth, int shadowingFrame)
+    //    internal override Variable BindShadow (object varname, int argDepth, int shadowingFrame)
     //    {
-    //        int offset = this.lambda.LexicalOffset (varname);
-    //        return (offset == -1)
-    //            ? parent.BindShadow (varname, depth + 1, shadowingFrame)
-    //            : DangerousLexicalVariable.Make (varname, shadowingFrame, depth, offset);
+    //        int argOffset = this.lambda.LexicalOffset (varname);
+    //        return (argOffset == -1)
+    //            ? parent.BindShadow (varname, argDepth + 1, shadowingFrame)
+    //            : DangerousLexicalVariable.Make (varname, shadowingFrame, argDepth, argOffset);
     //    }
 
     //    internal override Variable BindVariable (object varname)
     //    {
-    //        int offset = this.lambda.LexicalOffset (varname);
-    //        return (offset == -1)
+    //        int argOffset = this.lambda.LexicalOffset (varname);
+    //        return (argOffset == -1)
     //            ? parent.BindShadow (varname, 1, 0)
-    //            : Argument.Make (varname, offset); 
+    //            : Argument.Make (varname, argOffset); 
     //    }
     //}
 }

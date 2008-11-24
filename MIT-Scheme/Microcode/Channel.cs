@@ -214,8 +214,17 @@ namespace Microcode
             set { blocking = value; }
         }
 
+        static bool firstTime = true;
+        static readonly string cannedString = "(doit)\n";
         public override int Read (char [] buffer, int start, int limit)
         {
+            if (firstTime) {
+                for (int i = 0; i < cannedString.Length; i++)
+                    buffer [start + i] = cannedString [i];
+                firstTime = false;
+                return cannedString.Length;
+            }
+
             if (blocking == true) {
                 int filled = this.input.Read (buffer, start, limit - start);
                 return (filled);

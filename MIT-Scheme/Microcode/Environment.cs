@@ -72,7 +72,7 @@ namespace Microcode
 
         // Abstract functions on environments
 
-        // Grab the variable at offset in frame.
+        // Grab the variable at argOffset in frame.
         public abstract object ArgumentValue (int offset);
         public abstract object Argument0Value { get; }
         public abstract object Argument1Value { get; }
@@ -89,7 +89,7 @@ namespace Microcode
         // Deep search the lexical environment for the variable.
         // returns false on success, true if there is a problem.
         public abstract bool DeepSearch (out object value, object name);
-        // internal call tracks depth.
+        // internal call tracks argDepth.
         internal abstract bool DeepSearch (out object value, object name, int depth);
         internal abstract bool DeepSearchType (out object value, object name);
 
@@ -110,9 +110,9 @@ namespace Microcode
         internal abstract bool SafeDeepSearch (out object value, object name);
         // Used to link variables.
         internal abstract bool SetValueCell (object name, ValueCell newCell);
-        //internal abstract BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth);
-        //internal abstract BoundVariable SimulateLookup (object name);
-        //internal abstract BoundVariable SimulateStaticLookup (object name, int depth);
+        //internal abstract BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth);
+        //internal abstract BoundVariable SimulateLookup (object lambdaName);
+        //internal abstract BoundVariable SimulateStaticLookup (object lambdaName, int argDepth);
         internal abstract bool IsUnbound (object name);
         internal abstract bool IsUnreferenceable (object name);
 
@@ -321,7 +321,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        //internal override bool LexicalRef (out object value, object varname, int depth, int offset)
+        //internal override bool LexicalRef (out object value, object varname, int argDepth, int argOffset)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -351,17 +351,17 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -521,7 +521,7 @@ namespace Microcode
             else throw new NotImplementedException ("Global environments have no ancestor.");
         }
 
-        //internal override bool LexicalRef (out object value, object varname, int depth, int offset)
+        //internal override bool LexicalRef (out object value, object varname, int argDepth, int argOffset)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -557,21 +557,21 @@ namespace Microcode
             throw new NotImplementedException ("Variable not bound: " + name); 
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
-        //    return GlobalVariable.Make (name, this);
+        //    return GlobalVariable.Make (lambdaName, this);
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
         //    // The variable is known not to be shadowed in the lexical
         //    // environment, so we can treat it as a global.
-        //    return GlobalVariable.Make (name, this);
+        //    return GlobalVariable.Make (lambdaName, this);
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
-        //    return DangerousGlobalVariable.Make (name, this, safeDepth, depth);
+        //    return DangerousGlobalVariable.Make (lambdaName, this, safeDepth, argDepth);
         //}
 
         internal override bool FastLexicalRef1 (out object value, object name, int offset)
@@ -595,12 +595,10 @@ namespace Microcode
 
         internal override bool FastLexicalRef (out object value, object name, int depth, int offset)
         {
-            if (depth == 1) {
-                value = this.closure.Environment.ArgumentValue (offset);
-            }
-            else {
-                Environment env = GetAncestorEnvironment (depth);
-                value = env.ArgumentValue (offset);
+            switch (depth) {
+                case 0: value = this.ArgumentValue (offset); break;
+                case 1: value = this.closure.Environment.ArgumentValue (offset); break;
+                default: value = GetAncestorEnvironment (depth).ArgumentValue (offset); break;
             }
             return false;
         }
@@ -619,7 +617,7 @@ namespace Microcode
                 // 12 871
             else {
                 if (this.lexicalCache == null) {
-                    if (transitCount++ < 5)
+                    if (transitCount++ < 3)
                         return this.Closure.Environment.GetAncestorEnvironment (depth - 1);
                     this.lexicalCache = new Environment [depth + 1];
                 }
@@ -873,14 +871,14 @@ namespace Microcode
         internal override bool FastLexicalRef (out object value, object name, int depth, int offset)
         {
             throw new NotImplementedException ();
-        //    if (depth == 0) return bindings [offset].GetValue (out value);
+        //    if (argDepth == 0) return bindings [argOffset].GetValue (out value);
         //    ValueCell vcell;
         //    if (this.incrementals != null
         //        && this.incrementals.TryGetValue (varname, out vcell)) {
         //        return vcell.GetValue (out value);
         //    }
 
-        //    return closure.Environment.FastLexicalRef (out value, varname, depth - 1, offset);
+        //    return closure.Environment.FastLexicalRef (out value, varname, argDepth - 1, argOffset);
         }
 
         internal override ValueCell GetValueCell (object name)
@@ -1041,56 +1039,56 @@ namespace Microcode
             }
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
-        //    int offset = this.closure.FormalOffset (name);
-        //    if (offset == -1) {
+        //    int argOffset = this.closure.FormalOffset (lambdaName);
+        //    if (argOffset == -1) {
         //        if (this.incrementals == null)
-        //            return FreeVariable.Make (name, this);
+        //            return FreeVariable.Make (lambdaName, this);
         //        else {
         //            ValueCell vcell;
-        //            if (this.incrementals.TryGetValue (name, out vcell))
-        //                return TopLevelVariable.Make (name, vcell);
+        //            if (this.incrementals.TryGetValue (lambdaName, out vcell))
+        //                return TopLevelVariable.Make (lambdaName, vcell);
         //            else
-        //                return FreeVariable.Make (name, this);
+        //                return FreeVariable.Make (lambdaName, this);
         //        }
         //    }
-        //    return TopLevelVariable.Make (name, this.bindings [offset]);
+        //    return TopLevelVariable.Make (lambdaName, this.bindings [argOffset]);
             
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
-        //    int offset = this.closure.FormalOffset (name);
-        //    if (offset == -1) {
+        //    int argOffset = this.closure.FormalOffset (lambdaName);
+        //    if (argOffset == -1) {
         //        if (this.incrementals == null)
-        //            return FreeVariable.Make (name, this);
+        //            return FreeVariable.Make (lambdaName, this);
         //        else {
         //            ValueCell vcell;
-        //            if (this.incrementals.TryGetValue (name, out vcell))
-        //                return TopLevelVariable.Make (name, vcell);
+        //            if (this.incrementals.TryGetValue (lambdaName, out vcell))
+        //                return TopLevelVariable.Make (lambdaName, vcell);
         //            else
-        //                return FreeVariable.Make (name, this);
+        //                return FreeVariable.Make (lambdaName, this);
         //        }
         //    }
-        //    return TopLevelVariable.Make (name, this.bindings [offset]); 
+        //    return TopLevelVariable.Make (lambdaName, this.bindings [argOffset]); 
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
-        //    int offset = this.closure.FormalOffset (name);
-        //    if (offset == -1) {
+        //    int argOffset = this.closure.FormalOffset (lambdaName);
+        //    if (argOffset == -1) {
         //        if (this.incrementals == null)
-        //            return DangerousFreeVariable.Make (name, this, safeDepth);
+        //            return DangerousFreeVariable.Make (lambdaName, this, safeDepth);
         //        else {
         //            ValueCell vcell;
-        //            if (this.incrementals.TryGetValue (name, out vcell))
-        //                return DangerousTopLevelVariable.Make (name, vcell, safeDepth);
+        //            if (this.incrementals.TryGetValue (lambdaName, out vcell))
+        //                return DangerousTopLevelVariable.Make (lambdaName, vcell, safeDepth);
         //            else
-        //                return DangerousFreeVariable.Make (name, this, safeDepth);
+        //                return DangerousFreeVariable.Make (lambdaName, this, safeDepth);
         //        }
         //    }
-        //    return DangerousTopLevelVariable.Make (name, this.bindings [offset], safeDepth); 
+        //    return DangerousTopLevelVariable.Make (lambdaName, this.bindings [argOffset], safeDepth); 
   
         //}
 
@@ -1275,17 +1273,17 @@ namespace Microcode
                 return this.Closure.Environment.FreeRef (out value, varname, depth - 1);
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -1445,17 +1443,17 @@ namespace Microcode
                 return this.closure.Environment.FreeRef (out value, varname, depth - 1);
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -1478,6 +1476,12 @@ namespace Microcode
             if (value0 is ReferenceTrap) throw new NotImplementedException ();
 #endif
             this.value0 = value0;
+        }
+
+        internal SmallEnvironment1 (ClosureBase closure, Lambda value0)
+            : base (closure)
+        {
+            this.value0 = value0.Close (this);
         }
 
         public override object ArgumentValue (int offset)
@@ -1606,17 +1610,17 @@ namespace Microcode
                 return this.Closure.Environment.FreeRef (out value, varname, depth - 1); 
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -1772,17 +1776,17 @@ namespace Microcode
                 return this.Closure.Environment.FreeRef (out value, varname, depth - 1); 
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -1937,17 +1941,17 @@ namespace Microcode
                 return this.closure.Environment.FreeRef (out value, varname, depth - 1);
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -1979,6 +1983,9 @@ namespace Microcode
 
         public override object ArgumentValue (int offset)
         {
+#if DEBUG
+            SCode.location = "SmallEnvironment4.ArgumentValue";
+#endif
             switch (offset) {
                 case 0: return this.value0;
                 case 1: return this.value1;
@@ -2106,17 +2113,17 @@ namespace Microcode
                 return this.closure.Environment.FreeRef (out value, varname, depth - 1);
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -2237,17 +2244,17 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        //internal override BoundVariable SimulateLookup (object name)
+        //internal override BoundVariable SimulateLookup (object lambdaName)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object name, int depth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object name, int safeDepth, int depth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}

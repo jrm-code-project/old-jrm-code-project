@@ -194,7 +194,7 @@ namespace Microcode
         {
         }
 
-        [SchemePrimitive ("HUNK3-B?", 1, true)]
+        [SchemePrimitive ("HUNK3B?", 1, true)]
         public static bool IsHunk3b (out object answer, object arg)
         {
             answer = arg is UnmarkedHistory;

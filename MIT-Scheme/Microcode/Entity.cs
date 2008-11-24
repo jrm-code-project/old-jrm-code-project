@@ -56,6 +56,7 @@ namespace Microcode
         {
 #if DEBUG
             Entity.applicationCount += 1;
+            SCode.location = "Entity.Call.1";
 #endif
             return Interpreter.Call (out answer, ref expression, ref environment, this.first, this, arg0);
         }

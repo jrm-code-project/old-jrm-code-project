@@ -14,7 +14,7 @@ namespace Microcode
         // 3 interrupt-mask
         // 4   <restore-history return-address>
         // 5 history
-        // 6 previous-history-offset
+        // 6 previous-history-argOffset
         // 7 previous-history-control-point
         // 8 first-element-index
 

@@ -8,6 +8,9 @@ namespace Microcode
     [Serializable]
     struct BignumDigit
     {
+        const int BIGNUM_HALF_DIGIT_LENGTH = 31;
+        const long BIGNUM_RADIX = 0x4000000000000000L;
+        const long BIGNUM_RADIX_ROOT = 0x0000000080000000L;
         // A bignum digit is a positive integer 62 bits long.
         long bigit;
 
@@ -87,6 +90,23 @@ namespace Microcode
             return left.ToLong () > right.ToLong ();
         }
 
+        static public bool operator >= (BignumDigit left, int right)
+        {
+            return left.ToLong () >= right;
+        }
+
+
+        static public bool operator >= (BignumDigit left, long right)
+        {
+            return left.ToLong () >= right;
+        }
+
+        static public bool operator >= (BignumDigit left, BignumDigit right)
+        {
+            return left.ToLong () >= right.ToLong ();
+        }
+
+
         static public bool operator < (BignumDigit left, int right)
         {
             return left.ToLong () < (long) right;
@@ -101,6 +121,22 @@ namespace Microcode
         {
             return left.ToLong () < right.ToLong ();
         }
+
+        static public bool operator <= (BignumDigit left, int right)
+        {
+            return left.ToLong () <= (long) right;
+        }
+
+        static public bool operator <= (BignumDigit left, long right)
+        {
+            return left.ToLong () <= right;
+        }
+
+        static public bool operator <= (BignumDigit left, BignumDigit right)
+        {
+            return left.ToLong () <= right.ToLong ();
+        }
+
 
         static public bool operator == (BignumDigit left, int right)
         {
@@ -121,6 +157,86 @@ namespace Microcode
         {
             return new BignumDigit ((left.ToLong ()) << right);
         }
+
+        static public BignumDigit operator >> (BignumDigit left, int right)
+        {
+            return new BignumDigit ((left.ToLong ()) >> right);
+        }
+
+        static public BignumDigit operator + (BignumDigit left, BignumDigit right)
+        {
+            return new BignumDigit (left.ToLong () + right.ToLong ());
+        }
+
+        static public BignumDigit operator + (BignumDigit left, long right)
+        {
+            return new BignumDigit (left.ToLong () + right);
+        }
+
+
+
+        static public BignumDigit operator + (BignumDigit left, int right)
+        {
+            return new BignumDigit (left.ToLong () + right);
+        }
+
+
+        static public BignumDigit operator * (BignumDigit left, BignumDigit right)
+        {
+            return new BignumDigit (left.ToLong () * right.ToLong ());
+        }
+
+        static public BignumDigit operator * (BignumDigit left, long right)
+        {
+            return new BignumDigit (left.ToLong () * right);
+        }
+
+
+        static public BignumDigit operator / (BignumDigit left, BignumDigit right)
+        {
+            return new BignumDigit (left.ToLong () / right.ToLong ());
+        }
+
+        static public long operator / (BignumDigit left, long right)
+        {
+            return left.ToLong () / right;
+        }
+
+        static public BignumDigit operator % (BignumDigit left, BignumDigit right)
+        {
+            return new BignumDigit (left.ToLong () % right.ToLong ());
+        }
+
+        static public long operator % (BignumDigit left, long right)
+        {
+            return left.ToLong () % right;
+        }
+
+
+
+
+        static public BignumDigit operator - (BignumDigit left, BignumDigit right)
+        {
+            return new BignumDigit (left.ToLong () - right.ToLong ());
+        }
+
+        static public BignumDigit operator - (BignumDigit left, long right)
+        {
+            return new BignumDigit (left.ToLong () - right);
+        }
+
+
+
+        static public BignumDigit operator & (BignumDigit left, BignumDigit right)
+        {
+            return new BignumDigit (left.ToLong () & right.ToLong ());
+        }
+
+        static public BignumDigit operator | (BignumDigit left, BignumDigit right)
+        {
+            return new BignumDigit (left.ToLong () | right.ToLong ());
+        }
+
 
         static public bool operator != (BignumDigit left, int right)
         {
@@ -152,6 +268,159 @@ namespace Microcode
                 return this.bigit >> 31;
             }
         }
+
+        static long DivideSubtract (long v1, long v2, long guess, long [] u)
+        {
+            {
+                BignumDigit product;
+                long diff;
+                long carry;
+                //BDDS_MULSUB (v2, (u [2]), 0);
+                {
+                    product = (BignumDigit) (v2 * guess + 0);
+                    diff = u [2] - product.Low;
+                    if (diff < 0) {
+                        u [2] = diff + BIGNUM_RADIX_ROOT;
+                        carry = product.High + 1;
+                    }
+                    else {
+                        u [2] = diff;
+                        carry = product.High;
+                    }
+                }
+
+                //BDDS_MULSUB (v1, (u [1]), carry);
+                {
+                    product = (BignumDigit) (v1 * guess + carry);
+                    diff = u [1] - product.Low;
+                    if (diff < 0) {
+                        u [1] = diff + BIGNUM_RADIX_ROOT;
+                        carry = product.High + 1;
+                    }
+                    else {
+                        u [1] = diff;
+                        carry = product.High;
+                    }
+                }
+                if (carry == 0)
+                    return guess;
+                diff = ((u [0]) - carry);
+                if (diff < 0)
+                    (u [0]) = (diff + BIGNUM_RADIX);
+                else {
+                    (u [0]) = diff;
+                    return guess;
+                }
+            }
+            {
+                long sum;
+                long carry;
+                // BDDS_ADD (v2, (u [2]), 0);
+                {
+                    sum = (v2 + u [2] + 0);
+                    if (sum < BIGNUM_RADIX_ROOT) {
+                        u [2] = sum;
+                        carry = 0;
+                    }
+                    else {
+                        u [2] = (sum - BIGNUM_RADIX_ROOT);
+                        carry = 1;
+                    }
+                }
+
+                //BDDS_ADD (v1, (u [1]), carry);
+                {
+                    sum = (v1 + u [1] + carry);
+                    if (sum < BIGNUM_RADIX_ROOT) {
+                        u [1] = sum;
+                        carry = 0;
+                    }
+                    else {
+                        u [1] = (sum - BIGNUM_RADIX_ROOT);
+                        carry = 1;
+                    }
+                }
+
+                if (carry == 1)
+                    (u [0]) += 1;
+            }
+            return guess - 1;
+        }
+
+        public static BignumDigit Divide (BignumDigit uh, BignumDigit ul, BignumDigit v, out BignumDigit q)
+        {
+            long guess;
+            BignumDigit comparand;
+            long v1 = v.High; //(HD_HIGH (v));
+            long v2 = v.Low; //(HD_LOW (v));
+            long uj;
+            BignumDigit uj_uj1;
+            long q1;
+            long q2;
+            long [] u = new long [4];
+            if (uh == 0) {
+                if (ul < v) {
+                    q = (BignumDigit) 0;
+                    return ul;
+                }
+                else if (ul == v) {
+                    q = (BignumDigit) 1;
+                    return (BignumDigit) 0;
+                }
+            }
+            (u [0]) = uh.High; // (HD_HIGH (uh));
+            (u [1]) = uh.Low;  // (HD_LOW (uh));
+            (u [2]) = ul.High; // (HD_HIGH (ul));
+            (u [3]) = ul.Low;  // (HD_LOW (ul));
+            v1 = v.High; // (HD_HIGH (v));
+            v2 = v.Low; // (HD_LOW (v));
+            //BDD_STEP (q1, 0);
+            //#define BDD_STEP(qn, j)							
+            {
+                uj = (u [0]);
+                if (uj != v1) {
+                    uj_uj1 = new BignumDigit (uj, (u [0 + 1]));
+                    guess = (uj_uj1 / v1);
+                    comparand = new BignumDigit (uj_uj1 % v1, u [0 + 2]);
+                }
+                else {
+                    guess = BIGNUM_RADIX_ROOT - 1;
+                    comparand = new BignumDigit (u [0 + 1] + v1, u [0 + 2]);
+                }
+                while ((guess * v2) > comparand.ToLong ()) {
+                    guess -= 1;
+                    comparand += (v1 << BIGNUM_HALF_DIGIT_LENGTH);
+                    if (comparand >= (BignumDigit) BIGNUM_RADIX)
+                        break;
+                }
+
+                q1 = (DivideSubtract (v1, v2, guess, u));
+            }
+            {
+                uj = (u [1]);
+                if (uj != v1) {
+                    uj_uj1 = new BignumDigit (uj, (u [1 + 1]));
+                    guess = (uj_uj1 / v1);
+                    comparand = new BignumDigit (uj_uj1 % v1, u [1 + 2]);
+                }
+                else {
+                    guess = BIGNUM_RADIX_ROOT - 1;
+                    comparand = new BignumDigit (u [1 + 1] + v1, u [1 + 2]);
+                }
+                while ((guess * v2) > comparand.ToLong ()) {
+                    guess -= 1;
+                    comparand += (v1 << BIGNUM_HALF_DIGIT_LENGTH);
+                    if (comparand >= (BignumDigit) BIGNUM_RADIX)
+                        break;
+                }
+
+                q2 = (DivideSubtract (v1, v2, guess, u));
+            }
+            //
+            q = new BignumDigit (q1, q2); // (HD_CONS (q1, q2));
+            return new BignumDigit (u [2], u [3]);
+        }
+
     }
 
     enum bignum_comparison
@@ -697,8 +966,218 @@ namespace Microcode
 
         static void bignum_divide_unsigned_large_denominator (Bignum numerator, Bignum denominator, out Bignum quotient, out Bignum remainder, bool qsign, bool rsign)
         {
-            throw new NotImplementedException ();
+            int length_n = numerator.Length + 1;
+            int length_d = denominator.Length;
+            Bignum q = new Bignum (qsign, length_n - length_d);
+            Bignum u = new Bignum (rsign, length_n);
+
+            int shift = 0;
+            if (!(length_d > 1)) throw new NotImplementedException ();
+
+            {
+                BignumDigit v1 = denominator[length_d - 1];
+                while (v1 < (BIGNUM_RADIX / 2)) {
+                    v1 <<= 1;
+                    shift += 1;
+                }
+            }
+            if (shift == 0) {
+                numerator.DestructiveCopy (u); // bignum_destructive_copy (numerator, u);
+                u [length_n - 1] = (BignumDigit) 0; // (BIGNUM_REF (u, (length_n - 1))) = 0;
+                throw new NotImplementedException ();
+                // bignum_divide_unsigned_normalized (u, denominator, q);
+            }
+            else {
+                Bignum v = new Bignum (false, length_d); // (bignum_allocate (length_d, 0));
+                numerator.DestructiveNormalization (u, shift);   //bignum_destructive_normalization (numerator, u, shift);
+                denominator.DestructiveNormalization (v, shift); //bignum_destructive_normalization (denominator, v, shift);
+                bignum_divide_unsigned_normalized (u, v, q);
+                //bignum_divide_unsigned_normalized (u, v, q);
+                //BIGNUM_DEALLOCATE (v);
+                //if (remainder != ((bignum_type*) 0))
+                //    bignum_destructive_unnormalization (u, shift);
+            }
+                quotient = q.Trim ();// (bignum_trim (q));
+                remainder = u.Trim(); //(bignum_trim (u));
+            //else
+            //    BIGNUM_DEALLOCATE (u);
+            return;
         }
+
+        void DestructiveNormalization (Bignum target, int shift_left)
+        {
+            BignumDigit digit;
+            int scan_source = 0;
+            BignumDigit carry = (BignumDigit) 0;
+            int scan_target = 0;
+            int end_source = this.Length;
+            int end_target = target.Length;
+            int shift_right = (BIGNUM_DIGIT_LENGTH - shift_left);
+            BignumDigit mask = (BignumDigit) ((1UL << shift_right) - 1UL);
+            while (scan_source < end_source) {
+                digit = this[scan_source++];
+                target [scan_target++] = (((digit & mask) << shift_left) | carry);
+                carry = (digit >> shift_right);
+            }
+            if (scan_target < end_target)
+                target [scan_target] = carry;
+            else if (carry != 0)
+                throw new NotImplementedException ();
+            else
+                return;
+        }
+
+static void bignum_divide_unsigned_normalized (Bignum u, Bignum v, Bignum q)
+{
+  int u_length = u.Length; //(BIGNUM_LENGTH (u));
+  int v_length = v.Length; // (BIGNUM_LENGTH (v));
+  int u_start = 0; // (BIGNUM_START_PTR (u));
+  int u_scan = (u_start + u_length);
+  int u_scan_limit = (u_start + v_length);
+  int u_scan_start = (u_scan - v_length);
+  int v_start = 0; // (BIGNUM_START_PTR (v));
+  int v_end = (v_start + v_length);
+  int q_scan = 0;
+  BignumDigit v1 = v[v_end -1];
+  BignumDigit v2 = v[v_end -2];
+  BignumDigit ph;	/* high half of double-digit product */
+  BignumDigit pl;	/* low half of double-digit product */
+  BignumDigit guess;
+  long gh;	/* high half-digit of guess */
+  BignumDigit ch;	/* high half of double-digit comparand */
+  long v2l = v2.Low; //(HD_LOW (v2));
+  long v2h = v2.High; // (HD_HIGH (v2));
+  BignumDigit cl;	/* low half of double-digit comparand */
+
+  BignumDigit gm;		/* memory loc for reference parameter */
+  //if (q != BIGNUM_OUT_OF_BAND)
+  //  q_scan = ((BIGNUM_START_PTR (q)) + (BIGNUM_LENGTH (q)));
+  q_scan = 0 + q.Length;
+  while (u_scan_limit < u_scan)
+    {
+      pl = u [--u_scan] ; //uj = (*--u_scan);
+      if (pl != v1)
+	{
+	  /* comparand =
+	     (((((uj * BIGNUM_RADIX) + uj1) % v1) * BIGNUM_RADIX) + uj2);
+	     guess = (((uj * BIGNUM_RADIX) + uj1) / v1); */
+	  cl = u[u_scan -2];
+	  ch = BignumDigit.Divide (pl, u[u_scan -1], v1, out gm);
+	  guess = gm;
+	}
+      else
+	{
+	  cl = u [u_scan-2];
+	  ch = u [u_scan-1] + v1;
+	  guess = new BignumDigit (BIGNUM_RADIX - 1);
+	}
+//#define gl ph			/* low half-digit of guess */
+//#define uj pl
+//#define qj ph
+      while (true)
+	{
+	  /* product = (guess * v2); */
+	  ph = (BignumDigit) (guess.Low); // gl = (HD_LOW (guess));
+	  gh = guess.High; // (HD_HIGH (guess));
+      pl = ph * v2l;
+	  ph = ((BignumDigit)(v2l * gh) + (ph * v2h) + (BignumDigit)(pl.High));
+	  pl = new BignumDigit (ph.Low, pl.Low); // (HD_CONS ((HD_LOW (ph)), (HD_LOW (pl))));
+	  ph = ((BignumDigit)(v2h * gh) + ph.High);
+	  /* if (comparand >= product) */
+	  if ((ch > ph) || ((ch == ph) && (cl >= pl)))
+	    break;
+	  guess -= 1;
+	  /* comparand += (v1 << BIGNUM_DIGIT_LENGTH) */
+	  ch += v1;
+	  /* if (comparand >= (BIGNUM_RADIX * BIGNUM_RADIX)) */
+	  if (ch >= BIGNUM_RADIX)
+	    break;
+	}
+      
+      ph = (bignum_divide_subtract (v, v_start, v_end, guess, u, (--u_scan_start)));
+      q [--q_scan] = ph; // (*--q_scan) = qj;
+	
+    }
+  return;
+//#undef gl
+//#undef uj
+//#undef qj
+}
+
+static BignumDigit bignum_divide_subtract (Bignum v, int v_start, int v_end, BignumDigit guess, Bignum u, int u_start)
+{
+  int v_scan = v_start;
+  int u_scan = u_start;
+  BignumDigit carry = (BignumDigit)0;
+  if (guess == 0) return (BignumDigit)0;
+  {
+    long gl = guess.Low; //(HD_LOW (guess));
+    long gh = guess.High; //(HD_HIGH (guess));
+    BignumDigit vx;
+    BignumDigit pl;
+    BignumDigit vl;
+//#define vh vx
+//#define ph carry
+//#define diff pl
+    while (v_scan < v_end)
+      {
+	vx = v[v_scan++];
+	vl = (BignumDigit)(vx.Low); //(HD_LOW (v));
+	vx = (BignumDigit)(vx.High); // (HD_HIGH (v));
+	pl = ((vl * gl) + carry.Low);
+	carry = ((vl * gh) + (vx * gl) + pl.High + carry.High);
+	pl = u[u_scan] - new BignumDigit (carry.Low, pl.Low); //(HD_CONS ((HD_LOW (ph)), (HD_LOW (pl)))));
+	if (pl < 0)
+	  {
+	    u[u_scan++] = pl + (BignumDigit)(BIGNUM_RADIX);
+	    carry = ((vx * gh) + carry.High + 1);
+	  }
+	else
+	  {
+	    u[u_scan++] = carry;
+	    carry = ((vx * gh) + carry.High);
+	  }
+      }
+    if (carry == 0)
+      return (guess);
+    pl = u[u_scan] - carry;
+    if (pl < 0)
+      u[u_scan] = (pl + BIGNUM_RADIX);
+    else
+      {
+	u[u_scan] = pl;
+	return (guess);
+      }
+//#undef vh
+//#undef diff
+  }
+  /* Subtraction generated carry, implying guess is one too large.
+     Add v back in to bring it back down. */
+  v_scan = v_start;
+  u_scan = u_start;
+  carry = (BignumDigit) 0;
+  while (v_scan < v_end)
+    {
+      BignumDigit sum = (v[v_scan++] + u[u_scan] + carry);
+      if (sum < BIGNUM_RADIX)
+	{
+	  u[u_scan++] = sum;
+	  carry = (BignumDigit)0;
+	}
+      else
+	{
+	  u[u_scan++] = (sum - BIGNUM_RADIX);
+	  carry = (BignumDigit) 1;
+	}
+    }
+  if (carry == 1)
+    {
+      BignumDigit sum = (u[u_scan] + carry);
+      u[u_scan] = ((sum < BIGNUM_RADIX) ? sum : (sum - BIGNUM_RADIX));
+    }
+  return (guess - 1);
+}
+
 
         BignumDigit DestructiveScaleDown (BignumDigit denominator)
         {

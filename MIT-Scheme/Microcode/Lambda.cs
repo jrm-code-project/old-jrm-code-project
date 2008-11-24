@@ -9,27 +9,27 @@ namespace Microcode
     /// <summary>
     /// Base class for lambda expressions.
     /// </summary>
-    abstract class LambdaBase : SCode
+    abstract public class LambdaBase : SCode
     {
         static public readonly string internalLambda = String.Intern ("#[internal-lambda]");
         static public readonly string unnamed = String.Intern ("#[unnamed-procedure]");
         static public readonly string let = String.Intern ("#[let-procedure]");
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly string name; 
+        protected readonly string lambdaName; 
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly object [] formals;
+        protected readonly object [] lambdaFormals;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected SCode body;     
+        protected SCode lambdaBody;     
  
         protected LambdaBase (TC typeCode, string name, object [] formals, SCode body)
             : base (typeCode)
         {
-            this.name = name;
-            this.formals = formals;
-            this.body = body;
+            this.lambdaName = name;
+            this.lambdaFormals = formals;
+            this.lambdaBody = body;
             // Paranoia:  check for duplicate names
             if (name != "dummy-procedure") {
                 for (int i = 0; i < formals.Length - 1; i++)
@@ -38,47 +38,27 @@ namespace Microcode
             }
         }
 
-        public string Name { [DebuggerStepThrough] get { return this.name; } }
-        public object [] Formals { [DebuggerStepThrough] get { return this.formals; } }
-        public SCode Body { [DebuggerStepThrough] get { return this.body; } }
+        public string Name { [DebuggerStepThrough] get { return this.lambdaName; } }
+        public object [] Formals { [DebuggerStepThrough] get { return this.lambdaFormals; } }
+        public SCode Body { [DebuggerStepThrough] get { return this.lambdaBody; } }
 
         public int LexicalOffset (object name)
         {
             // This way is *slow*
-            // return Array.IndexOf (this.formals, varname);
-            for (int i = 0; i < this.formals.Length; i++)
-                if (name == this.formals [i])
+            // return Array.IndexOf (this.lambdaFormals, varname);
+            for (int i = 0; i < this.lambdaFormals.Length; i++)
+                if (name == this.lambdaFormals [i])
                     return i;
             return -1;
-        }
-
-        public bool IsLetrecLambda ()
-        {
-            return this.body.IsLetrecBody (this.formals, this.formals);
         }
 
         public override bool MutatesAny (object [] formals)
         {
             // Should check for shadowing.
-            return this.body.MutatesAny (formals);
-        }
-
-        public override bool UsesAny (object [] formals)
-        {
-            // Should check for shadowing.
-            return this.body.UsesAny (formals);
+            return this.lambdaBody.MutatesAny (formals);
         }
 
         public abstract BoundVariable IncreaseLexicalDepth (BoundVariable variable);
-
-        //public abstract BoundVariable SimulateDangerousLookup (object name, LexicalMap parent, int safeDepth, int depth);
-        //public abstract BoundVariable SimulateLookup (object name, LexicalMap parent);
-        //public abstract BoundVariable SimulateStaticLookup (object name, LexicalMap parent, int depth);
-
-        public override SCode Alpha (object from, object to)
-        {
-            throw new NotImplementedException ();
-        }
 
         public override SCode Bind (LexicalMap ctenv)
         {
@@ -95,7 +75,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        public override SCode Substitute (object name, object newObject)
         {
             throw new NotImplementedException ();
         }
@@ -116,13 +96,13 @@ namespace Microcode
         public static SCode Make (string name, object [] formals, SCode body)
         {
             if (body == null)
-                throw new ArgumentNullException ("body");
+                throw new ArgumentNullException ("lambdaBody");
             if (formals == null)
-                throw new ArgumentNullException ("formals");
+                throw new ArgumentNullException ("lambdaFormals");
             if (name == null)
                 throw new ArgumentNullException ("varname");
 
-                    // If someone in the body calls `the-environment', then we
+                    // If someone in the lambdaBody calls `the-environment', then we
                     // *must* create a first-class enabled environment.   
             return 
                 (body.CallsTheEnvironment () || ! Configuration.EnableStaticBinding) ? (Lambda) StandardLambda.Make (name, formals, body)
@@ -134,7 +114,7 @@ namespace Microcode
         {
 
             if (formals == null)
-                throw new ArgumentNullException ("formals");
+                throw new ArgumentNullException ("lambdaFormals");
 
             string sname = (string) name;
             object [] cdrArray = (object []) formals;
@@ -149,6 +129,13 @@ namespace Microcode
             return false;
         }
 
+        [SchemePrimitive ("LEXPR?", 1, true)]
+        public static bool IsLexpr (out object answer, object arg)
+        {
+            answer = Constant.sharpF;
+            return false;
+        }
+
         public abstract Closure Close (Environment environment);
 
         #region ISystemPair Members
@@ -159,14 +146,14 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                return UnwrapQuoted (this.body);
+                return UnwrapQuoted (this.lambdaBody);
             }
 
             [DebuggerStepThrough]
             set
             {
                 // ugh!  but the advice mechanism uses it.
-                this.body = EnsureSCode (value);
+                this.lambdaBody = EnsureSCode (value);
             }
         }
 
@@ -176,9 +163,9 @@ namespace Microcode
             //[DebuggerStepThrough]
             get
             {
-                object [] fakeFormals = new object [this.formals.Length + 1];
-                fakeFormals [0] = this.name;
-                Array.Copy (this.formals, 0, fakeFormals, 1, this.formals.Length);
+                object [] fakeFormals = new object [this.lambdaFormals.Length + 1];
+                fakeFormals [0] = this.lambdaName;
+                Array.Copy (this.lambdaFormals, 0, fakeFormals, 1, this.lambdaFormals.Length);
                 return fakeFormals;
             }
 
@@ -214,18 +201,20 @@ namespace Microcode
         public static SCode Make (string name, object [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
-                throw new ArgumentNullException ("body");
+                throw new ArgumentNullException ("lambdaBody");
             if (formals == null)
-                throw new ArgumentNullException ("formals");
+                throw new ArgumentNullException ("lambdaFormals");
             if (name == null)
                 throw new ArgumentNullException ("varname");
 
-                    // If someone in the body calls `the-environment', then we
-                    // *must* create a first-class enabled environment.   
             return 
-                (body.CallsTheEnvironment () || ! Configuration.EnableStaticBinding)
-                    ? (ExtendedLambda) StandardExtendedLambda.Make (name, formals, body, required, optional, rest)
-                    : (ExtendedLambda) StaticExtendedLambda.Make (name, formals, body, required, optional, rest);
+                // If no optional, rest, or aux arguments, just make a regular lambda.
+                (required == formals.Length && optional == 0 && rest == false) ? Lambda.Make (name, formals, body)
+                // If someone in the lambdaBody calls `the-environment', then we
+                // *must* create a first-class enabled environment.   
+
+                : (body.CallsTheEnvironment () || ! Configuration.EnableStaticBinding) ? (ExtendedLambda) StandardExtendedLambda.Make (name, formals, body, required, optional, rest)
+                : (ExtendedLambda) StaticExtendedLambda.Make (name, formals, body, required, optional, rest);
         }
 
         public static SCode Make (Hunk3 init)
@@ -255,7 +244,7 @@ namespace Microcode
             // [DebuggerStepThrough]
             get
             {
-                return UnwrapQuoted (this.body);
+                return UnwrapQuoted (this.lambdaBody);
             }
 
             set
@@ -270,9 +259,9 @@ namespace Microcode
             // [DebuggerStepThrough]
             get
             {
-                object [] fakeFormals = new object [this.formals.Length + 1];
-                fakeFormals [0] = this.name;
-                Array.Copy (this.formals, 0, fakeFormals, 1, this.formals.Length);
+                object [] fakeFormals = new object [this.lambdaFormals.Length + 1];
+                fakeFormals [0] = this.lambdaName;
+                Array.Copy (this.lambdaFormals, 0, fakeFormals, 1, this.lambdaFormals.Length);
                 return fakeFormals;
             }
 
@@ -300,31 +289,31 @@ namespace Microcode
         #endregion
 
 
-        //public override BoundVariable SimulateLookup (object name, LexicalMap parent)
+        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
         //{
-        //    int offset = LexicalOffset (name);
-        //    if (offset == -1)
-        //        return parent.SimulateDangerousLookup (name, 0, 0);
+        //    int argOffset = LexicalOffset (lambdaName);
+        //    if (argOffset == -1)
+        //        return parent.SimulateDangerousLookup (lambdaName, 0, 0);
         //    else
-        //        return Argument.Make (name, offset);
+        //        return Argument.Make (lambdaName, argOffset);
         //}
 
-        //public override BoundVariable SimulateStaticLookup (object name, LexicalMap parent, int depth)
+        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
         //{
-        //    int offset = LexicalOffset (name);
-        //    if (offset == -1)
-        //        return parent.SimulateDangerousLookup (name, depth, 0);
+        //    int argOffset = LexicalOffset (lambdaName);
+        //    if (argOffset == -1)
+        //        return parent.SimulateDangerousLookup (lambdaName, argDepth, 0);
         //    else
-        //        return LexicalVariable.Make (name, depth, offset);
+        //        return LexicalVariable.Make (lambdaName, argDepth, argOffset);
         //}
 
-        //public override BoundVariable SimulateDangerousLookup (object name, LexicalMap parent, int safeDepth, int depth)
+        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
         //{
-        //    int offset = LexicalOffset (name);
-        //    if (offset == -1)
-        //        return parent.SimulateDangerousLookup (name, safeDepth, depth + 1);
+        //    int argOffset = LexicalOffset (lambdaName);
+        //    if (argOffset == -1)
+        //        return parent.SimulateDangerousLookup (lambdaName, safeDepth, argDepth + 1);
         //    else
-        //        return DangerousLexicalVariable.Make (name, safeDepth, depth, offset);
+        //        return DangerousLexicalVariable.Make (lambdaName, safeDepth, argDepth, argOffset);
         //}
     }
 
@@ -343,9 +332,9 @@ namespace Microcode
         public static new StandardExtendedLambda Make (string name, object [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
-                throw new ArgumentNullException ("body");
+                throw new ArgumentNullException ("lambdaBody");
             if (formals == null)
-                throw new ArgumentNullException ("formals");
+                throw new ArgumentNullException ("lambdaFormals");
             if (name == null)
                 throw new ArgumentNullException ("varname");
 
@@ -354,10 +343,10 @@ namespace Microcode
 
         public override SCode Bind (LexicalMap ctenv)
         {
-            SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
-            return this.body == optimizedBody
+            SCode optimizedBody = this.lambdaBody.Bind (ctenv.Extend (this));
+            return this.lambdaBody == optimizedBody
                 ? this
-                : new StandardExtendedLambda (this.name, this.formals, optimizedBody, this.required, this.optional, this.rest);
+                : ExtendedLambda.Make (this.lambdaName, this.lambdaFormals, optimizedBody, this.required, this.optional, this.rest);
         }
 
         public override bool CallsTheEnvironment ()
@@ -369,24 +358,24 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("StandardExtendedLambda.EvalStep");
 #endif
             answer = new StandardExtendedClosure (this, environment);
             return false;
         }
 
 
-        //public override BoundVariable SimulateLookup (object name, LexicalMap parent)
+        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //public override BoundVariable SimulateStaticLookup (object name, LexicalMap parent, int depth)
+        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //public override BoundVariable SimulateDangerousLookup (object name, LexicalMap parent, int safeDepth, int depth)
+        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -413,9 +402,9 @@ namespace Microcode
         public static new StaticExtendedLambda Make (string name, object [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
-                throw new ArgumentNullException ("body");
+                throw new ArgumentNullException ("lambdaBody");
             if (formals == null)
-                throw new ArgumentNullException ("formals");
+                throw new ArgumentNullException ("lambdaFormals");
             if (name == null)
                 throw new ArgumentNullException ("varname");
 
@@ -424,10 +413,10 @@ namespace Microcode
 
         public override SCode Bind (LexicalMap ctenv)
         {
-            SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
-            return this.body == optimizedBody
+            SCode optimizedBody = this.lambdaBody.Bind (ctenv.Extend (this));
+            return this.lambdaBody == optimizedBody
                 ? this
-                : new StaticExtendedLambda (this.name, this.formals, optimizedBody, this.required, this.optional, this.rest);
+                : StaticExtendedLambda.Make (this.lambdaName, this.lambdaFormals, optimizedBody, this.required, this.optional, this.rest);
         }
 
         public override bool CallsTheEnvironment ()
@@ -438,37 +427,37 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("StaticExtendedLambda.EvalStep");
 #endif
             answer = new StaticExtendedClosure (this, environment);
             return false;
         }
 
-        //public override BoundVariable SimulateLookup (object name, LexicalMap parent)
+        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
         //{
-        //    int offset = LexicalOffset (name);
-        //    if (offset == -1)
-        //        return parent.SimulateStaticLookup (name, 1);
+        //    int argOffset = LexicalOffset (lambdaName);
+        //    if (argOffset == -1)
+        //        return parent.SimulateStaticLookup (lambdaName, 1);
         //    else
-        //        return Argument.Make (name, offset);
+        //        return Argument.Make (lambdaName, argOffset);
         //}
 
-        //public override BoundVariable SimulateStaticLookup (object name, LexicalMap parent, int depth)
+        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
         //{
-        //    int offset = LexicalOffset (name);
-        //    if (offset == -1)
-        //        return parent.SimulateStaticLookup (name, depth + 1);
+        //    int argOffset = LexicalOffset (lambdaName);
+        //    if (argOffset == -1)
+        //        return parent.SimulateStaticLookup (lambdaName, argDepth + 1);
         //    else
-        //        return LexicalVariable.Make (name, depth, offset);
+        //        return LexicalVariable.Make (lambdaName, argDepth, argOffset);
         //}
 
-        //public override BoundVariable SimulateDangerousLookup (object name, LexicalMap parent, int safeDepth, int depth)
+        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
         //{
-        //    int offset = LexicalOffset (name);
-        //    if (offset == -1)
-        //        return parent.SimulateDangerousLookup (name, safeDepth, depth + 1);
+        //    int argOffset = LexicalOffset (lambdaName);
+        //    if (argOffset == -1)
+        //        return parent.SimulateDangerousLookup (lambdaName, safeDepth, argDepth + 1);
         //    else
-        //        return DangerousLexicalVariable.Make (name, safeDepth, depth, offset);
+        //        return DangerousLexicalVariable.Make (lambdaName, safeDepth, argDepth, argOffset);
         //}
 
         public override BoundVariable IncreaseLexicalDepth (BoundVariable variable)
@@ -500,10 +489,10 @@ namespace Microcode
 
         public override SCode Bind (LexicalMap ctenv)
         {
-            SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
-            return this.body == optimizedBody
+            SCode optimizedBody = this.lambdaBody.Bind (ctenv.Extend (this));
+            return this.lambdaBody == optimizedBody
                 ? this
-                : new StandardLambda (this.name, this.formals, optimizedBody);
+                : new StandardLambda (this.lambdaName, this.lambdaFormals, optimizedBody);
         }
 
         public override bool CallsTheEnvironment ()
@@ -514,23 +503,23 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("StandardLambda.EvalStep");
 #endif
             answer = new StandardClosure (this, environment);
             return false;
         }
 
-        //public override BoundVariable SimulateLookup (object name, LexicalMap parent)
+        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //public override BoundVariable SimulateStaticLookup (object name, LexicalMap parent, int depth)
+        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
 
-        //public override BoundVariable SimulateDangerousLookup (object name, LexicalMap parent, int safeDepth, int depth)
+        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
         //{
         //    throw new NotImplementedException ();
         //}
@@ -559,31 +548,31 @@ namespace Microcode
             return false;
         }
         
-        //public override BoundVariable SimulateLookup (object name, LexicalMap parent)
+        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
         //{
-        //    int offset = LexicalOffset (name);
-        //    if (offset == -1)
-        //        return parent.SimulateStaticLookup (name, 1);
+        //    int argOffset = LexicalOffset (lambdaName);
+        //    if (argOffset == -1)
+        //        return parent.SimulateStaticLookup (lambdaName, 1);
         //    else
-        //        return Argument.Make (name, offset);
+        //        return Argument.Make (lambdaName, argOffset);
         //}
 
-        //public override BoundVariable SimulateStaticLookup (object name, LexicalMap parent, int depth)
+        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
         //{
-        //    int offset = LexicalOffset (name);
-        //    if (offset == -1)
-        //        return parent.SimulateStaticLookup (name, depth + 1);
+        //    int argOffset = LexicalOffset (lambdaName);
+        //    if (argOffset == -1)
+        //        return parent.SimulateStaticLookup (lambdaName, argDepth + 1);
         //    else
-        //        return LexicalVariable.Make (name, depth, offset);
+        //        return LexicalVariable.Make (lambdaName, argDepth, argOffset);
         //}
 
-        //public override BoundVariable SimulateDangerousLookup (object name, LexicalMap parent, int safeDepth, int depth)
+        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
         //{
-        //    int offset = LexicalOffset (name);
-        //    if (offset == -1)
-        //        return parent.SimulateDangerousLookup (name, safeDepth, depth + 1);
+        //    int argOffset = LexicalOffset (lambdaName);
+        //    if (argOffset == -1)
+        //        return parent.SimulateDangerousLookup (lambdaName, safeDepth, argDepth + 1);
         //    else
-        //        return DangerousLexicalVariable.Make (name, safeDepth, depth, offset);
+        //        return DangerousLexicalVariable.Make (lambdaName, safeDepth, argDepth, argOffset);
         //}
 
 
@@ -617,16 +606,16 @@ namespace Microcode
 
         public override SCode Bind (LexicalMap ctenv)
         {
-            SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
-            return this.body == optimizedBody
+            SCode optimizedBody = this.lambdaBody.Bind (ctenv.Extend (this));
+            return this.lambdaBody == optimizedBody
                 ? this
-                : new StaticLambda (this.name, this.formals, optimizedBody);
+                : new StaticLambda (this.lambdaName, this.lambdaFormals, optimizedBody);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("StaticLambda.EvalStep");
 #endif
             answer = new StaticClosure (this, environment);
             return false;
@@ -653,16 +642,16 @@ namespace Microcode
 
         public override SCode Bind (LexicalMap ctenv)
         {
-            SCode optimizedBody = this.body.Bind (ctenv.Extend (this));
-            return this.body == optimizedBody
+            SCode optimizedBody = this.lambdaBody.Bind (ctenv.Extend (this));
+            return this.lambdaBody == optimizedBody
                 ? this
-                : new SimpleLambda (this.name, this.formals, optimizedBody);
+                : new SimpleLambda (this.lambdaName, this.lambdaFormals, optimizedBody);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("SimpleLambda.EvalStep");
 #endif
             answer = new SimpleClosure (this, environment);
             return false;

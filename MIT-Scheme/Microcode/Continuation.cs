@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Microcode
 {
@@ -75,6 +76,9 @@ namespace Microcode
         {
             object answer;
             bool bounce;
+#if DEBUG
+            Timer tosProbe = new Timer (SCode.TopOfStackProbe, null, 5, 1);
+#endif
             do {
                 answer = null;
                 bounce = false;
