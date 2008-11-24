@@ -79,7 +79,6 @@ namespace Microcode
         {
             answer = (int) arg0 + 1;
             return false;
-
         }
 
         [SchemePrimitive ("MINUS-ONE-PLUS-FIXNUM", 1, false)]
@@ -104,11 +103,11 @@ namespace Microcode
             return false;
         }
 
-    //    [SchemePrimitive ("FIXNUM-NEGATE", 1)]
-    //    public static PartialResult Negate (object arg0)
-    //    {
-    //        throw new NotImplementedException ();
-    //    }
+        [SchemePrimitive ("FIXNUM-NEGATE", 1, false)]
+        public static bool Negate (out object answer, object arg0)
+        {
+            throw new NotImplementedException ();
+        }
 
         [SchemePrimitive ("MULTIPLY-FIXNUM", 2, false)]
         public static bool Multiply (out object answer, object left, object right)

@@ -227,17 +227,19 @@ namespace Microcode
             return false;
         }
 
-        //[SchemePrimitive ("FLONUM-NEGATE", 1)]
-        //public static PartialResult Negate (object arg0)
-        //{
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("FLONUM-NEGATE", 1, false)]
+        public static bool Negate (out object answer, object arg0)
+        {
+            answer = -(double) arg0;
+            return false;
+        }
 
-        //[SchemePrimitive ("FLONUM-ABS", 1)]
-        //public static PartialResult Abs (object arg0)
-        //{
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("FLONUM-ABS", 1, false)]
+        public static bool Abs (out object answer, object arg0)
+        {
+            answer = Math.Abs ((double) arg0);
+            return false;
+        }
 
         [SchemePrimitive ("FLONUM-EQUAL?", 2, false)]
         public static bool IsEqual (out object answer, object left, object right)

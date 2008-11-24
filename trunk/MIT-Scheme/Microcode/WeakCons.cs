@@ -41,6 +41,13 @@ namespace Microcode
             }
         }
 
+        [SchemePrimitive ("WEAK-CONS?", 1, true)]
+        public static bool IsBitString (out object answer, object arg)
+        {
+            answer = arg is WeakCons;
+            return false;
+        }
+
         #region ISystemPair Members
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar

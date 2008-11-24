@@ -48,7 +48,7 @@ namespace Microcode
                     break;
 
                 case TC.DISJUNCTION:
-                    answer = new Disjunction (car, cdr);
+                    answer = Disjunction.Make (car, cdr);
                     break;
 
                 case TC.ENTITY:

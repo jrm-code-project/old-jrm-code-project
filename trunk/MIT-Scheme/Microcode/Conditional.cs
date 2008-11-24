@@ -13,8 +13,13 @@ namespace Microcode
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type>();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type>();
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly Type predicateType;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly Type consequentType;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly Type alternativeType;
 #endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -42,19 +47,74 @@ namespace Microcode
 #endif
         }
 
-        public static SCode Make (SCode predicate, SCode consequent, SCode alternative)
+        static SCode SpecialMake (Quotation predicate, SCode consequent, SCode alternative)
+        {
+            throw new NotImplementedException ();
+        }
+
+        static SCode StandardMake (SCode predicate, SCode consequent, SCode alternative)
         {
             return
-                (Configuration.EnableSuperOperators && predicate is Argument && consequent is Argument && alternative is Argument) ? ConditionalAAA.Make ((Argument) predicate, (Argument) consequent, (Argument) alternative)
-                : (Configuration.EnableSuperOperators && predicate is Argument && consequent is Argument) ? ConditionalAAS.Make ((Argument) predicate, (Argument) consequent, alternative)
-                : (Configuration.EnableSuperOperators && predicate is Argument && alternative is Argument) ? ConditionalASA.Make ((Argument) predicate, consequent, (Argument) alternative)
-                : (Configuration.EnableSuperOperators && consequent is Argument && alternative is Argument) ? ConditionalSAA.Make (predicate, (Argument) consequent, (Argument) alternative)
-                : (Configuration.EnableSuperOperators && predicate is Argument) ? ConditionalASS.Make ((Argument) predicate, consequent, alternative)
-                : (Configuration.EnableSuperOperators && consequent is Argument) ? ConditionalSAS.Make (predicate, (Argument) consequent, alternative)
-                : (Configuration.EnableSuperOperators && alternative is Argument) ? ConditionalSSA.Make (predicate, consequent, (Argument) alternative)
+                (Configuration.EnableSuperOperators && predicate is PrimitiveCombination1) ? PCond1.Make ((PrimitiveCombination1) predicate, consequent, alternative)
+                : (Configuration.EnableSuperOperators && predicate is PrimitiveCombination2) ? PCond2.Make ((PrimitiveCombination2) predicate, consequent, alternative)
+                : (Configuration.EnableSuperOperators && predicate is LexicalVariable) ? ConditionalL.Make ((LexicalVariable) predicate, consequent, alternative)
+                : (Configuration.EnableSuperOperators && consequent is LexicalVariable) ? ConditionalSL.Make (predicate, (LexicalVariable) consequent, alternative)
+                : (Configuration.EnableSuperOperators && consequent is Quotation) ? ConditionalSQ.Make (predicate, (Quotation) consequent, alternative)
+                : (Configuration.EnableSuperOperators && alternative is LexicalVariable) ? ConditionalSSL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (Configuration.EnableSuperOperators && alternative is Quotation) ? ConditionalSSQ.Make (predicate, consequent, (Quotation) alternative)
                 : new Conditional (predicate, consequent, alternative);
         }
 
+        static SCode SpecialMake (SCode predicate, bool consequent, bool alternative)
+        {
+            if (consequent == true && alternative == false) {
+                if (predicate is Conditional)
+                    return Unimplemented ();
+                else
+                    // In this case, we're canonicalizing a return value to a boolean.
+                    return StandardMake (predicate, Quotation.Make (consequent), Quotation.Make (alternative));
+            }
+            else if (consequent == false && alternative == true) {
+                return 
+                    
+                    PrimitiveCombination1.Make (Primitive.Not, predicate);
+            }
+            else
+                // Should be impossible.
+               return Unimplemented ();
+        }
+
+        static SCode RewriteAsSequence (SCode predicate, Quotation consequent)
+        {
+            Console.WriteLine ("; rewrite as sequence");
+            return Sequence2.Make (predicate, consequent);
+        }
+
+        static SCode SpecialMake (SCode predicate, Quotation consequent, Quotation alternative)
+        {
+            object arg0 = consequent.Quoted;
+            object arg1 = alternative.Quoted;
+            return (Configuration.EnableMergeConditionalResult &&
+                     ((arg0 == null) && (arg1 == null))
+                || ((arg1 != null) &&
+                    ((arg0 == arg1)
+                     || ((arg0 is Int32 && arg1 is Int32) && ((int) arg0 == (int) arg1))
+                     || ((arg0 is char && arg1 is char) && ((char) arg0 == (char) arg1))
+                     || ((arg0 is bool && arg1 is bool) && ((bool) arg0 == (bool) arg1))))) ? RewriteAsSequence (predicate, consequent)
+                     : (arg0 is Boolean && arg1 is Boolean) ? SpecialMake (predicate, (bool) arg0, (bool) arg1)
+                     : (arg0 == Constant.Unspecific && Configuration.EnableTrueUnspecific) ? SpecialMake (predicate, alternative, alternative)
+                     : (arg1 == Constant.Unspecific && Configuration.EnableTrueUnspecific) ? SpecialMake (predicate, consequent, consequent)
+                     : StandardMake (predicate, consequent, alternative);
+            
+        }
+
+        public static SCode Make (SCode predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is Quotation) ? SpecialMake ((Quotation) predicate, consequent, alternative)
+                : (consequent is Quotation && alternative is Quotation) ? SpecialMake (predicate, (Quotation) consequent, (Quotation) alternative)
+                : StandardMake (predicate, consequent, alternative);
+        }
 
         public static SCode Make (object predicate, object consequent, object alternative)
         {
@@ -108,21 +168,10 @@ namespace Microcode
             SCode optCons = this.consequent.Bind (ctenv);
             SCode optAlt = this.alternative.Bind (ctenv);
             return 
-                //(optPred is Variable
-            //    && optCons is Variable
-            //    && ((Variable) optPred).varname == ((Variable) optCons).varname) ? new Disjunction (optPred, optCons)
-            //    : 
-            //(Configuration.EnableSuperOperators && optPred is PrimitiveConditional1) ? ConditionalPC1.Make ((PrimitiveConditional1) optPred, optCons, optAlt)
-            //: (Configuration.EnableSuperOperators && optPred is PrimitiveConditional2) ? ConditionalPC2.Make ((PrimitiveConditional2) optPred, optCons, optAlt)
-            //: (Configuration.EnableSuperOperators && optPred is PrimitiveCombination1) ? PrimitiveConditional1.Make (((PrimitiveCombination1) optPred).Operator, ((PrimitiveCombination1) optPred).Operand, optCons, optAlt)
-            //    : (Configuration.EnableSuperOperators && optPred is PrimitiveCombination2) ? PrimitiveConditional2.Make (((PrimitiveCombination2) optPred).Rator, ((PrimitiveCombination2) optPred).Rand0, ((PrimitiveCombination2) optPred).Rand1, optCons, optAlt)
-            //: (Configuration.EnableSuperOperators && optCons is Quotation) ? ConditionalSQS.Make (optPred, (Quotation) optCons, optAlt)
-            //: (Configuration.EnableSuperOperators && optPred is Argument) ? ConditionalA.Make ((Argument) optPred, optCons, optAlt)
-            //    : 
-            (optPred == this.predicate
+                 (optPred == this.predicate
                   && optCons == this.consequent
                   && optAlt == this.alternative) ? this
-                : new Conditional (optPred, optCons, optAlt);
+                : Conditional.Make (optPred, optCons, optAlt);
         }
 
         public override bool CallsTheEnvironment ()
@@ -135,15 +184,19 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.predicate);
             predicateTypeHistogram.Note (this.predicateType);
+            SCode.location = "Conditional.EvalStep";
 #endif
             object ev; 
             Control unev = this.predicate;
             Environment env = environment;
 
             while (unev.EvalStep (out ev, ref unev, ref env)) { };
+#if DEBUG
+                        SCode.location = "Conditional.EvalStep.1";
+#endif
             if (ev == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
                 environment = env;
@@ -154,9 +207,10 @@ namespace Microcode
 
             if ((ev is bool) && (bool) ev == false) {
 #if DEBUG
+                SCode.location = "-";
                 noteCalls (this.alternative);
                 alternativeTypeHistogram.Note(this.alternativeType);
-                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+                SCode.location = "Conditional.EvalStep.2";
 #endif
                 expression = this.alternative;
                 answer = null;
@@ -164,9 +218,10 @@ namespace Microcode
             }
             else {
 #if DEBUG
+                SCode.location = "-";
                 noteCalls (this.consequent);
                 consequentTypeHistogram.Note(this.consequentType);
-                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+                SCode.location = "Conditional.EvalStep.3";
 #endif
                 expression = this.consequent;
                 answer = null;
@@ -179,13 +234,6 @@ namespace Microcode
             return this.predicate.MutatesAny (formals)
                 || this.consequent.MutatesAny (formals)
                 || this.alternative.MutatesAny (formals);
-        }
-
-        public override bool UsesAny (object [] formals)
-        {
-            return this.predicate.UsesAny (formals)
-                || this.consequent.UsesAny (formals)
-                || this.alternative.UsesAny (formals);
         }
 
         #region ISystemHunk3 Members
@@ -229,12 +277,7 @@ namespace Microcode
 
         #endregion
 
-        public override SCode Alpha (object from, object to)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        public override SCode Substitute (object name, object newObject)
         {
             throw new NotImplementedException ();
         }
@@ -279,19 +322,3258 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class Disjunction : SCode, ISystemPair
+    class ConditionalL : Conditional
     {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode predicate;
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object predicateName;
+        public readonly int predicateDepth;
+        public readonly int predicateOffset;
+
+        protected ConditionalL (LexicalVariable predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.predicateName = predicate.Name;
+            this.predicateDepth = predicate.Depth;
+            this.predicateOffset = predicate.Offset;
+        }
+
+        public static SCode Make (LexicalVariable predicate, SCode consequent, SCode alternative)
+        {
+            return 
+                (predicate is Argument) ? ConditionalA.Make ((Argument) predicate, consequent, alternative)
+                : (predicate is LexicalVariable1) ? ConditionalL1.Make ((LexicalVariable1) predicate, consequent, alternative)
+                : (consequent is LexicalVariable) ? Unimplemented()
+            : (consequent is Quotation) ? ConditionalLQ.Make (predicate, (Quotation) consequent, alternative)
+            : (alternative is LexicalVariable) ? ConditionalLSL.Make (predicate, consequent, (LexicalVariable) alternative)
+            : (alternative is Quotation) ? ConditionalLSQ.Make (predicate, consequent, (Quotation) alternative)
+                
+            :   new ConditionalL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA : ConditionalL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA (Argument predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is Argument0) ? ConditionalA0.Make ((Argument0) predicate, consequent, alternative)
+                :  (predicate is Argument1) ? ConditionalA1.Make ((Argument1) predicate, consequent, alternative)
+                : (consequent is LexicalVariable) ? ConditionalAL.Make (predicate, (LexicalVariable) consequent, alternative)
+            : (consequent is Quotation) ? ConditionalAQ.Make (predicate, (Quotation) consequent, alternative)
+            : (alternative is LexicalVariable) ? ConditionalASL.Make (predicate, consequent, (LexicalVariable) alternative)
+            : (alternative is Quotation) ? ConditionalASQ.Make (predicate, consequent, (Quotation) alternative)
+            : new ConditionalA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA0 : ConditionalA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA0 (Argument0 predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (consequent is LexicalVariable) ? ConditionalA0L.Make (predicate, (LexicalVariable) consequent, alternative)
+            : (consequent is Quotation) ? ConditionalA0Q.Make (predicate, (Quotation) consequent, alternative)
+            : (alternative is LexicalVariable) ? ConditionalA0SL.Make (predicate, consequent, (LexicalVariable) alternative)
+            : (alternative is Quotation) ? ConditionalA0SQ.Make (predicate, consequent, (Quotation) alternative)
+            : new ConditionalA0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA0.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA0L : ConditionalA0
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA0L (Argument0 predicate, LexicalVariable consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, LexicalVariable consequent, SCode alternative)
+        {
+            return
+                (consequent is Argument) ? ConditionalA0A.Make (predicate, (Argument) consequent, alternative)
+            : (consequent is LexicalVariable1) ? ConditionalA0L1.Make (predicate, (LexicalVariable1) consequent, alternative)
+            : (alternative is LexicalVariable) ? Unimplemented()
+            : (alternative is Quotation) ? Unimplemented ()
+
+            : new ConditionalA0L (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalA0.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA0A : ConditionalA0L
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA0A (Argument0 predicate, Argument consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, Argument consequent, SCode alternative)
+        {
+            return
+                (consequent is Argument0) ? Disjunction.Make (predicate, alternative)
+            : (consequent is Argument1) ? ConditionalA0A1.Make (predicate, (Argument1) consequent, alternative)
+            : (alternative is LexicalVariable) ? Unimplemented ()
+            : (alternative is Quotation) ? Unimplemented ()
+
+            : new ConditionalA0A (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalA0.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA0A1 : ConditionalA0A
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA0A1 (Argument0 predicate, Argument1 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, Argument1 consequent, SCode alternative)
+        {
+            return
+                 (alternative is LexicalVariable) ? Unimplemented ()
+            : (alternative is Quotation) ? Unimplemented ()
+
+            : new ConditionalA0A1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA0A1.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument1Value;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA0L1 : ConditionalA0L
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA0L1 (Argument0 predicate, LexicalVariable1 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, LexicalVariable1 consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? ConditionalA0L1L.Make (predicate, consequent, (LexicalVariable) alternative)
+               : (alternative is Quotation) ? Unimplemented ()
+            : new ConditionalA0L1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalA0.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    class ConditionalA0L1L : ConditionalA0L1
+    {
+        protected ConditionalA0L1L (Argument0 predicate, LexicalVariable1 consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, LexicalVariable1 consequent, LexicalVariable alternative)
+        {
+            return
+                (alternative is Argument) ? Unimplemented()
+               : (alternative is LexicalVariable1) ? Unimplemented ()
+            : new ConditionalA0L1L (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalA0.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalA0Q : ConditionalA0
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object consequentValue;
+        protected ConditionalA0Q (Argument0 predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
+
+        public static SCode Make (Argument0 predicate, Quotation consequent, SCode alternative)
+        {
+            return
+              (alternative is LexicalVariable) ? ConditionalA0QL.Make (predicate, consequent, (LexicalVariable) alternative)
+            : (alternative is Quotation) ? ConditionalA0QQ.Make (predicate, consequent, (Quotation) alternative)
+            : new ConditionalA0Q (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA0Q.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = this.consequentValue;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA0QL : ConditionalA0Q
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeName;
+        protected readonly int alternativeDepth;
+        protected readonly int alternativeOffset;
+
+        protected ConditionalA0QL (Argument0 predicate, Quotation consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (Argument0 predicate, Quotation consequent, LexicalVariable alternative)
+        {
+            return
+              (alternative is Argument) ? ConditionalA0QA.Make (predicate, consequent, (Argument) alternative)
+            : (alternative is LexicalVariable1) ? Unimplemented()
+
+            : new ConditionalA0QL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalA0.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA0QA : ConditionalA0QL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+
+        protected ConditionalA0QA (Argument0 predicate, Quotation consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+
+        }
+
+        public static SCode Make (Argument0 predicate, Quotation consequent, Argument alternative)
+        {
+            return
+              (alternative is Argument0) ? Unimplemented()
+            : (alternative is Argument1) ? Unimplemented ()
+            : new ConditionalA0QA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalA0.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalA0QQ : ConditionalA0Q
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeValue;
+        protected ConditionalA0QQ (Argument0 predicate, Quotation consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (Argument0 predicate, Quotation consequent, Quotation alternative)
+        {
+            object isEq;
+            ObjectModel.Eq (out isEq, consequent.Quoted, alternative.Quoted);
+            if ((isEq is bool) && (bool) isEq == false)
+                return new ConditionalA0QQ (predicate, consequent, alternative);
+            else
+                // Same value either way, so punt.
+                return consequent;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalA0.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalA0SL : ConditionalA0
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeName;
+        protected readonly int alternativeDepth;
+        protected readonly int alternativeOffset;
+
+        protected ConditionalA0SL (Argument0 predicate, SCode consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (Argument0 predicate, SCode consequent, LexicalVariable alternative)
+        {
+            return
+                (alternative is Argument) ? ConditionalA0SA.Make (predicate, consequent, (Argument) alternative)
+                :(alternative is LexicalVariable1) ? ConditionalA0SL1.Make (predicate, consequent, (LexicalVariable1) alternative)
+
+            : new ConditionalA0SL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalA0.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    class ConditionalA0SA : ConditionalA0SL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA0SA (Argument0 predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, SCode consequent, Argument alternative)
+        {
+            return
+                (alternative is Argument0) ? ConditionalA0SQ.Make (predicate, consequent, Quotation.Make (false))
+                : (alternative is Argument1) ? ConditionalA0SA1.Make (predicate, consequent, (Argument1) alternative)
+
+            : new ConditionalA0SA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA0SA.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+                answer = environment.ArgumentValue (this.alternativeOffset);
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    class ConditionalA0SA1 : ConditionalA0SA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA0SA1 (Argument0 predicate, SCode consequent, Argument1 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, SCode consequent, Argument1 alternative)
+        {
+            return
+                 new ConditionalA0SA1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA0SA1.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+                answer = environment.Argument1Value;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+    class ConditionalA0SL1 : ConditionalA0SL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA0SL1 (Argument0 predicate, SCode consequent, LexicalVariable1 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, SCode consequent, LexicalVariable1 alternative)
+        {
+            return
+                 new ConditionalA0SL1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA0SL.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalA0SQ : ConditionalA0
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeValue;
+
+        protected ConditionalA0SQ (Argument0 predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (Argument0 predicate, SCode consequent, Quotation alternative)
+        {
+            return
+                new ConditionalA0SQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA0SQ.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+                answer = this.alternativeValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalA1 : ConditionalA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA1 (Argument1 predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument1 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                 (consequent is LexicalVariable) ? ConditionalA1L.Make (predicate, (LexicalVariable) consequent, alternative)
+                : (consequent is Quotation) ? ConditionalA1Q.Make (predicate, (Quotation) consequent, alternative)
+                : (alternative is LexicalVariable) ? ConditionalA1SL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? ConditionalA1SQ.Make (predicate, consequent, (Quotation) alternative)
+                : new ConditionalA1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA1.EvalStep");
+#endif
+            object ev = environment.Argument1Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA1L : ConditionalA1
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object consequentName;
+        public readonly int consequentDepth;
+        public readonly int consequentOffset;
+
+        protected ConditionalA1L (Argument1 predicate, LexicalVariable consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument1 predicate, LexicalVariable consequent, SCode alternative)
+        {
+            return
+                 (consequent is Argument) ? ConditionalA1A.Make (predicate, (Argument) consequent, alternative)
+                : (consequent is LexicalVariable1) ? Unimplemented()
+                : (alternative is LexicalVariable) ? Unimplemented()
+                : (alternative is Quotation) ? Unimplemented()
+                : new ConditionalA1L (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA1L.EvalStep");
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+    class ConditionalA1A : ConditionalA1L
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA1A (Argument1 predicate, Argument consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument1 predicate, Argument consequent, SCode alternative)
+        {
+            return
+                 (consequent is Argument0) ? Unimplemented()
+                : (consequent is Argument1) ? Disjunction.Make (predicate, alternative)
+                : (alternative is LexicalVariable) ? Unimplemented ()
+                : (alternative is Quotation) ? Unimplemented ()
+                : new ConditionalA1A (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA1A.EvalStep");
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+
+    [Serializable]
+    class ConditionalA1Q : ConditionalA1
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object consequentValue;
+
+        protected ConditionalA1Q (Argument1 predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
+
+        public static SCode Make (Argument1 predicate, Quotation consequent, SCode alternative)
+        {
+            return
+               (alternative is LexicalVariable) ? Unimplemented()
+            : (alternative is Quotation) ? ConditionalA1QQ.Make (predicate, consequent, (Quotation) alternative)
+            : new ConditionalA1Q (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA1Q.EvalStep");
+#endif
+            object ev = environment.Argument1Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = this.consequentValue;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalA1QQ : ConditionalA1Q
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA1QQ (Argument1 predicate, Quotation consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument1 predicate, Quotation consequent, Quotation alternative)
+        {
+            return
+             new ConditionalA1QQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+    [Serializable]
+    class ConditionalA1SL : ConditionalA1
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeName;
+        protected readonly int alternativeDepth;
+        protected readonly int alternativeOffset;
+
+        protected ConditionalA1SL (Argument1 predicate, SCode consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (Argument1 predicate, SCode consequent, LexicalVariable alternative)
+        {
+            return
+                (alternative is Argument) ? ConditionalA1SA.Make (predicate, consequent, (Argument) alternative)
+                : (alternative is LexicalVariable1) ? Unimplemented()
+                : new ConditionalA1SL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    class ConditionalA1SA : ConditionalA1SL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA1SA (Argument1 predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument1 predicate, SCode consequent, Argument alternative)
+        {
+            return
+                (alternative is Argument0) ? ConditionalA1SA0.Make (predicate, consequent, (Argument0) alternative)
+                : (alternative is Argument1) ? ConditionalA1SQ.Make (predicate, consequent, Quotation.Make(false))
+                : new ConditionalA1SA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    class ConditionalA1SA0 : ConditionalA1SA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA1SA0 (Argument1 predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument1 predicate, SCode consequent, Argument0 alternative)
+        {
+            return new ConditionalA1SA0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA1SA0.EvalStep");
+#endif
+            object ev = environment.Argument1Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+                answer = environment.Argument0Value;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalA1SQ : ConditionalA1
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeValue;
+
+        protected ConditionalA1SQ (Argument1 predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (Argument1 predicate, SCode consequent, Quotation alternative)
+        {
+            return
+              new ConditionalA1SQ (predicate, consequent, (Quotation) alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA1SQ.EvalStep");
+#endif
+            object ev = environment.Argument1Value;
+
+            if ((ev is bool) && (bool) ev == false) {
+                answer = this.alternativeValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalAL : ConditionalA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object consequentName;
+        protected readonly int consequentDepth;
+        protected readonly int consequentOffset;
+
+        protected ConditionalAL (Argument predicate, LexicalVariable consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentName = consequent.Name;
+            this.consequentDepth = consequent.Depth;
+            this.consequentOffset = consequent.Offset;
+        }
+
+        public static SCode Make (Argument predicate, LexicalVariable consequent, SCode alternative)
+        {
+            return
+                (consequent is Argument) ? ConditionalAA.Make (predicate, (Argument) consequent, alternative)
+            : (consequent is LexicalVariable1) ? Unimplemented()
+            : (alternative is LexicalVariable) ? Unimplemented()
+            : (alternative is Quotation) ? Unimplemented()
+            : new ConditionalAL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalAA : ConditionalAL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected ConditionalAA (Argument predicate, Argument consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument predicate, Argument consequent, SCode alternative)
+        {
+            return
+                (consequent is Argument0) ? Unimplemented()
+            : (consequent is Argument1) ? Unimplemented ()
+            : (alternative is LexicalVariable) ? Unimplemented ()
+            : (alternative is Quotation) ? ConditionalAAQ.Make (predicate, consequent, (Quotation) alternative)
+            : new ConditionalAA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalAAQ : ConditionalAA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeValue;
+
+        protected ConditionalAAQ (Argument predicate, Argument consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (Argument predicate, Argument consequent, Quotation alternative)
+        {
+            return
+                new ConditionalAAQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalAQ : ConditionalA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalAQ (Argument predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument predicate, Quotation consequent, SCode alternative)
+        {
+            return
+                 (alternative is LexicalVariable) ? Unimplemented ()
+            : (alternative is Quotation) ? ConditionalAQQ.Make (predicate, consequent, (Quotation) alternative)
+            : new ConditionalAQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalAQQ : ConditionalAQ
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeValue;
+
+        protected ConditionalAQQ (Argument predicate, Quotation consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (Argument predicate, Quotation consequent, Quotation alternative)
+        {
+            return
+                  new ConditionalAQQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalASL : ConditionalA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeName;
+        protected readonly int alternativeDepth;
+        protected readonly int alternativeOffset;
+
+        protected ConditionalASL (Argument predicate, SCode consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (Argument predicate, SCode consequent, LexicalVariable alternative)
+        {
+            return
+                (alternative is Argument) ? ConditionalASA.Make (predicate, consequent, (Argument) alternative)
+                : (alternative is LexicalVariable1) ? Unimplemented()
+                : new ConditionalASL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalASQ : ConditionalA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeValue;
+
+        protected ConditionalASQ (Argument predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (Argument predicate, SCode consequent, Quotation alternative)
+        {
+            return
+                 new ConditionalASQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalASQ.EvalStep");
+#endif
+            object ev = environment.ArgumentValue (this.predicateOffset);
+
+            if ((ev is bool) && (bool) ev == false) {
+                answer = this.alternativeValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalL1 : ConditionalL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalL1 (LexicalVariable1 predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (consequent is LexicalVariable) ? ConditionalL1L.Make (predicate, (LexicalVariable) consequent, alternative)
+            : (consequent is Quotation) ? ConditionalL1Q.Make (predicate, (Quotation) consequent, alternative)
+            : (alternative is LexicalVariable) ? ConditionalL1SL.Make (predicate, consequent, (LexicalVariable) alternative)
+            : (alternative is Quotation) ? ConditionalL1SQ.Make (predicate, consequent, (Quotation) alternative)
+            : new ConditionalL1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalL1.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef1 (out ev, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalL1L : ConditionalL1
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object consequentName;
+        protected readonly int consequentDepth;
+        protected readonly int consequentOffset;
+
+        protected ConditionalL1L (LexicalVariable1 predicate, LexicalVariable consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentName = consequent.Name;
+        this.consequentDepth = consequent.Depth;
+        this.consequentOffset = consequent.Offset;
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, LexicalVariable consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? Unimplemented ()
+            : (alternative is Quotation) ? ConditionalL1LQ.Make (predicate, consequent, (Quotation) alternative)
+            : new ConditionalL1L (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalL1L.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef1 (out ev, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalL1LQ : ConditionalL1L
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeValue;
+
+
+        protected ConditionalL1LQ (LexicalVariable1 predicate, LexicalVariable consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, LexicalVariable consequent, Quotation alternative)
+        {
+            return new ConditionalL1LQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+    [Serializable]
+    class ConditionalL1Q : ConditionalL1
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object consequentValue;
+        protected ConditionalL1Q (LexicalVariable1 predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, Quotation consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? ConditionalL1QL.Make (predicate, consequent, (LexicalVariable) alternative)
+            : (alternative is Quotation) ? ConditionalL1QQ.Make (predicate, consequent, (Quotation) alternative)
+            : new ConditionalL1Q (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalL1Q.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef1 (out ev, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = this.consequentValue;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalL1QL : ConditionalL1Q
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeName;
+        protected readonly int alternativeDepth;
+        protected readonly int alternativeOffset;
+         
+        protected ConditionalL1QL (LexicalVariable1 predicate, Quotation consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, Quotation consequent, LexicalVariable alternative)
+        {
+            return
+                (alternative is Argument) ? Unimplemented()
+                :  (alternative is LexicalVariable1) ? Unimplemented()
+            : new ConditionalL1QL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalL1QQ : ConditionalL1Q
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeValue;
+        protected ConditionalL1QQ (LexicalVariable1 predicate, Quotation consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, Quotation consequent, Quotation alternative)
+        {
+            return
+                 new ConditionalL1QQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalL1SL : ConditionalL1
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeName;
+        protected readonly int alternativeDepth;
+        protected readonly int alternativeOffset;
+
+        protected ConditionalL1SL (LexicalVariable1 predicate, SCode consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, SCode consequent, LexicalVariable alternative)
+        {
+            return
+               (alternative is Argument) ? ConditionalL1SA.Make (predicate, consequent, (Argument) alternative)
+            : (alternative is LexicalVariable1) ? Unimplemented()
+            : new ConditionalL1SL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalL1SA : ConditionalL1SL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalL1SA (LexicalVariable1 predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, SCode consequent, Argument alternative)
+        {
+            return
+               (alternative is Argument0) ? ConditionalL1SA0.Make (predicate, consequent, (Argument0) alternative)
+            : (alternative is Argument1) ? Unimplemented ()
+            : new ConditionalL1SA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalL1SA0 : ConditionalL1SA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalL1SA0 (LexicalVariable1 predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        {
+
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, SCode consequent, Argument0 alternative)
+        {
+            return
+                new ConditionalL1SA0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalL1SA0.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef1 (out ev, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+                answer = environment.Argument0Value;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalLQ : ConditionalL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object consequentValue;
+
+        protected ConditionalLQ (LexicalVariable predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
+
+        public static SCode Make (LexicalVariable predicate, Quotation consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? Unimplemented ()
+            : (alternative is Quotation) ? Unimplemented ()
+            : new ConditionalLQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalLSQ : ConditionalL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeValue;
+
+        protected ConditionalLSQ (LexicalVariable predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (LexicalVariable predicate, SCode consequent, Quotation alternative)
+        {
+            return
+                 new ConditionalLSQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalLSQ.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+                answer = this.alternativeValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalL1SQ : ConditionalL1
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object alternativeValue;
+        protected ConditionalL1SQ (LexicalVariable1 predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (LexicalVariable1 predicate, SCode consequent, Quotation alternative)
+        {
+            return new ConditionalL1SQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalL.EvalStep");
+#endif
+            object ev;
+            if (environment.FastLexicalRef1 (out ev, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+                answer = this.alternativeValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalSL : Conditional
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object consequentName;
+        public readonly int consequentDepth;
+        public readonly int consequentOffset;
+
+        protected ConditionalSL (SCode predicate, LexicalVariable consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentName = consequent.Name;
+            this.consequentDepth = consequent.Depth;
+            this.consequentOffset = consequent.Offset;
+        }
+
+        public static SCode Make (SCode predicate, LexicalVariable consequent, SCode alternative)
+        {
+            return 
+                (consequent is Argument) ? ConditionalSA.Make (predicate, (Argument) consequent, alternative)
+                : (consequent is LexicalVariable1) ? ConditionalSL1.Make (predicate, (LexicalVariable1) consequent, alternative)
+                : new ConditionalSL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalSL.EvalStep");
+            noteCalls (this.predicate);
+            predicateTypeHistogram.Note (this.predicateType);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalSA : ConditionalSL
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalSA (SCode predicate, Argument consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (SCode predicate, Argument consequent, SCode alternative)
+        {
+            return
+                (consequent is Argument0) ? ConditionalSA0.Make (predicate, (Argument0) consequent, alternative)
+                : (consequent is Argument1) ? ConditionalSA1.Make (predicate, (Argument1) consequent, alternative)
+                : new ConditionalSA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalSA.EvalStep");
+            noteCalls (this.predicate);
+            predicateTypeHistogram.Note (this.predicateType);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.ArgumentValue (this.consequentOffset);
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalSA0 : ConditionalSA
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalSA0 (SCode predicate, Argument0 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (SCode predicate, Argument0 consequent, SCode alternative)
+        {
+            return
+                 new ConditionalSA0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalSA0.EvalStep");
+            noteCalls (this.predicate);
+            predicateTypeHistogram.Note (this.predicateType);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument0Value;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalSA1 : ConditionalSA
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalSA1 (SCode predicate, Argument1 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (SCode predicate, Argument1 consequent, SCode alternative)
+        {
+            return
+                 new ConditionalSA1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalSA1.EvalStep");
+            noteCalls (this.predicate);
+            predicateTypeHistogram.Note (this.predicateType);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument1Value;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalSL1 : ConditionalSL
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalSL1 (SCode predicate, LexicalVariable1 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (SCode predicate, LexicalVariable1 consequent, SCode alternative)
+        {
+            return
+                 new ConditionalSL1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveConditionalSL1.EvalStep");
+            noteCalls (this.predicate);
+            predicateTypeHistogram.Note (this.predicateType);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef1 (out answer, this.consequentName, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+
+
+    [Serializable]
+    class ConditionalSQ : Conditional
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected object consequentValue;
+
+        protected ConditionalSQ (SCode predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
+
+        public static SCode Make (SCode predicate, Quotation consequent, SCode alternative)
+        {
+            return 
+                (alternative is LexicalVariable) ? ConditionalSQL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? ConditionalSQQ.Make (predicate, consequent, (Quotation) alternative)
+                : new ConditionalSQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalSQ.EvalStep");
+            predicateTypeHistogram.Note (this.predicateType);
+            noteCalls (this.predicate);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                expression = this.consequent;
+                answer = this.consequentValue;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalSQL : ConditionalSQ
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeName;
+        public readonly int alternativeDepth;
+        public readonly int alternativeOffset;
+
+        protected ConditionalSQL (SCode predicate, Quotation consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (SCode predicate, Quotation consequent, LexicalVariable alternative)
+        {
+            return new ConditionalSQL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalSQL.EvalStep");
+            predicateTypeHistogram.Note (this.predicateType);
+            noteCalls (this.predicate);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+                expression = this.alternative;
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+                expression = this.consequent;
+                answer = this.consequentValue;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalSQQ : ConditionalSQ
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+#endif
+        protected object alternativeValue;
+
+        protected ConditionalSQQ (SCode predicate, Quotation consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (SCode predicate, Quotation consequent, Quotation alternative)
+        {
+            if (consequent.Quoted == alternative.Quoted) {
+                Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
+                return Sequence2.Make (predicate, consequent);
+            }
+            else if (Configuration.EnableTrueUnspecific && consequent.Quoted == Constant.Unspecific) {
+                Debug.WriteLine ("; Optimize (if <expr> <unspecific> <literal>) => (begin <expr> <literal>)");
+                return Sequence2.Make (predicate, alternative);
+            }
+            else if (Configuration.EnableTrueUnspecific && alternative.Quoted == Constant.Unspecific) {
+                Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
+                return Sequence2.Make (predicate, consequent);
+            }
+            return new ConditionalSQQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalSQQ.EvalStep");
+            predicateTypeHistogram.Note (this.predicateType);
+            noteCalls (this.predicate);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+                expression = this.alternative;
+                answer = this.alternativeValue;
+                return false;
+            }
+            else {
+                expression = this.consequent;
+                answer = this.consequentValue;
+                return false;
+            }
+        }
+    }
+
+
+    [Serializable]
+    class ConditionalSSL : Conditional
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeName;
+        public readonly int alternativeDepth;
+        public readonly int alternativeOffset;
+
+        protected ConditionalSSL (SCode predicate, SCode consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (SCode predicate, SCode consequent, LexicalVariable alternative)
+        {
+            return new ConditionalSSL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalSSL.EvalStep");
+            noteCalls (this.predicate);
+            predicateTypeHistogram.Note (this.predicateType);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalSSQ : Conditional
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+#endif
+        protected object alternativeQuoted;
+
+        protected ConditionalSSQ (SCode predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeQuoted = alternative.Quoted;
+        }
+
+        public static SCode Make (SCode predicate, SCode consequent, Quotation alternative)
+        {
+            return new ConditionalSSQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.predicate);
+            predicateTypeHistogram.Note (this.predicateType);
+            SCode.location = "ConditionalSSQ.EvalStep";
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+#if DEBUG
+                        SCode.location = "ConditionalSSQ.EvalStep.1";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                SCode.location = "ConditionalSSQ.EvalStep.A";
+#endif
+                answer = this.alternativeQuoted;
+                return false;
+            }
+            else {
+#if DEBUG
+                SCode.location = "ConditionalSSQ.EvalStep.C";
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+
+        }
+    }
+
+
+
+    // ---------------------------
+
+
+    [Serializable]
+    class ConditionalLLL : Conditional
+    {
+        public readonly object predicateName;
+        public readonly int predicateDepth;
+        public readonly int predicateOffset;
+
+        public readonly object consequentName;
+        public readonly int consequentDepth;
+        public readonly int consequentOffset;
+
+        public readonly object alternativeName;
+        public readonly int alternativeDepth;
+        public readonly int alternativeOffset;
+
+        protected ConditionalLLL (LexicalVariable predicate, LexicalVariable consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.predicateName = predicate.Name;
+            this.predicateDepth = predicate.Depth;
+            this.predicateOffset = predicate.Offset;
+
+            this.consequentName = consequent.Name;
+            this.consequentDepth = consequent.Depth;
+            this.consequentOffset = consequent.Offset;
+
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (LexicalVariable predicate, LexicalVariable consequent, LexicalVariable alternative)
+        {
+            return new ConditionalLLL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class ConditionalSLL : Conditional
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object consequentName;
+        public readonly int consequentDepth;
+        public readonly int consequentOffset;
+
+        public readonly object alternativeName;
+        public readonly int alternativeDepth;
+        public readonly int alternativeOffset;
+
+        protected ConditionalSLL (SCode predicate, LexicalVariable consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentName = consequent.Name;
+            this.consequentDepth = consequent.Depth;
+            this.consequentOffset = consequent.Offset;
+
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (SCode predicate, LexicalVariable consequent, LexicalVariable alternative)
+        {
+            return new ConditionalSLL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+            noteCalls (this.predicate);
+            predicateTypeHistogram.Note (this.predicateType);
+#endif
+            object ev;
+            Control unev = this.predicate;
+            Environment env = environment;
+
+            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            if (ev == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+
+            }
+
+            if ((ev is bool) && (bool) ev == false) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            } 
+        }
+    }
+
+    [Serializable]
+    class ConditionalLSL : ConditionalL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type>();
+#endif
+
+        public readonly object alternativeName;
+        public readonly int alternativeDepth;
+        public readonly int alternativeOffset;
+
+        protected ConditionalLSL (LexicalVariable predicate, SCode consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        public static SCode Make (LexicalVariable predicate, SCode consequent, LexicalVariable alternative)
+        {
+            return 
+                (alternative is Argument) ? ConditionalLSA.Make (predicate, consequent, (Argument) alternative)
+                : (alternative is LexicalVariable1) ? Unimplemented()
+                : new ConditionalLSL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+ #if DEBUG
+            Warm ();
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class ConditionalLSA : ConditionalLSL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalLSA (LexicalVariable predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (LexicalVariable predicate, SCode consequent, Argument alternative)
+        {
+            return
+                (alternative is Argument0) ? Unimplemented()
+                : (alternative is Argument1) ? Unimplemented ()
+                : new ConditionalLSA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+#if DEBUG
+            Warm ();
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
+    [Serializable]
+    class ConditionalLLS : Conditional
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type>();
+#endif
+
+        public readonly object predicateName;
+        public readonly int predicateDepth;
+        public readonly int predicateOffset;
+
+        public readonly object consequentName;
+        public readonly int consequentDepth;
+        public readonly int consequentOffset;
+
+        protected ConditionalLLS (LexicalVariable predicate, LexicalVariable consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.predicateName = predicate.Name;
+            this.predicateDepth = predicate.Depth;
+            this.predicateOffset = predicate.Offset;
+
+            this.consequentName = consequent.Name;
+            this.consequentDepth = consequent.Depth;
+            this.consequentOffset = consequent.Offset;
+        }
+
+        public static SCode Make (LexicalVariable predicate, LexicalVariable consequent, SCode alternative)
+        {
+            return new ConditionalLLS (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+#endif
+            object ev;
+            if (environment.FastLexicalRef (out ev, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((ev is bool) && (bool) ev == false) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+ 
+    [Serializable]
+    class Disjunction : SCode, ISystemPair
+    {
+#if DEBUG
+        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+        public readonly Type predicateType;
+        public readonly Type alternativeType;
+#endif
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode alternative;
+        protected readonly SCode predicate;
 
-        public Disjunction (object predicate, object alternative)
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        protected readonly SCode alternative;
+
+        protected Disjunction (SCode predicate, SCode alternative)
             : base (TC.DISJUNCTION)
         {
-            this.predicate = EnsureSCode (predicate);
-            this.alternative = EnsureSCode (alternative);
+            this.predicate = predicate;
+            this.alternative = alternative;
+#if DEBUG
+            this.predicateType = predicate.GetType();
+            this.alternativeType = alternative.GetType();
+#endif
+        }
+
+        public static SCode Make (SCode predicate, SCode alternative)
+        {
+            return 
+                (predicate is Conditional) ? Conditional.Make (((Conditional) predicate).Predicate,
+                                                               Disjunction.Make (((Conditional) predicate).Consequent,
+                                                                                 alternative),
+                                                               Disjunction.Make (((Conditional) predicate).Alternative,
+                                                                                 alternative))
+                : (predicate is Disjunction) ? Unimplemented()
+                : (predicate is PrimitiveIsBigFixnum
+                    || predicate is PrimitiveIsBigFlonum
+                    || predicate is PrimitiveIsEq
+                    || predicate is PrimitiveIsFixnum
+                    || predicate is PrimitiveIsRatnum
+                    ) ? Conditional.Make (predicate, Quotation.Make(Constant.sharpT), alternative)
+                : (predicate is Sequence2) ? Sequence2.Make (((Sequence2) predicate).First,
+                                                             Disjunction.Make (((Sequence2) predicate).Second, alternative))
+                : (predicate is Sequence3) ? Unimplemented()
+                : (predicate is Quotation) ? ((((Quotation) predicate).Quoted is Boolean 
+                                             && ((bool)((Quotation) predicate).Quoted) == false) ? alternative : predicate)
+                : (alternative is Quotation) ? DisjunctionSQ.Make (predicate, (Quotation) alternative)
+                : new Disjunction (predicate, alternative);
+        }
+
+        public static SCode Make (object predicate, object alternative)
+        {
+            return Make (EnsureSCode (predicate), EnsureSCode (alternative));
         }
 
         public SCode Predicate
@@ -324,11 +3606,19 @@ namespace Microcode
                 || this.alternative.CallsTheEnvironment ();
         }
 
+        [SchemePrimitive ("DISJUNCTION?", 1, true)]
+        public static bool IsDisjunction (out object answer, object arg)
+        {
+            answer = arg is Disjunction;
+            return false;
+        }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("Disjunction.EvalStep");
             noteCalls (this.predicate);
+            predicateTypeHistogram.Note (this.predicateType);
 #endif
             Environment env = environment;
             Control pred = this.predicate;
@@ -344,6 +3634,7 @@ namespace Microcode
             if (ev is bool && (bool) ev == false) {
 #if DEBUG
                 noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 // tail call alternative
                 expression = this.alternative;
@@ -363,13 +3654,8 @@ namespace Microcode
                 || this.alternative.MutatesAny (formals);
         }
 
-        public override bool UsesAny (object [] formals)
-        {
-            return this.predicate.UsesAny (formals)
-                || this.alternative.UsesAny (formals);
-        }
-
         #region ISystemPair Members
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemPairCar
         {
@@ -398,12 +3684,7 @@ namespace Microcode
         #endregion
 
 
-        public override SCode Alpha (object from, object to)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool IsLetrecBody (object [] formals, object [] remainingFormals)
+        public override SCode Substitute (object name, object newObject)
         {
             throw new NotImplementedException ();
         }
@@ -452,126 +3733,355 @@ namespace Microcode
     }
 
     [Serializable]
-    class ConditionalASS : Conditional
+    class DisjunctionSQ : Disjunction
     {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        protected int argOffset;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public readonly object alternativeValue;
 
-        protected ConditionalASS (Argument predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
+        protected DisjunctionSQ (SCode predicate, Quotation alternative)
+            : base (predicate, alternative)
         {
-            this.argOffset = predicate.Offset;
+            this.alternativeValue = alternative.Quoted;
         }
 
-        public static SCode Make (Argument predicate, SCode consequent, SCode alternative)
+        public static SCode Make (SCode predicate, Quotation alternative)
         {
-            return new ConditionalASS (predicate, consequent, alternative);
+            return new DisjunctionSQ (predicate, alternative);
         }
 
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            throw new NotImplementedException ();
-        }
+ 
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ();
-#endif
-            object ev = environment.ArgumentValue (this.argOffset);
-
-            if ((ev is bool) && (bool) ev == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class ConditionalSAS : Conditional
-    {
-#if DEBUG
-        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        protected int consequentOffset;
-
-        protected ConditionalSAS (SCode predicate, Argument consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.consequentOffset = consequent.Offset;
-        }
-
-        public static SCode Make (SCode predicate, Argument consequent, SCode alternative)
-        {
-            return new ConditionalSAS (predicate, consequent, alternative);
-        }
-
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-            predicateTypeHistogram.Note (this.predicateType);
             noteCalls (this.predicate);
 #endif
-            object ev;
-            Control unev = this.predicate;
             Environment env = environment;
-
-            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+            Control pred = this.predicate;
+            object ev;
+            while (pred.EvalStep (out ev, ref pred, ref env)) { };
             if (ev == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
-                //environment = env;
-                //answer = Interpreter.UnwindStack;
-                //return false;
-
-            }
-
-            if ((ev is bool) && (bool) ev == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
-#if DEBUG
-                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
-#endif
-                expression = this.consequent;
-                answer = environment.ArgumentValue (this.consequentOffset);
+                ((UnwinderState) env).AddFrame (new DisjunctionFrame (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
                 return false;
             }
+
+            answer = (ev is bool && (bool) ev == false)
+                ? this.alternativeValue
+                : ev;
+
+                return false;
+ 
         }
+
+
     }
+
+
+//    [Serializable]
+//    class ConditionalASS : Conditional
+//    {
+//#if DEBUG
+//        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+//#endif
+//        protected int argOffset;
+
+//        protected ConditionalASS (Argument predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
+//        {
+//            this.argOffset = predicate.Offset;
+//        }
+
+//        public static SCode Make (Argument predicate, SCode consequent, SCode alternative)
+//        {
+//            return new ConditionalASS (predicate, consequent, alternative);
+//        }
+
+//        public override SCode Bind (LexicalMap ctenv)
+//        {
+//            throw new NotImplementedException ();
+//        }
+
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//#endif
+//            object ev = environment.ArgumentValue (this.argOffset);
+
+//            if ((ev is bool) && (bool) ev == false) {
+//#if DEBUG
+//                noteCalls (this.alternative);
+//                alternativeTypeHistogram.Note (this.alternativeType);
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+//#endif
+//                expression = this.alternative;
+//                answer = null;
+//                return true;
+//            }
+//            else {
+//#if DEBUG
+//                noteCalls (this.consequent);
+//                consequentTypeHistogram.Note (this.consequentType);
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+//#endif
+//                expression = this.consequent;
+//                answer = null;
+//                return true;
+//            }
+//        }
+//    }
+
+//    [Serializable]
+//    class ConditionalSAS : Conditional
+//    {
+//#if DEBUG
+//        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+//#endif
+//        protected int consequentOffset;
+
+//        protected ConditionalSAS (SCode predicate, Argument consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
+//        {
+//            this.consequentOffset = consequent.Offset;
+//        }
+
+//        public static SCode Make (SCode predicate, Argument consequent, SCode alternative)
+//        {
+//            return (consequent is Argument0) ? ConditionalSA0S.Make (predicate, (Argument0) consequent, alternative)
+//                : (consequent is Argument1) ? ConditionalSA1S.Make (predicate, (Argument1) consequent, alternative)
+//                : new ConditionalSAS (predicate, consequent, alternative);
+//        }
+
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//            predicateTypeHistogram.Note (this.predicateType);
+//            noteCalls (this.predicate);
+//#endif
+//            object ev;
+//            Control unev = this.predicate;
+//            Environment env = environment;
+
+//            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+//            if (ev == Interpreter.UnwindStack) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+//                //environment = env;
+//                //answer = Interpreter.UnwindStack;
+//                //return false;
+
+//            }
+
+//            if ((ev is bool) && (bool) ev == false) {
+//#if DEBUG
+//                noteCalls (this.alternative);
+//                alternativeTypeHistogram.Note (this.alternativeType);
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+//#endif
+//                expression = this.alternative;
+//                answer = null;
+//                return true;
+//            }
+//            else {
+//#if DEBUG
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+//#endif
+//                expression = this.consequent;
+//                answer = environment.ArgumentValue (this.consequentOffset);
+//                return false;
+//            }
+//        }
+//    }
+
+//    [Serializable]
+//    class ConditionalSA0S : Conditional
+//    {
+//#if DEBUG
+//        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+//#endif
+
+//        protected ConditionalSA0S (SCode predicate, Argument0 consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
+//        {
+//        }
+
+//        public static SCode Make (SCode predicate, Argument0 consequent, SCode alternative)
+//        {
+//            return
+//                (predicate is PrimComb2EqCarA0L) ? PCond2EqCarA0LA0S.Make ((PrimComb2EqCarA0L) predicate, consequent, alternative)
+                
+//                : new ConditionalSA0S (predicate, consequent, alternative);
+//        }
+
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//            predicateTypeHistogram.Note (this.predicateType);
+//            noteCalls (this.predicate);
+//#endif
+//            object ev;
+//            Control unev = this.predicate;
+//            Environment env = environment;
+
+//            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+//            if (ev == Interpreter.UnwindStack) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+//                //environment = env;
+//                //answer = Interpreter.UnwindStack;
+//                //return false;
+
+//            }
+
+//            if ((ev is bool) && (bool) ev == false) {
+//#if DEBUG
+//                noteCalls (this.alternative);
+//                alternativeTypeHistogram.Note (this.alternativeType);
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+//#endif
+//                expression = this.alternative;
+//                answer = null;
+//                return true;
+//            }
+//            else {
+//#if DEBUG
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+//#endif
+//                expression = this.consequent;
+//                answer = environment.Argument0Value;
+//                return false;
+//            }
+//        }
+//    }
+
+//    [Serializable]
+//    class ConditionalSA1S : ConditionalSAS
+//    {
+//#if DEBUG
+//        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
+//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+//#endif
+
+//        protected ConditionalSA1S (SCode predicate, Argument1 consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
+//        {
+//        }
+
+//        public static SCode Make (SCode predicate, Argument1 consequent, SCode alternative)
+//        {
+//            return new ConditionalSA1S (predicate, consequent, alternative);
+//        }
+
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//            predicateTypeHistogram.Note (this.predicateType);
+//            noteCalls (this.predicate);
+//#endif
+//            object ev;
+//            Control unev = this.predicate;
+//            Environment env = environment;
+
+//            while (unev.EvalStep (out ev, ref unev, ref env)) { };
+//            if (ev == Interpreter.UnwindStack) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+//                //environment = env;
+//                //answer = Interpreter.UnwindStack;
+//                //return false;
+
+//            }
+
+//            if ((ev is bool) && (bool) ev == false) {
+//#if DEBUG
+//                noteCalls (this.alternative);
+//                alternativeTypeHistogram.Note (this.alternativeType);
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+//#endif
+//                expression = this.alternative;
+//                answer = null;
+//                return true;
+//            }
+//            else {
+//#if DEBUG
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+//#endif
+//                expression = this.consequent;
+//                answer = environment.Argument1Value;
+//                return false;
+//            }
+//        }
+//    }
+
+
+//    [Serializable]
+//    class PCond2EqCarA0LA0S : ConditionalSA0S
+//    {
+        
+//#if DEBUG
+//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+//#endif
+//        public readonly object lambdaName;
+//        public readonly int argDepth;
+//        public readonly int argOffset;
+
+//        protected PCond2EqCarA0LA0S (PrimComb2EqCarA0L predicate, Argument0 consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
+//        {
+//            this.lambdaName = predicate.lambdaName;
+//            this.argDepth = predicate.argDepth;
+//            this.argOffset = predicate.argOffset;
+//        }
+
+//        public static SCode Make (PrimComb2EqCarA0L predicate, Argument0 consequent, SCode alternative)
+//        {
+//            return new PCond2EqCarA0LA0S (predicate, consequent, alternative);
+//        }
+
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//#endif
+//            object ev1;
+//            if (environment.FastLexicalRef (out ev1, this.lambdaName, this.argDepth, this.argOffset))
+//                throw new NotImplementedException ();
+
+//            Cons ev0 = environment.Argument0Value as Cons;
+//            if (ev0 == null) throw new NotImplementedException ();
+
+//            object ev;
+//            if (ObjectModel.Eq (out ev, ev0.Car, ev1))
+//                throw new NotImplementedException ();
+
+//            if ((ev is bool) && (bool) ev == false) {
+//#if DEBUG
+//                noteCalls (this.alternative);
+//                alternativeTypeHistogram.Note (this.alternativeType);
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+//#endif
+//                expression = this.alternative;
+//                answer = null;
+//                return true;
+//            }
+//            else {
+//#if DEBUG
+//                Debug.WriteLineIf (Primitive.Noisy, "    => #t");
+//#endif
+//                answer = environment.Argument0Value;
+//                return false;
+//            }
+//        }
+//    }
 
     [Serializable]
     class ConditionalSSA : Conditional
@@ -695,29 +4205,23 @@ namespace Microcode
 
 
     [Serializable]
-    class ConditionalASA : Conditional
+    class ConditionalASA : ConditionalASL
     {
 #if DEBUG
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type>();
 #endif
-        protected int predicateOffset;
-        protected int alternativeOffset;
 
         protected ConditionalASA (Argument predicate, SCode consequent, Argument alternative)
             : base (predicate, consequent, alternative)
         {
-            this.predicateOffset = predicate.Offset;
-            this.alternativeOffset = alternative.Offset;
         }
 
         public static SCode Make (Argument predicate, SCode consequent, Argument alternative)
         {
-            return new ConditionalASA (predicate, consequent, alternative);
-        }
-
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            throw new NotImplementedException ();
+            return 
+                (alternative is Argument0) ? Unimplemented()
+                : (alternative is Argument1) ? Unimplemented()
+                : new ConditionalASA (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -846,378 +4350,9 @@ namespace Microcode
     }
 
 
-//    [Serializable]
-//    class ConditionalSQS : Conditional
-//    {
-//#if DEBUG
-//        static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
-//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-//#endif
-
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        protected readonly object consequentQuoted;
-
-//        protected ConditionalSQS (SCode predicate, Quotation consequent, SCode alternative)
-//            : base (predicate, consequent, alternative)
-//        {
-//            this.consequentQuoted = consequent.Quoted;
-//        }
-
-//        public static SCode Make (SCode predicate, Quotation consequent, SCode alternative)
-//        {
-//            return new ConditionalSQS (predicate, consequent, alternative);
-//        }
+ 
 
 
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("Shouldn't be necessary.");
-//        }
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-//        {
-//#if DEBUG
-//            Warm ();
-//            noteCalls (this.predicate);
-//            predicateTypeHistogram.Note (this.predicateType);
-//#endif
-//            Control unev = this.predicate;
-//            Environment env = environment;
-//            while (unev.EvalStep (out answer, ref unev, ref env)) { };
-//            if (answer == Interpreter.UnwindStack) {
-//                ((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
-//                environment = env;
-//                answer = Interpreter.UnwindStack;
-//                return false;
-
-//            }
-
-//            if ((answer is bool) && (bool) answer == false) {
-//#if DEBUG
-//                noteCalls (this.alternative);
-//                alternativeTypeHistogram.Note (this.alternativeType);
-//#endif
-//                expression = this.alternative;
-//                return true;
-//            }
-//            else {
-//                answer = this.consequentQuoted;
-//                return false;
-//            }
-//        }
-//    }
-
-//    [Serializable]
-//    class ConditionalPC1 : Conditional
-//    {
-//        Primitive1 procedure;
-
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        [NonSerialized]
-//        protected PrimitiveMethod1 method;
-
-//        SCode arg0;
-//        SCode pcCons;
-//        SCode pcAlt;
-
-//        protected ConditionalPC1 (PrimitiveConditional1 predicate, SCode consequent, SCode alternative)
-//            : base (predicate, consequent, alternative)
-//        {
-//            this.procedure = predicate.procedure;
-//            this.method = this.procedure.Method;
-//            this.arg0 = predicate.arg0;
-//            this.pcCons = predicate.Consequent;
-//            this.pcAlt = predicate.Alternative;
-//        }
-
-//        public static SCode Make (PrimitiveConditional1 predicate, SCode consequent, SCode alternative)
-//        {
-//            return new ConditionalPC1 (predicate, consequent, alternative);
-//        }
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
-//        }
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-//        {
-//#if DEBUG
-//            Warm ();
-//#endif
-//            Control unev = this.arg0;
-//            Environment env = environment;
-//            object ev0;
-//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-//            if (ev0 == Interpreter.UnwindStack) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
-//                //answer = Interpreter.UnwindStack;
-//                //environment = env;
-//                //return false;
-//            }
-
-//            // It is expensive to bounce down to invoke the procedure
-//            // we invoke it directly and pass along the ref args.
-//#if DEBUG
-//            Primitive.hotPrimitives.Note (this.procedure);
-//#endif
-//            if (this.method (out answer, ev0)) {
-//                TailCallInterpreter tci = answer as TailCallInterpreter;
-//                if (tci != null) {
-//                    answer = null; // dispose of the evidence
-//                    // set up the interpreter for a tail call
-//                    Control cExpression = tci.Expression;
-//                    Environment cEnvironment = tci.Environment;
-//                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
-//                }
-//            }
-
-//            unev = ((answer is bool) && (bool) answer == false)
-//                ? this.pcAlt
-//                : this.pcCons;
-//            env = environment;
-//            while (unev.EvalStep (out answer, ref unev, ref env)) { };
-//            if (ev0 == Interpreter.UnwindStack) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
-//                //answer = Interpreter.UnwindStack;
-//                //environment = env;
-//                //return false;
-//            }
-//            if ((answer is bool) && (bool) answer == false) {
-//#if DEBUG
-//                noteCalls (this.alternative);
-//#endif
-//                expression = this.alternative;
-//                return true;
-//            }
-//            else {
-//#if DEBUG
-//                noteCalls (this.consequent);
-//#endif
-//                expression = this.consequent;
-//                return true;
-//            }
-//        }
-//    }
-
-
-//    [Serializable]
-//    class ConditionalPC2 : Conditional
-//    {
-//        Primitive2 procedure;
-
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        [NonSerialized]
-//        protected PrimitiveMethod2 method;
-
-//        SCode arg0;
-//        SCode arg1;
-//        SCode pcCons;
-//        SCode pcAlt;
-
-//        protected ConditionalPC2 (PrimitiveConditional2 predicate, SCode consequent, SCode alternative)
-//            : base (predicate, consequent, alternative)
-//        {
-//            this.procedure = predicate.procedure;
-//            this.method = this.procedure.Method;
-//            this.arg0 = predicate.arg0;
-//            this.arg1 = predicate.arg1;
-//            this.pcCons = predicate.Consequent;
-//            this.pcAlt = predicate.Alternative;
-//        }
-
-//        public static SCode Make (PrimitiveConditional2 predicate, SCode consequent, SCode alternative)
-//        {
-//            return new ConditionalPC2 (predicate, consequent, alternative);
-//        }
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
-//        }
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-//        {
-//#if DEBUG
-//            Warm ();
-//#endif
-//            Control unev = this.arg1;
-//            Environment env = environment;
-//            object ev1;
-//            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-//            if (ev1 == Interpreter.UnwindStack) {
-//                throw new NotImplementedException ();
-//            }
-
-//            unev = this.arg0;
-//            env = environment;
-//            object ev0;
-//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-//            if (ev0 == Interpreter.UnwindStack) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
-//                //answer = Interpreter.UnwindStack;
-//                //environment = env;
-//                //return false;
-//            }
-
-//            // It is expensive to bounce down to invoke the procedure
-//            // we invoke it directly and pass along the ref args.
-//#if DEBUG
-//            Primitive.hotPrimitives.Note (this.procedure);
-//#endif
-//            if (this.method (out answer, ev0, ev1)) {
-//                TailCallInterpreter tci = answer as TailCallInterpreter;
-//                if (tci != null) {
-//                    answer = null; // dispose of the evidence
-//                    // set up the interpreter for a tail call
-//                    Control cExpression = tci.Expression;
-//                    Environment cEnvironment = tci.Environment;
-//                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
-//                }
-//            }
-
-//            unev = ((answer is bool) && (bool) answer == false)
-//                ? this.pcAlt
-//                : this.pcCons;
-//            env = environment;
-//            while (unev.EvalStep (out answer, ref unev, ref env)) { };
-//            if (ev0 == Interpreter.UnwindStack) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
-//                //answer = Interpreter.UnwindStack;
-//                //environment = env;
-//                //return false;
-//            }
-//            if ((answer is bool) && (bool) answer == false) {
-//#if DEBUG
-//                noteCalls (this.alternative);
-//#endif
-//                expression = this.alternative;
-//                return true;
-//            }
-//            else {
-//#if DEBUG
-//                noteCalls (this.consequent);
-//#endif
-//                expression = this.consequent;
-//                return true;
-//            }
-//        }
-//}
-
-//    [Serializable]
-//    class PrimitiveConditional1 : Conditional
-//    {
-//#if DEBUG
-//        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
-//        static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
-//        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-
-//        protected Type arg0Type;
-//#endif
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        public readonly Primitive1 procedure;
-
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        [NonSerialized]
-//        protected PrimitiveMethod1 method;
-
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        public readonly SCode arg0;
-
-//        protected PrimitiveConditional1 (Primitive1 procedure, SCode arg0, SCode consequent, SCode alternative)
-//            : base (PrimitiveCombination1.Make (procedure, arg0), consequent, alternative)
-//        {
-//            this.procedure = procedure;
-//            this.method = procedure.Method;
-//            this.arg0 = arg0;
-//#if DEBUG
-//            this.arg0Type = this.arg0.GetType ();
-//#endif
-//        }
-
-//        public static SCode Make (Primitive1 procedure, SCode arg0, SCode consequent, SCode alternative)
-//        {
-//            return (arg0 is Argument) ? PrimitiveConditional1A.Make (procedure, (Argument) arg0, consequent, alternative)
-//                 : (consequent is Quotation) ? PrimitiveConditional1SQS.Make (procedure, arg0, (Quotation) consequent, alternative)
-//                 : new PrimitiveConditional1 (procedure, arg0, consequent, alternative);
-//        }
-
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
-//        }
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-//        {
-//#if DEBUG
-//            Warm ();
-//            noteCalls (this.arg0);
-//            procedureHistogram.Note (this.procedure);
-//            arg0TypeHistogram.Note (this.arg0Type);
-//#endif
-//            Control unev0 = this.arg0;
-//            Environment env = environment;
-//            object ev0;
-//            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
-//            if (ev0 == Interpreter.UnwindStack) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
-//                //answer = Interpreter.UnwindStack;
-//                //environment = env;
-//                //return false;
-//            }
-
-//            // It is expensive to bounce down to invoke the procedure
-//            // we invoke it directly and pass along the ref args.
-//#if DEBUG
-//            Primitive.hotPrimitives.Note (this.procedure);
-//#endif
-//            if (this.method (out answer, ev0)) {
-//                TailCallInterpreter tci = answer as TailCallInterpreter;
-//                if (tci != null) {
-//                    answer = null; // dispose of the evidence
-//                    // set up the interpreter for a tail call
-//                    Control cExpression = tci.Expression;
-//                    Environment cEnvironment = tci.Environment;
-//                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
-//                }
-//            }
-
-//            //Control unev = this.predicate;
-//            //Environment env = environment;
-//            //while (unev.EvalStep (out answer, ref unev, ref env)) { };
-//            //if (answer == Interpreter.UnwindStack) {
-//            //    ((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
-//            //    environment = env;
-//            //    answer = Interpreter.UnwindStack;
-//            //    return false;
-
-//            //}
-
-//            if ((answer is bool) && (bool) answer == false) {
-//#if DEBUG
-//                noteCalls (this.alternative);
-//                alternativeTypeHistogram.Note (this.alternativeType);
-//#endif
-//                expression = this.alternative;
-//                return true;
-//            }
-//            else {
-//#if DEBUG
-//                noteCalls (this.consequent);
-//                consequentTypeHistogram.Note (this.consequentType);
-//#endif
-//                expression = this.consequent;
-//                return true;
-//            }
-//        }
-//    }
 
 //    [Serializable]
 //    class PrimitiveConditional1A : PrimitiveConditional1
@@ -1229,23 +4364,18 @@ namespace Microcode
 //#endif
 //        int arg0offset;
 
-//        protected PrimitiveConditional1A (Primitive1 procedure, Argument arg0, SCode consequent, SCode alternative)
-//            : base (procedure, arg0, consequent, alternative)
+//        protected PrimitiveConditional1A (PrimitiveCombination1A predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
-//            this.arg0offset = arg0.Offset;
+//            this.arg0offset = predicate.argOffset;
 //        }
 
-//        public static SCode Make (Primitive1 procedure, Argument arg0, SCode consequent, SCode alternative)
+//        public static SCode Make (PrimitiveCombination1A predicate, SCode consequent, SCode alternative)
 //        {
-//            return 
-//                (arg0 is Argument0) ? PrimitiveConditional1A0.Make (procedure, (Argument0) arg0, consequent, alternative)
-//                :(arg0 is Argument1) ? PrimitiveConditional1A1.Make (procedure, (Argument1) arg0, consequent, alternative)
-//                : new PrimitiveConditional1A (procedure, arg0, consequent, alternative);
-//        }
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
+//            return
+//                (predicate is PrimitiveCombination1A0) ? PrimitiveConditional1A0.Make ((PrimitiveCombination1A0) predicate, consequent, alternative)
+//                : (predicate is PrimitiveCombination1A1) ? PrimitiveConditional1A1.Make ((PrimitiveCombination1A1) predicate, consequent, alternative)
+//                : new PrimitiveConditional1A (predicate, consequent, alternative);
 //        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1308,23 +4438,18 @@ namespace Microcode
 //        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
 //        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 //#endif
-//        PrimitiveConditional1A0 (Primitive1 procedure, Argument0 arg, SCode consequent, SCode alternative)
-//            : base (procedure, arg, consequent, alternative)
+//        protected PrimitiveConditional1A0 (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
 //        }
 
-//        public static SCode Make (Primitive1 procedure, Argument0 arg, SCode consequent, SCode alternative)
+//        public static SCode Make (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
 //        {
 //            return
-//                (procedure == Primitive.Find ("PAIR?", 1)) ? PrimitiveIsPairA0.Make (procedure, arg, consequent, alternative)
-//            : (procedure == Primitive.Find ("NULL?", 1)) ? PrimitiveIsNullA0.Make (procedure, arg, consequent, alternative)
-//             :   new PrimitiveConditional1A0 (procedure, arg, consequent, alternative);
-//        }
-
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
+//                (predicate.Operator == Primitive.Find ("NULL?", 1)) ? PrimitiveConditionalIsNullA0.Make (predicate, consequent, alternative)     
+//                : (predicate.Operator == Primitive.Find ("PAIR?", 1)) ? PrimitiveConditionalIsPairA0.Make (predicate, consequent, alternative)
+//                : (predicate.Operator == Primitive.Find ("%RECORD?", 1)) ? PrimitiveConditionalIsRecordA0.Make (predicate, consequent, alternative)
+//              :  new PrimitiveConditional1A0 (predicate, consequent, alternative);
 //        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1400,23 +4525,17 @@ namespace Microcode
 //        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 //#endif
 
-//        protected PrimitiveConditional1A1 (Primitive1 procedure, Argument1 arg, SCode consequent, SCode alternative)
-//            : base (procedure, arg, consequent, alternative)
+//        protected PrimitiveConditional1A1 (PrimitiveCombination1A1 predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
 //        }
 
-//        public static SCode Make (Primitive1 procedure, Argument1 arg, SCode consequent, SCode alternative)
-//        {           return
-//                (procedure == Primitive.Find ("PAIR?", 1)) ? PrimitiveIsPairA1.Make ( arg, consequent, alternative)
-//            : (procedure == Primitive.Find ("NULL?", 1)) ? PrimitiveIsNullA1.Make ( arg, consequent, alternative)
- 
-//            :  new PrimitiveConditional1A1 (procedure, arg, consequent, alternative);
-//        }
-
-
-//        public override SCode Bind (LexicalMap ctenv)
+//        public static SCode Make (PrimitiveCombination1A1 predicate, SCode consequent, SCode alternative)
 //        {
-//            throw new NotImplementedException ("shouldn't be necessary");
+//            return
+//                 (predicate.Operator == Primitive.Find ("NULL?", 1)) ? PrimitiveConditionalIsNullA1.Make (predicate, consequent, alternative)     
+//                : (predicate.Operator == Primitive.Find ("PAIR?", 1)) ? PrimitiveConditionalIsPairA1.Make (predicate, consequent, alternative)
+//                : new PrimitiveConditional1A1 (predicate, consequent, alternative);
 //        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1472,27 +4591,21 @@ namespace Microcode
 //    }
 
 //    [Serializable]
-//    class PrimitiveIsNullA0 : PrimitiveConditional1A
+//    class PrimitiveConditionalIsNullA0 : PrimitiveConditional1A0
 //    {
 //#if DEBUG
 //        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
 //        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 //#endif
-//        PrimitiveIsNullA0 (Primitive1 procedure, Argument0 arg, SCode consequent, SCode alternative)
-//            : base (procedure, arg, consequent, alternative)
+//        PrimitiveConditionalIsNullA0 (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
 //        }
 
-//        public static SCode Make (Primitive1 procedure, Argument0 arg, SCode consequent, SCode alternative)
+//        public static new SCode Make (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
 //        {
-//            return (consequent is Quotation) ? PrimitiveIsNullA0QS.Make (procedure, arg, (Quotation) consequent, alternative)
-//                : new PrimitiveIsNullA0 (procedure, arg, consequent, alternative);
-//        }
-
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
+//            return (consequent is Quotation) ? PrimitiveIsNullA0QS.Make (predicate, (Quotation) consequent, alternative)
+//                : new PrimitiveConditionalIsNullA0 (predicate, consequent, alternative);
 //        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1527,21 +4640,15 @@ namespace Microcode
 //        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 //#endif
 //        protected object quoted;
-//        PrimitiveIsNullA0QS (Primitive1 procedure, Argument0 arg, Quotation consequent, SCode alternative)
-//            : base (procedure, arg, consequent, alternative)
+//        PrimitiveIsNullA0QS (PrimitiveCombination1A0 predicate, Quotation consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
 //            this.quoted = consequent.Quoted;
 //        }
 
-//        public static SCode Make (Primitive1 procedure, Argument0 arg, Quotation consequent, SCode alternative)
+//        public static SCode Make (PrimitiveCombination1A0 predicate, Quotation consequent, SCode alternative)
 //        {
-//            return  new PrimitiveIsNullA0QS (procedure, arg, consequent, alternative);
-//        }
-
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
+//            return new PrimitiveIsNullA0QS (predicate, consequent, alternative);
 //        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1558,38 +4665,33 @@ namespace Microcode
 //#if DEBUG
 //                noteCalls (this.alternative);
 //                alternativeTypeHistogram.Note (this.alternativeType);
-//#endif          
+//#endif
 //                expression = this.alternative;
-//                answer = null;  
+//                answer = null;
 //                return true;
 //            }
 
 //        }
 //    }
-    
+
 //    [Serializable]
-//    class PrimitiveIsPairA0 : PrimitiveConditional1A
+//    class PrimitiveConditionalIsPairA0 : PrimitiveConditional1A0
 //    {
 //#if DEBUG
 //        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
 //        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 //#endif
-//        protected PrimitiveIsPairA0 (Primitive1 procedure, Argument0 arg, SCode consequent, SCode alternative)
-//            : base (procedure, arg, consequent, alternative)
+//        protected PrimitiveConditionalIsPairA0 (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
 //        }
 
-//        public static SCode Make (Primitive1 procedure, Argument0 arg, SCode consequent, SCode alternative)
+//        public static new SCode Make (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
 //        {
-//            return (consequent is PrimitiveCarA0) 
-//                ? PrimitiveIsPairA0CarA0.Make (procedure, arg, (PrimitiveCarA0) consequent, alternative)
-//                : new PrimitiveIsPairA0 (procedure, arg, consequent, alternative);
-//        }
-
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
+//            return (consequent is PrimitiveCarA0) ? PrimitiveIsPairA0CarA0.Make (predicate, (PrimitiveCarA0) consequent, alternative)
+//                : (consequent is Quotation) ? PrimitiveIsPairA0QS.Make (predicate, (Quotation) consequent, alternative)
+//                : (alternative is Quotation) ? PrimitiveIsPairA0SQ.Make (predicate, consequent, (Quotation) alternative)
+//                :  new PrimitiveConditionalIsPairA0 (predicate, consequent, alternative);
 //        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1619,26 +4721,21 @@ namespace Microcode
 //    }
 
 //    [Serializable]
-//    class PrimitiveIsPairA0CarA0 : PrimitiveIsPairA0
+//    class PrimitiveIsPairA0CarA0 : PrimitiveConditionalIsPairA0
 //    {
 //#if DEBUG
 //        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 //#endif
-//        PrimitiveIsPairA0CarA0 (Primitive1 procedure, Argument0 arg, PrimitiveCarA0 consequent, SCode alternative)
-//            : base (procedure, arg, consequent, alternative)
+//        PrimitiveIsPairA0CarA0 (PrimitiveCombination1A0 predicate, PrimitiveCarA0 consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
 //        }
 
-//        public static SCode Make (Primitive1 procedure, Argument0 arg, PrimitiveCarA0 consequent, SCode alternative)
+//        public static SCode Make (PrimitiveCombination1A0 predicate, PrimitiveCarA0 consequent, SCode alternative)
 //        {
-//            return  new PrimitiveIsPairA0CarA0 (procedure, arg, consequent, alternative);
+//            return new PrimitiveIsPairA0CarA0 (predicate, consequent, alternative);
 //        }
 
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
-//        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
@@ -1665,28 +4762,147 @@ namespace Microcode
 //    }
 
 //    [Serializable]
-//    class PrimitiveIsNullA1 : PrimitiveConditional1A1
+//    class PrimitiveIsPairA0QS : PrimitiveConditionalIsPairA0
+//    {
+//#if DEBUG
+//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+//#endif
+//        public object quoted;
+//        protected PrimitiveIsPairA0QS (PrimitiveCombination1A0 predicate, Quotation consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
+//        {
+//            this.quoted = consequent.Quoted;
+//        }
+
+//        public static SCode Make (PrimitiveCombination1A0 predicate, Quotation consequent, SCode alternative)
+//        {
+//            return new PrimitiveIsPairA0QS (predicate, consequent, alternative);
+//        }
+
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//#endif
+//            if (environment.Argument0Value is Cons) {
+//                answer = this.quoted;
+//                return false;
+//            }
+//            else {
+//#if DEBUG
+//                noteCalls (this.alternative);
+//                alternativeTypeHistogram.Note (this.alternativeType);
+//#endif
+//                expression = this.alternative;
+//                answer = null;
+//                return true;
+//            }
+//        }
+//    }
+
+//    [Serializable]
+//    class PrimitiveIsPairA0SQ : PrimitiveConditionalIsPairA0
+//    {
+//#if DEBUG
+//        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+//#endif
+//        public object quoted;
+//        protected PrimitiveIsPairA0SQ (PrimitiveCombination1A0 predicate, SCode consequent, Quotation alternative)
+//            : base (predicate, consequent, alternative)
+//        {
+//            this.quoted = alternative.Quoted;
+//        }
+
+//        public static SCode Make (PrimitiveCombination1A0 predicate, SCode consequent, Quotation alternative)
+//        {
+//            return new PrimitiveIsPairA0SQ (predicate, consequent, alternative);
+//        }
+
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//#endif
+//            if (environment.Argument0Value is Cons) {
+//#if DEBUG
+//                noteCalls (this.consequent);
+//                consequentTypeHistogram.Note (this.consequentType);
+//#endif
+//                expression = this.consequent;
+//                answer = null;
+//                return true;
+//            }
+//            else {
+//                answer = this.quoted;
+//                return false;
+
+//            }
+//        }
+//    }
+
+//    [Serializable]
+//    class PrimitiveConditionalIsRecordA0 : PrimitiveConditional1A0
 //    {
 //#if DEBUG
 //        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
 //        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 //#endif
-//        PrimitiveIsNullA1 (Argument1 arg, SCode consequent, SCode alternative)
-//            : base ((Primitive1)Primitive.Find ("NULL?", 1), arg, consequent, alternative)
+//        protected PrimitiveConditionalIsRecordA0 (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
 //        }
 
-//        public static SCode Make (Argument1 arg, SCode consequent, SCode alternative)
+//        public static new SCode Make (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
+//        {
+//            return //(consequent is Quotation) ? PrimitiveIsNullA0QS.Make (predicate, (Quotation) consequent, alternative)
+//                //: 
+//                new PrimitiveConditionalIsRecordA0 (predicate, consequent, alternative);
+//        }
+
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ();
+//#endif
+
+//            if (environment.Argument0Value is Record) {
+//#if DEBUG
+//                noteCalls (this.consequent);
+//                consequentTypeHistogram.Note (this.consequentType);
+//#endif
+//                expression = this.consequent;
+//            }
+//            else {
+//#if DEBUG
+//                noteCalls (this.alternative);
+//                alternativeTypeHistogram.Note (this.alternativeType);
+//#endif
+//                expression = this.alternative;
+//            }
+//            answer = null;
+//            return true;
+//        }
+//    }
+
+
+
+//    [Serializable]
+//    class PrimitiveConditionalIsNullA1 : PrimitiveConditional1A1
+//    {
+//#if DEBUG
+//        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+//#endif
+//        protected PrimitiveConditionalIsNullA1 (PrimitiveCombination1A1 predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
+//        {
+//        }
+
+//        public static new SCode Make (PrimitiveCombination1A1 predicate, SCode consequent, SCode alternative)
 //        {
 //            return // (consequent is Quotation) ? PrimitiveIsNullA0QS.Make (procedure, arg, (Quotation) consequent, alternative)
-//            //    : 
-//            new PrimitiveIsNullA1 (arg, consequent, alternative);
-//        }
-
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
+//                //    : 
+//            new PrimitiveConditionalIsNullA1 (predicate, consequent, alternative);
 //        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1715,29 +4931,24 @@ namespace Microcode
 //    }
 
 //    [Serializable]
-//    class PrimitiveIsPairA1 : PrimitiveConditional1A1
+//    class PrimitiveConditionalIsPairA1 : PrimitiveConditional1A1
 //    {
 //#if DEBUG
 //        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
 //        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 //#endif
-//        protected PrimitiveIsPairA1 (Argument1 arg, SCode consequent, SCode alternative)
-//            : base ((Primitive1)Primitive.Find ("PAIR?", 1), arg, consequent, alternative)
+//        protected PrimitiveConditionalIsPairA1 (PrimitiveCombination1A1 predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
 //        }
 
-//        public static SCode Make (Argument1 arg, SCode consequent, SCode alternative)
+//        public static new SCode Make (PrimitiveCombination1A1 predicate, SCode consequent, SCode alternative)
 //        {
-//            return 
+//            return
 //                //(consequent is PrimitiveCarA0)
 //                //? PrimitiveIsPairA0CarA0.Make (procedure, arg, (PrimitiveCarA0) consequent, alternative)
 //                //: 
-//                new PrimitiveIsPairA1 (arg, consequent, alternative);
-//        }
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
+//                new PrimitiveConditionalIsPairA1 (predicate, consequent, alternative);
 //        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1767,7 +4978,7 @@ namespace Microcode
 //    }
 
 
-//    [Serializable]
+//   [Serializable]
 //    class PrimitiveConditional1SQS : PrimitiveConditional1
 //    {
 //#if DEBUG
@@ -1777,22 +4988,18 @@ namespace Microcode
 //#endif
 //        protected readonly object quoted;
 
-//        protected PrimitiveConditional1SQS (Primitive1 procedure, SCode arg0, Quotation consequent, SCode alternative)
-//            : base (procedure, arg0, consequent, alternative)
+//        protected PrimitiveConditional1SQS (PrimitiveCombination1 predicate, Quotation consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
 //            this.quoted = consequent.Quoted;
 //        }
 
-//        public static SCode Make (Primitive1 procedure, SCode arg0, Quotation consequent, SCode alternative)
+//        public static SCode Make (PrimitiveCombination1 predicate, Quotation consequent, SCode alternative)
 //        {
-//            return new PrimitiveConditional1SQS (procedure, arg0, consequent, alternative);
+//            return new PrimitiveConditional1SQS (predicate, consequent, alternative);
 //        }
 
 
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
-//        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
@@ -1857,59 +5064,24 @@ namespace Microcode
 //    }
 
 //    [Serializable]
-//    class PrimitiveConditional2 : Conditional
+//    class PrimitiveIsEq : PrimitiveConditional2
 //    {
 //#if DEBUG
-//        static Histogram<Primitive2> procedureHistogram = new Histogram<Primitive2> ();
 //        [NonSerialized]
 //        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
 //        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
 //        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
 //        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 
-//        protected Type rand0Type;
-//        protected Type rand1Type;
 //#endif
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        public readonly Primitive2 procedure;
-
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        [NonSerialized]
-//        protected PrimitiveMethod2 method;
-
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        public readonly SCode arg0;
-
-//        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-//        public readonly SCode arg1;
-
-//        protected PrimitiveConditional2 (Primitive2 procedure, SCode arg0, SCode arg1, SCode consequent, SCode alternative)
-//            : base (PrimitiveCombination2.Make (procedure, arg0, arg1), consequent, alternative)
+//        protected PrimitiveIsEq (PrimitiveCombination2 predicate, SCode consequent, SCode alternative)
+//            : base (predicate, consequent, alternative)
 //        {
-//            this.procedure = procedure;
-//            this.method = this.procedure.Method;
-//            this.arg0 = arg0;
-//            this.arg1 = arg1;
-//#if DEBUG
-//            rand0Type = arg0.GetType ();
-//            rand1Type = arg1.GetType ();
-//#endif
 //        }
 
-//        public static SCode Make (Primitive2 procedure, SCode arg0, SCode arg1, SCode consequent, SCode alternative)
+//        public static new SCode Make (PrimitiveCombination2 predicate, SCode consequent, SCode alternative)
 //        {
-//            return
-//                (Configuration.EnableSuperOperators && arg0 is Argument) ? PrimitiveConditional2AS.Make (procedure, (Argument) arg0, arg1, consequent, alternative)
-//                : (Configuration.EnableSuperOperators && arg0 is LexicalVariable) ? PrimitiveConditional2LS.Make (procedure, (LexicalVariable) arg0, arg1, consequent, alternative)
-//                : (Configuration.EnableSuperOperators && arg0 is Quotation) ? PrimitiveConditional2QS.Make (procedure, (Quotation) arg0, arg1, consequent, alternative)
-//               // : (arg1 is LexicalVariable) ? PrimitiveConditional2SL.Make (procedure, arg0, (LexicalVariable) arg1, consequent, alternative)
-//                : (arg1 is Quotation) ? PrimitiveConditional2SQ.Make (procedure, arg0, (Quotation) arg1, consequent, alternative)
-//                : new PrimitiveConditional2 (procedure, arg0, arg1, consequent, alternative);
-//        }
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("shouldn't be necessary");
+//            return new PrimitiveIsEq (predicate, consequent, alternative);
 //        }
 
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1918,7 +5090,6 @@ namespace Microcode
 //            Warm ();
 //            noteCalls (this.arg0);
 //            noteCalls (this.arg1);
-//            procedureHistogram.Note (this.procedure);
 //            rand0TypeHistogram.Note (this.rand0Type);
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
@@ -1947,16 +5118,18 @@ namespace Microcode
 //#if DEBUG
 //            Primitive.hotPrimitives.Note (this.procedure);
 //#endif
-//            if (this.method (out answer, ev0, ev1)) {
-//                TailCallInterpreter tci = answer as TailCallInterpreter;
-//                if (tci != null) {
-//                    answer = null; // dispose of the evidence
-//                    // set up the interpreter for a tail call
-//                    Control cExpression = tci.Expression;
-//                    Environment cEnvironment = tci.Environment;
-//                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
-//                }
-//            }
+//            if (ObjectModel.Eq (out answer, ev0, ev1))
+//                throw new NotImplementedException ();
+//            //if (this.method (out answer, ev0, ev1)) {
+//            //    TailCallInterpreter tci = answer as TailCallInterpreter;
+//            //    if (tci != null) {
+//            //        answer = null; // dispose of the evidence
+//            //        // set up the interpreter for a tail call
+//            //        Control cExpression = tci.Expression;
+//            //        Environment cEnvironment = tci.Environment;
+//            //        while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+//            //    }
+//            //}
 
 //            if ((answer is bool) && (bool) answer == false) {
 //#if DEBUG
@@ -1976,6 +5149,7 @@ namespace Microcode
 //            }
 //        }
 //    }
+
 
 //    [Serializable]
 //    class PrimitiveConditional2AS : PrimitiveConditional2

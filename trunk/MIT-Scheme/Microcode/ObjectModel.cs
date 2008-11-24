@@ -108,23 +108,84 @@ namespace Microcode
         {
         }
 
+        [SchemePrimitive ("OBJECT-IS-ZERO?", 1, true)]
+        public static bool ObjectIsZero (out object answer, object arg0)
+        {
+            // If arg0 is an integer and if it is zero.
+            // like fix:zero?, but no error if arg is not an int.
+            answer = (arg0 is int && (int) arg0 == 0) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+
+        [SchemePrimitive ("OBJECT-IS-TRUE?", 1, true)]
+        public static bool ObjectIsTrue (out object answer, object arg0)
+        {
+            // If arg0 is a bool and if it is true.
+            answer = (arg0 is bool && (bool) arg0) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+
+
+        [SchemePrimitive ("CHAR-EQ?", 2, true)]
+        public static bool CharEq (out object answer, object arg0, object arg1)
+        {
+            // For chars only.
+            answer = (arg0 is char
+                      && arg1 is char
+                      && (char) arg0 == (char) arg1) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+
+        [SchemePrimitive ("INT-EQ?", 2, true)]
+        public static bool IntEq (out object answer, object arg0, object arg1)
+        {
+            // For integers only.
+            answer = (arg0 is int
+                      && arg1 is int
+                      && (int) arg0 == (int) arg1) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+
+        [SchemePrimitive ("BOOL-EQ?", 2, true)]
+        public static bool BoolEq (out object answer, object arg0, object arg1)
+        {
+            // For booleans only.
+            answer = (arg0 is bool
+                      && arg1 is bool
+                      && (bool) arg0 == (bool) arg1) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+
+        [SchemePrimitive ("OBJECT-EQ?", 2, true)]
+        public static bool ObjectEq (out object answer, object arg0, object arg1)
+        {
+            // For objects only.  Wrong for fixnums, etc.
+            answer = arg0 == arg1 ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+
         [SchemePrimitive ("EQ?", 2, true)]
         public static bool Eq (out object answer, object arg0, object arg1)
         {
-            if (arg0 == null)
-                answer = (arg1 == null);
-            else if (arg1 == null)
-                answer = false;
-            else if (arg0 == arg1)
-                answer = true;
-            else if (arg0 is Int32 && arg1 is Int32)
-                answer = ((int) arg0 == (int) arg1);
-            else if (arg0 is char && arg1 is char)
-                answer = ((char) arg0 == (char) arg1);
-            else if (arg0 is bool && arg1 is bool)
-                answer = ((bool) arg0 == (bool) arg1);
-            else
-                answer = false;
+            answer =
+                ((arg0 == null) && (arg1 == null))
+                || ((arg1 != null) &&
+                    ((arg0 == arg1)
+                     || ((arg0 is Int32 && arg1 is Int32) && ((int) arg0 == (int) arg1))
+                     || ((arg0 is char && arg1 is char) && ((char) arg0 == (char) arg1))
+                     || ((arg0 is bool && arg1 is bool) && ((bool) arg0 == (bool) arg1))))
+                     ? Constant.sharpT
+                     : Constant.sharpF;
+
+
+            //answer =
+            //    (arg0 == null) ? (arg1 == null)
+            //    : (arg1 == null) ? false
+            //    : (arg0 == arg1) ? true
+            //    : 
+            //    : 
+            //    : (arg0 is bool && arg1 is bool) ? ((bool) arg0 == (bool) arg1)
+            //    : false;
             return false;
         }
 
@@ -390,6 +451,10 @@ namespace Microcode
             switch (targetType) {
                 case TC.ACCESS:
                     banswer = arg1 is Access;
+                    break;
+
+                case TC.ASSIGNMENT:
+                    banswer = arg1 is Assignment;
                     break;
 
                 case TC.BIG_FIXNUM:

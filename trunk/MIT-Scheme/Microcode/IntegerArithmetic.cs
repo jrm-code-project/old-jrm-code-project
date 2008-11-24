@@ -34,7 +34,7 @@ namespace Microcode
                 return (long) (int) arg;
             else if (arg is long)
                 return (long) arg;
-            else
+            else 
                 throw new NotImplementedException ();
         }
 
@@ -45,6 +45,8 @@ namespace Microcode
                 answer = (int) (arg) == 0;
             else if (arg is long)
                 answer = (long) (arg) == 0;
+            else if (arg is Bignum)
+                answer = (Bignum) arg == 0;
             else
                 throw new NotImplementedException ();
             return false;
@@ -114,6 +116,8 @@ namespace Microcode
             if (left is int) {
                 if (right is int)
                     answer = (int) left < (int) (right);
+                else if (right is long)
+                    answer = (int) left < (long) right;
                 else
                     throw new NotImplementedException ();
             }
@@ -122,6 +126,16 @@ namespace Microcode
                     answer = (long) left < (int) right;
                 else if (right is long)
                     answer = (long) left < (long) right;
+                else
+                    throw new NotImplementedException ();
+            }
+            else if (left is Bignum) {
+                if (right is int)
+                    answer = (Bignum) left < (Bignum) (int) right;
+                else if (right is long)
+                    answer = (Bignum) left < (Bignum) (long) right;
+                else if (right is Bignum)
+                    answer = (Bignum) left < (Bignum) right;
                 else
                     throw new NotImplementedException ();
             }
@@ -137,7 +151,9 @@ namespace Microcode
                 if (right is int)
                     answer = (int) left > (int) right;
                 else if (right is long)
-                    answer = (long) (int) left > (long) right;
+                    answer = (int) left > (long) right;
+                else if (right is Bignum)
+                    answer = (int) left > (Bignum) right;
                 else
                     throw new NotImplementedException ();
             }
@@ -145,7 +161,17 @@ namespace Microcode
                 if (right is long)
                     answer = (long) left > (long) right;
                 else if (right is Bignum)
-                    answer = (Bignum) (long) left > (Bignum) right;
+                    answer = (long) left > (Bignum) right;
+                else
+                    throw new NotImplementedException ();
+            }
+            else if (left is Bignum) {
+                if (right is int)
+                    answer = (Bignum) left > (Bignum) (int) right;
+                else if (right is long)
+                    answer = (Bignum) left > (Bignum) (long) right;
+                else if (right is Bignum)
+                    answer = (Bignum) left > (Bignum) right;
                 else
                     throw new NotImplementedException ();
             }
@@ -171,6 +197,12 @@ namespace Microcode
                 else
                     throw new NotImplementedException ();
             }
+            else if (left is Bignum) {
+                if (right is int)
+                    answer = Bignum.ToInteger ((Bignum) left + (int) right);
+                else
+                    throw new NotImplementedException ();
+            }
             else
                 throw new NotImplementedException ();
             return false;
@@ -192,6 +224,16 @@ namespace Microcode
                     answer = Narrow ((long) left - (long) (int) right);
                 else if (right is long)
                     answer = Narrow ((long) left - (long) right);
+                else
+                    throw new NotImplementedException ();
+            }
+            else if (left is Bignum) {
+                if (right is int)
+                    answer = Bignum.ToInteger ((Bignum) left - (int) right);
+                else if (right is long)
+                    answer = Bignum.ToInteger ((Bignum) left - (long) right);
+                else if (right is Bignum)
+                    answer = Bignum.ToInteger ((Bignum) left - (Bignum) right);
                 else
                     throw new NotImplementedException ();
             }
@@ -225,7 +267,9 @@ namespace Microcode
             }
             else if (left is Bignum) {
                 if (right is int)
-                    throw new NotImplementedException ();
+                    answer = Bignum.ToInteger ((Bignum) (left) * (Bignum) (int) (right));
+                else if (right is long)
+                    answer = Bignum.ToInteger ((Bignum) (left) * (Bignum) (long) (right));
                 else if (right is Bignum)
                     answer = Bignum.ToInteger ((Bignum) (left) * (Bignum) (right));
                 else
@@ -246,21 +290,31 @@ namespace Microcode
             return false;
         }
 
-        //[SchemePrimitive ("INTEGER-ADD-1", 1, false)]
-        //public static PartialResult Add1 (object arg)
-        //{
-        //    if (arg is int)
-        //        return new PartialResult (Narrow (((long) (int) (arg)) + 1));
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("INTEGER-ADD-1", 1, false)]
+        public static bool Add1 (out object answer, object arg)
+        {
+            if (arg is int)
+                answer = (Narrow (((long) (int) (arg)) + 1));
+            else {
+                answer = null;
+                throw new NotImplementedException ();
+            }
+            return false;
+        }
 
-        //[SchemePrimitive ("INTEGER-SUBTRACT-1", 1, false)]
-        //public static PartialResult Subtract1 (object arg)
-        //{
-        //    if (arg is int)
-        //        return new PartialResult (Narrow (((long) (int) (arg)) - 1));
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("INTEGER-SUBTRACT-1", 1, false)]
+        public static bool Subtract1 (out object answer, object arg)
+        {
+            if (arg is int)
+                answer = (Narrow (((long) (int) (arg)) - 1));
+            else if (arg is long)
+                answer = (Narrow (((long) (arg)) - 1L));
+            else {
+                answer = null;
+                throw new NotImplementedException ();
+            }
+            return false;
+        }
 
         //public static PartialResult LengthInBits (object arg)
         //{
@@ -270,13 +324,25 @@ namespace Microcode
         [SchemePrimitive ("INTEGER-DIVIDE", 2, false)]
         public static bool Divide (out object answer, object left, object right)
         {
-            long w0 = Widen (left);
-            long w1 = Widen (right);
-            long remainder = 0;
-            long quotient = Math.DivRem (w0, w1, out remainder);
+            if (left is Bignum) {
+                if (right is Bignum) {
+                    Bignum remainder;
+                    Bignum q = Bignum.DivRem ((Bignum) left, (Bignum) right, out remainder);
+                    answer = new Cons (Bignum.ToInteger (q), Bignum.ToInteger (remainder));
+                    return false;
+                }
+                else
+                    throw new NotImplementedException ();
+            }
+            else {
+                long w0 = Widen (left);
+                long w1 = Widen (right);
+                long remainder = 0;
+                long quotient = Math.DivRem (w0, w1, out remainder);
 
-            answer = new Cons (Narrow (quotient), Narrow (remainder));
-            return false;
+                answer = new Cons (Narrow (quotient), Narrow (remainder));
+                return false;
+            }
         }
 
         [SchemePrimitive ("INTEGER-QUOTIENT", 2, false)]
@@ -299,9 +365,9 @@ namespace Microcode
             }
             else if (left is Bignum) {
                 if (right is int)
-                    answer = Bignum.ToInteger (Bignum.Quotient ((Bignum) left, (Bignum) (long) (int) right));
+                    answer = Bignum.ToInteger ((Bignum) left / (Bignum) (long) (int) right);
                 else if (right is long)
-                    answer = Bignum.ToInteger (Bignum.Quotient ((Bignum) left, (Bignum) (long) right));
+                    answer = Bignum.ToInteger ((Bignum) left / (Bignum) (long) right);
                 else
                     throw new NotImplementedException ();
             }
@@ -364,7 +430,7 @@ namespace Microcode
             else if (left is long)
                 answer = (double) (long) left;
             else if (left is Bignum)
-                answer = ((Bignum) left).ToDouble ();
+                answer = (double) ((Bignum) left);
             else
                 throw new NotImplementedException ();
             return false;

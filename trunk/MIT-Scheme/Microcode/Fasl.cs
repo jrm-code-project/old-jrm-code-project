@@ -167,14 +167,10 @@ namespace Microcode
 
         public object [] ReadVector (FaslFile file, uint offset)
         {
-            EncodedObject header = this [offset];
-            uint length = header.Datum;
+            uint length = this [offset].Datum;
             object [] vector = new object [length];
             for (uint i = 0; i < length; i++)
-            {
-                object obj = file.ReadObject (offset + 4 + i * 4);
-                vector [i] = obj;
-            }
+                vector [i] = file.ReadObject (offset + 4 + i * 4);
             return vector;
         }
 
@@ -484,7 +480,7 @@ namespace Microcode
                     return new Delay (ReadObject (encoded.Datum));
 
                 case TC.DISJUNCTION:
-                    return new Disjunction (ReadObject (encoded.Datum),
+                    return Disjunction.Make (ReadObject (encoded.Datum),
                                             ReadObject (encoded.Datum + 4));
 
                 case TC.EXTENDED_LAMBDA:
@@ -527,7 +523,7 @@ namespace Microcode
                                                         ReadObject (encoded.Datum + 8));
 
                 case TC.PCOMB3:
-                    return new PrimitiveCombination3 ((Primitive3) ReadObject (encoded.Datum + 4),
+                    return PrimitiveCombination3.Make ((Primitive3) ReadObject (encoded.Datum + 4),
                                                        ReadObject (encoded.Datum + 8),
                                                        ReadObject (encoded.Datum + 12),
                                                        ReadObject (encoded.Datum + 16));
@@ -582,7 +578,7 @@ namespace Microcode
                                 sequenceStack = (Cons) sequenceStack.Cdr;
                                 object ob1 = sequenceStack.Car;
                                 sequenceStack = (Cons) sequenceStack.Cdr;
-                                tail = new Sequence3 (ob1, ob2, tail);
+                                tail = Sequence3.Make (ob1, ob2, tail);
                             }
                             return tail;
                         }
@@ -655,9 +651,6 @@ namespace Microcode
         public static bool BinaryFasload (out object answer, object arg)
         {
             string filename = new String ((char []) arg);
-            //if (filename == "runtime-w32.pkd")
-            //    return interpreter.Return (Package.Initial ());
-            //else
             answer = Fasload (new String ((char []) arg));
             return false;
         }

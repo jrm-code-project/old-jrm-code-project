@@ -11,6 +11,8 @@ namespace Microcode
     {
 #if DEBUG
         public static bool Noisy;
+        static Histogram<ClosureBase> hotClosures = new Histogram<ClosureBase>();
+        protected long callCount;
 #endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Environment environment;
@@ -58,6 +60,14 @@ namespace Microcode
             [DebuggerStepThrough]
             get { return this.environment; }
         }
+
+#if DEBUG
+        protected void BumpCallCount() 
+        {callCount+= 1;
+            if ((callCount % 500) == 499)
+                hotClosures.Note (this);   
+        }
+#endif
 
         public abstract bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args);
         public abstract bool Call (out object answer, ref Control expression, ref Environment environment);
@@ -188,6 +198,10 @@ namespace Microcode
 
         public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
+#if DEBUG
+            SCode.location = "StandardExtendedClosure.Apply";
+            this.BumpCallCount ();
+#endif
             //object [] rands = environment.FrameVector;
             int nargs = args.Length;
             int nparams = this.lambda.Formals.Length; // param 0 is self
@@ -304,6 +318,10 @@ namespace Microcode
 
         public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
+#if DEBUG            
+            SCode.location = "StaticExtendedClosure.Apply";
+            this.BumpCallCount ();
+#endif
             //object [] rands = environment.FrameVector;
             int nargs = args.Length;
             int nparams = this.lambda.Formals.Length; // param 0 is self
@@ -368,6 +386,19 @@ namespace Microcode
             : base (TC.PROCEDURE, environment)
         {
         }
+
+        [SchemePrimitive ("PROCEDURE?", 1, true)]
+        public static bool IsRecord (out object answer, object arg0)
+        {
+            answer = arg0 is Closure;
+            return false;
+        }
+
+        public override string ToString ()
+        {
+            return "#<PROCEDURE " + this.Name + ">";
+        }
+
     }
 
     [Serializable]
@@ -393,7 +424,8 @@ namespace Microcode
         public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
 #if DEBUG
-            Debug.WriteLineIf (ClosureBase.Noisy, "(" + this.LongName);
+            this.BumpCallCount ();
+            SCode.location = "StandardClosure.Apply";
 #endif
             if (args.Length != this.lambda.Formals.Length)
                 throw new NotImplementedException ();
@@ -475,6 +507,11 @@ namespace Microcode
 
         public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
+           
+#if DEBUG
+            this.BumpCallCount();
+            SCode.location = "StaticClosure.Apply";
+#endif
             if (this.lambda.Formals.Length != args.Length)
                 throw new NotImplementedException ();
             expression = this.lambda.Body;
@@ -537,12 +574,16 @@ namespace Microcode
 
         public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
+
             switch (args.Length) {
                 case 1: return this.Call (out answer, ref expression, ref environment, args [0]);
                 case 2: return this.Call (out answer, ref expression, ref environment, args [0], args [1]);
                 case 3: return this.Call (out answer, ref expression, ref environment, args [0], args [1], args [2]);
                 case 4: return this.Call (out answer, ref expression, ref environment, args [0], args [1], args [2], args[3]);
                 default:
+#if DEBUG
+                    this.BumpCallCount ();
+#endif
                     if (args.Length != this.lambda.Formals.Length)
                         throw new NotImplementedException ();
                     expression = this.lambda.Body;
@@ -559,6 +600,11 @@ namespace Microcode
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
+            
+#if DEBUG
+            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call.1";
+#endif
             if (this.lambda.Formals.Length != 1)
                 throw new NotImplementedException ();
             expression = this.lambda.Body;
@@ -569,6 +615,10 @@ namespace Microcode
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
+#if DEBUG 
+            SCode.location = "SimpleClosure.Call.2";
+            this.BumpCallCount ();
+#endif
             if (this.lambda.Formals.Length != 2)
                 throw new NotImplementedException ();
             expression = this.lambda.Body;
@@ -579,6 +629,9 @@ namespace Microcode
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
+#if DEBUG
+            this.BumpCallCount ();
+#endif
             if (this.lambda.Formals.Length != 3)
                 throw new NotImplementedException ();
             expression = this.lambda.Body;
@@ -589,6 +642,9 @@ namespace Microcode
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
         {
+#if DEBUG
+            this.BumpCallCount ();
+#endif
             if (this.lambda.Formals.Length != 4)
                 throw new NotImplementedException ();
             expression = this.lambda.Body;
