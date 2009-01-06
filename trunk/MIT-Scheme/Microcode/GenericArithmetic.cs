@@ -28,6 +28,10 @@ namespace Microcode
         [SchemePrimitive ("&+", 2, false)]
         public static bool Add (out object answer, object left, object right)
         {
+            if (left is int && right is int) {
+                answer = (int) left + (int) right;
+                return false;
+            }
             answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericAdd, left, right), null);
             return true;
         }
@@ -106,6 +110,12 @@ namespace Microcode
         [SchemePrimitive ("&<", 2, false)]
         public static bool IsLess (out object answer, object left, object right)
         {
+            // Shortcut for fixnums
+            if (left is int && right is int) {
+                answer = ((int) left < (int) right) ? Constant.sharpT : Constant.sharpF;
+                return false;
+            }
+            else
                 answer = new TailCallInterpreter (CallFromPrimitive.Make ((IApplicable) FixedObjectsVector.GenericLessP, left, right), null);
                 return true;
         }

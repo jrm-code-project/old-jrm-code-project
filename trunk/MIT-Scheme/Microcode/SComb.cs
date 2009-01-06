@@ -10,9 +10,8 @@ namespace Microcode
     class Combination : SCode, ISystemVector
     {
 #if DEBUG
-        static Histogram<int> combinationSizeHistogram = new Histogram<int>();
+        static Histogram<int> combinationSizeHistogram = new Histogram<int> ();
 #endif
-
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly SCode [] components;
 
@@ -32,17 +31,16 @@ namespace Microcode
             this.components = comps;
         }
 
-        Combination(Cons components)
+        Combination (Cons components)
             : base (TC.COMBINATION)
         {
-            SCode[] comps = new SCode[components.Length()];
-            int i = 0;
-            while (components != null)
-            {
+            SCode[] comps = new SCode [components.Length ()];
+            int j = 0;
+            while (components != null) {
                 SCode component = EnsureSCode (components.Car);
-                comps[i] = component;
-                components = (Cons)(components.Cdr);
-                i += 1;
+                comps [j] = component;
+                components = (Cons) (components.Cdr);
+                j += 1;
             }
             this.components = comps;
         }
@@ -56,9 +54,9 @@ namespace Microcode
                     case 0:
                         throw new NotImplementedException ("shouldn't be possible");
 
-                    case 1:
-                        //Debugger.Break ();
-                        return Combination0.Make (oper);
+                    //case 1:
+                    //    //Debugger.Break ();
+                    //    return Combination0.Make (oper);
 
                     case 2:
                         throw new NotImplementedException ("combo 1");
@@ -67,10 +65,15 @@ namespace Microcode
                         throw new NotImplementedException ("combo 2");
 
                     case 4:
-                        return Combination3.Make (EnsureSCode (oper), EnsureSCode (components [1]), EnsureSCode (components [2]), EnsureSCode (components [3]));
+                        return Configuration.EnableCombination3 ?
+                               Combination3.Make (EnsureSCode (oper),
+                                                  EnsureSCode (components [1]),
+                                                  EnsureSCode (components [2]),
+                                                  EnsureSCode (components [3])) :
+                              new Combination (components);
 
-                    case 5:
-                        return Combination4.Make (EnsureSCode (oper), EnsureSCode (components [1]), EnsureSCode (components [2]), EnsureSCode (components [3]), EnsureSCode (components [4]));
+                    //case 5:
+                    //    return Combination4.Make (EnsureSCode (oper), EnsureSCode (components [1]), EnsureSCode (components [2]), EnsureSCode (components [3]), EnsureSCode (components [4]));
 
                     default:
                         return new Combination (components);
@@ -94,7 +97,7 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                return this.components[0];
+                return this.components [0];
             }
         }
 
@@ -105,7 +108,7 @@ namespace Microcode
             return false;
         }
 
-         public override SCode Bind (LexicalMap ctenv)
+        public override SCode Bind (LexicalMap ctenv)
         {
             bool anyChange = false;
             SCode [] opt = new SCode [this.components.Length];
@@ -118,43 +121,44 @@ namespace Microcode
                 : this;
         }
 
-         public override bool CallsTheEnvironment ()
-         {
-             foreach (SCode component in this.components)
-                 if (component.CallsTheEnvironment ()) 
-                     return true;
-             return false;
-         }
+        public override bool CallsTheEnvironment ()
+        {
+            foreach (SCode component in this.components)
+                if (component.CallsTheEnvironment ())
+                    return true;
+            return false;
+        }
 
 #if DEBUG
-         public override string Key ()
-         {
-             string answer = "(combination ";
-             foreach (SCode component in components)
-                 answer += component.Key ();
-             return answer + ")";
-         }
+        public override string Key ()
+        {
+            string answer = "(combination ";
+            foreach (SCode component in components)
+                answer += component.Key ();
+            return answer + ")";
+        }
 #endif
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("Combination.EvalStep");
+            Warm ("-");
             combinationSizeHistogram.Note (this.components.Length);
+            SCode.location = "Combination.EvalStep";
 #endif
             object rator = null;
             object [] evaluated = new object [this.components.Length - 1];
             int counter = this.components.Length - 1;
             while (counter > -1) {
+                object ev;
+                Environment env = environment;
                 Control expr = components [counter];
 #if DEBUG
-                noteCalls ((SCode)expr);
+                noteCalls ((SCode) expr);
 #endif
-                Environment env = environment;
-                object ev;
                 while (expr.EvalStep (out ev, ref expr, ref env)) { };
 #if DEBUG
-                SCode.location = "Combination.EvalStep.1";
+                SCode.location = "Combination.EvalStep";
 #endif
                 if (ev == Interpreter.UnwindStack) {
                     ((UnwinderState) env).AddFrame (new CombinationFrame (this, environment, evaluated, counter));
@@ -174,14 +178,14 @@ namespace Microcode
                     return Interpreter.Call (out answer, ref expression, ref environment, rator);
                 case 1:
                     Debugger.Break ();
-                    return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated[0]);
+                    return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0]);
                 case 2:
                     Debugger.Break ();
-                    return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0], evaluated[1]);
+                    return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0], evaluated [1]);
                 case 3:
-                    return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0], evaluated [1], evaluated[2]);
+                    return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0], evaluated [1], evaluated [2]);
                 case 4:
-                    return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0], evaluated [1], evaluated [2], evaluated[3]);
+                    return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0], evaluated [1], evaluated [2], evaluated [3]);
                 default:
                     return Interpreter.Apply (out answer, ref expression, ref environment, rator, evaluated);
             }
@@ -192,7 +196,7 @@ namespace Microcode
             return Combination.Make (cons.ToVector ());
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             foreach (SCode component in this.components)
                 if (component.MutatesAny (formals))
@@ -219,9 +223,12 @@ namespace Microcode
 
         #endregion
 
-        public override SCode Substitute (object name, object newObject)
+        public override bool Uses (Symbol formal)
         {
-            throw new NotImplementedException ();
+            foreach (SCode component in this.components)
+                if (component.Uses (formal))
+                    return true;
+            return false;
         }
     }
 
@@ -241,8 +248,9 @@ namespace Microcode
         public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
         {
             object [] evaluated = this.evaluated;
+            object rator = null;
             int counter = this.counter;
-            evaluated [counter--] = value;
+            evaluated [--counter] = value;
 
             while (counter > -1) {
                 Control expr = this.expression.Components [counter];
@@ -255,10 +263,15 @@ namespace Microcode
                     answer = Interpreter.UnwindStack;
                     return false;
                 }
-                evaluated [counter--] = ev;
+                if (counter == 0) {
+                    rator = ev;
+                    break;
+                }
+                else
+                    evaluated [--counter] = ev;
             }
 
-            return Interpreter.Apply (out answer, ref expression, ref environment, evaluated [0], evaluated);
+            return Interpreter.Apply (out answer, ref expression, ref environment, rator, evaluated);
 
          }
 
@@ -313,12 +326,13 @@ namespace Microcode
         public static SCode Make (object rator)
         {
             return 
-                (rator is LexicalVariable) ? Combination0L.Make ((LexicalVariable)rator)
-                // Combination of no arguments simply applied, just insert the lambdaBody.
-                // This confuses the pretty printer, though.
-                //: (rator is StaticLambda && ((Lambda) rator).Formals.Length == 0) ? SpecialMake ((StaticLambda) rator)
-                : (rator is StaticLambda && ((Lambda) rator).Formals.Length == 0) ? SpecialCombination0.Make ((StaticLambda) rator)
-                : new Combination0 (rator);
+                //(rator is LexicalVariable) ? Combination0L.Make ((LexicalVariable)rator)
+                //// Combination of no arguments simply applied, just insert the lambdaBody.
+                //// This confuses the pretty printer, though.
+                ////: (rator is StaticLambda && ((Lambda) rator).Formals.Length == 0) ? SpecialMake ((StaticLambda) rator)
+                //: (rator is StaticLambda && ((Lambda) rator).Formals.Length == 0) ? SpecialCombination0.Make ((StaticLambda) rator)
+                //: 
+                new Combination0 (rator);
         }
 
         public SCode Operator
@@ -363,9 +377,14 @@ namespace Microcode
             return Interpreter.Call (out answer, ref expression, ref environment, evop);
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             return this.rator.MutatesAny (formals);
+        }
+
+        public override bool Uses (Symbol formal)
+        {
+            return this.rator.Uses (formal);
         }
 
         #region ISystemVector Members
@@ -390,11 +409,6 @@ namespace Microcode
 
         #endregion
 
-
-        public override SCode Substitute (object name, object newObject)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
@@ -433,8 +447,8 @@ namespace Microcode
 
     class SpecialCombination0 : Combination0
     {
-        string name;
-        object [] formals;
+        Symbol name;
+        Symbol [] formals;
         SCode body;
 
         protected SpecialCombination0 (StaticLambda rator)
@@ -609,13 +623,13 @@ namespace Microcode
 //        static Histogram<Type> c3TypeHistogram = new Histogram<Type> ();
 //#endif
 //        protected object lambdaName;
-//        protected int argOffset;
+//        protected int randOffset;
 
 //        protected Combination3L1SSS (LexicalVariable1 rator, SCode rand0, SCode rand1, SCode rand2)
 //            : base (rator, rand0, rand1, rand2)
 //        {
 //            this.lambdaName = rator.Name;
-//            this.argOffset = rator.Offset;
+//            this.randOffset = rator.Offset;
 //        }
 
 //        public static SCode Make (LexicalVariable1 rator, SCode rand0, SCode rand1, SCode rand2)
@@ -674,7 +688,7 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (environment.FastLexicalRef1 (out evop, this.lambdaName, this.argOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.lambdaName, this.randOffset))
 //                throw new NotImplementedException ();
 //            //env = environment;
 //            //unev = this.components [0];
@@ -751,7 +765,7 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (environment.FastLexicalRef1 (out evop, this.lambdaName, this.argOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.lambdaName, this.randOffset))
 //                throw new NotImplementedException ();
 //            //env = environment;
 //            //unev = this.components [0];
@@ -794,7 +808,7 @@ namespace Microcode
             noteCalls (this.components [4]);
             SCode.location = "Combination4.EvalStep";
 #endif
-            object ev3 = null;
+            object ev3;
             Environment env = environment;
             Control unev3 = this.components [4];
             while (unev3.EvalStep (out ev3, ref unev3, ref env)) { };
@@ -808,7 +822,7 @@ namespace Microcode
                 //answer = Interpreter.UnwindStack;
                 //return false;
             }
-            object ev2 = null;
+            object ev2;
             env = environment;
             Control unev2 = this.components [3];
             while (unev2.EvalStep (out ev2, ref unev2, ref env)) { };
@@ -823,7 +837,7 @@ namespace Microcode
                 //return false;
             }
 
-            object ev1 = null;
+            object ev1;
             env = environment;
             Control unev1 = this.components [2];
             while (unev1.EvalStep (out ev1, ref unev1, ref env)) { };
@@ -838,7 +852,7 @@ namespace Microcode
                 //return false;
             }
 
-            object ev0 = null;
+            object ev0;
             env = environment;
             Control unev0 = this.components [1];
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
@@ -852,7 +866,7 @@ namespace Microcode
                 return false;
             }
 
-            object evop = null;
+            object evop;
             env = environment;
             Control unevop = this.components [0];
             while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
@@ -965,7 +979,6 @@ namespace Microcode
         }
     }
 
-
     [Serializable]
     sealed class PrimitiveCombination0 : SCode
     {
@@ -1020,9 +1033,9 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression,ref Environment environment)
         {
 #if DEBUG
-            Warm ("PrimitiveCombination0.EvalStep");
+            Warm ("-");
             Primitive.hotPrimitives.Note (this.procedure);
-            Debug.WriteLineIf (Primitive.Noisy, this.procedure.ToString ());
+            SCode.location = this.procedure.Name.ToString();
 #endif 
             if (this.method (out answer)) {
                 throw new NotImplementedException ();
@@ -1030,19 +1043,19 @@ namespace Microcode
             else return false;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             return false;
         }
 
-        public override SCode Substitute (object name, object newObject)
+        public override bool Uses (Symbol formal)
         {
-            throw new NotImplementedException ();
+            return false;
         }
     }
     
     [Serializable]
-    class PrimitiveCombination3 : SCode
+    class PrimitiveCombination3 : SCode, ISystemVector
     {
 #if DEBUG
         [NonSerialized]
@@ -1093,14 +1106,30 @@ namespace Microcode
         public static SCode Make (Primitive3 procedure, SCode arg0, SCode arg1, SCode arg2)
         {
             return
-                (arg1 is Quotation) ? PrimitiveCombination3SQ.Make (procedure, arg0, (Quotation) arg1, arg2)
-                : new PrimitiveCombination3 (procedure, arg0, arg1, arg2);
+                //(Configuration.EnableSuperOperators && arg1 is Quotation) ? PrimitiveCombination3SQ.Make (procedure, arg0, (Quotation) arg1, arg2) :
+                new PrimitiveCombination3 (procedure, arg0, arg1, arg2);
         }
 
         public static SCode Make (object procedure, object arg0, object arg1, object arg2)
         {
             return
                 PrimitiveCombination3.Make ((Primitive3) procedure, EnsureSCode(arg0), EnsureSCode(arg1), EnsureSCode(arg2));
+        }
+
+        public static SCode Make (Cons elements)
+        {
+            object proc = elements.Car;
+            Cons tail0 = (Cons) elements.Cdr;
+            object arg0 = tail0.Car;
+            Cons tail1 = (Cons) tail0.Cdr;
+            object arg1 = tail1.Car;
+            Cons tail2 = (Cons) tail1.Cdr;
+            object arg2 = tail2.Car;
+            object tail3 = tail2.Cdr;
+            if (tail3 == null)
+                return Make (proc, arg0, arg1, arg2);
+            else
+                throw new NotImplementedException ();
         }
 
         [OnDeserialized ()]
@@ -1144,7 +1173,6 @@ namespace Microcode
                 return this.arg2;
             }
         }
-
 
         [SchemePrimitive ("PRIMITIVE-COMBINATION3?", 1, true)]
         public static bool IsPrimitiveCombination3 (out object answer, object arg)
@@ -1190,16 +1218,21 @@ namespace Microcode
             Control unev = this.arg2;
             while (unev.EvalStep (out ev2, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination3.EvalStep.1";
+            SCode.location = "PrimitiveCombination3.EvalStep";
 #endif
-            if (ev2 == Interpreter.UnwindStack) throw new NotImplementedException ();
+            if (ev2 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
 
             object ev1;
             env = environment;
             unev = this.arg1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination3.EvalStep.2";
+            SCode.location = "PrimitiveCombination3.EvalStep";
 #endif
             if (ev1 == Interpreter.UnwindStack) throw new NotImplementedException ();
 
@@ -1215,8 +1248,7 @@ namespace Microcode
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.procedure);
-            Debug.WriteLineIf (Primitive.Noisy, this.procedure.ToString ());
-            SCode.location = this.procedure.Name;
+            SCode.location = this.procedure.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1, ev2)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -1231,18 +1263,113 @@ namespace Microcode
             return false;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             return this.arg0.MutatesAny (formals)
                 || this.arg1.MutatesAny (formals)
                 || this.arg2.MutatesAny (formals);
         }
 
-        public override SCode Substitute (object name, object newObject)
+        public override bool Uses (Symbol formal)
+        {
+            return this.arg0.Uses (formal)
+                || this.arg1.Uses (formal)
+                || this.arg2.Uses (formal);
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { return 4; }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            switch (index) {
+                case 0: return this.Operator;
+                case 1: return this.Operand0;
+                case 2: return this.Operand1;
+                case 3: return this.Operand2;
+                default:
+                    throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemVectorSet (int index, object newValue)
         {
             throw new NotImplementedException ();
         }
+
+        #endregion
     }
+
+    sealed class PrimitiveCombination3Frame0 : SubproblemContinuation<PrimitiveCombination3>, ISystemVector
+    {
+        public PrimitiveCombination3Frame0 (PrimitiveCombination3 expression, Environment environment)
+            : base (expression, environment)
+        {
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev2)
+        {
+            object ev1;
+            Control unev = this.expression.Operand1;
+            Environment env = this.environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            unev = this.expression.Operand0;
+            env = this.environment;
+            object ev0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+#if DEBUG
+            Primitive.hotPrimitives.Note (this.expression.Operator);
+            SCode.location = this.expression.Operator.Name.ToString();
+#endif
+            if (this.expression.Operator.Method (out answer, ev0, ev1, ev2)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null;
+                    expression = tci.Expression;
+                    environment = tci.Environment;
+                    return true;
+                }
+                else
+                    throw new NotImplementedException ();
+            }
+            else return false;
+        }
+    }
+
+
 
     class PrimitiveCombination3SQ : PrimitiveCombination3
     {
@@ -1300,7 +1427,7 @@ namespace Microcode
             // that call back.
 #if DEBUG
             Primitive.hotPrimitives.Note (this.procedure);
-            Debug.WriteLineIf (Primitive.Noisy, this.procedure.ToString ());
+            SCode.location = this.procedure.Name.ToString();
 #endif
             if (this.method (out answer, ev0, this.arg1Value, ev2)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -1315,86 +1442,5 @@ namespace Microcode
             return false;
         }
     }
-
-
-//    [Serializable]
-//    class PrimitiveCombination3LSS : PrimitiveCombination3
-//    {
-//#if DEBUG
-//        [NonSerialized]
-//        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-//        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-//        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-//#endif
-//        protected object l0name;
-//        protected int l0depth;
-//        protected int l0offset;
-
-//        public PrimitiveCombination3LSS (Primitive3 procedure, LexicalVariable arg0, object arg1, object arg2)
-//            : base (procedure, arg0, arg1, arg2)
-//        {
-//            this.l0name = arg0.Name;
-//            this.l0depth = arg0.Depth;
-//            this.l0offset = arg0.Offset;
-//        }
-
-//        public static PrimitiveCombination3LSS Make (Primitive3 procedure, LexicalVariable arg0, object arg1, object arg2)
-//        {
-//            return new PrimitiveCombination3LSS (procedure, arg0, arg1, arg2);
-//        }
-
-//        public override SCode Bind (LexicalMap ctenv)
-//        {
-//            throw new NotImplementedException ("Shouldn't be necessary.");
-//        }
- 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-//        {
-//#if DEBUG
-//            Warm ();
-//            noteCalls (this.arg0);
-//            noteCalls (this.arg1);
-//            noteCalls (this.arg2);
-//            ratorHistogram.Note (this.procedure);
-//            rand1TypeHistogram.Note (this.rand1Type);
-//            rand2TypeHistogram.Note (this.rand2Type);
-//#endif
-//            object ev2;
-//            Environment env = environment;
-//            Control unev = this.arg2;
-//            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-//            if (ev2 == Interpreter.UnwindStack) throw new NotImplementedException ();
-
-//            object ev1;
-//            env = environment;
-//            unev = this.arg1;
-//            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-//            if (ev1 == Interpreter.UnwindStack) throw new NotImplementedException ();
-
-//            object ev0;
-//            if (environment.LexicalRef (out ev0, this.l0name, this.l0depth, this.l0offset))
-//                throw new NotImplementedException ();
-//            // It may be expensive to bounce down to invoke the procedure
-//            // we should invoke it directly and pass along the ref args.
-//            // Calling directly may break tail recursion for primitives
-//            // that call back.
-//#if DEBUG
-//            Primitive.hotPrimitives.Note (this.procedure);
-//            Debug.WriteLineIf (Primitive.Noisy, this.procedure.ToString ());
-//#endif
-//            if (this.method (out answer, ev0, ev1, ev2)) {
-//                TailCallInterpreter tci = answer as TailCallInterpreter;
-//                if (tci != null) {
-//                    expression = tci.Expression;
-//                    environment = tci.Environment;
-//                    answer = null;
-//                    return true;
-//                }
-//                throw new NotImplementedException ();
-//            }
-//            return false;
-//        }
-
-//    }
 
 }

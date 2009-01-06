@@ -28,11 +28,11 @@ namespace Microcode
 
             switch ((TC) acode) {
                 case TC.ACCESS:
-                    answer = new Access (car, (string) cdr);
+                    answer = new Access (car, (Symbol) cdr);
                     break;
 
                 case TC.ASSIGNMENT:
-                    answer = new Assignment (car, cdr);
+                    answer = Assignment.Make (car, cdr);
                     break;
 
                 case TC.COMBINATION_1:
@@ -44,7 +44,11 @@ namespace Microcode
                     break;
 
                 case TC.DEFINITION:
-                    answer = new Definition (car, cdr);
+                    answer = new Definition ((Symbol)car, cdr);
+                    break;
+
+                case TC.DELAY:
+                    answer = new Delay (car, cdr);
                     break;
 
                 case TC.DISJUNCTION:
@@ -82,7 +86,7 @@ namespace Microcode
                 case TC.UNINTERNED_SYMBOL:
                     // What gives?  Uninterned strings are squirrely on the CLR.
                     // We put them in a class object to have more control.
-                    answer = new UninternedSymbol (new String ((char []) car));
+                    answer = Symbol.MakeUninterned (new String ((char []) car));
                     break;
 
                 case TC.WEAK_CONS:
@@ -103,7 +107,7 @@ namespace Microcode
                 answer = systemPair.SystemPairCar;
             else {
                 // special case strings to act like symbols
-                // with a print varname in the system pair car.
+                // with a print ratorName in the system pair car.
                 string sarg = arg as string;
                 if (sarg == null)
                     throw new NotImplementedException ();

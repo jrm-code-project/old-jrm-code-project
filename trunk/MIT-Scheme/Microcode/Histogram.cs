@@ -11,6 +11,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Dictionary<T, long> entries = new Dictionary<T, long> ();
 
+        [DebuggerStepThrough]
         public void Note (T item)
         {
             if (entries.ContainsKey (item))

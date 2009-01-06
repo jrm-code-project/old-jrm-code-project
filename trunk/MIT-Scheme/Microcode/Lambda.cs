@@ -9,50 +9,65 @@ namespace Microcode
     /// <summary>
     /// Base class for lambda expressions.
     /// </summary>
+    [Serializable]
     abstract public class LambdaBase : SCode
     {
-        static public readonly string internalLambda = String.Intern ("#[internal-lambda]");
-        static public readonly string unnamed = String.Intern ("#[unnamed-procedure]");
-        static public readonly string let = String.Intern ("#[let-procedure]");
+        static public readonly Symbol internalLambda = Symbol.Make ("#[internal-lambda]");
+        static public readonly Symbol unnamed = Symbol.Make ("#[unnamed-procedure]");
+        static public readonly Symbol let = Symbol.Make ("#[let-procedure]");
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly string lambdaName; 
+        protected readonly Symbol lambdaName; 
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly object [] lambdaFormals;
+        protected readonly Symbol [] lambdaFormals;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected SCode lambdaBody;     
- 
-        protected LambdaBase (TC typeCode, string name, object [] formals, SCode body)
+        protected SCode lambdaBody;
+
+        int lexicalCacheSize = 0;
+
+        protected LambdaBase (TC typeCode, Symbol name, Symbol [] formals, SCode body)
             : base (typeCode)
         {
             this.lambdaName = name;
             this.lambdaFormals = formals;
             this.lambdaBody = body;
             // Paranoia:  check for duplicate names
-            if (name != "dummy-procedure") {
+            if (name != Symbol.Make("dummy-procedure")) {
                 for (int i = 0; i < formals.Length - 1; i++)
                     for (int j = i + 1; j < formals.Length; j++)
                         if (formals [i] == formals [j]) Debugger.Break ();
             }
         }
 
-        public string Name { [DebuggerStepThrough] get { return this.lambdaName; } }
-        public object [] Formals { [DebuggerStepThrough] get { return this.lambdaFormals; } }
+        public Symbol Name { [DebuggerStepThrough] get { return this.lambdaName; } }
+        public Symbol [] Formals { [DebuggerStepThrough] get { return this.lambdaFormals; } }
         public SCode Body { [DebuggerStepThrough] get { return this.lambdaBody; } }
+
+        public int LexicalCacheSize
+        {
+            get
+            {
+                return this.lexicalCacheSize;
+            }
+            set
+            {
+                this.lexicalCacheSize = value;
+            }
+        }
 
         public int LexicalOffset (object name)
         {
             // This way is *slow*
-            // return Array.IndexOf (this.lambdaFormals, varname);
+            // return Array.IndexOf (this.lambdaFormals, ratorName);
             for (int i = 0; i < this.lambdaFormals.Length; i++)
                 if (name == this.lambdaFormals [i])
                     return i;
             return -1;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             // Should check for shadowing.
             return this.lambdaBody.MutatesAny (formals);
@@ -75,9 +90,9 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override SCode Substitute (object name, object newObject)
+        public override bool Uses (Symbol formal)
         {
-            throw new NotImplementedException ();
+            return this.lambdaBody.Uses (formal);
         }
     }
 
@@ -88,38 +103,38 @@ namespace Microcode
     [Serializable]
     abstract class Lambda : LambdaBase, ISystemPair
     {
-        protected Lambda (string name, object [] formals, SCode body)
+        protected Lambda (Symbol name, Symbol [] formals, SCode body)
             : base (TC.LAMBDA, name, formals, body)
         {
         }
 
-        public static SCode Make (string name, object [] formals, SCode body)
+        public static SCode Make (Symbol name, Symbol [] formals, SCode body)
         {
             if (body == null)
                 throw new ArgumentNullException ("lambdaBody");
             if (formals == null)
                 throw new ArgumentNullException ("lambdaFormals");
             if (name == null)
-                throw new ArgumentNullException ("varname");
+                throw new ArgumentNullException ("ratorName");
 
-                    // If someone in the lambdaBody calls `the-environment', then we
-                    // *must* create a first-class enabled environment.   
-            return 
-                (body.CallsTheEnvironment () || ! Configuration.EnableStaticBinding) ? (Lambda) StandardLambda.Make (name, formals, body)
-                : (formals.Length == 0 || body.MutatesAny(formals) || ! Configuration.EnableSimpleLambda) ? (Lambda) new StaticLambda (name, formals, body)
-                : (Lambda) new SimpleLambda (name, formals, body);
+            // If someone in the lambdaBody calls `the-environment', then we
+            // *must* create a first-class enabled environment.   
+            return
+                (body.CallsTheEnvironment () || !Configuration.EnableStaticBinding) ?  StandardLambda.Make (name, formals, body) :
+                (formals.Length == 0 || body.MutatesAny (formals) || !Configuration.EnableSimpleLambda) ? (SCode) new StaticLambda (name, formals, body) :
+                new SimpleLambda (name, formals, body);
         }
 
         public static SCode Make (object name, object formals, object body)
         {
-
             if (formals == null)
                 throw new ArgumentNullException ("lambdaFormals");
-
-            string sname = (string) name;
-            object [] cdrArray = (object []) formals;
-
-            return Make (sname, cdrArray, EnsureSCode (body));
+            object [] formalsArray = (object []) formals;
+            Symbol [] realFormals = new Symbol [formalsArray.Length];
+            for (int i = 0; i < formalsArray.Length; i++) {
+                realFormals [i] = (Symbol) formalsArray [i];
+            }
+            return Make ((Symbol) name, (Symbol []) realFormals, EnsureSCode (body));
         }
 
         [SchemePrimitive ("LAMBDA?", 1, true)]
@@ -190,7 +205,7 @@ namespace Microcode
 
         public readonly bool rest;
 
-        protected ExtendedLambda (string name, object [] formals, SCode body, uint required, uint optional, bool rest)
+        protected ExtendedLambda (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
             : base (TC.EXTENDED_LAMBDA, name, formals, body)
         {
             this.required = required;
@@ -198,14 +213,14 @@ namespace Microcode
             this.rest = rest;
         }
 
-        public static SCode Make (string name, object [] formals, SCode body, uint required, uint optional, bool rest)
+        public static SCode Make (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
                 throw new ArgumentNullException ("lambdaBody");
             if (formals == null)
                 throw new ArgumentNullException ("lambdaFormals");
             if (name == null)
-                throw new ArgumentNullException ("varname");
+                throw new ArgumentNullException ("ratorName");
 
             return 
                 // If no optional, rest, or aux arguments, just make a regular lambda.
@@ -219,12 +234,11 @@ namespace Microcode
 
         public static SCode Make (Hunk3 init)
         {
-
             object [] cdrArray = (object []) init.Cxr1;
-            string name = (string) cdrArray [0];
-            object [] formals = new object [cdrArray.Length - 1];
+            Symbol name = (Symbol) cdrArray [0];
+            Symbol [] formals = new Symbol [cdrArray.Length - 1];
             for (int i = 0; i < formals.Length; i++)
-                formals [i] = cdrArray [i + 1];
+                formals [i] = (Symbol) cdrArray [i + 1];
             uint code = (uint) (int) (init.Cxr2);
             return Make (name, formals, EnsureSCode (init.Cxr0), (code >> 8) & 0xFF, code & 0xFF, ((code >> 16) & 0x1) == 0x1);
         }
@@ -288,33 +302,6 @@ namespace Microcode
 
         #endregion
 
-
-        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
-        //{
-        //    int argOffset = LexicalOffset (lambdaName);
-        //    if (argOffset == -1)
-        //        return parent.SimulateDangerousLookup (lambdaName, 0, 0);
-        //    else
-        //        return Argument.Make (lambdaName, argOffset);
-        //}
-
-        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
-        //{
-        //    int argOffset = LexicalOffset (lambdaName);
-        //    if (argOffset == -1)
-        //        return parent.SimulateDangerousLookup (lambdaName, argDepth, 0);
-        //    else
-        //        return LexicalVariable.Make (lambdaName, argDepth, argOffset);
-        //}
-
-        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
-        //{
-        //    int argOffset = LexicalOffset (lambdaName);
-        //    if (argOffset == -1)
-        //        return parent.SimulateDangerousLookup (lambdaName, safeDepth, argDepth + 1);
-        //    else
-        //        return DangerousLexicalVariable.Make (lambdaName, safeDepth, argDepth, argOffset);
-        //}
     }
 
     /// <summary>
@@ -324,19 +311,19 @@ namespace Microcode
     [Serializable]
     sealed class StandardExtendedLambda : ExtendedLambda
     {
-        StandardExtendedLambda (string name, object [] formals, SCode body, uint required, uint optional, bool rest)
+        StandardExtendedLambda (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
             : base (name, formals, body, required, optional, rest)
         {
         }
 
-        public static new StandardExtendedLambda Make (string name, object [] formals, SCode body, uint required, uint optional, bool rest)
+        public static new StandardExtendedLambda Make (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
                 throw new ArgumentNullException ("lambdaBody");
             if (formals == null)
                 throw new ArgumentNullException ("lambdaFormals");
             if (name == null)
-                throw new ArgumentNullException ("varname");
+                throw new ArgumentNullException ("ratorName");
 
             return new StandardExtendedLambda (name, formals, body, required, optional, rest);
         }
@@ -364,23 +351,6 @@ namespace Microcode
             return false;
         }
 
-
-        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
-        //{
-        //    throw new NotImplementedException ();
-        //}
-
-        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
-        //{
-        //    throw new NotImplementedException ();
-        //}
-
-        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
-        //{
-        //    throw new NotImplementedException ();
-        //}
-
-
         public override BoundVariable IncreaseLexicalDepth (BoundVariable variable)
         {
             throw new NotImplementedException ();
@@ -394,19 +364,19 @@ namespace Microcode
     [Serializable]
     sealed class StaticExtendedLambda : ExtendedLambda
     {
-        StaticExtendedLambda (string name, object [] formals, SCode body, uint required, uint optional, bool rest)
+        StaticExtendedLambda (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
             : base (name, formals, body, required, optional, rest)
         {
         }
 
-        public static new StaticExtendedLambda Make (string name, object [] formals, SCode body, uint required, uint optional, bool rest)
+        public static new StaticExtendedLambda Make (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
                 throw new ArgumentNullException ("lambdaBody");
             if (formals == null)
                 throw new ArgumentNullException ("lambdaFormals");
             if (name == null)
-                throw new ArgumentNullException ("varname");
+                throw new ArgumentNullException ("ratorName");
 
             return new StaticExtendedLambda (name, formals, body, required, optional, rest);
         }
@@ -433,33 +403,6 @@ namespace Microcode
             return false;
         }
 
-        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
-        //{
-        //    int argOffset = LexicalOffset (lambdaName);
-        //    if (argOffset == -1)
-        //        return parent.SimulateStaticLookup (lambdaName, 1);
-        //    else
-        //        return Argument.Make (lambdaName, argOffset);
-        //}
-
-        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
-        //{
-        //    int argOffset = LexicalOffset (lambdaName);
-        //    if (argOffset == -1)
-        //        return parent.SimulateStaticLookup (lambdaName, argDepth + 1);
-        //    else
-        //        return LexicalVariable.Make (lambdaName, argDepth, argOffset);
-        //}
-
-        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
-        //{
-        //    int argOffset = LexicalOffset (lambdaName);
-        //    if (argOffset == -1)
-        //        return parent.SimulateDangerousLookup (lambdaName, safeDepth, argDepth + 1);
-        //    else
-        //        return DangerousLexicalVariable.Make (lambdaName, safeDepth, argDepth, argOffset);
-        //}
-
         public override BoundVariable IncreaseLexicalDepth (BoundVariable variable)
         {
             return variable.IncreaseStaticLexicalDepth ();
@@ -473,11 +416,11 @@ namespace Microcode
     [Serializable]
     sealed class StandardLambda : Lambda
     {
-        StandardLambda (string name, object [] formals, SCode body)
+        StandardLambda (Symbol name, Symbol [] formals, SCode body)
             : base (name, formals, body)
         { }
 
-        public static new StandardLambda Make (string name, object [] formals, SCode body)
+        public static new StandardLambda Make (Symbol name, Symbol [] formals, SCode body)
         {
            return new StandardLambda (name, formals, body);
         }
@@ -509,22 +452,6 @@ namespace Microcode
             return false;
         }
 
-        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
-        //{
-        //    throw new NotImplementedException ();
-        //}
-
-        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
-        //{
-        //    throw new NotImplementedException ();
-        //}
-
-        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
-        //{
-        //    throw new NotImplementedException ();
-        //}
-
-
         public override BoundVariable IncreaseLexicalDepth (BoundVariable variable)
         {
             throw new NotImplementedException ();
@@ -537,9 +464,10 @@ namespace Microcode
     /// where we know the lexical addresses of free variables and don't
     /// have to worry about shadowing definition.
     /// </summary>
+    [Serializable]
     abstract class StaticLambdaBase : Lambda
     {
-        protected StaticLambdaBase (string name, object [] formals, SCode body)
+        protected StaticLambdaBase (Symbol name, Symbol [] formals, SCode body)
             : base (name, formals, body)
         { }
 
@@ -547,35 +475,7 @@ namespace Microcode
         {
             return false;
         }
-        
-        //public override BoundVariable SimulateLookup (object lambdaName, LexicalMap parent)
-        //{
-        //    int argOffset = LexicalOffset (lambdaName);
-        //    if (argOffset == -1)
-        //        return parent.SimulateStaticLookup (lambdaName, 1);
-        //    else
-        //        return Argument.Make (lambdaName, argOffset);
-        //}
-
-        //public override BoundVariable SimulateStaticLookup (object lambdaName, LexicalMap parent, int argDepth)
-        //{
-        //    int argOffset = LexicalOffset (lambdaName);
-        //    if (argOffset == -1)
-        //        return parent.SimulateStaticLookup (lambdaName, argDepth + 1);
-        //    else
-        //        return LexicalVariable.Make (lambdaName, argDepth, argOffset);
-        //}
-
-        //public override BoundVariable SimulateDangerousLookup (object lambdaName, LexicalMap parent, int safeDepth, int argDepth)
-        //{
-        //    int argOffset = LexicalOffset (lambdaName);
-        //    if (argOffset == -1)
-        //        return parent.SimulateDangerousLookup (lambdaName, safeDepth, argDepth + 1);
-        //    else
-        //        return DangerousLexicalVariable.Make (lambdaName, safeDepth, argDepth, argOffset);
-        //}
-
-
+ 
         public override Closure Close (Environment environment)
         {
             throw new NotImplementedException ();
@@ -594,8 +494,8 @@ namespace Microcode
     [Serializable]
     sealed class StaticLambda : StaticLambdaBase
     {
-        internal StaticLambda (string varname, object [] formals, SCode body)
-            : base (varname, formals, body)
+        internal StaticLambda (Symbol name, Symbol [] formals, SCode body)
+            : base (name, formals, body)
         {         
         }
 
@@ -630,7 +530,7 @@ namespace Microcode
     [Serializable]
     sealed class SimpleLambda : StaticLambdaBase
     {
-        internal SimpleLambda (string name, object [] formals, SCode body)
+        internal SimpleLambda (Symbol name, Symbol [] formals, SCode body)
             : base (name, formals, body)
         {
         }

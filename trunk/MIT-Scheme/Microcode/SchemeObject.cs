@@ -1,7 +1,8 @@
 ﻿
 using System;
 using System.Diagnostics;
-
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
@@ -12,7 +13,9 @@ namespace Microcode
     {
 #if DEBUG
         static long counter;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        [NonSerialized]
         protected readonly long objectSerialNumber;
 #endif
 

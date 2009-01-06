@@ -209,7 +209,19 @@ namespace Microcode
         [SchemePrimitive ("FLONUM-SUBTRACT", 2, false)]
         public static bool Subtract (out object answer, object left, object right)
         {
-            answer = (double) left - (double) right;
+            if (left is long) {
+                if (right is double) {
+                    answer = (double)(long) left - (double) right;
+                }
+                else throw new NotImplementedException();
+            }
+            else if (left is double) {
+                if (right is double) {
+                    answer = (double) left - (double) right;
+                }
+                else throw new NotImplementedException();
+            }
+            else throw new NotImplementedException();
             return false;
         }
 
@@ -339,11 +351,12 @@ namespace Microcode
         //    throw new NotImplementedException ();
         //}
 
-        //[SchemePrimitive ("FLONUM-SQRT", 1)]
-        //public static PartialResult Sqrt (object arg)
-        //{
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("FLONUM-SQRT", 1, false)]
+        public static bool Sqrt (out object answer, object arg)
+        {
+            answer = Math.Sqrt ((double) arg);
+            return false;
+        }
 
         //[SchemePrimitive ("FLONUM-EXPT", 2)]
         //public static PartialResult Expt (object fbase, object fpower)

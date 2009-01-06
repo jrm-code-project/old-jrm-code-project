@@ -31,9 +31,10 @@ namespace Microcode
 
         public static SCode Make (SCode rator, SCode rand0, SCode rand1, SCode rand2)
         {
-            return (rand2 is Argument) ? Combination3SSSA.Make (rator, rand0, rand1, (Argument) rand2)
-                : (rand2 is Quotation) ? Combination3SSSQ.Make (rator, rand0, rand1, (Quotation) rand2)
-                : new Combination3 (rator, rand0, rand1, rand2);
+            return 
+                //(rand2 is Argument) ? Combination3SSSA.Make (rator, rand0, rand1, (Argument) rand2)
+                //(rand2 is Quotation) ? Combination3SSSQ.Make (rator, rand0, rand1, (Quotation) rand2)
+                new Combination3 (rator, rand0, rand1, rand2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -55,11 +56,10 @@ namespace Microcode
             Control unev = this.components [3];
             while (unev.EvalStep (out ev2, ref unev, ref env)) { };
             if (ev2 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new Combination3Frame0 (this, environment));
-                //environment = env;
-                //answer = Interpreter.UnwindStack;
-                //return false;
+                ((UnwinderState) env).AddFrame (new Combination3Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
             }
 
             object ev1;
@@ -67,11 +67,10 @@ namespace Microcode
             unev = this.components [2];
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
             if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new Combination3Frame1 (this, environment, ev2));
-                //environment = env;
-                //answer = Interpreter.UnwindStack;
-                //return false;
+                ((UnwinderState) env).AddFrame (new Combination3Frame1 (this, environment, ev2));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
             }
 
             object ev0;
@@ -90,19 +89,126 @@ namespace Microcode
             unev = this.components [0];
             while (unev.EvalStep (out evop, ref unev, ref env)) { };
             if (evop == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination3Frame3 (this, environment, ev0, ev1, ev2));
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination3Frame3 (this, environment, ev0, ev1, ev2));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1, ev2);
+        }
+    }
+
+    class Combination3Frame0 : SubproblemContinuation<Combination3>, ISystemVector
+    {
+        public Combination3Frame0 (Combination3 combination, Environment environment)
+            : base (combination, environment)
+        {
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev2)
+        {
+            object ev1;
+            Environment env = environment;
+            Control unevop = this.expression.Components [2];
+            while (unevop.EvalStep (out ev1, ref unevop, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination3Frame1 (this.expression, environment, ev2));
                 environment = env;
                 answer = Interpreter.UnwindStack;
                 return false;
             }
 
-            // expression = (SCode) evop;
+            object ev0;
+            env = environment;
+            unevop = this.expression.Components [1];
+            while (unevop.EvalStep (out ev0, ref unevop, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            object evop;
+            env = environment;
+            unevop = this.expression.Operator;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
             return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1, ev2);
         }
-
     }
 
-    [Serializable]
+    class Combination3Frame1 : SubproblemContinuation<Combination3>, ISystemVector
+    {
+        readonly object ev2;
+        public Combination3Frame1 (Combination3 combination, Environment environment, object ev2)
+            : base (combination, environment)
+        {
+            this.ev2 = ev2;
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev1)
+        {
+            object ev0;
+            Environment env = environment;
+            Control unevop = this.expression.Components [1];
+            while (unevop.EvalStep (out ev0, ref unevop, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            object evop;
+            env = environment;
+            unevop = this.expression.Operator;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1, this.ev2);
+        }
+    }
+
     class Combination3Frame2 : SubproblemContinuation<Combination3>, ISystemVector
     {
         readonly object ev1;

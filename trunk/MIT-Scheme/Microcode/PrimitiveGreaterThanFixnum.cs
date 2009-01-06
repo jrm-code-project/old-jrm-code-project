@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     class PrimitiveGreaterThanFixnum : PrimitiveCombination2
     {
         protected PrimitiveGreaterThanFixnum (Primitive2 rator, SCode rand0, SCode rand1)
@@ -15,11 +16,11 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rand0 is LexicalVariable) ? PrimitiveGreaterThanFixnumL.Make (rator, (LexicalVariable) rand0, rand1)
-                : (rand0 is Quotation) ? PrimitiveGreaterThanFixnumQ.Make (rator, (Quotation) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitiveGreaterThanFixnumSL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveGreaterThanFixnumSQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveGreaterThanFixnum (rator, rand0, rand1);
+                (rand0 is LexicalVariable) ? PrimitiveGreaterThanFixnumL.Make (rator, (LexicalVariable) rand0, rand1) :
+                (rand0 is Quotation) ? PrimitiveGreaterThanFixnumQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveGreaterThanFixnumSL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveGreaterThanFixnumSQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveGreaterThanFixnum (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1275,11 +1276,12 @@ namespace Microcode
         }
     }
 
-    class PrimitiveGreaterThanFixnumSQ : PrimitiveGreaterThanFixnum
+    [Serializable]
+    sealed class PrimitiveGreaterThanFixnumSQ : PrimitiveGreaterThanFixnum
     {
         public readonly int rand1Value;
 
-        protected PrimitiveGreaterThanFixnumSQ (Primitive2 rator, SCode rand0, Quotation rand1)
+        PrimitiveGreaterThanFixnumSQ (Primitive2 rator, SCode rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value = (int) rand1.Quoted;
@@ -1297,12 +1299,8 @@ namespace Microcode
             Warm ("PrimitiveGreaterThanFixnumSQ.EvalStep");
             noteCalls (this.rand0);
 #endif
-            // Eval argument1
-            int ev1 = this.rand1Value;
-
             // Eval argument0
             object ev0;
-
             Control unev = this.rand0;
             Environment env = environment;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
@@ -1315,7 +1313,7 @@ namespace Microcode
             }
 
             // Greater-than-fixnum?
-            answer = (int) ev0 > ev1 ? Constant.sharpT : Constant.sharpF;
+            answer = ((int) ev0 > (int) this.rand1Value) ? Constant.sharpT : Constant.sharpF;
             return false;
             throw new NotImplementedException ();
         }

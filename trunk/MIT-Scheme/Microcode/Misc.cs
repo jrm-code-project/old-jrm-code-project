@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Win32;
 using System.Text;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Microcode
 {
@@ -335,7 +337,17 @@ namespace Microcode
         [SchemePrimitive ("PRIMITIVE-FASDUMP", 3, false)]
         public static bool PrimitiveFasdump (out object answer, object arg0, object arg1, object arg2)
         {
-            throw new NotImplementedException ();
+            System.IO.FileStream output = System.IO.File.OpenWrite (new String ((char []) arg1));
+            // Slap in the expected header.
+            output.WriteByte (0xFA);
+            output.WriteByte (0xFA);
+            output.WriteByte (0xFA);
+            output.WriteByte (0xFA);
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bfmt = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter ();
+            bfmt.Serialize (output, arg0);
+            output.Close ();
+            answer = Constant.sharpT;
+            return false;
         }
 
         [SchemePrimitive ("PRIMITIVE-PURIFY", 3, true)]
@@ -426,19 +438,19 @@ namespace Microcode
         {
             answer = (
                 new Cons (
-                new Cons (string.Intern ("HKEY_CLASSES_ROOT"), null), //Registry.ClassesRoot),
+                new Cons (Symbol.Make ("HKEY_CLASSES_ROOT"), null), //Registry.ClassesRoot),
                 new Cons (
-                new Cons (string.Intern ("HKEY_CURRENT_USER"), null), //Registry.CurrentUser),
+                new Cons (Symbol.Make ("HKEY_CURRENT_USER"), null), //Registry.CurrentUser),
                 new Cons (
-                new Cons (string.Intern ("HKEY_LOCAL_MACHINE"), null), //Registry.LocalMachine),
+                new Cons (Symbol.Make ("HKEY_LOCAL_MACHINE"), null), //Registry.LocalMachine),
                 new Cons (
-                new Cons (string.Intern ("HKEY_USERS"), null), //Registry.Users),
+                new Cons (Symbol.Make ("HKEY_USERS"), null), //Registry.Users),
                 new Cons (
-                new Cons (string.Intern ("HKEY_PERFORMANCE_DATA"), null), //Registry.PerformanceData),
+                new Cons (Symbol.Make ("HKEY_PERFORMANCE_DATA"), null), //Registry.PerformanceData),
                 new Cons (
-                new Cons (string.Intern ("HKEY_CURRENT_CONFIG"), null), //Registry.CurrentConfig),
+                new Cons (Symbol.Make ("HKEY_CURRENT_CONFIG"), null), //Registry.CurrentConfig),
                 new Cons (
-                new Cons (string.Intern ("HKEY_DYNAMIC_DATA"), null), //Registry.DynData),
+                new Cons (Symbol.Make ("HKEY_DYNAMIC_DATA"), null), //Registry.DynData),
                 null))))))));
             return false;
         }

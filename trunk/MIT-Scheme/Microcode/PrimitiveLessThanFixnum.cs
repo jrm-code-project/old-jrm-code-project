@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     class PrimitiveLessThanFixnum : PrimitiveCombination2
     {
         protected PrimitiveLessThanFixnum (Primitive2 rator, SCode rand0, SCode rand1)
@@ -15,11 +16,11 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rand0 is LexicalVariable) ? PrimitiveLessThanFixnumL.Make (rator, (LexicalVariable) rand0, rand1)
-                : (rand0 is Quotation) ? PrimitiveLessThanFixnumQ.Make (rator, (Quotation) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitiveLessThanFixnumSL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveLessThanFixnumSQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveLessThanFixnum (rator, rand0, rand1);
+                (rand0 is LexicalVariable) ? PrimitiveLessThanFixnumL.Make (rator, (LexicalVariable) rand0, rand1) :
+                (rand0 is Quotation) ? PrimitiveLessThanFixnumQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveLessThanFixnumSL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveLessThanFixnumSQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveLessThanFixnum (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -950,9 +951,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveLessThanFixnumL1Q");
 #endif
-            throw new NotImplementedException ();
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+            answer = ((int) ev0 < this.rand1Value) ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
     }
 
@@ -1107,9 +1112,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveLessThanFixnumLQ.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+                throw new NotImplementedException ();
+            answer = ((int) ev0 < this.rand1Value) ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
     }
 

@@ -10,7 +10,6 @@ namespace Microcode
     abstract class ClosureBase : SchemeObject, IApplicable, ISystemPair
     {
 #if DEBUG
-        public static bool Noisy;
         static Histogram<ClosureBase> hotClosures = new Histogram<ClosureBase>();
         protected long callCount;
 #endif
@@ -31,7 +30,7 @@ namespace Microcode
         }
 
 
-        public string Name
+        public Symbol Name
         {
             [DebuggerStepThrough]
             get
@@ -44,14 +43,14 @@ namespace Microcode
         {
             get
             {
-                string name = this.Lambda.Name;
+                Symbol name = this.Lambda.Name;
                 if ((name == LambdaBase.unnamed
                     || name == LambdaBase.internalLambda
                     || name == LambdaBase.let)
                     && this.Environment.closure != null)
                     return this.Environment.closure.LongName + " " + name;
                 else
-                    return name;
+                    return name.ToString();
             }
         }
 
@@ -407,10 +406,13 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly StandardLambda lambda;
 
+        public readonly int argumentCount;
+
         internal StandardClosure (StandardLambda lambda, Environment environment)
             : base (environment)
         {
             this.lambda = lambda;
+            this.argumentCount = lambda.Formals.Length;
         }
 
         public override LambdaBase Lambda
@@ -427,7 +429,7 @@ namespace Microcode
             this.BumpCallCount ();
             SCode.location = "StandardClosure.Apply";
 #endif
-            if (args.Length != this.lambda.Formals.Length)
+            if (args.Length != this.argumentCount)
                 throw new NotImplementedException ();
             expression = this.lambda.Body;
             environment = new StandardEnvironment (this, args);
@@ -481,10 +483,13 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly LType lambda;
 
+        public readonly int argumentCount;
+
         protected StaticClosureBase (Environment environment, LType lambda)
             : base (environment)
         {
             this.lambda = lambda;
+            this.argumentCount = lambda.Formals.Length;
         }
 
         public override LambdaBase Lambda
@@ -512,7 +517,7 @@ namespace Microcode
             this.BumpCallCount();
             SCode.location = "StaticClosure.Apply";
 #endif
-            if (this.lambda.Formals.Length != args.Length)
+            if (this.argumentCount != args.Length)
                 throw new NotImplementedException ();
             expression = this.lambda.Body;
             environment = new StaticEnvironment (this, args);
@@ -563,11 +568,12 @@ namespace Microcode
     [Serializable]
     sealed class SimpleClosure : StaticClosureBase<SimpleLambda>
     {
-
+        SCode body;
         internal SimpleClosure (SimpleLambda lambda, Environment environment)
             : base (environment, lambda)
         {
             if (lambda.Formals.Length == 0) throw new NotImplementedException ();
+            this.body = lambda.Body;
         }
 
         #region IApplicable Members
@@ -584,9 +590,9 @@ namespace Microcode
 #if DEBUG
                     this.BumpCallCount ();
 #endif
-                    if (args.Length != this.lambda.Formals.Length)
+                    if (args.Length != this.argumentCount)
                         throw new NotImplementedException ();
-                    expression = this.lambda.Body;
+                    expression = this.body;
                     environment = (Environment) new SimpleEnvironment (this, args);
                     answer = null; // keep the compiler happy
                     return true;
@@ -599,16 +605,17 @@ namespace Microcode
         }
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
-        {
-            
+        {        
 #if DEBUG
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call.1";
 #endif
-            if (this.lambda.Formals.Length != 1)
+            if (this.argumentCount != 1)
                 throw new NotImplementedException ();
-            expression = this.lambda.Body;
+            expression = this.body;
+            SCode.location = "new SmallEnvironment1";
             environment = new SmallEnvironment1 (this, arg0);
+            SCode.location = "SimpleClosure.Call.1";
             answer = null; // keep the compiler happy
             return true;
         }
@@ -616,13 +623,16 @@ namespace Microcode
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG 
-            SCode.location = "SimpleClosure.Call.2";
+            SCode.location = "-";
             this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call.2";
 #endif
-            if (this.lambda.Formals.Length != 2)
+            if (this.argumentCount != 2)
                 throw new NotImplementedException ();
-            expression = this.lambda.Body;
+            expression = this.body;
+            SCode.location = "new SmallEnvironment2";
             environment = new SmallEnvironment2 (this, arg0, arg1);
+            SCode.location = "SimpleClosure.Call.2";
             answer = null; // keep the compiler happy
             return true;
         }
@@ -632,7 +642,7 @@ namespace Microcode
 #if DEBUG
             this.BumpCallCount ();
 #endif
-            if (this.lambda.Formals.Length != 3)
+            if (this.argumentCount != 3)
                 throw new NotImplementedException ();
             expression = this.lambda.Body;
             environment = new SmallEnvironment3 (this, arg0, arg1, arg2);
@@ -645,7 +655,7 @@ namespace Microcode
 #if DEBUG
             this.BumpCallCount ();
 #endif
-            if (this.lambda.Formals.Length != 4)
+            if (this.argumentCount != 4)
                 throw new NotImplementedException ();
             expression = this.lambda.Body;
             environment = new SmallEnvironment4 (this, arg0, arg1, arg2, arg3);

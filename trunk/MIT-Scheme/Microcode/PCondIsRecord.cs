@@ -10,27 +10,14 @@ namespace Microcode
     class PCondIsRecord : PCond1
     {
 #if DEBUG
-        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
         static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-
-
 #endif
 
         protected PCondIsRecord (PrimitiveIsRecord predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-
-#if DEBUG
-            this.arg0Type = this.arg0.GetType ();
-#endif
-        }
-
-        static SCode SpecialMake (PrimitiveNot predicate, SCode consequent, SCode alternative)
-        {
-            Debug.WriteLine ("; Optimize (if (not ...)");
-            return Conditional.Make (predicate.Operand, alternative, consequent);
         }
 
         public static SCode Make (PrimitiveIsRecord predicate, SCode consequent, SCode alternative)
@@ -50,7 +37,6 @@ namespace Microcode
 #if DEBUG
             Warm ();
             noteCalls (this.arg0);
-            procedureHistogram.Note (this.procedure);
             arg0TypeHistogram.Note (this.arg0Type);
 #endif
             Control unev0 = this.arg0;
@@ -88,6 +74,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsRecordL : PCondIsRecord
     {
         public readonly object predicateName;
@@ -206,7 +193,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsRecordA0.EvalStep");
 #endif
 
             object ev0 = environment.Argument0Value;
@@ -1098,6 +1085,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsRecordL1 : PCondIsRecordL
     {
         protected PCondIsRecordL1 (PrimitiveIsRecordL1 predicate, SCode consequent, SCode alternative)
@@ -1108,35 +1096,23 @@ namespace Microcode
         public static SCode Make (PrimitiveIsRecordL1 predicate, SCode consequent, SCode alternative)
         {
             return
-       (consequent is LexicalVariable) ? PCondIsRecordL1L.Make (predicate, (LexicalVariable) consequent, alternative)
-       : (consequent is Quotation) ? PCondIsRecordL1Q.Make (predicate, (Quotation) consequent, alternative)
-       : (alternative is LexicalVariable) ? PCondIsRecordL1SL.Make (predicate, consequent, (LexicalVariable) alternative)
-       : (alternative is Quotation) ? PCondIsRecordL1SQ.Make (predicate, consequent, (Quotation) alternative)
-       : new PCondIsRecordL1 (predicate, consequent, alternative);
+                (consequent is LexicalVariable) ? PCondIsRecordL1L.Make (predicate, (LexicalVariable) consequent, alternative) :
+                (consequent is Quotation) ? PCondIsRecordL1Q.Make (predicate, (Quotation) consequent, alternative) :
+                (alternative is LexicalVariable) ? PCondIsRecordL1SL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                (alternative is Quotation) ? PCondIsRecordL1SQ.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsRecordL1 (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            #region EvalStepBody
 #if DEBUG
-            Warm ();
-            noteCalls (this.arg0);
+            Warm ("PCondIsRecordL1.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
                 throw new NotImplementedException ();
 
-
-            if (!(ev0 is Record)) {
-#if DEBUG
-                noteCalls (this.alternative);
-
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
+            if (ev0 is Record)  {
 #if DEBUG
                 noteCalls (this.consequent);
 #endif
@@ -1144,8 +1120,14 @@ namespace Microcode
                 answer = null;
                 return true;
             }
-            #endregion
-
+            else {
+#if DEBUG
+                noteCalls (this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
         }
     }
 
@@ -1910,11 +1892,12 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordSSQ : PCondIsRecord
+    [Serializable]
+    sealed class PCondIsRecordSSQ : PCondIsRecord
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRecordSSQ (PrimitiveIsRecord predicate, SCode consequent, Quotation alternative)
+        PCondIsRecordSSQ (PrimitiveIsRecord predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
@@ -1943,17 +1926,17 @@ namespace Microcode
                 //return false;
             }
 
-            if (!(ev0 is Record)) {
-                answer = this.alternativeValue;
-                return false;
-            }
-            else {
+            if (ev0 is Record) {
 #if DEBUG
                 noteCalls (this.consequent);
 #endif
                 expression = this.consequent;
                 answer = null;
                 return true;
+            }
+            else {
+                answer = this.alternativeValue;
+                return false;
             }
         }
     }

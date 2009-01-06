@@ -10,21 +10,14 @@ namespace Microcode
     class PCondIsComplex : PCond1
     {
 #if DEBUG
-        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
         static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 
 #endif
-
-
         protected PCondIsComplex (PrimitiveIsComplex predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-
-#if DEBUG
-            this.arg0Type = this.arg0.GetType ();
-#endif
         }
 
         public static SCode Make (PrimitiveIsComplex predicate, SCode consequent, SCode alternative)
@@ -44,7 +37,6 @@ namespace Microcode
 #if DEBUG
             Warm ();
             noteCalls (this.arg0);
-            procedureHistogram.Note (this.procedure);
             arg0TypeHistogram.Note (this.arg0Type);
 #endif
             Control unev0 = this.arg0;
@@ -112,7 +104,7 @@ namespace Microcode
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsComplexL.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
@@ -202,27 +194,12 @@ namespace Microcode
 #if DEBUG
             Warm ("PCondIsComplexA0.EvalStep");
 #endif
-
-            object ev0 = environment.Argument0Value;
-
-
-
-            if (!(ev0 is Complex)) {
+            expression = (environment.Argument0Value is Complex) ? this.consequent : this.alternative;
 #if DEBUG
-                noteCalls (this.alternative);
+            noteCalls ((SCode)expression);
 #endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
+            answer = null;
+            return true;
         }
 
         internal static SCode Make (PrimitiveIsComplexA0 predicate, SCode consequent, SCode alternative)
@@ -261,7 +238,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsComplexA0L.EvalStep");
 #endif
             object ev0 = environment.Argument0Value;
 
@@ -758,7 +735,9 @@ namespace Microcode
         }
         internal static SCode Make (PrimitiveIsComplexA1 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsComplexA1SL (predicate, consequent, alternative);
+            return 
+                (alternative is Argument) ? PCondIsComplexA1SA.Make (predicate, consequent, (Argument) alternative) :
+                new PCondIsComplexA1SL (predicate, consequent, alternative);
 
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -786,6 +765,125 @@ namespace Microcode
         }
 
 
+    }
+
+    class PCondIsComplexA1SA : PCondIsComplexA1SL
+    {
+
+
+        protected PCondIsComplexA1SA (PrimitiveIsComplexA1 predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+        internal static SCode Make (PrimitiveIsComplexA1 predicate, SCode consequent, Argument alternative)
+        {
+            return
+                (alternative is Argument0) ? PCondIsComplexA1SA0.Make (predicate, consequent, (Argument0) alternative) :
+                (alternative is Argument1) ? PCondIsComplexA1SA1.Make (predicate, consequent, (Argument1) alternative) :
+                new PCondIsComplexA1SA (predicate, consequent, alternative);
+
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
+            #region EvalStepBody
+#if DEBUG
+            Warm ("PCondIsComplexA1SL.EvalStep");
+#endif
+            if (!(environment.Argument1Value is Complex)) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            #endregion
+
+        }
+
+
+    }
+
+    sealed class PCondIsComplexA1SA0 : PCondIsComplexA1SA
+    {
+        PCondIsComplexA1SA0 (PrimitiveIsComplexA1 predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+        internal static SCode Make (PrimitiveIsComplexA1 predicate, SCode consequent, Argument0 alternative)
+        {
+            return
+                new PCondIsComplexA1SA0 (predicate, consequent, alternative);
+
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
+            #region EvalStepBody
+#if DEBUG
+            Warm ("PCondIsComplexA1SL.EvalStep");
+#endif
+            if (!(environment.Argument1Value is Complex)) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            #endregion
+
+        }
+
+
+    }
+
+    sealed class PCondIsComplexA1SA1 : PCondIsComplexA1SA
+    {
+        PCondIsComplexA1SA1 (PrimitiveIsComplexA1 predicate, SCode consequent, Argument1 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+        internal static SCode Make (PrimitiveIsComplexA1 predicate, SCode consequent, Argument1 alternative)
+        {
+            return
+                new PCondIsComplexA1SA1 (predicate, consequent, alternative);
+
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsComplexA1SA1.EvalStep");
+#endif
+            object test = environment.Argument1Value;
+
+            if (test is Complex) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = test;
+                return false;
+            }
+        }
     }
 
     class PCondIsComplexA1SQ : PCondIsComplexA1

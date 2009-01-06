@@ -200,9 +200,9 @@ namespace Microcode
         }
     }
 
-    class PrimitiveVector8BRefA0A1 : PrimitiveVector8BRefA0A
+    sealed class PrimitiveVector8BRefA0A1 : PrimitiveVector8BRefA0A
     {
-        protected PrimitiveVector8BRefA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
+        PrimitiveVector8BRefA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -216,10 +216,11 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
+            Warm ("PrimitiveVector8BRefA0A1.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            // Vector-8b-ref
+            answer = (int) ((char []) environment.Argument0Value) [(int) environment.Argument1Value];
+            return false; 
         }
     }
 
@@ -548,9 +549,9 @@ namespace Microcode
         }
     }
 
-    class PrimitiveVector8BRefLA0 : PrimitiveVector8BRefLA
+    sealed class PrimitiveVector8BRefLA0 : PrimitiveVector8BRefLA
     {
-        protected PrimitiveVector8BRefLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
+        PrimitiveVector8BRefLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -566,16 +567,13 @@ namespace Microcode
 #if DEBUG
             Warm ("PrimitiveVector8BRefLA0.EvalStep");
 #endif
-            // Eval argument1
-            object ev1 = environment.Argument0Value;
-
             // Eval argument0
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
                 throw new NotImplementedException ();
 
             // Vector-8b-ref
-            answer = (int) ((char []) ev0) [(int) ev1];
+            answer = (int) ((char []) ev0) [(int) environment.Argument0Value];
             return false; 
         }
     }

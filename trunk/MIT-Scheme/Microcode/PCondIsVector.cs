@@ -1,12 +1,14 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
 namespace Microcode
 {
-    class PCondIsRatnum : PCond1
+
+    [Serializable]
+    class PCondIsVector : PCond1
     {
 #if DEBUG
         static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
@@ -14,29 +16,29 @@ namespace Microcode
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 #endif
 
-        protected PCondIsRatnum (PrimitiveIsRatnum predicate, SCode consequent, SCode alternative)
+        protected PCondIsVector (PrimitiveIsVector predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsVector predicate, SCode consequent, SCode alternative)
         {
             return
-                 (predicate is PrimitiveIsRatnumL) ? PCondIsRatnumL.Make ((PrimitiveIsRatnumL) predicate, consequent, alternative)
-                : (consequent is LexicalVariable) ? PCondIsRatnumSL.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsRatnumSQ.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsRatnumSSL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumSSQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnum (predicate, consequent, alternative);
+                (predicate is PrimitiveIsVectorL) ? PCondIsVectorL.Make ((PrimitiveIsVectorL) predicate, consequent, alternative):
+                (consequent is LexicalVariable) ? PCondIsVectorSL.Make (predicate, (LexicalVariable) consequent, alternative):
+                (consequent is Quotation) ? PCondIsVectorSQ.Make (predicate, (Quotation) consequent, alternative):
+                (alternative is LexicalVariable) ? PCondIsVectorSSL.Make (predicate, consequent, (LexicalVariable) alternative):
+                (alternative is Quotation) ? PCondIsVectorSSQ.Make (predicate, consequent, (Quotation) alternative):
+                new PCondIsVector (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            #region EvalStepBody
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.arg0);
             arg0TypeHistogram.Note (this.arg0Type);
+            SCode.location = "PCondIsVector.EvalStep";
 #endif
             Control unev0 = this.arg0;
             Environment env = environment;
@@ -44,14 +46,14 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsVectorFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
@@ -69,17 +71,16 @@ namespace Microcode
                 answer = null;
                 return true;
             }
-            #endregion
         }
     }
 
-    class PCondIsRatnumL : PCondIsRatnum
+    class PCondIsVectorL : PCondIsVector
     {
         public readonly object predicateName;
         public readonly int predicateDepth;
         public readonly int predicateOffset;
 
-        protected PCondIsRatnumL (PrimitiveIsRatnumL predicate, SCode consequent, SCode alternative)
+        protected PCondIsVectorL (PrimitiveIsVectorL predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.predicateName = ((LexicalVariable) predicate.Operand).Name;
@@ -87,30 +88,30 @@ namespace Microcode
             this.predicateOffset = ((LexicalVariable) predicate.Operand).Offset;
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsVectorL predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsRatnumA) ? PCondIsRatnumA.Make ((PrimitiveIsRatnumA) predicate, consequent, alternative)
-                : (predicate is PrimitiveIsRatnumL1) ? PCondIsRatnumL1.Make ((PrimitiveIsRatnumL1) predicate, consequent, alternative)
-                : (consequent is LexicalVariable) ? PCondIsRatnumLL.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsRatnumLQ.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsRatnumLSL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumLSQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumL (predicate, consequent, alternative);
+                (predicate is PrimitiveIsVectorA) ? PCondIsVectorA.Make ((PrimitiveIsVectorA) predicate, consequent, alternative):
+                (predicate is PrimitiveIsVectorL1) ? PCondIsVectorL1.Make ((PrimitiveIsVectorL1) predicate, consequent, alternative):
+                (consequent is LexicalVariable) ? PCondIsVectorLL.Make (predicate, (LexicalVariable) consequent, alternative):
+                (consequent is Quotation) ? PCondIsVectorLQ.Make (predicate, (Quotation) consequent, alternative):
+                (alternative is LexicalVariable) ? PCondIsVectorLSL.Make (predicate, consequent, (LexicalVariable) alternative):
+                (alternative is Quotation) ? PCondIsVectorLSQ.Make (predicate, consequent, (Quotation) alternative):
+                new PCondIsVectorL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ("PCondIsRatnumL.EvalStep");
+            Warm ();
 #endif
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
                 throw new NotImplementedException ();
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -130,23 +131,23 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA : PCondIsRatnumL
+    class PCondIsVectorA : PCondIsVectorL
     {
-        protected PCondIsRatnumA (PrimitiveIsRatnumA predicate, SCode consequent, SCode alternative)
+        protected PCondIsVectorA (PrimitiveIsVectorA predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumA predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsVectorA predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsRatnumA0) ? PCondIsRatnumA0.Make ((PrimitiveIsRatnumA0) predicate, consequent, alternative)
-                : (predicate is PrimitiveIsRatnumA1) ? PCondIsRatnumA1.Make ((PrimitiveIsRatnumA1) predicate, consequent, alternative)
-                : (consequent is LexicalVariable) ? PCondIsRatnumAL.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsRatnumAQ.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsRatnumASL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumASQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumA (predicate, consequent, alternative);
+                (predicate is PrimitiveIsVectorA0) ? PCondIsVectorA0.Make ((PrimitiveIsVectorA0) predicate, consequent, alternative):
+                (predicate is PrimitiveIsVectorA1) ? PCondIsVectorA1.Make ((PrimitiveIsVectorA1) predicate, consequent, alternative):
+                (consequent is LexicalVariable) ? PCondIsVectorAL.Make (predicate, (LexicalVariable) consequent, alternative):
+                (consequent is Quotation) ? PCondIsVectorAQ.Make (predicate, (Quotation) consequent, alternative):
+                (alternative is LexicalVariable) ? PCondIsVectorASL.Make (predicate, consequent, (LexicalVariable) alternative):
+                (alternative is Quotation) ? PCondIsVectorASQ.Make (predicate, consequent, (Quotation) alternative):
+                new PCondIsVectorA (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -159,7 +160,7 @@ namespace Microcode
             object ev0 = environment.ArgumentValue (this.predicateOffset);
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -181,9 +182,9 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA0 : PCondIsRatnumA
+    class PCondIsVectorA0 : PCondIsVectorA
     {
-        protected PCondIsRatnumA0 (PrimitiveIsRatnumA0 predicate, SCode consequent, SCode alternative)
+        protected PCondIsVectorA0 (PrimitiveIsVectorA0 predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
@@ -191,14 +192,14 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA0.EvalStep");
+            Warm ("PCondIsVectorA0.EvalStep");
 #endif
 
             object ev0 = environment.Argument0Value;
 
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -216,24 +217,24 @@ namespace Microcode
             }
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, SCode consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorA0 predicate, SCode consequent, SCode alternative)
         {
             return
-       (consequent is LexicalVariable) ? PCondIsRatnumA0L.Make (predicate, (LexicalVariable) consequent, alternative)
-       : (consequent is Quotation) ? PCondIsRatnumA0Q.Make (predicate, (Quotation) consequent, alternative)
-       : (alternative is LexicalVariable) ? PCondIsRatnumA0SL.Make (predicate, consequent, (LexicalVariable) alternative)
-       : (alternative is Quotation) ? PCondIsRatnumA0SQ.Make (predicate, consequent, (Quotation) alternative)
-       : new PCondIsRatnumA0 (predicate, consequent, alternative);
+       (consequent is LexicalVariable) ? PCondIsVectorA0L.Make (predicate, (LexicalVariable) consequent, alternative)
+       : (consequent is Quotation) ? PCondIsVectorA0Q.Make (predicate, (Quotation) consequent, alternative)
+       : (alternative is LexicalVariable) ? PCondIsVectorA0SL.Make (predicate, consequent, (LexicalVariable) alternative)
+       : (alternative is Quotation) ? PCondIsVectorA0SQ.Make (predicate, consequent, (Quotation) alternative)
+       : new PCondIsVectorA0 (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumA0L : PCondIsRatnumA0
+    class PCondIsVectorA0L : PCondIsVectorA0
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumA0L (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsVectorA0L (PrimitiveIsVectorA0 predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -241,23 +242,23 @@ namespace Microcode
             this.consequentOffset = consequent.Offset;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorA0 predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumA0LL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumA0LQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumA0L (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsVectorA0LL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsVectorA0LQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsVectorA0L (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA0L.EvalStep");
+            Warm ();
 #endif
             object ev0 = environment.Argument0Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -274,15 +275,15 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA0LL : PCondIsRatnumA0L
+    class PCondIsVectorA0LL : PCondIsVectorA0L
     {
-        protected PCondIsRatnumA0LL (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsVectorA0LL (PrimitiveIsVectorA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsVectorA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA0LL (predicate, consequent, alternative);
+            return new PCondIsVectorA0LL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -291,19 +292,19 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA0LQ : PCondIsRatnumA0L
+    class PCondIsVectorA0LQ : PCondIsVectorA0L
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumA0LQ (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsVectorA0LQ (PrimitiveIsVectorA0 predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsVectorA0 predicate, LexicalVariable consequent, Quotation alternative)
         {
-            return new PCondIsRatnumA0LQ (predicate, consequent, alternative);
+            return new PCondIsVectorA0LQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -314,7 +315,7 @@ namespace Microcode
             object ev0 = environment.Argument0Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -327,32 +328,32 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA0Q : PCondIsRatnumA0
+    class PCondIsVectorA0Q : PCondIsVectorA0
     {
         public readonly object consequentValue;
 
-        protected PCondIsRatnumA0Q (PrimitiveIsRatnumA0 predicate, Quotation consequent, SCode alternative)
+        protected PCondIsVectorA0Q (PrimitiveIsVectorA0 predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, Quotation consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorA0 predicate, Quotation consequent, SCode alternative)
         {
             return
-    (alternative is LexicalVariable) ? PCondIsRatnumA0QL.Make (predicate, consequent, (LexicalVariable) alternative)
-    : (alternative is Quotation) ? PCondIsRatnumA0QQ.Make (predicate, consequent, (Quotation) alternative)
-    : new PCondIsRatnumA0Q (predicate, consequent, alternative);
+    (alternative is LexicalVariable) ? PCondIsVectorA0QL.Make (predicate, consequent, (LexicalVariable) alternative)
+    : (alternative is Quotation) ? PCondIsVectorA0QQ.Make (predicate, consequent, (Quotation) alternative)
+    : new PCondIsVectorA0Q (predicate, consequent, alternative);
 
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA0Q.EvalStep");
+            Warm ("PCondIsVectorA0Q.EvalStep");
 #endif
             object ev0 = environment.Argument0Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -369,15 +370,15 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA0QL : PCondIsRatnumA0Q
+    class PCondIsVectorA0QL : PCondIsVectorA0Q
     {
-        protected PCondIsRatnumA0QL (PrimitiveIsRatnumA0 predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsVectorA0QL (PrimitiveIsVectorA0 predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, Quotation consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsVectorA0 predicate, Quotation consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA0QL (predicate, consequent, alternative);
+            return new PCondIsVectorA0QL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -388,12 +389,12 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA0QQ : PCondIsRatnumA0Q
+    class PCondIsVectorA0QQ : PCondIsVectorA0Q
     {
-        protected PCondIsRatnumA0QQ (PrimitiveIsRatnumA0 predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsVectorA0QQ (PrimitiveIsVectorA0 predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         { }
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, Quotation consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsVectorA0 predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -407,7 +408,7 @@ namespace Microcode
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
                 return Sequence2.Make (predicate, consequent);
             }
-            return new PCondIsRatnumA0QQ (predicate, consequent, alternative);
+            return new PCondIsVectorA0QQ (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -417,22 +418,22 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA0SL : PCondIsRatnumA0
+    class PCondIsVectorA0SL : PCondIsVectorA0
     {
         public readonly object alternativeName;
         public readonly int alternativeDepth;
         public readonly int alternativeOffset;
 
-        protected PCondIsRatnumA0SL (PrimitiveIsRatnumA0 predicate, SCode consequent, LexicalVariable alternative)
+        protected PCondIsVectorA0SL (PrimitiveIsVectorA0 predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeName = alternative.Name;
             this.alternativeDepth = alternative.Depth;
             this.alternativeOffset = alternative.Offset;
         }
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, SCode consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsVectorA0 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA0SL (predicate, consequent, alternative);
+            return new PCondIsVectorA0SL (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -442,7 +443,7 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
                 if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
                     throw new NotImplementedException ();
                 return false;
@@ -464,30 +465,30 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA0SQ : PCondIsRatnumA0
+    class PCondIsVectorA0SQ : PCondIsVectorA0
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumA0SQ (PrimitiveIsRatnumA0 predicate, SCode consequent, Quotation alternative)
+        protected PCondIsVectorA0SQ (PrimitiveIsVectorA0 predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, SCode consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsVectorA0 predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumA0SQ (predicate, consequent, alternative);
+            return new PCondIsVectorA0SQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsVectorA0SQ.EvalStep");
 #endif
             object ev0 = environment.Argument0Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -503,22 +504,21 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA1 : PCondIsRatnumA
+    class PCondIsVectorA1 : PCondIsVectorA
     {
-        protected PCondIsRatnumA1 (PrimitiveIsRatnumA1 predicate, SCode consequent, SCode alternative)
+        protected PCondIsVectorA1 (PrimitiveIsVectorA1 predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA1.EvalStep");
-
+            Warm ("PCondIsVectorA1.EvalStep");
 #endif
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 
@@ -538,24 +538,24 @@ namespace Microcode
             }
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, SCode consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorA1 predicate, SCode consequent, SCode alternative)
         {
             return
-                (consequent is LexicalVariable) ? PCondIsRatnumA1L.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsRatnumA1Q.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsRatnumA1SL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumA1SQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumA1 (predicate, consequent, alternative);
+                (consequent is LexicalVariable) ? PCondIsVectorA1L.Make (predicate, (LexicalVariable) consequent, alternative)
+                : (consequent is Quotation) ? PCondIsVectorA1Q.Make (predicate, (Quotation) consequent, alternative)
+                : (alternative is LexicalVariable) ? PCondIsVectorA1SL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsVectorA1SQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsVectorA1 (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumA1L : PCondIsRatnumA1
+    class PCondIsVectorA1L : PCondIsVectorA1
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumA1L (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsVectorA1L (PrimitiveIsVectorA1 predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -564,12 +564,12 @@ namespace Microcode
 
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorA1 predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumA1LL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumA1LQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumA1L (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsVectorA1LL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsVectorA1LQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsVectorA1L (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -580,7 +580,7 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument1Value;
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -600,15 +600,15 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA1LL : PCondIsRatnumA1L
+    class PCondIsVectorA1LL : PCondIsVectorA1L
     {
-        protected PCondIsRatnumA1LL (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsVectorA1LL (PrimitiveIsVectorA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsVectorA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA1LL (predicate, consequent, alternative);
+            return new PCondIsVectorA1LL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -617,19 +617,19 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA1LQ : PCondIsRatnumA1L
+    class PCondIsVectorA1LQ : PCondIsVectorA1L
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumA1LQ (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsVectorA1LQ (PrimitiveIsVectorA1 predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsVectorA1 predicate, LexicalVariable consequent, Quotation alternative)
         {
-            return new PCondIsRatnumA1LQ (predicate, consequent, alternative);
+            return new PCondIsVectorA1LQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -640,7 +640,7 @@ namespace Microcode
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -653,30 +653,30 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA1Q : PCondIsRatnumA1
+    class PCondIsVectorA1Q : PCondIsVectorA1
     {
         public readonly object consequentValue;
-        protected PCondIsRatnumA1Q (PrimitiveIsRatnumA1 predicate, Quotation consequent, SCode alternative)
+        protected PCondIsVectorA1Q (PrimitiveIsVectorA1 predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, Quotation consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorA1 predicate, Quotation consequent, SCode alternative)
         {
             return
-    (alternative is LexicalVariable) ? PCondIsRatnumA1QL.Make (predicate, consequent, (LexicalVariable) alternative)
-    : (alternative is Quotation) ? PCondIsRatnumA1QQ.Make (predicate, consequent, (Quotation) alternative)
-    : new PCondIsRatnumA1Q (predicate, consequent, alternative);
+    (alternative is LexicalVariable) ? PCondIsVectorA1QL.Make (predicate, consequent, (LexicalVariable) alternative)
+    : (alternative is Quotation) ? PCondIsVectorA1QQ.Make (predicate, consequent, (Quotation) alternative)
+    : new PCondIsVectorA1Q (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA1Q.EvalStep");
+            Warm ("PCondIsVectorA1Q.EvalStep");
 #endif
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -691,12 +691,12 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA1QL : PCondIsRatnumA1Q
+    class PCondIsVectorA1QL : PCondIsVectorA1Q
     {
-        protected PCondIsRatnumA1QL (PrimitiveIsRatnumA1 predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsVectorA1QL (PrimitiveIsVectorA1 predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, Quotation quotation, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsVectorA1 predicate, Quotation quotation, LexicalVariable alternative)
         {
 
             throw new NotImplementedException ();
@@ -709,12 +709,12 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA1QQ : PCondIsRatnumA1Q
+    class PCondIsVectorA1QQ : PCondIsVectorA1Q
     {
-        protected PCondIsRatnumA1QQ (PrimitiveIsRatnumA1 predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsVectorA1QQ (PrimitiveIsVectorA1 predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         { }
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, Quotation consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsVectorA1 predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -738,22 +738,22 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA1SL : PCondIsRatnumA1
+    class PCondIsVectorA1SL : PCondIsVectorA1
     {
         public readonly object alternativeName;
         public readonly int alternativeDepth;
         public readonly int alternativeOffset;
 
-        protected PCondIsRatnumA1SL (PrimitiveIsRatnumA1 predicate, SCode consequent, LexicalVariable alternative)
+        protected PCondIsVectorA1SL (PrimitiveIsVectorA1 predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeName = alternative.Name;
             this.alternativeDepth = alternative.Depth;
             this.alternativeOffset = alternative.Offset;
         }
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, SCode consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsVectorA1 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA1SL (predicate, consequent, alternative);
+            return new PCondIsVectorA1SL (predicate, consequent, alternative);
 
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -764,7 +764,7 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument1Value;
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
                 if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
                     throw new NotImplementedException ();
                 return false;
@@ -785,30 +785,30 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA1SQ : PCondIsRatnumA1
+    class PCondIsVectorA1SQ : PCondIsVectorA1
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumA1SQ (PrimitiveIsRatnumA1 predicate, SCode consequent, Quotation alternative)
+        protected PCondIsVectorA1SQ (PrimitiveIsVectorA1 predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, SCode consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsVectorA1 predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumA1SQ (predicate, consequent, alternative);
+            return new PCondIsVectorA1SQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsVectorA1SQ.EvalStep");
 #endif
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -824,13 +824,13 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumAL : PCondIsRatnumA
+    class PCondIsVectorAL : PCondIsVectorA
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumAL (PrimitiveIsRatnumA predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsVectorAL (PrimitiveIsVectorA predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -846,7 +846,7 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.predicateOffset);
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 
@@ -863,22 +863,24 @@ namespace Microcode
             #endregion
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA predicate, LexicalVariable consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorA predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumALL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumALQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumAL (predicate, consequent, alternative);
+                (consequent is Argument) ? Unimplemented():
+                (consequent is LexicalVariable1) ? Unimplemented():
+                (alternative is LexicalVariable) ? PCondIsVectorALL.Make (predicate, consequent, (LexicalVariable) alternative):
+                (alternative is Quotation) ? PCondIsVectorALQ.Make (predicate, consequent, (Quotation) alternative):
+                new PCondIsVectorAL (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumAA : PCondIsRatnumAL
+    class PCondIsVectorAA : PCondIsVectorAL
     {
-        protected PCondIsRatnumAA (PrimitiveIsRatnumA predicate, Argument consequent, SCode alternative)
+        protected PCondIsVectorAA (PrimitiveIsVectorA predicate, Argument consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        static public SCode Make (PrimitiveIsRatnumA predicate, Argument consequent, SCode alternative)
+        static public SCode Make (PrimitiveIsVectorA predicate, Argument consequent, SCode alternative)
         {
             throw new NotImplementedException ();
         }
@@ -889,12 +891,12 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumAL1 : PCondIsRatnumAL
+    class PCondIsVectorAL1 : PCondIsVectorAL
     {
-        protected PCondIsRatnumAL1 (PrimitiveIsRatnumA predicate, LexicalVariable1 consequent, SCode alternative)
+        protected PCondIsVectorAL1 (PrimitiveIsVectorA predicate, LexicalVariable1 consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         { }
-        static public SCode Make (PrimitiveIsRatnumA predicate, LexicalVariable1 consequent, SCode alternative)
+        static public SCode Make (PrimitiveIsVectorA predicate, LexicalVariable1 consequent, SCode alternative)
         {
             throw new NotImplementedException ();
         }
@@ -904,12 +906,12 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumALL : PCondIsRatnumAL
+    class PCondIsVectorALL : PCondIsVectorAL
     {
-        protected PCondIsRatnumALL (PrimitiveIsRatnumA predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsVectorALL (PrimitiveIsVectorA predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
-        static public SCode Make (PrimitiveIsRatnumA predicate, LexicalVariable consequent, LexicalVariable alternative)
+        static public SCode Make (PrimitiveIsVectorA predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
             throw new NotImplementedException ();
         }
@@ -919,12 +921,12 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumALQ : PCondIsRatnumAL
+    class PCondIsVectorALQ : PCondIsVectorAL
     {
-        protected PCondIsRatnumALQ (PrimitiveIsRatnumA predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsVectorALQ (PrimitiveIsVectorA predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         { }
-        static public SCode Make (PrimitiveIsRatnumA predicate, LexicalVariable consequent, Quotation alternative)
+        static public SCode Make (PrimitiveIsVectorA predicate, LexicalVariable consequent, Quotation alternative)
         {
             throw new NotImplementedException ();
         }
@@ -934,11 +936,11 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumAQ : PCondIsRatnumA
+    class PCondIsVectorAQ : PCondIsVectorA
     {
         public readonly object consequentValue;
 
-        protected PCondIsRatnumAQ (PrimitiveIsRatnumA predicate, Quotation consequent, SCode alternative)
+        protected PCondIsVectorAQ (PrimitiveIsVectorA predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
@@ -953,7 +955,7 @@ namespace Microcode
             object ev0 = environment.ArgumentValue (this.predicateOffset);
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -969,18 +971,18 @@ namespace Microcode
 
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA predicate, Quotation consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorA predicate, Quotation consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumAQL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumAQQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumAQ (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsVectorAQL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsVectorAQQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsVectorAQ (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumAQL : PCondIsRatnumAQ
+    class PCondIsVectorAQL : PCondIsVectorAQ
     {
-        protected PCondIsRatnumAQL (PrimitiveIsRatnumA predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsVectorAQL (PrimitiveIsVectorA predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
         }
@@ -989,15 +991,15 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA predicate, Quotation consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsVectorA predicate, Quotation consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumAQL (predicate, consequent, alternative);
+            return new PCondIsVectorAQL (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumAQQ : PCondIsRatnumAQ
+    class PCondIsVectorAQQ : PCondIsVectorAQ
     {
-        protected PCondIsRatnumAQQ (PrimitiveIsRatnumA predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsVectorAQQ (PrimitiveIsVectorA predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
         }
@@ -1007,7 +1009,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA predicate, Quotation consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsVectorA predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -1021,13 +1023,13 @@ namespace Microcode
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
                 return Sequence2.Make (predicate, consequent);
             }
-            return new PCondIsRatnumAQQ (predicate, consequent, alternative);
+            return new PCondIsVectorAQQ (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumASL : PCondIsRatnumA
+    class PCondIsVectorASL : PCondIsVectorA
     {
-        protected PCondIsRatnumASL (PrimitiveIsRatnumA predicate, SCode consequent, SCode alternative)
+        protected PCondIsVectorASL (PrimitiveIsVectorA predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
@@ -1036,17 +1038,17 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal static PCondIsRatnumA Make (PrimitiveIsRatnumA predicate, SCode consequent, LexicalVariable lexicalVariable)
+        internal static PCondIsVectorA Make (PrimitiveIsVectorA predicate, SCode consequent, LexicalVariable lexicalVariable)
         {
             throw new NotImplementedException ();
         }
     }
 
-    class PCondIsRatnumASQ : PCondIsRatnumA
+    class PCondIsVectorASQ : PCondIsVectorA
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumASQ (PrimitiveIsRatnumA predicate, SCode consequent, Quotation alternative)
+        protected PCondIsVectorASQ (PrimitiveIsVectorA predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
@@ -1060,7 +1062,7 @@ namespace Microcode
             object ev0 = environment.ArgumentValue (predicateOffset);
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -1075,41 +1077,41 @@ namespace Microcode
             }
         }
 
-        internal static PCondIsRatnumA Make (PrimitiveIsRatnumA predicate, SCode consequent, Quotation alternative)
+        internal static PCondIsVectorA Make (PrimitiveIsVectorA predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumASQ (predicate, consequent, alternative);
+            return new PCondIsVectorASQ (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumL1 : PCondIsRatnumL
+    class PCondIsVectorL1 : PCondIsVectorL
     {
-        protected PCondIsRatnumL1 (PrimitiveIsRatnumL1 predicate, SCode consequent, SCode alternative)
+        protected PCondIsVectorL1 (PrimitiveIsVectorL1 predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumL1 predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsVectorL1 predicate, SCode consequent, SCode alternative)
         {
             return
-       (consequent is LexicalVariable) ? PCondIsRatnumL1L.Make (predicate, (LexicalVariable) consequent, alternative)
-       : (consequent is Quotation) ? PCondIsRatnumL1Q.Make (predicate, (Quotation) consequent, alternative)
-       : (alternative is LexicalVariable) ? PCondIsRatnumL1SL.Make (predicate, consequent, (LexicalVariable) alternative)
-       : (alternative is Quotation) ? PCondIsRatnumL1SQ.Make (predicate, consequent, (Quotation) alternative)
-       : new PCondIsRatnumL1 (predicate, consequent, alternative);
+       (consequent is LexicalVariable) ? PCondIsVectorL1L.Make (predicate, (LexicalVariable) consequent, alternative)
+       : (consequent is Quotation) ? PCondIsVectorL1Q.Make (predicate, (Quotation) consequent, alternative)
+       : (alternative is LexicalVariable) ? PCondIsVectorL1SL.Make (predicate, consequent, (LexicalVariable) alternative)
+       : (alternative is Quotation) ? PCondIsVectorL1SQ.Make (predicate, consequent, (Quotation) alternative)
+       : new PCondIsVectorL1 (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ("PCondIsRatnumL1.EvalStep");
+            Warm ("PCondIsVectorL1.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
                 throw new NotImplementedException ();
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 
@@ -1131,13 +1133,13 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumL1L : PCondIsRatnumL1
+    class PCondIsVectorL1L : PCondIsVectorL1
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumL1L (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsVectorL1L (PrimitiveIsVectorL1 predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -1146,12 +1148,12 @@ namespace Microcode
 
         }
 
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorL1 predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumL1LL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumL1LQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumL1L (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsVectorL1LL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsVectorL1LQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsVectorL1L (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -1163,7 +1165,7 @@ namespace Microcode
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
                 throw new NotImplementedException ();
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 
@@ -1184,15 +1186,15 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumL1LL : PCondIsRatnumL1L
+    class PCondIsVectorL1LL : PCondIsVectorL1L
     {
-        protected PCondIsRatnumL1LL (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsVectorL1LL (PrimitiveIsVectorL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsVectorL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumL1LL (predicate, consequent, alternative);
+            return new PCondIsVectorL1LL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1201,19 +1203,19 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumL1LQ : PCondIsRatnumL1L
+    class PCondIsVectorL1LQ : PCondIsVectorL1L
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumL1LQ (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsVectorL1LQ (PrimitiveIsVectorL1 predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsVectorL1 predicate, LexicalVariable consequent, Quotation alternative)
         {
-            return new PCondIsRatnumL1LQ (predicate, consequent, alternative);
+            return new PCondIsVectorL1LQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1224,7 +1226,7 @@ namespace Microcode
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -1237,126 +1239,22 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumL1Q : PCondIsRatnumL1
+    class PCondIsVectorL1Q : PCondIsVectorL1
     {
         public readonly object consequentValue;
 
-        protected PCondIsRatnumL1Q (PrimitiveIsRatnumL1 predicate, Quotation consequent, SCode alternative)
+        protected PCondIsVectorL1Q (PrimitiveIsVectorL1 predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, Quotation consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsVectorL1 predicate, Quotation consequent, SCode alternative)
         {
             return
-    (alternative is LexicalVariable) ? PCondIsRatnumL1QL.Make (predicate, consequent, (LexicalVariable) alternative)
-    : (alternative is Quotation) ? PCondIsRatnumL1QQ.Make (predicate, consequent, (Quotation) alternative)
-    : new PCondIsRatnumL1Q (predicate, consequent, alternative);
+    (alternative is LexicalVariable) ? PCondIsVectorL1QL.Make (predicate, consequent, (LexicalVariable) alternative)
+    : (alternative is Quotation) ? PCondIsVectorL1QQ.Make (predicate, consequent, (Quotation) alternative)
+    : new PCondIsVectorL1Q (predicate, consequent, alternative);
         }
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsRatnum.EvalStep");
-#endif
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
-                throw new NotImplementedException ();
-
-            if (!(ev0 is Ratnum)) {
-#if DEBUG
-                noteCalls (this.alternative);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
-                answer = this.consequentValue;
-                return false;
-            }
-        }
-    }
-
-    class PCondIsRatnumL1QL : PCondIsRatnumL1Q
-    {
-        protected PCondIsRatnumL1QL (PrimitiveIsRatnumL1 predicate, Quotation consequent, LexicalVariable alternative)
-            : base (predicate, consequent, alternative)
-        { }
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, Quotation quotation, LexicalVariable alternative)
-        {
-
-            throw new NotImplementedException ();
-        }
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-
-
-    }
-
-    class PCondIsRatnumL1QQ : PCondIsRatnumL1Q
-    {
-        protected PCondIsRatnumL1QQ (PrimitiveIsRatnumL1 predicate, Quotation consequent, Quotation alternative)
-            : base (predicate, consequent, alternative)
-        { }
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, Quotation consequent, Quotation alternative)
-        {
-            if (consequent.Quoted == alternative.Quoted) {
-                Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
-                return Sequence2.Make (predicate, consequent);
-            }
-            else if (Configuration.EnableTrueUnspecific && consequent.Quoted == Constant.Unspecific) {
-                Debug.WriteLine ("; Optimize (if <expr> <unspecific> <literal>) => (begin <expr> <literal>)");
-                return Sequence2.Make (predicate, alternative);
-            }
-            else if (Configuration.EnableTrueUnspecific && alternative.Quoted == Constant.Unspecific) {
-                Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
-                return Sequence2.Make (predicate, consequent);
-            }
-            return new PCondIsRatnumL1QQ (predicate, consequent, alternative);
-        }
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-
-
-    }
-
-    class PCondIsRatnumL1SL : PCondIsRatnumL1
-    {
-        protected PCondIsRatnumL1SL (PrimitiveIsRatnumL1 predicate, SCode consequent, LexicalVariable alternative)
-            : base (predicate, consequent, alternative)
-        { }
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, SCode consequent, LexicalVariable alternative)
-        {
-            return new PCondIsRatnumL1SL (predicate, consequent, alternative);
-
-        }
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-
-
-    }
-
-    class PCondIsRatnumL1SQ : PCondIsRatnumL1
-    {
-        public readonly object alternativeValue;
-
-        protected PCondIsRatnumL1SQ (PrimitiveIsRatnumL1 predicate, SCode consequent, Quotation alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeValue = alternative.Quoted;
-        }
-
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, SCode consequent, Quotation alternative)
-        {
-            return new PCondIsRatnumL1SQ (predicate, consequent, alternative);
-        }
-
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             #region EvalStepBody
@@ -1369,110 +1267,7 @@ namespace Microcode
                 throw new NotImplementedException ();
 
 
-            if (!(ev0 is Ratnum)) {
-                answer = this.alternativeValue;
-                return false;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            #endregion
-
-            throw new NotImplementedException ();
-        }
-    }
-
-    class PCondIsRatnumLL : PCondIsRatnumL
-    {
-        protected PCondIsRatnumLL (PrimitiveIsRatnumL predicate, LexicalVariable consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsRatnumL predicate, LexicalVariable consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? PCondIsRatnumLLL.Make (predicate, consequent, alternative)
-                : (alternative is Quotation) ? PCondIsRatnumLLQ.Make (predicate, consequent, alternative)
-                : new PCondIsRatnumLL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    class PCondIsRatnumLLL : PCondIsRatnumLL
-    {
-        protected PCondIsRatnumLLL (PrimitiveIsRatnumL predicate, LexicalVariable consequent, LexicalVariable alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsRatnumL predicate, LexicalVariable consequent, LexicalVariable alternative)
-        {
-            return new PCondIsRatnumLLL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    class PCondIsRatnumLLQ : PCondIsRatnumLL
-    {
-        protected PCondIsRatnumLLQ (PrimitiveIsRatnumL predicate, LexicalVariable consequent, Quotation alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsRatnumL predicate, LexicalVariable consequent, Quotation alternative)
-        {
-            return new PCondIsRatnumLLQ (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    class PCondIsRatnumLQ : PCondIsRatnumL
-    {
-        protected readonly object consequentValue;
-
-        protected PCondIsRatnumLQ (PrimitiveIsRatnumL predicate, Quotation consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.consequentValue = consequent.Quoted;
-        }
-
-        public static SCode Make (PrimitiveIsRatnumL predicate, Quotation consequent, SCode alternative)
-        {
-            return
-              (alternative is LexicalVariable) ? PCondIsRatnumLQL.Make (predicate, consequent, (LexicalVariable) alternative)
-              : (alternative is Quotation) ? PCondIsRatnumLQQ.Make (predicate, consequent, (Quotation) alternative)
-              : new PCondIsRatnumLQ (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsRatnumLQ.EvalStep");
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
-                throw new NotImplementedException ();
-
-
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -1482,37 +1277,37 @@ namespace Microcode
             }
             else {
                 answer = this.consequentValue;
-                return true;
+                return false;
             }
+            #endregion
+
         }
     }
 
-    class PCondIsRatnumLQL : PCondIsRatnumLQ
+    class PCondIsVectorL1QL : PCondIsVectorL1Q
     {
-        protected PCondIsRatnumLQL (PrimitiveIsRatnumL predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsVectorL1QL (PrimitiveIsVectorL1 predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
+        { }
+        internal static SCode Make (PrimitiveIsVectorL1 predicate, Quotation quotation, LexicalVariable alternative)
         {
-        }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, Quotation consequent, LexicalVariable alternative)
-        {
-            return new PCondIsRatnumLQL (predicate, consequent, alternative);
+            throw new NotImplementedException ();
         }
-
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             throw new NotImplementedException ();
         }
+
+
     }
 
-    class PCondIsRatnumLQQ : PCondIsRatnumLQ
+    class PCondIsVectorL1QQ : PCondIsVectorL1Q
     {
-        protected PCondIsRatnumLQQ (PrimitiveIsRatnumL predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsVectorL1QQ (PrimitiveIsVectorL1 predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsRatnumL predicate, Quotation consequent, Quotation alternative)
+        { }
+        internal static SCode Make (PrimitiveIsVectorL1 predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -1526,46 +1321,235 @@ namespace Microcode
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
                 return Sequence2.Make (predicate, consequent);
             }
-            return new PCondIsRatnumLQQ (predicate, consequent, alternative);
+            return new PCondIsVectorL1QQ (predicate, consequent, alternative);
         }
-
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             throw new NotImplementedException ();
         }
+
+
     }
 
-    class PCondIsRatnumLSL : PCondIsRatnumL
+    class PCondIsVectorL1SL : PCondIsVectorL1
     {
-        protected PCondIsRatnumLSL (PrimitiveIsRatnumL predicate, SCode consequent, LexicalVariable alternative)
+        protected PCondIsVectorL1SL (PrimitiveIsVectorL1 predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
+        { }
+        internal static SCode Make (PrimitiveIsVectorL1 predicate, SCode consequent, LexicalVariable alternative)
         {
-        }
+            return new PCondIsVectorL1SL (predicate, consequent, alternative);
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, SCode consequent, LexicalVariable alternative)
-        {
-            return new PCondIsRatnumLSL (predicate, consequent, alternative);
         }
-
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             throw new NotImplementedException ();
         }
+
+
     }
 
-    class PCondIsRatnumLSQ : PCondIsRatnumL
+    class PCondIsVectorL1SQ : PCondIsVectorL1
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumLSQ (PrimitiveIsRatnumL predicate, SCode consequent, Quotation alternative)
+        protected PCondIsVectorL1SQ (PrimitiveIsVectorL1 predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, SCode consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsVectorL1 predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumLSQ (predicate, consequent, alternative);
+            return new PCondIsVectorL1SQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            #region EvalStepBody
+#if DEBUG
+            Warm ("PCondIsVectorL1SQ.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+
+            if (!(ev0 is object [])) {
+                answer = this.alternativeValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            #endregion
+
+            throw new NotImplementedException ();
+        }
+    }
+
+    class PCondIsVectorLL : PCondIsVectorL
+    {
+        protected PCondIsVectorLL (PrimitiveIsVectorL predicate, LexicalVariable consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsVectorL predicate, LexicalVariable consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? PCondIsVectorLLL.Make (predicate, consequent, alternative)
+                : (alternative is Quotation) ? PCondIsVectorLLQ.Make (predicate, consequent, alternative)
+                : new PCondIsVectorLL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    class PCondIsVectorLLL : PCondIsVectorLL
+    {
+        protected PCondIsVectorLLL (PrimitiveIsVectorL predicate, LexicalVariable consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsVectorL predicate, LexicalVariable consequent, LexicalVariable alternative)
+        {
+            return new PCondIsVectorLLL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    class PCondIsVectorLLQ : PCondIsVectorLL
+    {
+        protected PCondIsVectorLLQ (PrimitiveIsVectorL predicate, LexicalVariable consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsVectorL predicate, LexicalVariable consequent, Quotation alternative)
+        {
+            return new PCondIsVectorLLQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    class PCondIsVectorLQ : PCondIsVectorL
+    {
+        protected PCondIsVectorLQ (PrimitiveIsVectorL predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsVectorL predicate, Quotation consequent, SCode alternative)
+        {
+            return
+              (alternative is LexicalVariable) ? PCondIsVectorLQL.Make (predicate, consequent, (LexicalVariable) alternative)
+              : (alternative is Quotation) ? PCondIsVectorLQQ.Make (predicate, consequent, (Quotation) alternative)
+              : new PCondIsVectorLQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    class PCondIsVectorLQL : PCondIsVectorLQ
+    {
+        protected PCondIsVectorLQL (PrimitiveIsVectorL predicate, Quotation consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsVectorL predicate, Quotation consequent, LexicalVariable alternative)
+        {
+            return new PCondIsVectorLQL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    class PCondIsVectorLQQ : PCondIsVectorLQ
+    {
+        protected PCondIsVectorLQQ (PrimitiveIsVectorL predicate, Quotation consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsVectorL predicate, Quotation consequent, Quotation alternative)
+        {
+            if (consequent.Quoted == alternative.Quoted) {
+                Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
+                return Sequence2.Make (predicate, consequent);
+            }
+            else if (Configuration.EnableTrueUnspecific && consequent.Quoted == Constant.Unspecific) {
+                Debug.WriteLine ("; Optimize (if <expr> <unspecific> <literal>) => (begin <expr> <literal>)");
+                return Sequence2.Make (predicate, alternative);
+            }
+            else if (Configuration.EnableTrueUnspecific && alternative.Quoted == Constant.Unspecific) {
+                Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
+                return Sequence2.Make (predicate, consequent);
+            }
+            return new PCondIsVectorLQQ (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    class PCondIsVectorLSL : PCondIsVectorL
+    {
+        protected PCondIsVectorLSL (PrimitiveIsVectorL predicate, SCode consequent, LexicalVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsVectorL predicate, SCode consequent, LexicalVariable alternative)
+        {
+            return new PCondIsVectorLSL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    class PCondIsVectorLSQ : PCondIsVectorL
+    {
+        public readonly object alternativeValue;
+
+        protected PCondIsVectorLSQ (PrimitiveIsVectorL predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (PrimitiveIsVectorL predicate, SCode consequent, Quotation alternative)
+        {
+            return new PCondIsVectorLSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1579,7 +1563,7 @@ namespace Microcode
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
                 throw new NotImplementedException ();
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
                 answer = this.alternativeValue;
                 return false;
             }
@@ -1597,13 +1581,13 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSL : PCondIsRatnum
+    class PCondIsVectorSL : PCondIsVector
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumSL (PrimitiveIsRatnum predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsVectorSL (PrimitiveIsVector predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -1611,12 +1595,12 @@ namespace Microcode
             this.consequentOffset = consequent.Offset;
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, LexicalVariable consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsVector predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-     (alternative is LexicalVariable) ? PCondIsRatnumSLL.Make (predicate, consequent, (LexicalVariable) alternative)
-     : (alternative is Quotation) ? PCondIsRatnumSLQ.Make (predicate, consequent, (Quotation) alternative)
-     : new PCondIsRatnumSL (predicate, consequent, alternative);
+     (alternative is LexicalVariable) ? PCondIsVectorSLL.Make (predicate, consequent, (LexicalVariable) alternative)
+     : (alternative is Quotation) ? PCondIsVectorSLQ.Make (predicate, consequent, (Quotation) alternative)
+     : new PCondIsVectorSL (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -1631,14 +1615,14 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsVectorFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -1655,16 +1639,16 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSLL : PCondIsRatnumSL
+    class PCondIsVectorSLL : PCondIsVectorSL
     {
 
-        protected PCondIsRatnumSLL (PrimitiveIsRatnum predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsVectorSLL (PrimitiveIsVector predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
 
-        public static SCode Make (PrimitiveIsRatnum predicate, LexicalVariable consequent, LexicalVariable alternative)
+        public static SCode Make (PrimitiveIsVector predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
             throw new NotImplementedException ();
         }
@@ -1675,21 +1659,21 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSLQ : PCondIsRatnumSL
+    class PCondIsVectorSLQ : PCondIsVectorSL
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumSLQ (PrimitiveIsRatnum predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsVectorSLQ (PrimitiveIsVector predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
 
-        public static SCode Make (PrimitiveIsRatnum predicate, LexicalVariable consequent, Quotation alternative)
+        public static SCode Make (PrimitiveIsVector predicate, LexicalVariable consequent, Quotation alternative)
         {
 
-            return new PCondIsRatnumSLQ (predicate, consequent, alternative);
+            return new PCondIsVectorSLQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1704,14 +1688,14 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsVectorFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
                 answer = this.alternativeValue;
                 return false;
             }
@@ -1723,28 +1707,28 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSQ : PCondIsRatnum
+    class PCondIsVectorSQ : PCondIsVector
     {
         public readonly object consequentValue;
 
-        protected PCondIsRatnumSQ (PrimitiveIsRatnum predicate, Quotation consequent, SCode alternative)
+        protected PCondIsVectorSQ (PrimitiveIsVector predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, Quotation consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsVector predicate, Quotation consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumSQL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumSQQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumSQ (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsVectorSQL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsVectorSQQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsVectorSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsVectorSQ.EvalStep");
             noteCalls (this.arg0);
 #endif
             Control unev0 = this.arg0;
@@ -1753,14 +1737,17 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsVectorFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
-
-            if (!(ev0 is Ratnum)) {
+            if (ev0 is object []) {
+                answer = this.consequentValue;
+                return false;
+            }
+            else {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -1768,22 +1755,18 @@ namespace Microcode
                 answer = null;
                 return true;
             }
-            else {
-                answer = this.consequentValue;
-                return false;
-            }
         }
     }
 
-    class PCondIsRatnumSQL : PCondIsRatnumSQ
+    class PCondIsVectorSQL : PCondIsVectorSQ
     {
-        protected PCondIsRatnumSQL (PrimitiveIsRatnum predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsVectorSQL (PrimitiveIsVector predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
 
-        public static SCode Make (PrimitiveIsRatnum predicate, Quotation consequent, LexicalVariable alternative)
+        public static SCode Make (PrimitiveIsVector predicate, Quotation consequent, LexicalVariable alternative)
         {
             throw new NotImplementedException ();
         }
@@ -1794,18 +1777,18 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSQQ : PCondIsRatnumSQ
+    class PCondIsVectorSQQ : PCondIsVectorSQ
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumSQQ (PrimitiveIsRatnum predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsVectorSQQ (PrimitiveIsVector predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
 
-        public static SCode Make (PrimitiveIsRatnum predicate, Quotation consequent, Quotation alternative)
+        public static SCode Make (PrimitiveIsVector predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -1820,7 +1803,7 @@ namespace Microcode
                 return Sequence2.Make (predicate, consequent);
             }
 
-            return new PCondIsRatnumSQQ (predicate, consequent, alternative);
+            return new PCondIsVectorSQQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1836,14 +1819,14 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsVectorFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
                 answer = this.alternativeValue;
                 return false;
             }
@@ -1855,13 +1838,13 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSSL : PCondIsRatnum
+    class PCondIsVectorSSL : PCondIsVector
     {
         public readonly object alternativeName;
         public readonly int alternativeDepth;
         public readonly int alternativeOffset;
 
-        protected PCondIsRatnumSSL (PrimitiveIsRatnum predicate, SCode consequent, LexicalVariable alternative)
+        protected PCondIsVectorSSL (PrimitiveIsVector predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeName = alternative.Name;
@@ -1869,9 +1852,9 @@ namespace Microcode
             this.alternativeOffset = alternative.Offset;
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, SCode consequent, LexicalVariable alternative)
+        public static SCode Make (PrimitiveIsVector predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumSSL (predicate, consequent, alternative);
+            return new PCondIsVectorSSL (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -1885,7 +1868,7 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsVectorFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
@@ -1893,7 +1876,7 @@ namespace Microcode
 
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
                 if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
                     throw new NotImplementedException ();
                 return false;
@@ -1909,40 +1892,45 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSSQ : PCondIsRatnum
+    [Serializable]
+    class PCondIsVectorSSQ : PCondIsVector
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumSSQ (PrimitiveIsRatnum predicate, SCode consequent, Quotation alternative)
+        protected PCondIsVectorSSQ (PrimitiveIsVector predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, SCode consequent, Quotation alternative)
+        public static SCode Make (PrimitiveIsVector predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumSSQ (predicate, consequent, alternative);
+            return new PCondIsVectorSSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.arg0);
+            SCode.location = "PCondIsVectorSSQ.EvalStep";
 #endif
             Control unev0 = this.arg0;
             Environment env = environment;
             object ev0;
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+#if DEBUG
+                        SCode.location = "PCondIsVectorSSQ.EvalStep";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsVectorFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is object [])) {
                 answer = this.alternativeValue;
                 return false;
             }

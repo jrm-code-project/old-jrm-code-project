@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     class PrimitivePlusFixnum : PrimitiveCombination2
     {
         protected PrimitivePlusFixnum (Primitive2 rator, SCode rand0, SCode rand1)
@@ -16,11 +17,11 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rand0 is LexicalVariable) ? PrimitivePlusFixnumL.Make (rator, (LexicalVariable) rand0, rand1)
-                : (rand0 is Quotation) ? PrimitivePlusFixnumQ.Make (rator, (Quotation) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitivePlusFixnumSL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitivePlusFixnumSQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitivePlusFixnum (rator, rand0, rand1);
+                (rand0 is LexicalVariable) ? PrimitivePlusFixnumL.Make (rator, (LexicalVariable) rand0, rand1) :
+                (rand0 is Quotation) ? PrimitivePlusFixnumQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitivePlusFixnumSL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitivePlusFixnumSQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitivePlusFixnum (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -242,7 +243,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitivePlusFixnumA0L.EvalStep");
 #endif
             // Eval argument1
             object ev1;
@@ -250,10 +251,11 @@ namespace Microcode
                 throw new NotImplementedException ();
 
             // Eval argument0
-            object ev0 = (int) environment.Argument0Value;
+            int ev0 = (int) environment.Argument0Value;
 
             // Compute answer
-            throw new NotImplementedException();
+            answer = ev0 + (int) ev1;
+            return false;
         }
     }
 
@@ -281,9 +283,9 @@ namespace Microcode
         }
     }
 
-    class PrimitivePlusFixnumA0A0 : PrimitivePlusFixnumA0A
+    sealed class PrimitivePlusFixnumA0A0 : PrimitivePlusFixnumA0A
     {
-        protected PrimitivePlusFixnumA0A0 (Primitive2 rator, Argument0 rand0, Argument0 rand1)
+        PrimitivePlusFixnumA0A0 (Primitive2 rator, Argument0 rand0, Argument0 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -297,16 +299,12 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitivePlusFixnumA0A0.EvalStep");
 #endif
             // Eval argument1
-            object ev1 = environment.Argument1Value;
+            int ev1 = (int) environment.Argument0Value;
 
-            // Eval argument0
-            //object ev0 = environment.Argument0Value;
-
-            // Compute result
-            answer = (int) ev1 + (int) ev1;
+            answer = ev1 + ev1;
             return false;
         }
     }
@@ -467,9 +465,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitivePlusFixnumA1L.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            object ev1;
+            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                throw new NotImplementedException ();
+            answer = (int) environment.Argument1Value + (int) ev1;
+            return false;
         }
     }
 
@@ -483,30 +485,24 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument1 rand0, Argument rand1)
         {
             return
-                (rand1 is Argument0) ? PrimitivePlusFixnumA1A0.Make (rator, rand0, (Argument0) rand1)
-                : (rand1 is Argument1) ? Unimplemented()
-                : new PrimitivePlusFixnumA1A (rator, rand0, rand1);
+                (rand1 is Argument0) ? PrimitivePlusFixnumA1A0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Unimplemented() :
+                new PrimitivePlusFixnumA1A (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitivePlusFixnumA1A.EvalStep");
 #endif
-            // Eval argument1
-            object ev1 = environment.ArgumentValue (this.rand1Offset);
-
-            // Eval argument0
-            object ev0 = environment.Argument1Value;
-
-            // Compute answer
-            throw new NotImplementedException();
+            answer = (int) environment.Argument1Value + (int) environment.ArgumentValue (this.rand1Offset);
+            return false;
         }
     }
 
-    class PrimitivePlusFixnumA1A0 : PrimitivePlusFixnumA1A
+    sealed class PrimitivePlusFixnumA1A0 : PrimitivePlusFixnumA1A
     {
-        protected PrimitivePlusFixnumA1A0 (Primitive2 rator, Argument1 rand0, Argument0 rand1)
+        PrimitivePlusFixnumA1A0 (Primitive2 rator, Argument1 rand0, Argument0 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -850,7 +846,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitivePlusFixnumL1L1.EvalStep");
 #endif
             // Eval argument1
             object ev1;
@@ -973,9 +969,16 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitivePlusFixnumLA0.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            // Eval argument0
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            // Compute answer
+            answer = (int) ev0 + (int) environment.Argument0Value;
+            return false;
         }
     }
 

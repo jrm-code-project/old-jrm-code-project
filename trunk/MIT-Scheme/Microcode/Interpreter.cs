@@ -170,9 +170,12 @@ namespace Microcode
             return true; // special return
         }
 
+        static int cwccTroubleCount;
+
         [SchemePrimitive ("CALL-WITH-CURRENT-CONTINUATION", 1, false)]
         public static bool CallWithCurrentContinuation (out object answer, object arg)
         {
+            //if (cwccTroubleCount++ > 7) Debugger.Break ();
             // extreme hair ahead
 
             IApplicable receiver = arg as IApplicable;

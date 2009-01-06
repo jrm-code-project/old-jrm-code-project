@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
-
+    [Serializable]
     class PrimitiveIsObjectType : PrimitiveCombination2
     {
         protected PrimitiveIsObjectType (Primitive2 rator, SCode rand0, SCode rand1)
@@ -16,19 +16,20 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rand0 is LexicalVariable) ? PrimitiveIsObjectTypeL.Make (rator, (LexicalVariable) rand0, rand1)
-                : (rand0 is Quotation) ? PrimitiveIsObjectTypeQ.Make (rator, (Quotation) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitiveIsObjectTypeSL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveIsObjectTypeSQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveIsObjectType (rator, rand0, rand1);
+                (rand0 is LexicalVariable) ? PrimitiveIsObjectTypeL.Make (rator, (LexicalVariable) rand0, rand1) :
+                (rand0 is Quotation) ? PrimitiveIsObjectTypeQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveIsObjectTypeSL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsObjectTypeSQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsObjectType (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.rand0);
             noteCalls (this.rand1);
+            SCode.location = "PrimitiveIsObjectType.EvalStep";
 #endif
             // Eval argument1
             object ev1;
@@ -36,6 +37,9 @@ namespace Microcode
             Control unev = this.rand1;
             Environment env = environment;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+                        SCode.location = "PrimitiveIsObjectType.EvalStep";
+#endif
             if (ev1 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -50,6 +54,9 @@ namespace Microcode
             unev = this.rand0;
             env = environment;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsObjectType.EvalStep";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -58,7 +65,7 @@ namespace Microcode
                 //return false;
             }
 
-            if (ObjectModel.IsPrimitiveObjectType (out answer, ( ev0), (ev1)))
+            if (ObjectModel.IsPrimitiveObjectType (out answer, ev0, ev1))
                 throw new NotImplementedException();
             return false;
         }
@@ -81,11 +88,11 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, LexicalVariable rand0, SCode rand1)
         {
             return
-                (rand0 is Argument) ? PrimitiveIsObjectTypeA.Make (rator, (Argument) rand0, rand1)
-                : (rand0 is LexicalVariable1) ? PrimitiveIsObjectTypeL1.Make (rator, (LexicalVariable1) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitiveIsObjectTypeLL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveIsObjectTypeLQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveIsObjectTypeL (rator, rand0, rand1);
+                (rand0 is Argument) ? PrimitiveIsObjectTypeA.Make (rator, (Argument) rand0, rand1) :
+                (rand0 is LexicalVariable1) ? PrimitiveIsObjectTypeL1.Make (rator, (LexicalVariable1) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveIsObjectTypeLL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsObjectTypeLQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsObjectTypeL (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1162,6 +1169,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeQ : PrimitiveIsObjectType
     {
 #if DEBUG
@@ -1181,8 +1189,8 @@ namespace Microcode
             return
                 //(code == TC.ACCESS) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("ACCESS?", 1), rand1)
                 //: (code == TC.ASSIGNMENT) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("ASSIGNMENT?", 1), rand1)
-                (code == TC.BIG_FIXNUM) ? PrimitiveCombination1.Make ((Primitive1) Primitive.IsBigFixnum, rand1) :
-                ////: (code == TC.BIG_FLONUM) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("BIG-FLONUM?", 1), rand1)
+                //(code == TC.BIG_FIXNUM) ? PrimitiveCombination1.Make ((Primitive1) Primitive.IsBigFixnum, rand1) :
+                //(code == TC.BIG_FLONUM) ? PrimitiveCombination1.Make ((Primitive1) Primitive.IsBigFlonum, rand1) :
                 //: (code == TC.BROKEN_HEART) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("BROKEN-HEART?", 1), rand1)
                 //: (code == TC.COMBINATION) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("COMBINATION?", 1), rand1)
                 //: (code == TC.COMBINATION_1) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("COMBINATION1?", 1), rand1)
@@ -1190,7 +1198,7 @@ namespace Microcode
                 //: (code == TC.COMMENT) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("COMMENT?", 1), rand1)
                 //: (code == TC.COMPILED_CODE_BLOCK) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("COMPILED_CODE_BLOCK?", 1), rand1)
                 //: (code == TC.COMPILED_ENTRY) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("COMPILED-ENTRY?", 1), rand1)
-                (code == TC.COMPLEX) ? PrimitiveCombination1.Make (Primitive.IsComplex, rand1) :
+                //(code == TC.COMPLEX) ? PrimitiveCombination1.Make (Primitive.IsComplex, rand1) :
                 //: (code == TC.CONDITIONAL) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("CONDITIONAL?", 1), rand1)
                 //: (code == TC.CONTROL_POINT) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("CONTROL-POINT?", 1), rand1)
                 //: (code == TC.DEFINITION) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("DEFINITION?", 1), rand1)
@@ -1201,9 +1209,9 @@ namespace Microcode
                 //: (code == TC.EXTENDED_LAMBDA) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("EXTENDED-LAMBDA?", 1), rand1)
                 //: (code == TC.EXTENDED_PROCEDURE) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("EXTENDED-PROCEDURE?", 1), rand1)
                 //: (code == TC.ENVIRONMENT) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("ENVIRONMENT?", 1), rand1)
-                (code == TC.FIXNUM) ? PrimitiveCombination1.Make ((Primitive1) Primitive.IsFixnum, rand1) :
+                //(code == TC.FIXNUM) ? PrimitiveCombination1.Make ((Primitive1) Primitive.IsFixnum, rand1) :
                 //: (code == TC.HUNK3_B) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("HUNK3B?", 1), rand1)
-                (code == TC.INTERNED_SYMBOL) ? PrimitiveCombination1.Make (Primitive.IsSymbol, rand1) :
+                //(code == TC.INTERNED_SYMBOL) ? PrimitiveCombination1.Make (Primitive.IsSymbol, rand1) :
                 //: (code == TC.LAMBDA) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("LAMBDA?", 1), rand1)
                 //: (code == TC.LEXPR) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("LEXPR?", 1), rand1)
                 //: (code == TC.MANIFEST_CLOSURE) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("MANIFEST-CLOSURE?", 1), rand1)
@@ -1214,7 +1222,7 @@ namespace Microcode
                 //: (code == TC.PCOMB3) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("PRIMITIVE-COMBINATION3?", 1), rand1)
                 //: (code == TC.PRIMITIVE) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("PRIMITIVE?", 1), rand1)
                 //: (code == TC.PROCEDURE) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("PROCEDURE?", 1), rand1)
-                (code == TC.RATNUM) ? PrimitiveCombination1.Make ((Primitive1) Primitive.IsRatnum, rand1) :
+                //(code == TC.RATNUM) ? PrimitiveCombination1.Make ((Primitive1) Primitive.IsRatnum, rand1) :
                 //: (code == TC.REFERENCE_TRAP) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("REFERENCE-TRAP?", 1), rand1)
                 //: (code == TC.RETURN_CODE) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("RETURN-CODE?", 1), rand1)
                 //: (code == TC.SCODE_QUOTE) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("SCODE-QUOTE?", 1), rand1)
@@ -1227,8 +1235,8 @@ namespace Microcode
                 //: (code == TC.VECTOR) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("VECTOR?", 1), rand1)
                 //: (code == TC.WEAK_CONS) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("WEAK-CONS?", 1), rand1)
                 //: Unimplemented ();
-                //: (rand1 is LexicalVariable) ? PrimitiveIsObjectTypeQL.Make (rator, rand0, (LexicalVariable) rand1)
-                //: (rand1 is Quotation) ? PrimitiveIsObjectTypeQQ.Make (rator, rand0, (Quotation) rand1)
+                (rand1 is LexicalVariable) ? PrimitiveIsObjectTypeQL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsObjectTypeQQ.Make (rator, rand0, (Quotation) rand1) :
                  new PrimitiveIsObjectTypeQ (rator, rand0, rand1);
         }
 
@@ -1247,6 +1255,9 @@ namespace Microcode
             Control unev = this.rand1;
             Environment env = environment;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsObjectTypeQ.EvalStep";
+#endif
             if (ev1 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -1278,9 +1289,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Quotation rand0, LexicalVariable rand1)
         {
             return
-                (rand1 is Argument) ? PrimitiveIsObjectTypeQA.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveIsObjectTypeQL1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveIsObjectTypeQL (rator, rand0, rand1);
+                (rand1 is Argument) ? PrimitiveIsObjectTypeQA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is LexicalVariable1) ? PrimitiveIsObjectTypeQL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+                new PrimitiveIsObjectTypeQL (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1302,25 +1313,25 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Quotation rand0, Argument rand1)
         {
             return
-                (rand1 is Argument0) ? PrimitiveIsObjectTypeQA0.Make (rator, rand0, (Argument0) rand1)
-                : (rand1 is Argument1) ? PrimitiveIsObjectTypeQA1.Make (rator, rand0, (Argument1) rand1)
-                : new PrimitiveIsObjectTypeQA (rator, rand0, rand1);
+                (rand1 is Argument0) ? PrimitiveIsObjectTypeQA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? PrimitiveIsObjectTypeQA1.Make (rator, rand0, (Argument1) rand1) :
+                new PrimitiveIsObjectTypeQA (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("IsPrimitiveObjectTypeQA.EvalStep");
 #endif
-            if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value , ( environment.ArgumentValue(this.rand1Offset))))
+            if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value , environment.ArgumentValue(this.rand1Offset)))
                 throw new NotImplementedException();
             return false;
         }
     }
 
-    class PrimitiveIsObjectTypeQA0 : PrimitiveIsObjectTypeQA
+    sealed class PrimitiveIsObjectTypeQA0 : PrimitiveIsObjectTypeQA
     {
-        protected PrimitiveIsObjectTypeQA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
+        PrimitiveIsObjectTypeQA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -1334,17 +1345,17 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsObjectTypeQA0.EvalStep");
 #endif
-            if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value , (environment.Argument0Value)))
+            if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value , environment.Argument0Value))
                 throw new NotImplementedException();
             return false;
         }
     }
 
-    class PrimitiveIsObjectTypeQA1 : PrimitiveIsObjectTypeQA
+    sealed class PrimitiveIsObjectTypeQA1 : PrimitiveIsObjectTypeQA
     {
-        protected PrimitiveIsObjectTypeQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
+        PrimitiveIsObjectTypeQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -1358,17 +1369,17 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsObjectTypeQA1.EvalStep");
 #endif
-            if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value , (environment.Argument1Value)))
+            if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value, environment.Argument1Value))
                 throw new NotImplementedException();
             return false;
         }
     }
 
-    class PrimitiveIsObjectTypeQL1 : PrimitiveIsObjectTypeQL
+    sealed class PrimitiveIsObjectTypeQL1 : PrimitiveIsObjectTypeQL
     {
-        protected PrimitiveIsObjectTypeQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
+        PrimitiveIsObjectTypeQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -1382,26 +1393,24 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsObjectTypeQL1.EvalStep");
 #endif
             // Eval argument1
             object ev1;
             if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
                 throw new NotImplementedException ();
 
-
-            if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value, (ev1)))
+            if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value, ev1))
                 throw new NotImplementedException();
             return false;
         }
-
     }
 
-    class PrimitiveIsObjectTypeQQ : PrimitiveIsObjectTypeQ
+    sealed class PrimitiveIsObjectTypeQQ : PrimitiveIsObjectTypeQ
     {
         public readonly object rand1Value;
 
-        protected PrimitiveIsObjectTypeQQ (Primitive2 rator, Quotation rand0, Quotation rand1)
+        PrimitiveIsObjectTypeQQ (Primitive2 rator, Quotation rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value =  rand1.Quoted;
@@ -1418,7 +1427,6 @@ namespace Microcode
 #if DEBUG
             Warm ();
 #endif
-            // refetch because vector may be mutable
             if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value , (this.rand1Value)))
                 throw new NotImplementedException();
             return false;
@@ -1442,9 +1450,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, SCode rand0, LexicalVariable rand1)
         {
             return
-                (rand1 is Argument) ? PrimitiveIsObjectTypeSA.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveIsObjectTypeSL1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveIsObjectTypeSL (rator, rand0, rand1);
+                (rand1 is Argument) ? PrimitiveIsObjectTypeSA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is LexicalVariable1) ? PrimitiveIsObjectTypeSL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+                new PrimitiveIsObjectTypeSL (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1488,9 +1496,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, SCode rand0, Argument rand1)
         {
             return
-                (rand1 is Argument0) ? PrimitiveIsObjectTypeSA0.Make (rator, rand0, (Argument0) rand1)
-                : (rand1 is Argument1) ? PrimitiveIsObjectTypeSA1.Make (rator, rand0, (Argument1) rand1)
-                : new PrimitiveIsObjectTypeSA (rator, rand0, rand1);
+                (rand1 is Argument0) ? PrimitiveIsObjectTypeSA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? PrimitiveIsObjectTypeSA1.Make (rator, rand0, (Argument1) rand1) :
+                new PrimitiveIsObjectTypeSA (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1522,9 +1530,9 @@ namespace Microcode
 
     }
 
-    class PrimitiveIsObjectTypeSA0 : PrimitiveIsObjectTypeSA
+    sealed class PrimitiveIsObjectTypeSA0 : PrimitiveIsObjectTypeSA
     {
-        protected PrimitiveIsObjectTypeSA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
+        PrimitiveIsObjectTypeSA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -1532,22 +1540,24 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, SCode rand0, Argument0 rand1)
         {
             return
-
                 new PrimitiveIsObjectTypeSA0 (rator, rand0, rand1);
         }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.rand0);
+            SCode.location = "PrimitiveIsObjectTypeSA0.EvalStep";
 #endif
-
             // Eval argument0
             object ev0;
-
             Control unev = this.rand0;
             Environment env = environment;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsObjectTypeSA0.EvalStep";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -1556,16 +1566,15 @@ namespace Microcode
                 //return false;
             }
 
-            if (ObjectModel.IsPrimitiveObjectType (out answer, ( ev0), (environment.Argument0Value)))
-                throw new NotImplementedException();
+            if (ObjectModel.IsPrimitiveObjectType (out answer, ev0, environment.Argument0Value))
+                throw new NotImplementedException ();
             return false;
         }
-
     }
 
-    class PrimitiveIsObjectTypeSA1 : PrimitiveIsObjectTypeSA
+    sealed class PrimitiveIsObjectTypeSA1 : PrimitiveIsObjectTypeSA
     {
-        protected PrimitiveIsObjectTypeSA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
+        PrimitiveIsObjectTypeSA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -1597,17 +1606,15 @@ namespace Microcode
                 //return false;
             }
 
-            if (ObjectModel.IsPrimitiveObjectType (out answer, ( ev0), (environment.Argument1Value)))
+            if (ObjectModel.IsPrimitiveObjectType (out answer, ev0, environment.Argument1Value))
                 throw new NotImplementedException();
             return false;
         }
-
     }
 
-
-    class PrimitiveIsObjectTypeSL1 : PrimitiveIsObjectTypeSL
+    sealed class PrimitiveIsObjectTypeSL1 : PrimitiveIsObjectTypeSL
     {
-        protected PrimitiveIsObjectTypeSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
+        PrimitiveIsObjectTypeSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
             : base (rator, rand0, rand1)
         {
         }
@@ -1615,28 +1622,29 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
         {
             return
-
                 new PrimitiveIsObjectTypeSL1 (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.rand0);
+            SCode.location = "PrimitiveIsObjectTypeSL1.EvalStep";
 #endif
             // Eval argument1
             object ev1;
-
             if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
                 throw new NotImplementedException ();
 
             // Eval argument0
             object ev0;
-
             Control unev = this.rand0;
             Environment env = environment;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsObjectTypeSL1.EvalStep";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -1645,18 +1653,17 @@ namespace Microcode
                 //return false;
             }
 
-            if (ObjectModel.IsPrimitiveObjectType (out answer, ( ev0), (ev1)))
-                throw new NotImplementedException();
+            if (ObjectModel.IsPrimitiveObjectType (out answer, ev0, ev1))
+                throw new NotImplementedException ();
             return false;
         }
-
     }
 
-    class PrimitiveIsObjectTypeSQ : PrimitiveIsObjectType
+    sealed class PrimitiveIsObjectTypeSQ : PrimitiveIsObjectType
     {
         public readonly object rand1Value;
 
-        protected PrimitiveIsObjectTypeSQ (Primitive2 rator, SCode rand0, Quotation rand1)
+        PrimitiveIsObjectTypeSQ (Primitive2 rator, SCode rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value =  rand1.Quoted;

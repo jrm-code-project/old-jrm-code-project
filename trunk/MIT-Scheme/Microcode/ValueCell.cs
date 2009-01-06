@@ -73,7 +73,7 @@ namespace Microcode
                 || (value is StandardEnvironment)
                 //|| (value is StaticEnvironment)
                 || (value is TheEnvironment)
-                || (value is UninternedSymbol)
+                || (value is Symbol)
                 || (value is UnmarkedHistory)
                 || (value is Variable)
                 || (value is WeakCons)

@@ -10,27 +10,14 @@ namespace Microcode
     class PCondIsBigFlonum : PCond1
     {
 #if DEBUG
-        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
         static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-
 #endif
-
 
         protected PCondIsBigFlonum (PrimitiveIsBigFlonum predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-
-#if DEBUG
-            this.arg0Type = this.arg0.GetType ();
-#endif
-        }
-
-        static SCode SpecialMake (PrimitiveNot predicate, SCode consequent, SCode alternative)
-        {
-            Debug.WriteLine ("; Optimize (if (not ...)");
-            return Conditional.Make (predicate.Operand, alternative, consequent);
         }
 
         public static SCode Make (PrimitiveIsBigFlonum predicate, SCode consequent, SCode alternative)
@@ -50,7 +37,6 @@ namespace Microcode
 #if DEBUG
             Warm ();
             noteCalls (this.arg0);
-            procedureHistogram.Note (this.procedure);
             arg0TypeHistogram.Note (this.arg0Type);
 #endif
             Control unev0 = this.arg0;
@@ -118,7 +104,7 @@ namespace Microcode
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsBigFlonumL.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
@@ -1118,7 +1104,6 @@ namespace Microcode
             #region EvalStepBody
 #if DEBUG
             Warm ("PCondIsBigFlonumL1.EvalStep");
-            noteCalls (this.arg0);
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))

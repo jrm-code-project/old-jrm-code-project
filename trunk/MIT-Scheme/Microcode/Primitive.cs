@@ -16,21 +16,18 @@ namespace Microcode
     delegate bool PrimitiveMethod3 (out object answer, object argument0, object argument1, object argument2);
 
     [Serializable]
-    public abstract class Primitive : SchemeObject //SCode
+    public abstract class Primitive : SchemeObject, ISerializable //SCode
     {
 #if DEBUG
-        [NonSerialized]
-        public static bool Noisy = false;
-
         [NonSerialized]
         internal static Histogram<Primitive> hotPrimitives = new Histogram<Primitive> ();
 #endif
 
         // Global table mapping names to primitive procedures.
         [NonSerialized]
-        static Dictionary<string, Primitive> primitiveTable = new Dictionary<string, Primitive> ();
+        static Dictionary<Symbol, Primitive> primitiveTable = new Dictionary<Symbol, Primitive> ();
 
-        readonly string name;
+        readonly Symbol name;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly int arity;
 
@@ -56,12 +53,13 @@ namespace Microcode
         internal static Primitive1 IsComplex;
         internal static Primitive1 IsFixnum;
         internal static Primitive1 IsFixnumZero;
+        internal static Primitive1 IsNegative;
         internal static Primitive1 IsNull;
         internal static Primitive1 IsPair;
         internal static Primitive1 IsRatnum;
         internal static Primitive1 IsRecord;
         internal static Primitive1 IsSymbol;
-        internal static Primitive1 IsTrue;
+        internal static Primitive1 IsSharpT;
         internal static Primitive1 IsVector;
         internal static Primitive1 Not;
         internal static Primitive1 ObjectDatum;
@@ -70,6 +68,7 @@ namespace Microcode
         internal static Primitive1 SetInterruptEnables;
         internal static Primitive1 SetTrapState;
         internal static Primitive1 StringAllocate;
+        internal static Primitive1 SystemPairCar;
         internal static Primitive1 SystemVectorSize;
         internal static Primitive1 RequestInterrupts;
         internal static Primitive1 PositiveFixnum;
@@ -180,8 +179,9 @@ namespace Microcode
             IsComplex = (Primitive1) Find ("COMPLEX?", 1);
             IsFixnum = (Primitive1) Find ("FIXNUM?", 1);
             IsFixnumZero = (Primitive1) Find ("ZERO-FIXNUM?", 1);
+            IsNegative = (Primitive1) Find ("NEGATIVE?", 1);
             IsNull = (Primitive1) Find ("NULL?", 1);
-            IsTrue = (Primitive1) Find ("OBJECT-IS-TRUE?", 1);
+            IsSharpT = (Primitive1) Find ("OBJECT-IS-TRUE?", 1);
             IsPair = (Primitive1) Find ("PAIR?", 1);
             PositiveFixnum = (Primitive1) Find ("POSITIVE-FIXNUM?", 1);
             IsRatnum = (Primitive1) Find ("RATNUM?", 1);
@@ -195,6 +195,7 @@ namespace Microcode
             SetInterruptEnables = (Primitive1) Find ("SET-INTERRUPT-ENABLES!", 1);
             SetTrapState = (Primitive1) Find ("SET-TRAP-STATE!", 1);
             StringAllocate = (Primitive1) Find ("STRING-ALLOCATE", 1);
+            SystemPairCar = (Primitive1) Find ("SYSTEM-PAIR-CAR", 1);
             SystemVectorSize = (Primitive1) Find ("SYSTEM-VECTOR-SIZE", 1);
             RequestInterrupts = (Primitive1) Find ("REQUEST-INTERRUPTS!", 1);
 
@@ -279,14 +280,14 @@ namespace Microcode
             WithInterruptMask = (Primitive2) Find ("WITH-INTERRUPT-MASK", 2);
         }
 
-        internal Primitive (string name, int arity)
+        internal Primitive (Symbol name, int arity)
             : base (TC.PRIMITIVE)
         {
             this.name = name;
             this.arity = arity;
         }
 
-        public string Name
+        public Symbol Name
         {
             [DebuggerStepThrough]
             get
@@ -309,38 +310,38 @@ namespace Microcode
             return "#<PRIMITIVE " + this.name + " " + this.arity.ToString (CultureInfo.InvariantCulture) + ">";
         }
 
-        static string CanonicalizeName (string name)
+        static Symbol CanonicalizeName (string name)
         {
-            return String.Intern (name.ToUpperInvariant ());
+            return Symbol.Make (name.ToUpperInvariant ());
         }
 
         static void AddPrimitive (string name, int arity, PrimitiveMethod method)
         {
-            string cname = CanonicalizeName (name);
-            primitiveTable.Add (cname, new PrimitiveN (String.Intern (name), arity, method));
+            Symbol cname = CanonicalizeName (name);
+            primitiveTable.Add (cname, new PrimitiveN (Symbol.Make (name), arity, method));
         }
 
         static void AddPrimitive (string name, PrimitiveMethod0 method)
         {
-            string cname = CanonicalizeName (name);
-            primitiveTable.Add (cname, new Primitive0 (String.Intern (name), method));
+            Symbol cname = CanonicalizeName (name);
+            primitiveTable.Add (cname, new Primitive0 (Symbol.Make (name), method));
         }
 
         static void AddPrimitive (string name, PrimitiveMethod1 method)
         {
-            string cname = CanonicalizeName (name);
-            primitiveTable.Add (cname, new Primitive1 (String.Intern (name), method));
+            Symbol cname = CanonicalizeName (name);
+            primitiveTable.Add (cname, new Primitive1 (Symbol.Make (name), method));
         }
 
         static void AddPrimitive (string name, PrimitiveMethod2 method)
         {
-            string cname = CanonicalizeName (name);
-            primitiveTable.Add (cname, new Primitive2 (String.Intern (name), method));
+            Symbol cname = CanonicalizeName (name);
+            primitiveTable.Add (cname, new Primitive2 (Symbol.Make (name), method));
         }
 
         static void AddPrimitive (string name, PrimitiveMethod3 method)
         {
-            primitiveTable.Add (CanonicalizeName (name), new Primitive3 (String.Intern (name), method));
+            primitiveTable.Add (CanonicalizeName (name), new Primitive3 (Symbol.Make (name), method));
         }
 
         static void AddPrimitives (Type type)
@@ -379,7 +380,7 @@ namespace Microcode
 
         internal static Primitive Find (string name)
         {
-            string cname = CanonicalizeName (name);
+            Symbol cname = CanonicalizeName (name);
             Primitive value;
             if (primitiveTable.TryGetValue (cname, out value)) {
                 return value;
@@ -389,7 +390,7 @@ namespace Microcode
 
         internal static Primitive Find (string name, int arity)
         {
-            string cname = CanonicalizeName (name);
+            Symbol cname = CanonicalizeName (name);
             Primitive value;
             if (primitiveTable.TryGetValue (cname, out value)) {
                 // found one, but wrong arity
@@ -452,8 +453,8 @@ namespace Microcode
         public static bool GetPrimitiveAddress (out object answer, object arg0, object arg1)
         {
             answer = arg1 is int
-                ? Find ((string) arg0, (int) arg1)
-                : Find ((string) arg0);
+                ? Find (((Symbol) arg0).ToString(), (int) arg1)
+                : Find (((Symbol) arg0).ToString());
             return false;
         }
 
@@ -478,15 +479,22 @@ namespace Microcode
             return false;
         }
 
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (PrimitiveDeserializer));
+            info.AddValue ("name", this.name.ToString());
+            info.AddValue ("arity", this.arity);
+        }
     }
 
     [Serializable]
-    sealed class Primitive0 : Primitive, IApplicable, ISerializable
+    sealed class Primitive0 : Primitive, IApplicable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod0 method;
 
-        public Primitive0 (string name, PrimitiveMethod0 method)
+        public Primitive0 (Symbol name, PrimitiveMethod0 method)
             : base (name, 0)
         {
             this.method = method;
@@ -501,14 +509,6 @@ namespace Microcode
             }
         }
 
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("varname", this.Name);
-            info.AddValue ("arity", 0);
-        }
-
         #region IApplicable Members
 
         public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
@@ -521,8 +521,8 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             Primitive.hotPrimitives.Note (this);
+            SCode.location = this.Name.ToString();
 #endif
             if (this.method (out answer)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -546,11 +546,6 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        #endregion
-
-        #region IApplicable Members
-
-
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
             throw new NotImplementedException ();
@@ -575,12 +570,12 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class Primitive1 : Primitive, IApplicable, ISerializable
+    sealed class Primitive1 : Primitive, IApplicable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod1 method;
 
-        public Primitive1 (string name, PrimitiveMethod1 method)
+        public Primitive1 (Symbol name, PrimitiveMethod1 method)
             : base (name, 1)
         {
             this.method = method;
@@ -594,14 +589,6 @@ namespace Microcode
             {
                 return this.method;
             }
-        }
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("varname", this.Name);
-            info.AddValue ("arity", 1);
         }
 
         #region IApplicable Members
@@ -619,9 +606,8 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
 #if DEBUG
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             hotPrimitives.Note (this);
-            SCode.location = this.Name;
+            SCode.location = this.Name.ToString();
 #endif
             if (this.method (out answer, arg0))
                 throw new NotImplementedException ();
@@ -632,11 +618,6 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
-
-        #endregion
-
-        #region IApplicable Members
-
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
@@ -662,12 +643,12 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class Primitive2 : Primitive, IApplicable, ISerializable
+    sealed class Primitive2 : Primitive, IApplicable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod2 method;
 
-        public Primitive2 (string name, PrimitiveMethod2 method)
+        public Primitive2 (Symbol name, PrimitiveMethod2 method)
             : base (name, 2)
         {
             this.method = method;
@@ -680,14 +661,6 @@ namespace Microcode
             {
                 return this.method;
             }
-        }
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("varname", this.Name);
-            info.AddValue ("arity", 2);
         }
 
         #region IApplicable Members
@@ -710,8 +683,8 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             hotPrimitives.Note (this);
+            SCode.location = this.Name.ToString();
 #endif
             if (this.method (out answer, arg0, arg1)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -724,11 +697,6 @@ namespace Microcode
 
             return false;
         }
-
-        #endregion
-
-        #region IApplicable Members
-
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
@@ -754,12 +722,12 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class Primitive3 : Primitive, IApplicable, ISerializable
+    sealed class Primitive3 : Primitive, IApplicable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod3 method;
 
-        public Primitive3 (string name, PrimitiveMethod3 method)
+        public Primitive3 (Symbol name, PrimitiveMethod3 method)
             : base (name, 3)
         {
             this.method = method;
@@ -772,14 +740,6 @@ namespace Microcode
             {
                 return this.method;
             }
-        }
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("varname", this.Name);
-            info.AddValue ("arity", 3);
         }
 
         #region IApplicable Members
@@ -807,8 +767,8 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
 #if DEBUG
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             hotPrimitives.Note (this);
+            SCode.location = this.Name.ToString();
 #endif
             if (this.method (out answer, arg0, arg1, arg2)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -841,12 +801,12 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveN : Primitive, IApplicable, ISerializable
+    sealed class PrimitiveN : Primitive, IApplicable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod method;
 
-        public PrimitiveN (string name, int arity, PrimitiveMethod method)
+        public PrimitiveN (Symbol name, int arity, PrimitiveMethod method)
             : base (name, arity)
         {
             this.method = method;
@@ -861,21 +821,13 @@ namespace Microcode
             }
         }
 
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (PrimitiveDeserializer));
-            info.AddValue ("varname", this.Name);
-            info.AddValue ("arity", this.Arity);
-        }
-
         #region IApplicable members
 
         public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
 #if DEBUG
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             Primitive.hotPrimitives.Note (this);
+            SCode.location = this.Name.ToString();
 #endif
             //// gotta remove the procedure from the front of the arglist.
             //object [] args1 = new object [args.Length - 1];
@@ -891,8 +843,8 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             hotPrimitives.Note (this);
+            SCode.location = this.Name.ToString();
 #endif
             object [] arguments = new object [] { };
             if (this.method (out answer, arguments))
@@ -903,9 +855,8 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
 #if DEBUG
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             hotPrimitives.Note (this);
-            SCode.location = this.Name;
+            SCode.location = this.Name.ToString();
 #endif
             object [] arguments = new object [] { arg0 };
             if (this.method (out answer, arguments))
@@ -916,8 +867,8 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             hotPrimitives.Note (this);
+            SCode.location = this.Name.ToString();
 #endif
             object [] arguments = new object [] { arg0, arg1 };
             if (this.method (out answer, arguments))
@@ -928,8 +879,8 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
 #if DEBUG
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             hotPrimitives.Note (this);
+            SCode.location = this.Name.ToString();
 #endif
             object [] arguments = new object [] { arg0, arg1, arg2 };
             if (this.method (out answer, arguments))
@@ -940,15 +891,10 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
         {
 #if DEBUG
-            SCode.location = "PrimitiveN.Call.4";
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             hotPrimitives.Note (this);
+            SCode.location = this.Name.ToString();
 #endif
-            object [] arguments = new object [] { arg0, arg1, arg2, arg3};
-#if DEBUG
-            SCode.location = this.Name;
-#endif
-            if (this.method (out answer, arguments))
+            if (this.method (out answer, new object [] { arg0, arg1, arg2, arg3}))
                 throw new NotImplementedException ();
             return false; // no problems   
         }
@@ -962,13 +908,6 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
-
-
-        #endregion
-
-        #region IApplicable Members
-
-
 
         #endregion
     }
