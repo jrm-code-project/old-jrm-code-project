@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Microcode
 {
@@ -183,6 +184,10 @@ namespace Microcode
         }
     }
 
+    class BadFaslFileException : Exception
+    {
+    }
+
     class FaslHeader
     {
         const UInt32 FASL_FILE_MARKER = 0xfafafafa;
@@ -278,7 +283,8 @@ namespace Microcode
             for (int i = 16; i < FASL_HEADER_SIZE; i++)
             {
                 UInt32 discard = binaryReader.ReadUInt32 ();
-                Debug.Assert (discard == 0);
+                if (discard != 0)
+                    throw new BadFaslFileException ();
             }
             return header;
         }
@@ -365,16 +371,16 @@ namespace Microcode
                 : null;
         }
 
-        public string [] ReadFormals (uint location)
+        public Symbol [] ReadFormals (uint location)
         {
             object [] formals = (object []) ReadObject (location);
-            string [] result = new string [formals.Length];
+            Symbol [] result = new Symbol [formals.Length];
             for (int i = 0; i < formals.Length; i++)
-                result [i] = (string) formals [i];
+                result [i] = (Symbol) formals [i];
             return result;
         }
 
-        public void ReadFormals (uint location, out string name, out string [] formals)
+        public void ReadFormals (uint location, out Symbol name, out Symbol [] formals)
         {
             object [] names = (object []) ReadObject (location);
             for (int i = 0; i < names.Length - 1; i++)
@@ -383,23 +389,23 @@ namespace Microcode
                         Debugger.Break ();
 
 
-            name = (string) names [0];
-            formals = new string [names.Length-1];
+            name = (Symbol) names [0];
+            formals = new Symbol [names.Length-1];
             for (int i = 1; i < names.Length; i++)
-                formals [i-1] = (string) names [i];
+                formals [i - 1] = (names [i] is Symbol) ? (Symbol) names [i] : Symbol.MakeUninterned ((string) names [i]);
             return;
         }
 
-        public Assignment ReadAssignment (uint location)
+        public SCode ReadAssignment (uint location)
         {
-            return new Assignment (((Variable) ReadObject (location)),
+            return Assignment.Make (((Variable) ReadObject (location)),
                                    ReadObject (location + 4));
         }
 
         public SCode ReadExtendedLambda (uint location)
         {
-            string name;
-            string [] formals;
+            Symbol name;
+            Symbol [] formals;
             ReadFormals (location + 4, out name, out formals);
             object third = ReadObject (location + 8);
             EncodedObject argcount = new EncodedObject ((uint) (int) third);
@@ -427,7 +433,7 @@ namespace Microcode
             {
                 case TC.ACCESS:
                     return new Access (ReadObject (encoded.Datum),
-                       (string) ReadObject (encoded.Datum + 4));
+                       (Symbol) ReadObject (encoded.Datum + 4));
 
                 case TC.ASSIGNMENT:
                     return ReadAssignment (encoded.Datum);
@@ -473,7 +479,7 @@ namespace Microcode
                     return Constant.Decode (encoded.Datum);
  
                 case TC.DEFINITION:
-                    return new Definition (ReadObject (encoded.Datum),
+                    return new Definition ((Symbol) ReadObject (encoded.Datum),
                                            ReadObject (encoded.Datum + 4));
 
                 case TC.DELAY:
@@ -492,11 +498,11 @@ namespace Microcode
                            : (int) encoded.Datum;
 
                 case TC.INTERNED_SYMBOL:
-                    return String.Intern (new String ((char []) ReadObject (encoded.Datum)));
+                    return Symbol.Make (new String ((char []) ReadObject (encoded.Datum)));
 
                 case TC.LAMBDA:
-                    string name;
-                    string [] formals;
+                    Symbol name;
+                    Symbol [] formals;
                     ReadFormals (encoded.Datum + 4, out name, out formals);
                     return Lambda.Make (name, formals, ReadObject (encoded.Datum));
 
@@ -593,17 +599,17 @@ namespace Microcode
                     // keep their identity when read.
                     // Also, postpend a unique number so we can tell these apart.
                     first = ReadObject (encoded.Datum);
-                    if (first is string)
+                    if (first is Symbol)
                         return first;
                     else
                     {
-                        string result = "#:" + new String ((char []) first) + "-" + (gensymCounter++).ToString();
+                        Symbol result = Symbol.MakeUninterned ("#:" + new String ((char []) first) + "-" + (gensymCounter++).ToString());
                         this.sharingTable.Add (encoded.Datum, result);
                         return result;
                     }
 
                 case TC.VARIABLE:
-                    return Variable.Make ((string) ReadObject (encoded.Datum));
+                    return Variable.Make ((Symbol) ReadObject (encoded.Datum));
 
                 case TC.VECTOR:
                     return ReadVector (encoded.Datum);
@@ -631,7 +637,7 @@ namespace Microcode
     {
         private Fasl () { }
 
-        public static object Fasload (string pathName)
+        static object OldFasload (string pathName)
         {
             FileStream faslStream = null;
 
@@ -644,6 +650,37 @@ namespace Microcode
             {
                 if (faslStream != null)
                     faslStream.Close ();
+            }
+        }
+
+        static object NewFasload (string pathName)
+        {
+            FileStream faslStream = null;
+
+            try {
+                faslStream = File.OpenRead (pathName);
+                faslStream.ReadByte ();
+                faslStream.ReadByte ();
+                faslStream.ReadByte ();
+                faslStream.ReadByte ();
+                BinaryFormatter bfmt = new BinaryFormatter ();
+                object rootObject = bfmt.Deserialize (faslStream);
+                return rootObject;
+            }
+            finally {
+                if (faslStream != null)
+                    faslStream.Close ();
+            }
+        }
+
+
+        public static object Fasload (string pathName)
+        {
+            try {
+                return OldFasload (pathName);
+            }
+            catch (BadFaslFileException) {
+                return NewFasload (pathName);
             }
         }
 

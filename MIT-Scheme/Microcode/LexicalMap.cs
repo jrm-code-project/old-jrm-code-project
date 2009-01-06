@@ -16,17 +16,17 @@ namespace Microcode
         {
             return new LambdaLexicalMap (lambda, this);
         }
-        internal abstract LexicalMap AddSubstitution (object name, BoundVariable value);
+        internal abstract LexicalMap AddSubstitution (Symbol name, BoundVariable value);
         public  static LexicalMap Make (Environment environment)
         {
             return (environment is GlobalEnvironment)
                 ? (LexicalMap) new GlobalLexicalMap (environment)
                 : (LexicalMap) new TopLevelLexicalMap (environment);
         }
-        internal abstract BoundVariable Bind (object name);
-        //internal abstract BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth);
+        internal abstract BoundVariable Bind (Symbol name);
+        //internal abstract BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int randDepth);
         //internal abstract BoundVariable SimulateLookup (object lambdaName);
-        //internal abstract BoundVariable SimulateStaticLookup (object lambdaName, int argDepth);
+        //internal abstract BoundVariable SimulateStaticLookup (object lambdaName, int randDepth);
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ namespace Microcode
     sealed class GlobalLexicalMap : LexicalMap
     {
         readonly Environment bindingEnvironment;
-        Dictionary<object,BoundVariable> bindingCache = new Dictionary<object, BoundVariable> ();
+        Dictionary<Symbol,BoundVariable> bindingCache = new Dictionary<Symbol, BoundVariable> ();
 
         internal GlobalLexicalMap (Environment bindingEnvironment)
         {
@@ -49,17 +49,17 @@ namespace Microcode
         //    return bindingEnvironment.SimulateLookup (lambdaName);
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int randDepth)
         //{
-        //    return bindingEnvironment.SimulateStaticLookup (lambdaName, argDepth);
+        //    return bindingEnvironment.SimulateStaticLookup (lambdaName, randDepth);
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int randDepth)
         //{
-        //    return bindingEnvironment.SimulateDangerousLookup (lambdaName, safeDepth, argDepth);
+        //    return bindingEnvironment.SimulateDangerousLookup (lambdaName, safeDepth, randDepth);
         //}
 
-        internal override BoundVariable Bind (object name)
+        internal override BoundVariable Bind (Symbol name)
         {
             BoundVariable answer;
             if (bindingCache.TryGetValue (name, out answer))
@@ -78,7 +78,7 @@ namespace Microcode
                 
         }
 
-        internal override LexicalMap AddSubstitution (object name, BoundVariable value)
+        internal override LexicalMap AddSubstitution (Symbol name, BoundVariable value)
         {
             throw new NotImplementedException ();
         }
@@ -105,17 +105,17 @@ namespace Microcode
            //    return bindingEnvironment.SimulateLookup (lambdaName);
            //}
 
-           //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
+           //internal override BoundVariable SimulateStaticLookup (object lambdaName, int randDepth)
            //{
-           //    return bindingEnvironment.SimulateStaticLookup (lambdaName, argDepth);
+           //    return bindingEnvironment.SimulateStaticLookup (lambdaName, randDepth);
            //}
 
-           //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
+           //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int randDepth)
            //{
-           //    return bindingEnvironment.SimulateDangerousLookup (lambdaName, safeDepth, argDepth);
+           //    return bindingEnvironment.SimulateDangerousLookup (lambdaName, safeDepth, randDepth);
            //}
 
-           internal override BoundVariable Bind (object name)
+           internal override BoundVariable Bind (Symbol name)
            {
                BoundVariable answer;
                if (bindingCache.TryGetValue (name, out answer))
@@ -133,7 +133,7 @@ namespace Microcode
 
            }
 
-           internal override LexicalMap AddSubstitution (object name, BoundVariable value)
+           internal override LexicalMap AddSubstitution (Symbol name, BoundVariable value)
            {
                throw new NotImplementedException ();
            }
@@ -147,7 +147,7 @@ namespace Microcode
     {
         readonly LambdaBase lambda;
         readonly LexicalMap parent;
-        Dictionary<object,BoundVariable> bindingCache = new Dictionary<object, BoundVariable> ();
+        Dictionary<Symbol,BoundVariable> bindingCache = new Dictionary<Symbol, BoundVariable> ();
         internal LambdaLexicalMap (LambdaBase lambda, LexicalMap parent)
         {
             this.lambda = lambda;
@@ -160,17 +160,17 @@ namespace Microcode
         //    return this.lambda.SimulateLookup (lambdaName, this.parent);
         //}
 
-        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int argDepth)
+        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int randDepth)
         //{
-        //    return this.lambda.SimulateStaticLookup (lambdaName, this.parent, argDepth);
+        //    return this.lambda.SimulateStaticLookup (lambdaName, this.parent, randDepth);
         //}
 
-        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int argDepth)
+        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int randDepth)
         //{
-        //    return this.lambda.SimulateDangerousLookup (lambdaName, this.parent, safeDepth, argDepth);
+        //    return this.lambda.SimulateDangerousLookup (lambdaName, this.parent, safeDepth, randDepth);
         //}
 
-        internal override BoundVariable Bind (object name)
+        internal override BoundVariable Bind (Symbol name)
         {
             BoundVariable answer;
             if (bindingCache.TryGetValue (name, out answer))
@@ -203,7 +203,7 @@ namespace Microcode
             return answer;
         }
 
-        internal override LexicalMap AddSubstitution (object name, BoundVariable value)
+        internal override LexicalMap AddSubstitution (Symbol name, BoundVariable value)
         {
             return new SubstitutionLexicalMap (name, value, this);
         }
@@ -211,23 +211,23 @@ namespace Microcode
 
     class SubstitutionLexicalMap : LexicalMap
     {
-        protected readonly object name;
+        protected readonly Symbol name;
         protected readonly BoundVariable value;
         protected readonly LexicalMap parent;
 
-        public SubstitutionLexicalMap (object name, BoundVariable value, LexicalMap parent)
+        public SubstitutionLexicalMap (Symbol name, BoundVariable value, LexicalMap parent)
         {
             this.name = name;
             this.value = value;
             this.parent = parent;
         }
 
-        internal override LexicalMap AddSubstitution (object name, BoundVariable value)
+        internal override LexicalMap AddSubstitution (Symbol name, BoundVariable value)
         {
             return new SubstitutionLexicalMap (name, value, this);
         }
 
-        internal override BoundVariable Bind (object name)
+        internal override BoundVariable Bind (Symbol name)
         {
             if (name == this.name)
                 return this.value;
@@ -240,11 +240,11 @@ namespace Microcode
     //    {
     //    }
 
-    //    internal abstract Variable BindLexical (object varname, int argDepth);
+    //    internal abstract Variable BindLexical (object ratorName, int randDepth);
 
-    //    internal abstract Variable BindVariable (object varname);
+    //    internal abstract Variable BindVariable (object ratorName);
 
-    //    internal abstract Variable BindShadow (object varname, int argDepth, int shadowingFrame);
+    //    internal abstract Variable BindShadow (object ratorName, int randDepth, int shadowingFrame);
 
     //    //internal LexicalMap Extend (SimpleLambda lambda)
     //    //{
@@ -276,51 +276,51 @@ namespace Microcode
     //        this.bindingEnvironment = bindingEnvironment;
     //    }
 
-    //    internal override Variable BindVariable (object varname)
+    //    internal override Variable BindVariable (object ratorName)
     //    {
     //        ClosureBase closure = this.bindingEnvironment.Closure;
 
     //        if (closure == null)
     //            // We know it can only be in the global environment.
-    //            return GlobalVariable.Make (varname, this.bindingEnvironment);
+    //            return GlobalVariable.Make (ratorName, this.bindingEnvironment);
     //        else {
-    //            int argOffset = this.bindingEnvironment.Closure.FormalOffset (varname);
+    //            int randOffset = this.bindingEnvironment.Closure.FormalOffset (ratorName);
     //            // If it isn't bound in the binding time environment, then we
     //            // call it `Free' and search the incrementals and then the environment.
-    //            return (argOffset != -1)
-    //                ? Argument.Make (varname, argOffset)
-    //                : FreeVariable.Make (varname, bindingEnvironment);
+    //            return (randOffset != -1)
+    //                ? Argument.Make (ratorName, randOffset)
+    //                : FreeVariable.Make (ratorName, bindingEnvironment);
     //        }
     //    }
 
-    //    internal override Variable BindShadow (object varname, int argDepth, int shadowingFrame)
+    //    internal override Variable BindShadow (object ratorName, int randDepth, int shadowingFrame)
     //    {
     //        ClosureBase closure = this.bindingEnvironment.Closure;
     //        if (closure == null) {
     //            // Same as free.  We have no clue where the variable is.
     //            // Hope it shows up before we need it, though.
-    //            return DangerousFreeVariable.Make (varname, shadowingFrame, argDepth);
+    //            return DangerousFreeVariable.Make (ratorName, shadowingFrame, randDepth);
     //        }
     //        else {
-    //            int argOffset = closure.FormalOffset (varname);
-    //            return (argOffset == -1)
-    //                ? DangerousFreeVariable.Make (varname, shadowingFrame, argDepth)
-    //                : DangerousLexicalVariable.Make (varname, shadowingFrame, argDepth, argOffset);
+    //            int randOffset = closure.FormalOffset (ratorName);
+    //            return (randOffset == -1)
+    //                ? DangerousFreeVariable.Make (ratorName, shadowingFrame, randDepth)
+    //                : DangerousLexicalVariable.Make (ratorName, shadowingFrame, randDepth, randOffset);
     //        }
     //    }
 
-    //    internal override Variable BindLexical (object varname, int argDepth)
+    //    internal override Variable BindLexical (object ratorName, int randDepth)
     //    {
     //        ClosureBase closure = this.bindingEnvironment.Closure;
     //        if (closure == null) {
     //            // Root environment and cannot be shadowed.
-    //            return GlobalVariable.Make (varname, this.bindingEnvironment);
+    //            return GlobalVariable.Make (ratorName, this.bindingEnvironment);
     //        }
     //        else {
-    //            int argOffset = closure.FormalOffset (varname);
-    //            return (argOffset == -1)
-    //                ? FreeVariable.Make (varname, this.bindingEnvironment)
-    //                : TopLevelVariable.Make (varname, this.bindingEnvironment.GetValueCell (varname));
+    //            int randOffset = closure.FormalOffset (ratorName);
+    //            return (randOffset == -1)
+    //                ? FreeVariable.Make (ratorName, this.bindingEnvironment)
+    //                : TopLevelVariable.Make (ratorName, this.bindingEnvironment.GetValueCell (ratorName));
     //        }
     //    }
     //}
@@ -343,28 +343,28 @@ namespace Microcode
     //        : base (lambda, parent)
     //    { }
 
-    //    internal override Variable BindVariable (object varname)
+    //    internal override Variable BindVariable (object ratorName)
     //    {
-    //        int argOffset = this.lambda.LexicalOffset (varname);
-    //        return (argOffset == -1)
-    //            ? parent.BindLexical (varname, 1)  // Search deeper.
-    //            : Argument.Make (varname, argOffset);
+    //        int randOffset = this.lambda.LexicalOffset (ratorName);
+    //        return (randOffset == -1)
+    //            ? parent.BindLexical (ratorName, 1)  // Search deeper.
+    //            : Argument.Make (ratorName, randOffset);
     //    }
 
-    //    internal override Variable BindShadow (object varname, int argDepth, int shadowingFrame)
+    //    internal override Variable BindShadow (object ratorName, int randDepth, int shadowingFrame)
     //    {
-    //        int argOffset = this.lambda.LexicalOffset (varname);
-    //        return (argOffset == -1)
-    //            ? parent.BindShadow (varname, argDepth + 1, shadowingFrame)
-    //            : DangerousLexicalVariable.Make (varname, shadowingFrame, argDepth, argOffset);
+    //        int randOffset = this.lambda.LexicalOffset (ratorName);
+    //        return (randOffset == -1)
+    //            ? parent.BindShadow (ratorName, randDepth + 1, shadowingFrame)
+    //            : DangerousLexicalVariable.Make (ratorName, shadowingFrame, randDepth, randOffset);
     //    }
 
-    //    internal override Variable BindLexical (object varname, int argDepth)
+    //    internal override Variable BindLexical (object ratorName, int randDepth)
     //    {
-    //        int argOffset = this.lambda.LexicalOffset (varname);
-    //        return (argOffset == -1)
-    //          ? parent.BindLexical (varname, argDepth + 1)  // Search deeper.
-    //          : LexicalVariable.Make (varname, argDepth, argOffset);
+    //        int randOffset = this.lambda.LexicalOffset (ratorName);
+    //        return (randOffset == -1)
+    //          ? parent.BindLexical (ratorName, randDepth + 1)  // Search deeper.
+    //          : LexicalVariable.Make (ratorName, randDepth, randOffset);
     //    }
     //}
 
@@ -391,28 +391,28 @@ namespace Microcode
     //    {
     //    }
 
-    //    internal override Variable BindLexical (object varname, int argDepth)
+    //    internal override Variable BindLexical (object ratorName, int randDepth)
     //    {
-    //        int argOffset = this.lambda.LexicalOffset (varname);
-    //        return (argOffset == -1)
-    //            ? parent.BindShadow (varname, argDepth + 1, argDepth) // ***
-    //            : LexicalVariable.Make (varname, argDepth, argOffset);
+    //        int randOffset = this.lambda.LexicalOffset (ratorName);
+    //        return (randOffset == -1)
+    //            ? parent.BindShadow (ratorName, randDepth + 1, randDepth) // ***
+    //            : LexicalVariable.Make (ratorName, randDepth, randOffset);
     //    }
 
-    //    internal override Variable BindShadow (object varname, int argDepth, int shadowingFrame)
+    //    internal override Variable BindShadow (object ratorName, int randDepth, int shadowingFrame)
     //    {
-    //        int argOffset = this.lambda.LexicalOffset (varname);
-    //        return (argOffset == -1)
-    //            ? parent.BindShadow (varname, argDepth + 1, shadowingFrame)
-    //            : DangerousLexicalVariable.Make (varname, shadowingFrame, argDepth, argOffset);
+    //        int randOffset = this.lambda.LexicalOffset (ratorName);
+    //        return (randOffset == -1)
+    //            ? parent.BindShadow (ratorName, randDepth + 1, shadowingFrame)
+    //            : DangerousLexicalVariable.Make (ratorName, shadowingFrame, randDepth, randOffset);
     //    }
 
-    //    internal override Variable BindVariable (object varname)
+    //    internal override Variable BindVariable (object ratorName)
     //    {
-    //        int argOffset = this.lambda.LexicalOffset (varname);
-    //        return (argOffset == -1)
-    //            ? parent.BindShadow (varname, 1, 0)
-    //            : Argument.Make (varname, argOffset);
+    //        int randOffset = this.lambda.LexicalOffset (ratorName);
+    //        return (randOffset == -1)
+    //            ? parent.BindShadow (ratorName, 1, 0)
+    //            : Argument.Make (ratorName, randOffset);
     //    }
     //}
 
@@ -427,28 +427,28 @@ namespace Microcode
     //        this.parent = parent;
     //    }
  
-    //    internal override Variable BindLexical (object varname, int argDepth)
+    //    internal override Variable BindLexical (object ratorName, int randDepth)
     //    {
-    //        int argOffset = this.lambda.LexicalOffset (varname);
-    //        return (argOffset == -1)
-    //            ? parent.BindShadow (varname, argDepth + 1, argDepth)
-    //            : LexicalVariable.Make (varname, argDepth, argOffset);
+    //        int randOffset = this.lambda.LexicalOffset (ratorName);
+    //        return (randOffset == -1)
+    //            ? parent.BindShadow (ratorName, randDepth + 1, randDepth)
+    //            : LexicalVariable.Make (ratorName, randDepth, randOffset);
     //    }
 
-    //    internal override Variable BindShadow (object varname, int argDepth, int shadowingFrame)
+    //    internal override Variable BindShadow (object ratorName, int randDepth, int shadowingFrame)
     //    {
-    //        int argOffset = this.lambda.LexicalOffset (varname);
-    //        return (argOffset == -1)
-    //            ? parent.BindShadow (varname, argDepth + 1, shadowingFrame)
-    //            : DangerousLexicalVariable.Make (varname, shadowingFrame, argDepth, argOffset);
+    //        int randOffset = this.lambda.LexicalOffset (ratorName);
+    //        return (randOffset == -1)
+    //            ? parent.BindShadow (ratorName, randDepth + 1, shadowingFrame)
+    //            : DangerousLexicalVariable.Make (ratorName, shadowingFrame, randDepth, randOffset);
     //    }
 
-    //    internal override Variable BindVariable (object varname)
+    //    internal override Variable BindVariable (object ratorName)
     //    {
-    //        int argOffset = this.lambda.LexicalOffset (varname);
-    //        return (argOffset == -1)
-    //            ? parent.BindShadow (varname, 1, 0)
-    //            : Argument.Make (varname, argOffset); 
+    //        int randOffset = this.lambda.LexicalOffset (ratorName);
+    //        return (randOffset == -1)
+    //            ? parent.BindShadow (ratorName, 1, 0)
+    //            : Argument.Make (ratorName, randOffset); 
     //    }
     //}
 }

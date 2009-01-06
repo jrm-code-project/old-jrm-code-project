@@ -141,16 +141,23 @@ namespace Microcode
 
     class FileChannel : Channel
     {
-        FileStream inputReader;
+        FileStream stream;
+        bool isBlocking;
 
-        public FileChannel (FileStream inputReader)
+        public FileChannel (FileStream stream)
         {
-            this.inputReader = inputReader;
+            this.stream = stream;
         }
 
         public override int Write (char [] buffer, int start, int end)
         {
-            throw new NotImplementedException ();
+            int count = end - start;
+            byte [] byteBuffer = new byte [count];
+            for (int i = 0; i < count; i++) {
+                byteBuffer [i] = (byte) buffer [start + i];
+            }
+            this.stream.Write (byteBuffer, 0, count);
+            return count;
         }
 
         public override char [] TypeName
@@ -160,15 +167,14 @@ namespace Microcode
 
         public override bool IsBlocking
         {
-            get { throw new NotImplementedException (); }
-            set { throw new NotImplementedException (); }
-
+            get { return isBlocking; }
+            set { isBlocking = value; }
         }
 
         public override int Read (char [] buffer, int start, int end)
         {
             byte [] myBuffer = new byte [(end - start)];
-            int count = this.inputReader.Read (myBuffer, 0, (end - start));
+            int count = this.stream.Read (myBuffer, 0, (end - start));
             for (int i = 0; i < count; i++)
                 buffer[start+i] = (char) myBuffer[i];
             return count;
@@ -176,7 +182,7 @@ namespace Microcode
 
         public override bool Close ()
         {
-            this.inputReader.Close ();
+            this.stream.Close ();
             DeallocateChannel (this);
             return true;
         }
@@ -416,6 +422,17 @@ namespace Microcode
             char [] filename = (char []) arg0;
             WeakCons holder = (WeakCons) arg1;
             int channel = Channel.MakeFileChannel (new FileStream (new String (filename), System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read));
+            holder.Cdr = channel;
+            answer = true;
+            return false;
+        }
+
+        [SchemePrimitive ("NEW-FILE-OPEN-OUTPUT-CHANNEL", 2, false)]
+        public static bool NewFileOpenOutputChannel (out object answer, object arg0, object arg1)
+        {
+            char [] filename = (char []) arg0;
+            WeakCons holder = (WeakCons) arg1;
+            int channel = Channel.MakeFileChannel (new FileStream (new String (filename), System.IO.FileMode.CreateNew, System.IO.FileAccess.Write, System.IO.FileShare.None));
             holder.Cdr = channel;
             answer = true;
             return false;

@@ -14,7 +14,7 @@ namespace Microcode
         // 3 interrupt-mask
         // 4   <restore-history return-address>
         // 5 history
-        // 6 previous-history-argOffset
+        // 6 previous-history-randOffset
         // 7 previous-history-control-point
         // 8 first-element-index
 
@@ -56,8 +56,8 @@ namespace Microcode
                 newFrames = newFrames.rest;
                 if (new_frame.continuation != null)
                     throw new Exception ("Continuation not empty?");
-                new_frame.continuation = frames;
                 frames = new ContinuationFrameList (new_frame, frames);
+                new_frame.continuation = frames;
             }
         }
 

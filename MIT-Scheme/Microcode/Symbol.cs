@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
-    public class Symbol : SchemeObject
+    [Serializable]
+    public class Symbol : SchemeObject, ISerializable, ISystemPair
     {
         static Dictionary<string,Symbol> symbolTable = new Dictionary<string, Symbol> ();
         readonly string name;
+        readonly int hashCode;
 
         Symbol (string name, bool intern)
             : base (intern ? TC.INTERNED_SYMBOL : TC.UNINTERNED_SYMBOL)
         {
             this.name = name;
+            this.hashCode = name.GetHashCode ();
             if (intern)
                 symbolTable.Add(name, this);
         }
@@ -26,9 +30,18 @@ namespace Microcode
             return canonicalSymbol;
         }
 
-        public static implicit operator Symbol (string name)
+        void CheckInterning ()
         {
-            return Make (name);
+            Symbol canonicalSymbol;
+            if (symbolTable.TryGetValue (this.name, out canonicalSymbol) == false ||
+                this != canonicalSymbol) {
+                if (this.TypeCode != TC.UNINTERNED_SYMBOL)
+                    throw new NotImplementedException();
+            }
+            else {
+                if (this.TypeCode != TC.INTERNED_SYMBOL)
+                    throw new NotImplementedException();
+            }
         }
 
         static public Symbol MakeUninterned (string name)
@@ -38,12 +51,82 @@ namespace Microcode
 
         public char [] ToCharArray ()
         {
+#if DEBUG
+            CheckInterning();
+#endif
             return this.name.ToCharArray ();
         }
 
         public override string ToString ()
         {
+#if DEBUG
+            CheckInterning();
+#endif
             return this.name;
         }
+
+        public override int GetHashCode ()
+        {
+            return this.hashCode;
+        }
+
+        #region ISystemPair Members
+
+        public object SystemPairCar
+        {
+            get
+            {
+#if DEBUG
+            CheckInterning();
+#endif
+                return this.name.ToCharArray();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemPairCdr
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (SymbolDeserializer));
+            info.AddValue ("name", this.name);
+            info.AddValue ("intern", this.TypeCode == TC.INTERNED_SYMBOL);
+        }
+    }
+
+    [Serializable]
+    internal sealed class SymbolDeserializer : IObjectReference
+    {
+        // This object has no fields (although it could).
+        string name;
+        bool intern;
+
+        // GetRealObject is called after this object is deserialized.
+        public Object GetRealObject (StreamingContext context)
+        {
+            if (intern)
+                return Symbol.Make (this.name);
+            else
+                return Symbol.MakeUninterned (this.name);
+        }
+
+        public void SetName (string value) { this.name = value; }
+        public void SetIntern (bool value) { this.intern = value; }
     }
 }

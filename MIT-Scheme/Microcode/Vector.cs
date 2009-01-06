@@ -56,6 +56,7 @@ namespace Microcode
             else
                 throw new NotImplementedException ();
         }
+
         // Specialized version for common case
         [SchemePrimitive ("VECTOR-REF0", 1, false)]
         public static bool VectorRef0 (out object answer, object vec)

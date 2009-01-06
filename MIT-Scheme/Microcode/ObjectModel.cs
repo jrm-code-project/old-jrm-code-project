@@ -120,7 +120,7 @@ namespace Microcode
         [SchemePrimitive ("OBJECT-IS-TRUE?", 1, true)]
         public static bool ObjectIsTrue (out object answer, object arg0)
         {
-            // If arg0 is a bool and if it is true.
+            // If arg0 is essentially EQ to sharpT.
             answer = (arg0 is bool && (bool) arg0) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
@@ -292,7 +292,6 @@ namespace Microcode
                             || arg is double
                             || arg is int
                             || arg is long
-                            || arg is string
                             || arg is Constant)
                 answer = 0;
             else if (arg is ISystemPair)
@@ -433,8 +432,6 @@ namespace Microcode
                 answer = (int) TC.BIG_FLONUM;
             else if (arg is int || arg is long)
                 answer = (int) TC.FIXNUM;
-            else if (arg is string)
-                answer = (int) TC.INTERNED_SYMBOL;
             else if (arg is SchemeObject)
                 answer = (int) ((SchemeObject) arg).TypeCode;
             else
@@ -556,7 +553,7 @@ namespace Microcode
                     break;
 
                 case TC.INTERNED_SYMBOL:
-                    banswer = arg1 is string;
+                    banswer = arg1 is Symbol && ((Symbol)arg1).TypeCode == TC.INTERNED_SYMBOL;
                     break;
 
                 case TC.LAMBDA:
@@ -628,7 +625,7 @@ namespace Microcode
                     break;
 
                 case TC.UNINTERNED_SYMBOL:
-                    banswer = arg1 is UninternedSymbol;
+                    banswer = arg1 is Symbol && ((Symbol) arg1).TypeCode == TC.UNINTERNED_SYMBOL;
                     break;
 
                 case TC.VECTOR:
@@ -707,15 +704,14 @@ namespace Microcode
         [SchemePrimitive ("SYMBOL?", 1, true)]
         public static bool IsSymbol (out object answer, object arg)
         {
-            string sym = arg as string;
-            answer = (sym != null && string.IsInterned(sym) == sym);
+            answer = (arg is Symbol && ((Symbol) arg).TypeCode == TC.INTERNED_SYMBOL) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
 
         [SchemePrimitive ("UNINTERNED-SYMBOL?", 1, true)]
         public static bool IsUninternedSymbol (out object answer, object arg)
         {
-            answer = (arg is UninternedSymbol) ? Constant.sharpT : Constant.sharpF;
+            answer = (arg is Symbol && ((Symbol) arg).TypeCode == TC.UNINTERNED_SYMBOL) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
 
@@ -812,6 +808,10 @@ namespace Microcode
                         ? new object [0]
                         : ((Cons) tail).ToVector ();
                     answer = new StandardEnvironment (closure, initialValues);
+                    break;
+
+                case TC.PCOMB3:
+                    answer = PrimitiveCombination3.Make ((Cons) arg1);
                     break;
 
                 default:

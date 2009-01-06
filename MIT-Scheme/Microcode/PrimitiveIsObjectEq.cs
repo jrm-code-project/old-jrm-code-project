@@ -9,6 +9,7 @@ namespace Microcode
     /// True iff both args are objects and they are = to each other.
     /// False otherwise.  Does not throw an error.
     /// </summary>
+    [Serializable]
     class PrimitiveIsObjectEq : PrimitiveCombination2
     {
         protected PrimitiveIsObjectEq (Primitive2 rator, SCode rand0, SCode rand1)
@@ -19,11 +20,11 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rand0 is LexicalVariable) ? PrimitiveIsObjectEqL.Make (rator, (LexicalVariable) rand0, rand1)
-                : (rand0 is Quotation) ? PrimitiveIsObjectEqQ.Make (rator, (Quotation) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitiveIsObjectEqSL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveIsObjectEqSQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveIsObjectEq (rator, rand0, rand1);
+                (rand0 is LexicalVariable) ? PrimitiveIsObjectEqL.Make (rator, (LexicalVariable) rand0, rand1) :
+                (rand0 is Quotation) ? PrimitiveIsObjectEqQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveIsObjectEqSL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsObjectEqSQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsObjectEq (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -306,8 +307,7 @@ namespace Microcode
         }
     }
 
-
-
+    [Serializable]
     class PrimitiveIsObjectEqQ : PrimitiveIsObjectEq
     {
         public readonly object rand0Value;
@@ -321,9 +321,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
         {
             return
-                (rand1 is LexicalVariable) ? PrimitiveIsObjectEqQL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? Unimplemented ()
-                : new PrimitiveIsObjectEqQ (rator, rand0, rand1);
+                (rand1 is LexicalVariable) ? PrimitiveIsObjectEqQL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? Unimplemented () :
+                new PrimitiveIsObjectEqQ (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -338,8 +338,10 @@ namespace Microcode
 #if DEBUG
             SCode.location = "PrimitiveIsObjectEqQ.EvalStep.1";
 #endif
-            answer = (ev1 == this.rand0Value)
-                ? Constant.sharpT : Constant.sharpF;
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+            answer = (this.rand0Value == ev1) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
     }
@@ -361,17 +363,21 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Quotation rand0, LexicalVariable rand1)
         {
             return
-                (rand1 is Argument) ? PrimitiveIsObjectEqQA.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveIsObjectEqQL1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveIsObjectEqQL (rator, rand0, rand1);
+                (rand1 is Argument) ? PrimitiveIsObjectEqQA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is LexicalVariable1) ? PrimitiveIsObjectEqQL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+                new PrimitiveIsObjectEqQL (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PrimitiveIsObjectEqQ.EvalStep");
+            Warm ("PrimitiveIsObjectEqQL.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            object ev1;
+            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                throw new NotImplementedException ();
+            answer = (this.rand0Value == ev1) ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
     }
 
@@ -399,7 +405,6 @@ namespace Microcode
 #endif
             answer = (environment.ArgumentValue (this.rand1Offset) == this.rand0Value) ? Constant.sharpT : Constant.sharpF;
             return false;
-
         }
     }
 
@@ -501,11 +506,12 @@ namespace Microcode
         }
     }
 
-    class PrimitiveIsObjectEqSQ : PrimitiveIsObjectEq
+    [Serializable]
+    sealed class PrimitiveIsObjectEqSQ : PrimitiveIsObjectEq
     {
         public readonly object rand1Value;
 
-        protected PrimitiveIsObjectEqSQ (Primitive2 rator, SCode rand0, Quotation rand1)
+        PrimitiveIsObjectEqSQ (Primitive2 rator, SCode rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value = rand1.Quoted;

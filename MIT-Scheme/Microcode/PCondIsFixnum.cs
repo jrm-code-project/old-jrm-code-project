@@ -4,34 +4,20 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-
 namespace Microcode
 {
     [Serializable]
     class PCondIsFixnum : PCond1
     {
 #if DEBUG
-        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
         static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-
 #endif
-
 
         protected PCondIsFixnum (PrimitiveIsFixnum predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-
-#if DEBUG
-            this.arg0Type = this.arg0.GetType ();
-#endif
-        }
-
-        static SCode SpecialMake (PrimitiveNot predicate, SCode consequent, SCode alternative)
-        {
-            Debug.WriteLine ("; Optimize (if (not ...)");
-            return Conditional.Make (predicate.Operand, alternative, consequent);
         }
 
         public static SCode Make (PrimitiveIsFixnum predicate, SCode consequent, SCode alternative)
@@ -51,7 +37,6 @@ namespace Microcode
 #if DEBUG
             Warm ();
             noteCalls (this.arg0);
-            procedureHistogram.Note (this.procedure);
             arg0TypeHistogram.Note (this.arg0Type);
 #endif
             Control unev0 = this.arg0;
@@ -119,7 +104,7 @@ namespace Microcode
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsFixnumL.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
@@ -260,20 +245,24 @@ namespace Microcode
         internal static SCode Make (PrimitiveIsFixnumA0 predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsFixnumA0LL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsFixnumA0LQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsFixnumA0L (predicate, consequent, alternative);
+                (consequent is Argument) ? PCondIsFixnumA0A.Make (predicate, (Argument) consequent, alternative) :
+                (consequent is LexicalVariable1) ? Unimplemented():
+                (alternative is LexicalVariable) ? PCondIsFixnumA0LL.Make (predicate, consequent, (LexicalVariable) alternative):
+                (alternative is Quotation) ? PCondIsFixnumA0LQ.Make (predicate, consequent, (Quotation) alternative):
+                new PCondIsFixnumA0L (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsFixnumA0L.EvalStep");
 #endif
-            object ev0 = environment.Argument0Value;
-
-
-            if (! (ev0 is Int32)) {
+            if (environment.Argument0Value is Int32) {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -282,13 +271,89 @@ namespace Microcode
 
                 return true;
             }
-            else {
+        }
+    }
+
+    class PCondIsFixnumA0A : PCondIsFixnumA0L
+    {
+
+        protected PCondIsFixnumA0A (PrimitiveIsFixnumA0 predicate, Argument consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsFixnumA0 predicate, Argument consequent, SCode alternative)
+        {
+            return
+                (consequent is Argument0) ? PCondIsFixnumA0A0.Make (predicate, (Argument0) consequent, alternative) :
+                (consequent is Argument1) ? Unimplemented () :
+                (alternative is LexicalVariable) ? Unimplemented() :
+                (alternative is Quotation) ? Unimplemented() :
+                new PCondIsFixnumA0A (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
+#if DEBUG
+            Warm ("PCondIsFixnumA0L.EvalStep");
+#endif
+            if (environment.Argument0Value is Int32) {
                 if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
                     throw new NotImplementedException ();
                 return false;
             }
+            else {
+#if DEBUG
+                noteCalls (this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+
+                return true;
+            }
         }
     }
+
+    class PCondIsFixnumA0A0 : PCondIsFixnumA0A
+    {
+
+        protected PCondIsFixnumA0A0 (PrimitiveIsFixnumA0 predicate, Argument0 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsFixnumA0 predicate, Argument0 consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? Unimplemented () :
+                (alternative is Quotation) ? Unimplemented () :
+                new PCondIsFixnumA0A0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsFixnumA0A0.EvalStep");
+#endif
+            object test = environment.Argument0Value;
+
+            if (test is Int32) {
+                answer = test;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
 
     class PCondIsFixnumA0LL : PCondIsFixnumA0L
     {
@@ -446,10 +511,15 @@ namespace Microcode
             this.alternativeDepth = alternative.Depth;
             this.alternativeOffset = alternative.Offset;
         }
+
         internal static SCode Make (PrimitiveIsFixnumA0 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsFixnumA0SL (predicate, consequent, alternative);
+            return 
+                (alternative is Argument) ? PCondIsFixnumA0SA.Make (predicate, consequent, (Argument) alternative) :
+                (alternative is LexicalVariable1) ? Unimplemented() :
+                new PCondIsFixnumA0SL (predicate, consequent, alternative);
         }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
@@ -476,6 +546,87 @@ namespace Microcode
         }
 
 
+    }
+
+    class PCondIsFixnumA0SA : PCondIsFixnumA0SL
+    {
+
+        protected PCondIsFixnumA0SA (PrimitiveIsFixnumA0 predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsFixnumA0 predicate, SCode consequent, Argument alternative)
+        {
+            return
+                (alternative is Argument0) ? PCondIsFixnumA0SA0.Make (predicate, consequent, (Argument0) alternative) :
+                (alternative is Argument1) ? Unimplemented () :
+                new PCondIsFixnumA0SA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
+#if DEBUG
+            Warm ("PCondIsFixnumA0SL.EvalStep");
+#endif
+            object ev0 = environment.Argument0Value;
+
+            if (!(ev0 is Int32)) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+
+
+        }
+
+
+    }
+
+    sealed class PCondIsFixnumA0SA0 : PCondIsFixnumA0SA
+    {
+
+        PCondIsFixnumA0SA0 (PrimitiveIsFixnumA0 predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsFixnumA0 predicate, SCode consequent, Argument0 alternative)
+        {
+            return
+                new PCondIsFixnumA0SA0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsFixnumA0SA0.EvalStep");
+#endif
+            object ev0 = environment.Argument0Value;
+
+            if (ev0 is Int32) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif                
+                expression = this.consequent;
+                answer = null;
+                return true;  
+            }
+            else {
+                answer = ev0;
+                return false;
+            }
+        }
     }
 
     class PCondIsFixnumA0SQ : PCondIsFixnumA0
@@ -525,28 +676,24 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
-            noteCalls (this.arg0);
-
+            Warm ("PCondIsFixnumA1.EvalStep");
 #endif
-            object ev0 = environment.Argument1Value;
-
-
-            if (! (ev0 is Int32)) {
-#if DEBUG
-                noteCalls (this.alternative);
-
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
+            if (environment.Argument1Value is Int32) 
+            {
 #if DEBUG
                 noteCalls (this.consequent);
 
 #endif
                 expression = this.consequent;
+                answer = null;
+                return true;
+            } 
+            else 
+            {
+#if DEBUG
+                noteCalls (this.alternative);
+#endif
+                expression = this.alternative;
                 answer = null;
                 return true;
             }
@@ -1116,28 +1263,27 @@ namespace Microcode
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ();
-            noteCalls (this.arg0);
+            Warm ("PCondIsFixnumL1.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
                 throw new NotImplementedException ();
 
 
-            if (! (ev0 is Int32)) {
+            if (ev0 is Int32) {
 #if DEBUG
-                noteCalls (this.alternative);
-
+                noteCalls (this.consequent);
 #endif
-                expression = this.alternative;
+                expression = this.consequent;
                 answer = null;
                 return true;
             }
             else {
 #if DEBUG
-                noteCalls (this.consequent);
+                noteCalls (this.alternative);
+
 #endif
-                expression = this.consequent;
+                expression = this.alternative;
                 answer = null;
                 return true;
             }

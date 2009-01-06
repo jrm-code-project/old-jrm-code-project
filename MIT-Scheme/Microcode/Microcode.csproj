@@ -24,7 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <NoWarn>0162</NoWarn>
+    <NoWarn>0162,0429</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,7 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <NoWarn>0162</NoWarn>
+    <NoWarn>0162,0429</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -52,8 +52,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BigInteger.cs" />
+    <Compile Include="Let1.cs" />
     <Compile Include="PCond1.cs" />
     <Compile Include="PCond2.cs" />
+    <Compile Include="PCond2a.cs" />
+    <Compile Include="PCond2b.cs" />
+    <Compile Include="PCond2c.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PCond2d.cs" />
+    <Compile Include="PCond2e.cs" />
+    <Compile Include="PCond2f.cs" />
+    <Compile Include="PCond2g.cs" />
     <Compile Include="PCondIsBigFixnum.cs" />
     <Compile Include="PCondIsBigFlonum.cs" />
     <Compile Include="PCondIsChar.cs" />
@@ -61,23 +71,27 @@
     <Compile Include="PCondIsComplex.cs" />
     <Compile Include="PCondIsEq.cs" />
     <Compile Include="PCondIsFixnum.cs" />
+    <Compile Include="PCondIsFixnumEqual.cs" />
     <Compile Include="PCondIsIntEq.cs" />
+    <Compile Include="PCondIsNegative.cs" />
     <Compile Include="PCondIsNull.cs" />
     <Compile Include="PCondIsObjectEq.cs" />
     <Compile Include="PCondIsObjectType.cs" />
     <Compile Include="PCondIsPair.cs" />
     <Compile Include="PCondIsRatnum.cs" />
     <Compile Include="PCondIsRecord.cs" />
+    <Compile Include="PCondIsSymbol.cs" />
     <Compile Include="PCondLessThanFixnum.cs" />
     <Compile Include="PrimitiveCons.cs" />
     <Compile Include="PrimitiveGeneralCarCdr.cs" />
     <Compile Include="PrimitiveGreaterThanFixnum.cs" />
     <Compile Include="PrimitiveIsCharEq.cs" />
     <Compile Include="PrimitiveIsEq.cs" />
+    <Compile Include="PrimitiveIsFixnumEqual.cs" />
     <Compile Include="PrimitiveIsIntEq.cs" />
     <Compile Include="PrimitiveIsObjectEq.cs" />
     <Compile Include="PrimitiveIsObjectType.cs" />
-    <Compile Include="PrimitiveIsVector.cs" />
+    <Compile Include="PCondIsVector.cs" />
     <Compile Include="PrimitiveLessThanFixnum.cs" />
     <Compile Include="PrimitivePlusFixnum.cs" />
     <Compile Include="PrimitiveRecordRef.cs" />
@@ -139,8 +153,8 @@
     <Compile Include="SComb.cs" />
     <Compile Include="SComb1.cs" />
     <Compile Include="SComb2.cs" />
+    <Compile Include="Symbol.cs" />
     <Compile Include="Termination.cs" />
-    <Compile Include="UninternedSymbol.cs" />
     <Compile Include="ValueCell.cs" />
     <Compile Include="Variable.cs" />
     <Compile Include="Vector.cs" />

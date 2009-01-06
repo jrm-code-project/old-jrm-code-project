@@ -10,32 +10,26 @@ namespace Microcode
     [Serializable]
     class PCondIsPair : PCond1
     {
-        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
+#if DEBUG
         static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
 
         protected PCondIsPair (PrimitiveIsPair predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-
-        }
-
-        static SCode SpecialMake (PrimitiveNot predicate, SCode consequent, SCode alternative)
-        {
-            Debug.WriteLine ("; Optimize (if (not ...)");
-            return Conditional.Make (predicate.Operand, alternative, consequent);
         }
 
         public static SCode Make (PrimitiveIsPair predicate, SCode consequent, SCode alternative)
         {
             return
-                 (predicate is PrimitiveIsPairL) ? PCondIsPairL.Make ((PrimitiveIsPairL) predicate, consequent, alternative)
-                : (consequent is LexicalVariable) ? PCondIsPairSL.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsPairSQ.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsPairSSL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsPairSSQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsPair (predicate, consequent, alternative);
+                (predicate is PrimitiveIsPairL) ? PCondIsPairL.Make ((PrimitiveIsPairL) predicate, consequent, alternative) :
+                 (consequent is LexicalVariable) ? PCondIsPairSL.Make (predicate, (LexicalVariable) consequent, alternative) :
+                 (consequent is Quotation) ? PCondIsPairSQ.Make (predicate, (Quotation) consequent, alternative) :
+                 (alternative is LexicalVariable) ? PCondIsPairSSL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                 (alternative is Quotation) ? PCondIsPairSSQ.Make (predicate, consequent, (Quotation) alternative) :
+                 new PCondIsPair (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -43,7 +37,6 @@ namespace Microcode
 #if DEBUG
             Warm ("PCondIsPair.EvalStep");
             noteCalls (this.arg0);
-            procedureHistogram.Note (this.procedure);
             arg0TypeHistogram.Note (this.arg0Type);
 #endif
             Control unev0 = this.arg0;
@@ -175,41 +168,44 @@ namespace Microcode
 #if DEBUG
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type>();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type>();
-
 #endif
         protected PCondIsPairA0 (PrimitiveIsPairA0 predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
+        internal static SCode Make (PrimitiveIsPairA0 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (consequent is LexicalVariable) ? PCondIsPairA0L.Make (predicate, (LexicalVariable) consequent, alternative) :
+                //(consequent is SimpleLet1CarA0) ? PCondIsPairA0SimpleLet1CarA0.Make (predicate, (SimpleLet1CarA0) consequent, alternative) :
+                //(consequent is PCondIsEqCarA0LA0) ? PCondIsPairA0Fragment6.Make (predicate, (PCondIsEqCarA0LA0) consequent, alternative) :
+                //: (consequent is SComb1Fragment3) ? PCondIsPairFragment4.Make (predicate, (SComb1Fragment3) consequent, alternative) :
+                (consequent is Quotation) ? PCondIsPairA0Q.Make (predicate, (Quotation) consequent, alternative) :
+                (alternative is LexicalVariable) ? PCondIsPairA0SL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                (alternative is Quotation) ? PCondIsPairA0SQ.Make (predicate, consequent, (Quotation) alternative) :
+               new PCondIsPairA0 (predicate, consequent, alternative);
+        }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsPairA0.EvalStep");
+            Warm ("-");
             if (environment.Argument0Value is Cons)
                 consequentTypeHistogram.Note (this.consequentType);
             else
                 alternativeTypeHistogram.Note (this.alternativeType);
+            SCode.location = "PCondIsPairA0.EvalStep";
 #endif
             expression = (environment.Argument0Value is Cons)
                 ? this.consequent
                 : this.alternative;
             answer = null;
 #if DEBUG
+            SCode.location = "-";
             noteCalls ((SCode) expression);
 #endif
             return true;
-        }
-
-        internal static SCode Make (PrimitiveIsPairA0 predicate, SCode consequent, SCode alternative)
-        {
-            return
-               (consequent is LexicalVariable) ? PCondIsPairA0L.Make (predicate, (LexicalVariable) consequent, alternative)
-               : (consequent is SComb1Fragment3) ? PCondIsPairFragment4.Make (predicate, (SComb1Fragment3) consequent, alternative)
-               : (consequent is Quotation) ? PCondIsPairA0Q.Make (predicate, (Quotation) consequent, alternative)
-               : (alternative is LexicalVariable) ? PCondIsPairA0SL.Make (predicate, consequent, (LexicalVariable) alternative)
-               : (alternative is Quotation) ? PCondIsPairA0SQ.Make (predicate, consequent, (Quotation) alternative)
-               : new PCondIsPairA0 (predicate, consequent, alternative);
         }
     }
 
@@ -230,9 +226,11 @@ namespace Microcode
         internal static SCode Make (PrimitiveIsPairA0 predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsPairA0LL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsPairA0LQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsPairA0L (predicate, consequent, alternative);
+                (consequent is Argument) ? PCondIsPairA0A.Make (predicate, (Argument) consequent, alternative) :
+                (consequent is LexicalVariable1) ? PCondIsPairA0L1.Make (predicate, (LexicalVariable1) consequent, alternative) :
+                (alternative is LexicalVariable) ? PCondIsPairA0LL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                (alternative is Quotation) ? PCondIsPairA0LQ.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsPairA0L (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -259,6 +257,153 @@ namespace Microcode
             }
         }
     }
+
+    class PCondIsPairA0A : PCondIsPairA0L
+    {
+        protected PCondIsPairA0A (PrimitiveIsPairA0 predicate, Argument consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsPairA0 predicate, Argument consequent, SCode alternative)
+        {
+            return
+                (consequent is Argument0) ? PCondIsPairA0A0.Make (predicate, (Argument0) consequent, alternative) :
+                (consequent is Argument1) ? Unimplemented() :
+                (alternative is LexicalVariable) ? Unimplemented() :
+                (alternative is Quotation) ? Unimplemented() :
+                new PCondIsPairA0A (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+#endif
+            object ev0 = environment.Argument0Value;
+
+
+            if (!(ev0 is Cons)) {
+#if DEBUG
+                noteCalls (this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+    class PCondIsPairA0A0 : PCondIsPairA0A
+    {
+        protected PCondIsPairA0A0 (PrimitiveIsPairA0 predicate, Argument0 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsPairA0 predicate, Argument0 consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? Unimplemented () :
+                (alternative is Quotation) ? PCondIsPairA0A0Q.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsPairA0A0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairA0A0.EvalStep");
+#endif
+            object ev0 = environment.Argument0Value;
+            if (ev0 is Cons) {
+                answer = ev0;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    sealed class PCondIsPairA0A0Q : PCondIsPairA0A0
+    {
+        readonly object alternativeValue;
+
+        PCondIsPairA0A0Q (PrimitiveIsPairA0 predicate, Argument0 consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        internal static SCode Make (PrimitiveIsPairA0 predicate, Argument0 consequent, Quotation alternative)
+        {
+            return
+                new PCondIsPairA0A0Q (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairA0A0Q.EvalStep");
+#endif
+            object ev0 = environment.Argument0Value;
+            answer = (ev0 is Cons) ? ev0 : this.alternativeValue;
+            return false;
+        }
+    }
+
+    class PCondIsPairA0L1 : PCondIsPairA0L
+    {
+        protected PCondIsPairA0L1 (PrimitiveIsPairA0 predicate, LexicalVariable1 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsPairA0 predicate, LexicalVariable1 consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? Unimplemented() :
+                (alternative is Quotation) ? Unimplemented() :
+                new PCondIsPairA0L1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+#endif
+            object ev0 = environment.Argument0Value;
+
+
+            if (!(ev0 is Cons)) {
+#if DEBUG
+                noteCalls (this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+
 
     class PCondIsPairA0LL : PCondIsPairA0L
     {
@@ -313,31 +458,43 @@ namespace Microcode
         }
     }
 
-    class PCondIsPairA0Let1CarA0 : PCondIsPairA0
+    class PCondIsPairA0SimpleLet1CarA0 : PCondIsPairA0
     {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> bodyTypeHistogram = new Histogram<Type> ();
+
+        public readonly Type bodyType;
+#endif
         public readonly SimpleLambda rator;
         public readonly SCode body;
 
-        protected PCondIsPairA0Let1CarA0 (PrimitiveIsPairA0 predicate, SimpleLet1CarA0 consequent, SCode alternative)
+        protected PCondIsPairA0SimpleLet1CarA0 (PrimitiveIsPairA0 predicate, SimpleLet1CarA0 consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.rator = (SimpleLambda) consequent.rator;
             this.body = this.rator.Body;
+#if DEBUG
+            this.bodyType = this.body.GetType ();
+#endif
         }
 
         internal static SCode Make (PrimitiveIsPairA0 predicate, SimpleLet1CarA0 consequent, SCode alternative)
         {
             return
-                 new PCondIsPairA0Let1CarA0 (predicate, consequent, alternative);
+                 new PCondIsPairA0SimpleLet1CarA0 (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsPairA0SimpleLet1CarA0.EvalStep");
 #endif
             Cons evarg = environment.Argument0Value as Cons;
             if (evarg == null) {
+#if DEBUG
+                alternativeTypeHistogram.Note(this.alternativeType);
+#endif
                 // tail call the alternative
                 expression = this.alternative;
             }
@@ -346,17 +503,16 @@ namespace Microcode
                 SimpleClosure cl = new SimpleClosure ((SimpleLambda) this.rator, environment);
                 expression = this.body;
                 environment = new SmallEnvironment1 (cl, evarg.Car);
+#if DEBUG
+                bodyTypeHistogram.Note (this.bodyType);
+#endif
             }
             answer = null;
 #if DEBUG
             noteCalls ((SCode) expression);
 #endif
             return true;
-
         }
-
-
-
     }
 
     class PCondIsPairFragment4 : PCondIsPairA0
@@ -443,7 +599,6 @@ namespace Microcode
 #if DEBUG
                     noteCalls (this.alternative0);
                     alternative0TypeHistogram.Note (this.alternative0Type);
-                    Debug.WriteLineIf (Primitive.Noisy, "    => #f");
 #endif
                     expression = this.alternative0;
                     answer = null;
@@ -476,7 +631,6 @@ namespace Microcode
 #if DEBUG
                         noteCalls (this.consequent1);
                         consequent1TypeHistogram.Note (this.consequent1Type);
-                        Debug.WriteLineIf (Primitive.Noisy, "    => #t");
 #endif
                         expression = this.consequent1;
                         answer = null;
@@ -535,7 +689,6 @@ namespace Microcode
 #if DEBUG
                     noteCalls (this.alternative0);
                     alternative0TypeHistogram.Note (this.alternative0Type);
-                    Debug.WriteLineIf (Primitive.Noisy, "    => #f");
 #endif
                     SimpleClosure cl = new SimpleClosure ((SimpleLambda) this.rator, environment);
                     environment = new SmallEnvironment1 (cl, evargCar);
@@ -564,7 +717,6 @@ namespace Microcode
 #if DEBUG
                         noteCalls (this.consequent1);
                         consequent1TypeHistogram.Note (this.consequent1Type);
-                        Debug.WriteLineIf (Primitive.Noisy, "    => #t");
 #endif
                         SimpleClosure cl = new SimpleClosure ((SimpleLambda) this.rator, environment);
                         environment = new SmallEnvironment1 (cl, evargCar);
@@ -581,6 +733,7 @@ namespace Microcode
                         //object alt1Evrand = ((Cons) alt1Evrandtemp).Cdr;
 
                         object evop;
+
                         if (environment.FastLexicalRef (out evop, this.altRatorName, this.altRatorDepth - 1, this.altRatorOffset))
                             throw new NotImplementedException ();
                         return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg.Cdr);
@@ -592,7 +745,81 @@ namespace Microcode
         }
     }
 
+    class PCondIsPairA0Fragment6 : PCondIsPairA0
+    {
+#if DEBUG
+        static Histogram<Type> consequentAlternativeTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+        public readonly Type consequentAlternativeType;
+#endif
+        public readonly object consequentRand1Name;
+        public readonly int consequentRand1Depth;
+        public readonly int consequentRand1Offset;
 
+        public readonly SCode consequentAlternative;
+
+        protected PCondIsPairA0Fragment6 (PrimitiveIsPairA0 predicate,  PCondIsEqCarA0LA0 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentRand1Name = consequent.rand1Name;
+            this.consequentRand1Depth = consequent.rand1Depth;
+            this.consequentRand1Offset = consequent.rand1Offset;
+
+            this.consequentAlternative = consequent.Alternative;
+#if DEBUG
+            this.consequentAlternativeType = this.consequentAlternative.GetType ();
+#endif
+        }
+
+        internal static SCode Make (PrimitiveIsPairA0 predicate, PCondIsEqCarA0LA0 consequent, SCode alternative)
+        {
+            return
+               new PCondIsPairA0Fragment6 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PCondIsPairA0.EvalStep";
+#endif
+            Cons ev0 = environment.Argument0Value as Cons;
+            if (ev0 == null) {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+            else {
+                object arg1;
+                if (environment.FastLexicalRef (out arg1, this.consequentRand1Name, this.consequentRand1Depth, this.consequentRand1Offset))
+                    throw new NotImplementedException ();
+
+                object arg0 = ev0.Car;
+                if (((arg0 == null) && (arg1 == null))
+                || ((arg1 != null) &&
+                    ((arg0 == arg1)
+                     || ((arg0 is Int32 && arg1 is Int32) && ((int) arg0 == (int) arg1))
+                     || ((arg0 is char && arg1 is char) && ((char) arg0 == (char) arg1))
+                     || ((arg0 is bool && arg1 is bool) && ((bool) arg0 == (bool) arg1))))) {
+                    answer = ev0;
+                    return false;
+                }
+                else {
+#if DEBUG
+                    noteCalls (this.consequentAlternative);
+                    consequentAlternativeTypeHistogram.Note (this.consequentAlternativeType);
+#endif
+                    expression = this.consequentAlternative;
+                    answer = null;
+                    return true;
+                }
+            }
+        }
+    }
 
     class PCondIsPairA0Q : PCondIsPairA0
     {
@@ -696,7 +923,10 @@ namespace Microcode
 
         internal static SCode Make (PrimitiveIsPairA0 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsPairA0SL (predicate, consequent, alternative);
+            return 
+                (alternative is Argument) ? PCondIsPairA0SA.Make (predicate, consequent, (Argument) alternative) :
+                (alternative is LexicalVariable1) ? PCondIsPairA0SL1.Make (predicate, consequent, (LexicalVariable1) alternative) :
+                new PCondIsPairA0SL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -727,11 +957,159 @@ namespace Microcode
 
     }
 
-    class PCondIsPairA0SQ : PCondIsPairA0
+    class PCondIsPairA0SA : PCondIsPairA0SL
     {
+        protected PCondIsPairA0SA (PrimitiveIsPairA0 predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsPairA0 predicate, SCode consequent, Argument alternative)
+        {
+            return
+                (alternative is Argument0) ? PCondIsPairA0SA0.Make (predicate, consequent, (Argument0) alternative) :
+                (alternative is Argument1) ? PCondIsPairA0SA1.Make (predicate, consequent, (Argument1) alternative) :
+                new PCondIsPairA0SA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairA0SA.EvalStep");
+#endif
+            throw new NotImplementedException ();
+            object ev0 = environment.Argument0Value;
+
+            if (!(ev0 is Cons)) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+
+
+        }
+
+
+    }
+
+    sealed class PCondIsPairA0SA0 : PCondIsPairA0SA
+    {
+        PCondIsPairA0SA0 (PrimitiveIsPairA0 predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsPairA0 predicate, SCode consequent, Argument0 alternative)
+        {
+            return
+                new PCondIsPairA0SA0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairA0SA1.EvalStep");
+#endif
+            object temp = environment.Argument0Value;
+            if (temp is Cons) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = temp;
+                return false;
+            }
+        }
+    }
+
+    sealed class PCondIsPairA0SA1 : PCondIsPairA0SA
+    {
+        PCondIsPairA0SA1 (PrimitiveIsPairA0 predicate, SCode consequent, Argument1 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsPairA0 predicate, SCode consequent, Argument1 alternative)
+        {
+            return
+                new PCondIsPairA0SA1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairA0SA1.EvalStep");
+#endif
+            if (environment.Argument0Value is Cons) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument1Value;
+                return false;
+            }
+        }
+    }
+
+    sealed class PCondIsPairA0SL1 : PCondIsPairA0SL
+    {
+        PCondIsPairA0SL1 (PrimitiveIsPairA0 predicate, SCode consequent, LexicalVariable1 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsPairA0 predicate, SCode consequent, LexicalVariable1 alternative)
+        {
+            return
+                new PCondIsPairA0SL1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairA0SL1.EvalStep");
+#endif
+            if (environment.Argument0Value is Cons) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef1 (out answer, this.alternativeName, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+    sealed class PCondIsPairA0SQ : PCondIsPairA0
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type>();
+#endif
         public readonly object alternativeValue;
 
-        protected PCondIsPairA0SQ (PrimitiveIsPairA0 predicate, SCode consequent, Quotation alternative)
+        PCondIsPairA0SQ (PrimitiveIsPairA0 predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
@@ -749,7 +1127,10 @@ namespace Microcode
 #endif
             if (environment.Argument0Value is Cons) {
 #if DEBUG
+                SCode.location = "-";
                 noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCondIsPairA0SQ.EvalStep";
 #endif
                 expression = this.consequent;
                 answer = null;
@@ -778,21 +1159,24 @@ namespace Microcode
 #if DEBUG
             Warm ("PCondIsPairA1.EvalStep");
 #endif
-            if (!(environment.Argument1Value is Cons)) {
+            if (environment.Argument1Value is Cons) {
 #if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
-#if DEBUG
+                SCode.location = "-";
                 noteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCondIsPairA1.EvalStep.1";
 #endif
                 expression = this.consequent;
+                answer = null;
+                return true;
+            } else {
+#if DEBUG
+                SCode.location = "-";
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                SCode.location = "PCondIsPairA1.EvalStep.2";
+#endif
+                expression = this.alternative;
                 answer = null;
                 return true;
             }
@@ -924,31 +1308,30 @@ namespace Microcode
         internal static SCode Make (PrimitiveIsPairA1 predicate, Quotation consequent, SCode alternative)
         {
             return
-    (alternative is LexicalVariable) ? PCondIsPairA1QL.Make (predicate, consequent, (LexicalVariable) alternative)
-    : (alternative is Quotation) ? PCondIsPairA1QQ.Make (predicate, consequent, (Quotation) alternative)
-    : new PCondIsPairA1Q (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsPairA1QL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                (alternative is Quotation) ? PCondIsPairA1QQ.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsPairA1Q (predicate, consequent, alternative);
         }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
-            noteCalls (this.arg0);
+            Warm ("PCondIsPairA1Q.EvalStep");
 #endif
             object ev0 = environment.Argument1Value;
 
-
-            if (!(ev0 is Cons)) {
+            if (ev0 is Cons) {
+                answer = this.consequentValue;
+                return false;
+            }
+            else {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
                 expression = this.alternative;
                 answer = null;
                 return true;
-            }
-            else {
-                answer = this.consequentValue;
-                return false;
-            }
+            }  
         }
     }
 
@@ -1014,7 +1397,10 @@ namespace Microcode
         }
         internal static SCode Make (PrimitiveIsPairA1 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsPairA1SL (predicate, consequent, alternative);
+            return 
+                (alternative is Argument) ? PCondIsPairA1SA.Make (predicate, consequent, (Argument) alternative) :
+                (alternative is LexicalVariable1) ? Unimplemented():
+                new PCondIsPairA1SL (predicate, consequent, alternative);
 
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1042,6 +1428,90 @@ namespace Microcode
         }
 
 
+    }
+
+    class PCondIsPairA1SA : PCondIsPairA1SL
+    {
+
+        protected PCondIsPairA1SA (PrimitiveIsPairA1 predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+        internal static SCode Make (PrimitiveIsPairA1 predicate, SCode consequent, Argument alternative)
+        {
+            return
+                (alternative is Argument0) ? PCondIsPairA1SA0.Make (predicate, consequent, (Argument0) alternative) :
+                (alternative is Argument1) ? Unimplemented () :
+                new PCondIsPairA1SA (predicate, consequent, alternative);
+
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
+#if DEBUG
+            Warm ("PCondIsPairA1SL.EvalStep");
+#endif
+            object ev0 = environment.Argument1Value;
+
+            if (!(ev0 is Cons)) {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.consequent);
+
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+
+        }
+
+
+    }
+
+    sealed class PCondIsPairA1SA0 : PCondIsPairA1SA
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type>();
+#endif
+
+        PCondIsPairA1SA0 (PrimitiveIsPairA1 predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsPairA1 predicate, SCode consequent, Argument0 alternative)
+        {
+            return
+                new PCondIsPairA1SA0 (predicate, consequent, alternative);
+
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairA1SA0.EvalStep");
+#endif
+            object ev0 = environment.Argument1Value;
+
+            if (ev0 is Cons) {
+#if DEBUG
+                noteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument0Value;
+                return false;
+            }
+        }
     }
 
     class PCondIsPairA1SQ : PCondIsPairA1
@@ -1361,7 +1831,6 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("PCondIsPairL1.EvalStep");
-            noteCalls (this.arg0);
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
@@ -1400,27 +1869,32 @@ namespace Microcode
             this.consequentName = consequent.Name;
             this.consequentDepth = consequent.Depth;
             this.consequentOffset = consequent.Offset;
-
         }
 
         internal static SCode Make (PrimitiveIsPairL1 predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsPairL1LL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsPairL1LQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsPairL1L (predicate, consequent, alternative);
+                (consequent is Argument) ? Unimplemented():
+                (consequent is LexicalVariable1) ? PCondIsPairL1L1.Make (predicate, (LexicalVariable1) consequent, alternative) :
+                (alternative is LexicalVariable) ? PCondIsPairL1LL.Make (predicate, consequent, (LexicalVariable) alternative):
+                (alternative is Quotation) ? PCondIsPairL1LQ.Make (predicate, consequent, (Quotation) alternative):
+                new PCondIsPairL1L (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            #region EvalStepBody
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsPairL1L.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
                 throw new NotImplementedException ();
 
-            if (!(ev0 is Cons)) {
+            if (ev0 is Cons) {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
 #if DEBUG
                 noteCalls (this.alternative);
 
@@ -1429,17 +1903,54 @@ namespace Microcode
                 answer = null;
                 return true;
             }
-            else {
-                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
-                    throw new NotImplementedException ();
-                return false;
-            }
-            #endregion
-
         }
 
 
     }
+
+    class PCondIsPairL1L1 : PCondIsPairL1L
+    {
+        protected PCondIsPairL1L1 (PrimitiveIsPairL1 predicate, LexicalVariable1 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsPairL1 predicate, LexicalVariable1 consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? Unimplemented() :
+                (alternative is Quotation) ? Unimplemented() :
+                new PCondIsPairL1L1 (predicate, consequent, alternative);
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairL1L1.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if (ev0 is Cons) {
+                if (environment.FastLexicalRef1 (out answer, this.consequentName, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.alternative);
+
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+
+
+    }
+
+
 
     class PCondIsPairL1LL : PCondIsPairL1L
     {
@@ -1591,24 +2102,101 @@ namespace Microcode
         protected PCondIsPairL1SL (PrimitiveIsPairL1 predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
+
         internal static SCode Make (PrimitiveIsPairL1 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsPairL1SL (predicate, consequent, alternative);
+            return 
+                (alternative is Argument) ? PCondIsPairL1SA.Make (predicate, consequent, (Argument) alternative) :
+                (alternative is LexicalVariable1) ? PCondIsPairL1SL1.Make (predicate, consequent, (LexicalVariable1) alternative) :
+                new PCondIsPairL1SL (predicate, consequent, alternative);
 
         }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             throw new NotImplementedException ();
         }
-
-
     }
 
-    class PCondIsPairL1SQ : PCondIsPairL1
+    class PCondIsPairL1SA : PCondIsPairL1SL
+    {
+        protected PCondIsPairL1SA (PrimitiveIsPairL1 predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        { }
+
+        internal static SCode Make (PrimitiveIsPairL1 predicate, SCode consequent, Argument alternative)
+        {
+            return
+                (alternative is Argument0) ? PCondIsPairL1SA0.Make (predicate, consequent, (Argument0) alternative) :
+                (alternative is Argument1) ? Unimplemented () :
+                new PCondIsPairL1SA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    sealed class PCondIsPairL1SA0 : PCondIsPairL1SA
+    {
+        PCondIsPairL1SA0 (PrimitiveIsPairL1 predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        { }
+
+        internal static SCode Make (PrimitiveIsPairL1 predicate, SCode consequent, Argument0 alternative)
+        {
+            return
+                new PCondIsPairL1SA0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairL1SA0.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException();
+
+            if (ev0 is Cons) {
+#if DEBUG
+                noteCalls(this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument0Value;
+                return false;
+            }
+        }
+    }
+
+    sealed class PCondIsPairL1SL1 : PCondIsPairL1SL
+    {
+        PCondIsPairL1SL1 (PrimitiveIsPairL1 predicate, SCode consequent, LexicalVariable1 alternative)
+            : base (predicate, consequent, alternative)
+        { }
+
+        internal static SCode Make (PrimitiveIsPairL1 predicate, SCode consequent, LexicalVariable1 alternative)
+        {
+            return
+                new PCondIsPairL1SL1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    sealed class PCondIsPairL1SQ : PCondIsPairL1
     {
         public readonly object alternativeValue;
 
-        protected PCondIsPairL1SQ (PrimitiveIsPairL1 predicate, SCode consequent, Quotation alternative)
+        PCondIsPairL1SQ (PrimitiveIsPairL1 predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
@@ -1621,14 +2209,12 @@ namespace Microcode
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            #region EvalStepBody
 #if DEBUG
             Warm ("PCondIsPairL1SQ.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
                 throw new NotImplementedException ();
-
 
             if (!(ev0 is Cons)) {
                 answer = this.alternativeValue;
@@ -1642,32 +2228,153 @@ namespace Microcode
                 answer = null;
                 return true;
             }
-            #endregion
-
-            throw new NotImplementedException ();
         }
     }
 
     class PCondIsPairLL : PCondIsPairL
     {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object consequentName;
+        public readonly int consequentDepth;
+        public readonly int consequentOffset;
+
         protected PCondIsPairLL (PrimitiveIsPairL predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
+            this.consequentName = consequent.Name;
+            this.consequentDepth = consequent.Depth;
+            this.consequentOffset = consequent.Offset;
         }
 
         public static SCode Make (PrimitiveIsPairL predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsPairLLL.Make (predicate, consequent, alternative)
-                : (alternative is Quotation) ? PCondIsPairLLQ.Make (predicate, consequent, alternative)
-                : new PCondIsPairLL (predicate, consequent, alternative);
+                (consequent is Argument) ? PCondIsPairLA.Make (predicate, (Argument) consequent, alternative) :
+                (consequent is LexicalVariable1) ? Unimplemented():
+                (alternative is LexicalVariable) ? PCondIsPairLLL.Make (predicate, consequent, (LexicalVariable)  alternative) :
+                (alternative is Quotation) ? PCondIsPairLLQ.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsPairLL (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairLL.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if (ev0 is Cons) {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    class PCondIsPairLA : PCondIsPairLL
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected PCondIsPairLA (PrimitiveIsPairL predicate, Argument consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsPairL predicate, Argument consequent, SCode alternative)
+        {
+            return
+                (consequent is Argument0) ? PCondIsPairLA0.Make (predicate, (Argument0) consequent, alternative) :
+                (consequent is Argument1) ? Unimplemented () :
+                (alternative is LexicalVariable) ? Unimplemented() :
+                (alternative is Quotation) ? Unimplemented() :
+                new PCondIsPairLA (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             throw new NotImplementedException ();
+#if DEBUG
+            Warm ("PCondIsPairLL.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if (ev0 is Cons) {
+                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
         }
     }
+
+    class PCondIsPairLA0 : PCondIsPairLA
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected PCondIsPairLA0 (PrimitiveIsPairL predicate, Argument0 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsPairL predicate, Argument0 consequent, SCode alternative)
+        {
+            return
+                (alternative is LexicalVariable) ? Unimplemented () :
+                (alternative is Quotation) ? Unimplemented() :
+                new PCondIsPairLA0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairLA0.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if (ev0 is Cons) {
+                answer = environment.Argument0Value;
+                return false;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+
 
     class PCondIsPairLLL : PCondIsPairLL
     {
@@ -1977,13 +2684,17 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.arg0);
+            SCode.location = "PCondIsPairSQ.EvalStep";
 #endif
             Control unev0 = this.arg0;
             Environment env = environment;
             object ev0;
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+#if DEBUG
+                        SCode.location = "PCondIsPairSQ.EvalStep.1";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveIsPairFrame0 (this, environment));
@@ -2104,10 +2815,63 @@ namespace Microcode
 
         public static SCode Make (PrimitiveIsPair predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsPairSSL (predicate, consequent, alternative);
+            return 
+                (alternative is Argument) ? PCondIsPairSSA.Make (predicate, consequent, (Argument) alternative) :
+                (alternative is LexicalVariable1) ? PCondIsPairSSL1.Make (predicate, consequent, (LexicalVariable1) alternative) :
+                new PCondIsPairSSL (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.arg0);
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveIsPairFrame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            if (ev0 is Cons) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true; 
+            }
+            else {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+    class PCondIsPairSSA : PCondIsPairSSL
+    {
+
+        protected PCondIsPairSSA (PrimitiveIsPair predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsPair predicate, SCode consequent, Argument alternative)
+        {
+            return
+                (alternative is Argument0) ? PCondIsPairSSA0.Make (predicate, consequent, (Argument0) alternative) :
+                (alternative is Argument1) ? Unimplemented () :
+                new PCondIsPairSSA (predicate, consequent, alternative);
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
 #if DEBUG
             Warm ("PCondIsPairSSL.EvalStep");
             noteCalls (this.arg0);
@@ -2142,11 +2906,105 @@ namespace Microcode
         }
     }
 
-    class PCondIsPairSSQ : PCondIsPair
+    sealed class PCondIsPairSSA0 : PCondIsPairSSA
+    {
+
+        PCondIsPairSSA0 (PrimitiveIsPair predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsPair predicate, SCode consequent, Argument0 alternative)
+        {
+            return
+                new PCondIsPairSSA0 (predicate, consequent, alternative);
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.arg0);
+            SCode.location = "PCondIsPairSSA0.EvalStep";
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveIsPairFrame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            if (ev0 is Cons) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument0Value;
+                return false;
+            }
+        }
+    }
+
+    sealed class PCondIsPairSSL1 : PCondIsPairSSL
+    {
+        PCondIsPairSSL1 (PrimitiveIsPair predicate, SCode consequent, LexicalVariable1 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsPair predicate, SCode consequent, LexicalVariable1 alternative)
+        {
+            return
+                new PCondIsPairSSL1 (predicate, consequent, alternative);
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsPairSSL1.EvalStep");
+            noteCalls (this.arg0);
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveIsPairFrame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            if (ev0 is Cons) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef1 (out answer, this.alternativeName, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    sealed class PCondIsPairSSQ : PCondIsPair
     {
         public readonly object alternativeValue;
 
-        protected PCondIsPairSSQ (PrimitiveIsPair predicate, SCode consequent, Quotation alternative)
+        PCondIsPairSSQ (PrimitiveIsPair predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
@@ -2175,11 +3033,7 @@ namespace Microcode
                 //return false;
             }
 
-            if (!(ev0 is Cons)) {
-                answer = this.alternativeValue;
-                return false;
-            }
-            else {
+            if (ev0 is Cons) {
 #if DEBUG
                 noteCalls (this.consequent);
 #endif
@@ -2187,8 +3041,11 @@ namespace Microcode
                 answer = null;
                 return true;
             }
+            else {
+                answer = this.alternativeValue;
+                return false;
+            }
         }
     }
 
 }
-

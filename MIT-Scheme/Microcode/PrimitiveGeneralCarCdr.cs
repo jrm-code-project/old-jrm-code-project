@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,11 +16,11 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rand0 is LexicalVariable) ? PrimitiveGeneralCarCdrL.Make (rator, (LexicalVariable) rand0, rand1)
-                : (rand0 is Quotation) ? Unimplemented()// PrimitiveGeneralCarCdrQ.Make (rator, (Quotation) rand0, rand1)
-                : (rand1 is LexicalVariable) ? Unimplemented()// PrimitiveGeneralCarCdrSL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ?  PrimitiveGeneralCarCdrSQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveGeneralCarCdr (rator, rand0, rand1);
+                (rand0 is LexicalVariable) ? PrimitiveGeneralCarCdrL.Make (rator, (LexicalVariable) rand0, rand1) :
+                (rand0 is Quotation) ? Unimplemented() : // PrimitiveGeneralCarCdrQ.Make (rator, (Quotation) rand0, rand1)
+                (rand1 is LexicalVariable) ? Unimplemented() : // PrimitiveGeneralCarCdrSL.Make (rator, rand0, (LexicalVariable) rand1)
+                (rand1 is Quotation) ?  PrimitiveGeneralCarCdrSQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveGeneralCarCdr (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -451,8 +452,7 @@ namespace Microcode
         }
     }
 
-
-
+    [Serializable]
     class PrimitiveGeneralCarCdrSQ : PrimitiveGeneralCarCdr
     {
         public readonly int rand1Value;
@@ -463,12 +463,51 @@ namespace Microcode
             this.rand1Value = (int) rand1.Quoted;
         }
 
+        static SCode AddCar (SCode rand, int code)
+        {
+            return BuildGCC (rand, code * 2 + 1);
+        }
+
+        static SCode AddCdr (SCode rand, int code)
+        {
+            return BuildGCC (rand, code * 2 + 0);
+        }
+
+        static SCode BuildGCC (SCode rand, int code)
+        {
+            Debug.Write ("\n; => GeneralCarCdr " + code.ToString ());
+            return PrimitiveCombination2.Make (Primitive.GeneralCarCdr, rand, Quotation.Make (code));
+        }
+
+        static SCode CombineGCC (SCode rand, int innerCode, int outerCode)
+        {
+            if (innerCode == 6 && outerCode == 6)
+                return BuildGCC (rand, 26);
+            else if (innerCode == 6 && outerCode == 12) // 110 1100 => 110010
+                return BuildGCC (rand, 50);
+            else if (innerCode == 25 && outerCode == 4) // 11001 100 => 1001001
+                return BuildGCC (rand, 0x49);
+            else if (innerCode == 25 && outerCode == 10) // 11001 1010 => 1010 1001
+                return BuildGCC (rand, 0xA9);
+            throw new NotImplementedException ();
+        }
+
+        static bool isFoldableCxr (SCode form, Primitive prim)
+        {
+            return Configuration.EnableFoldCarCdr &&
+                ((form is PrimitiveCombination1 && ((PrimitiveCombination1) form).Operator == prim) ||
+                 (form is PrimitiveCombination2 &&
+                 ((PrimitiveCombination2) form).Rator == prim &&
+                 ((PrimitiveCombination2) form).Rand1 is Quotation));
+        }
+
         public static SCode Make (Primitive2 rator, SCode rand0, Quotation rand1)
         {
             return
-                (Configuration.EnableFoldCarCdr && rand0 is PrimitiveCar) ? Unimplemented() //PrimitiveGeneralCarCdr.Make (rator, ((PrimitiveCar) rand0).Operand, ((int) rand1.Quoted) * 2 + 1)
-                : (Configuration.EnableFoldCarCdr && rand0 is PrimitiveCdr) ? Unimplemented () //PrimitiveGeneralCarCdr.Make (rator, ((PrimitiveCdr) rand0).Operand, ((int) rand1.Quoted) * 2)
-                : new PrimitiveGeneralCarCdrSQ (rator, rand0, rand1);
+                isFoldableCxr (rand0, Primitive.Car) ? AddCar (((PrimitiveCombination1)rand0).Operand, (int) rand1.Quoted) :
+                isFoldableCxr (rand0, Primitive.Cdr) ? AddCdr (((PrimitiveCombination1) rand0).Operand, (int) rand1.Quoted) :
+                isFoldableCxr (rand0, Primitive.GeneralCarCdr) ? CombineGCC (((PrimitiveCombination2) rand0).Rand0, (int) ((Quotation) ((PrimitiveCombination2) rand0).Rand1).Quoted, (int) rand1.Quoted) :
+                new PrimitiveGeneralCarCdrSQ (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -497,7 +536,5 @@ namespace Microcode
                 throw new NotImplementedException ();
             return false;
         }
-
     }
-
 }

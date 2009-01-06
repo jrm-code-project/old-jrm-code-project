@@ -386,9 +386,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PrimitiveIsCharEqQ.EvalStep");
+            Warm ("PrimitiveIsCharEqQL1.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            object ev1;
+            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+            answer = (this.rand0Value == (char) ev1) ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
     }
 

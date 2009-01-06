@@ -10,27 +10,14 @@ namespace Microcode
     class PCondIsChar : PCond1
     {
 #if DEBUG
-        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
         static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-
 #endif
-
 
         protected PCondIsChar (PrimitiveIsChar predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-
-#if DEBUG
-            this.arg0Type = this.arg0.GetType ();
-#endif
-        }
-
-        static SCode SpecialMake (PrimitiveNot predicate, SCode consequent, SCode alternative)
-        {
-            Debug.WriteLine ("; Optimize (if (not ...)");
-            return Conditional.Make (predicate.Operand, alternative, consequent);
         }
 
         public static SCode Make (PrimitiveIsChar predicate, SCode consequent, SCode alternative)
@@ -50,7 +37,6 @@ namespace Microcode
 #if DEBUG
             Warm ();
             noteCalls (this.arg0);
-            procedureHistogram.Note (this.procedure);
             arg0TypeHistogram.Note (this.arg0Type);
 #endif
             Control unev0 = this.arg0;
@@ -267,7 +253,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsCharA0L.EvalStep");
 #endif
             object ev0 = environment.Argument0Value;
 
@@ -1115,9 +1101,7 @@ namespace Microcode
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ("-");
-            noteCalls (this.arg0);
-            SCode.location = "PCondIsCharL1.EvalStep";
+            Warm ("PCondIsCharL1.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))

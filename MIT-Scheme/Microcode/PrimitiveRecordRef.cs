@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     class PrimitiveRecordRef : PrimitiveCombination2
     {
         protected PrimitiveRecordRef (Primitive2 rator, SCode rand0, SCode rand1)
@@ -16,11 +17,11 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rand0 is LexicalVariable) ? PrimitiveRecordRefL.Make (rator, (LexicalVariable) rand0, rand1)
-                : (rand0 is Quotation) ? PrimitiveRecordRefQ.Make (rator, (Quotation) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitiveRecordRefSL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveRecordRefSQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveRecordRef (rator, rand0, rand1);
+                (rand0 is LexicalVariable) ? PrimitiveRecordRefL.Make (rator, (LexicalVariable) rand0, rand1) :
+                (rand0 is Quotation) ? PrimitiveRecordRefQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveRecordRefSL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveRecordRefSQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveRecordRef (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -378,8 +379,9 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.rand1);
+            SCode.location = "PrimitiveRecordRefA1.EvalStep";
 #endif
             // Eval argument1
             object ev1;
@@ -730,8 +732,9 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.rand1);
+            SCode.location = "PrimitiveRecordRefL1.EvalStep";
 #endif
             // Eval argument1
             object ev1;
@@ -1367,8 +1370,9 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.rand0);
+            SCode.location = "PrimitiveRecordRefSL.EvalStep";
 #endif
             // Eval argument1
             object ev1;
@@ -1564,11 +1568,12 @@ namespace Microcode
 
     }
 
-    class PrimitiveRecordRefSQ : PrimitiveRecordRef
+    [Serializable]
+    sealed class PrimitiveRecordRefSQ : PrimitiveRecordRef
     {
         public readonly int rand1Value;
 
-        protected PrimitiveRecordRefSQ (Primitive2 rator, SCode rand0, Quotation rand1)
+        PrimitiveRecordRefSQ (Primitive2 rator, SCode rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value = (int) rand1.Quoted;
@@ -1593,15 +1598,50 @@ namespace Microcode
             Environment env = environment;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveRecordRefSQFrame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
+
             }
 
             answer = ((Record) ev0).Ref(this.rand1Value);
             return false;
         }
     }
+
+    [Serializable]
+    sealed class PrimitiveRecordRefSQFrame0 : SubproblemContinuation<PrimitiveRecordRefSQ>, ISystemVector
+    {
+        internal PrimitiveRecordRefSQFrame0 (PrimitiveRecordRefSQ expression, Environment environment)
+            : base (expression, environment)
+        {
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
 }

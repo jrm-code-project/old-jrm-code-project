@@ -7,7 +7,6 @@ namespace Microcode
     class PCondIsBigFixnum : PCond1
     {
 #if DEBUG
-        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
         static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
@@ -16,16 +15,6 @@ namespace Microcode
         protected PCondIsBigFixnum (PrimitiveIsBigFixnum predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-
-#if DEBUG
-            this.arg0Type = this.arg0.GetType ();
-#endif
-        }
-
-        static SCode SpecialMake (PrimitiveNot predicate, SCode consequent, SCode alternative)
-        {
-            Debug.WriteLine ("; Optimize (if (not ...)");
-            return Conditional.Make (predicate.Operand, alternative, consequent);
         }
 
         public static SCode Make (PrimitiveIsBigFixnum predicate, SCode consequent, SCode alternative)
@@ -45,7 +34,6 @@ namespace Microcode
 #if DEBUG
             Warm ();
             noteCalls (this.arg0);
-            procedureHistogram.Note (this.procedure);
             arg0TypeHistogram.Note (this.arg0Type);
 #endif
             Control unev0 = this.arg0;
@@ -113,7 +101,7 @@ namespace Microcode
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsBigFixnumL.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
@@ -262,7 +250,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsBigFixnumA0L.EvalStep");
 #endif
             object ev0 = environment.Argument0Value;
 
@@ -492,7 +480,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PCondIsBigFixnumA0SQ.EvalStep");
 #endif
             object ev0 = environment.Argument0Value;
 
@@ -522,28 +510,25 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
-            noteCalls (this.arg0);
+            Warm ("PCondIsBigFixnum");
 
 #endif
-            object ev0 = environment.Argument1Value;
 
-
-            if (!(ev0 is Int64)) {
-#if DEBUG
-                noteCalls (this.alternative);
-
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
+            if (environment.Argument1Value is Int64) {
 #if DEBUG
                 noteCalls (this.consequent);
 
 #endif
                 expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                noteCalls (this.alternative);
+
+#endif
+                expression = this.alternative;
                 answer = null;
                 return true;
             }
@@ -1113,8 +1098,7 @@ namespace Microcode
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ();
-            noteCalls (this.arg0);
+            Warm ("PCondIsBigFixnumL1.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))

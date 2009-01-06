@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Microcode
 {
-    class PCondIsRatnum : PCond1
+    class PCondIsSymbol : PCond1
     {
 #if DEBUG
         static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
@@ -14,20 +14,20 @@ namespace Microcode
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 #endif
 
-        protected PCondIsRatnum (PrimitiveIsRatnum predicate, SCode consequent, SCode alternative)
+        protected PCondIsSymbol (PrimitiveIsSymbol predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsSymbol predicate, SCode consequent, SCode alternative)
         {
             return
-                 (predicate is PrimitiveIsRatnumL) ? PCondIsRatnumL.Make ((PrimitiveIsRatnumL) predicate, consequent, alternative)
-                : (consequent is LexicalVariable) ? PCondIsRatnumSL.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsRatnumSQ.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsRatnumSSL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumSSQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnum (predicate, consequent, alternative);
+                 (predicate is PrimitiveIsSymbolL) ? PCondIsSymbolL.Make ((PrimitiveIsSymbolL) predicate, consequent, alternative)
+                : (consequent is LexicalVariable) ? PCondIsSymbolSL.Make (predicate, (LexicalVariable) consequent, alternative)
+                : (consequent is Quotation) ? PCondIsSymbolSQ.Make (predicate, (Quotation) consequent, alternative)
+                : (alternative is LexicalVariable) ? PCondIsSymbolSSL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolSSQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbol (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -44,14 +44,14 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsSymbolFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
@@ -73,13 +73,13 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumL : PCondIsRatnum
+    class PCondIsSymbolL : PCondIsSymbol
     {
         public readonly object predicateName;
         public readonly int predicateDepth;
         public readonly int predicateOffset;
 
-        protected PCondIsRatnumL (PrimitiveIsRatnumL predicate, SCode consequent, SCode alternative)
+        protected PCondIsSymbolL (PrimitiveIsSymbolL predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.predicateName = ((LexicalVariable) predicate.Operand).Name;
@@ -87,30 +87,30 @@ namespace Microcode
             this.predicateOffset = ((LexicalVariable) predicate.Operand).Offset;
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsSymbolL predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsRatnumA) ? PCondIsRatnumA.Make ((PrimitiveIsRatnumA) predicate, consequent, alternative)
-                : (predicate is PrimitiveIsRatnumL1) ? PCondIsRatnumL1.Make ((PrimitiveIsRatnumL1) predicate, consequent, alternative)
-                : (consequent is LexicalVariable) ? PCondIsRatnumLL.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsRatnumLQ.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsRatnumLSL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumLSQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumL (predicate, consequent, alternative);
+                (predicate is PrimitiveIsSymbolA) ? PCondIsSymbolA.Make ((PrimitiveIsSymbolA) predicate, consequent, alternative)
+                : (predicate is PrimitiveIsSymbolL1) ? PCondIsSymbolL1.Make ((PrimitiveIsSymbolL1) predicate, consequent, alternative)
+                : (consequent is LexicalVariable) ? PCondIsSymbolLL.Make (predicate, (LexicalVariable) consequent, alternative)
+                : (consequent is Quotation) ? PCondIsSymbolLQ.Make (predicate, (Quotation) consequent, alternative)
+                : (alternative is LexicalVariable) ? PCondIsSymbolLSL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolLSQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbolL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ("PCondIsRatnumL.EvalStep");
+            Warm ("PCondIsSymbolL.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
                 throw new NotImplementedException ();
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -130,36 +130,41 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA : PCondIsRatnumL
+    class PCondIsSymbolA : PCondIsSymbolL
     {
-        protected PCondIsRatnumA (PrimitiveIsRatnumA predicate, SCode consequent, SCode alternative)
+        protected PCondIsSymbolA (PrimitiveIsSymbolA predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumA predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsSymbolA predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsRatnumA0) ? PCondIsRatnumA0.Make ((PrimitiveIsRatnumA0) predicate, consequent, alternative)
-                : (predicate is PrimitiveIsRatnumA1) ? PCondIsRatnumA1.Make ((PrimitiveIsRatnumA1) predicate, consequent, alternative)
-                : (consequent is LexicalVariable) ? PCondIsRatnumAL.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsRatnumAQ.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsRatnumASL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumASQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumA (predicate, consequent, alternative);
+                (predicate is PrimitiveIsSymbolA0) ? PCondIsSymbolA0.Make ((PrimitiveIsSymbolA0) predicate, consequent, alternative)
+                : (predicate is PrimitiveIsSymbolA1) ? PCondIsSymbolA1.Make ((PrimitiveIsSymbolA1) predicate, consequent, alternative)
+                : (consequent is LexicalVariable) ? PCondIsSymbolAL.Make (predicate, (LexicalVariable) consequent, alternative)
+                : (consequent is Quotation) ? PCondIsSymbolAQ.Make (predicate, (Quotation) consequent, alternative)
+                : (alternative is LexicalVariable) ? PCondIsSymbolASL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolASQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbolA (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            #region EvalStepBody
 #if DEBUG
-            Warm ();
-
+            Warm ("PCondIsSymbolA.EvalStep");
 #endif
             object ev0 = environment.ArgumentValue (this.predicateOffset);
 
-
-            if (!(ev0 is Ratnum)) {
+            if (ev0 is Symbol) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -167,23 +172,12 @@ namespace Microcode
                 answer = null;
                 return true;
             }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            #endregion
-
         }
     }
 
-    class PCondIsRatnumA0 : PCondIsRatnumA
+    class PCondIsSymbolA0 : PCondIsSymbolA
     {
-        protected PCondIsRatnumA0 (PrimitiveIsRatnumA0 predicate, SCode consequent, SCode alternative)
+        protected PCondIsSymbolA0 (PrimitiveIsSymbolA0 predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
@@ -191,14 +185,14 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA0.EvalStep");
+            Warm ("PCondIsSymbolA0.EvalStep");
 #endif
 
             object ev0 = environment.Argument0Value;
 
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -216,24 +210,24 @@ namespace Microcode
             }
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, SCode consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolA0 predicate, SCode consequent, SCode alternative)
         {
             return
-       (consequent is LexicalVariable) ? PCondIsRatnumA0L.Make (predicate, (LexicalVariable) consequent, alternative)
-       : (consequent is Quotation) ? PCondIsRatnumA0Q.Make (predicate, (Quotation) consequent, alternative)
-       : (alternative is LexicalVariable) ? PCondIsRatnumA0SL.Make (predicate, consequent, (LexicalVariable) alternative)
-       : (alternative is Quotation) ? PCondIsRatnumA0SQ.Make (predicate, consequent, (Quotation) alternative)
-       : new PCondIsRatnumA0 (predicate, consequent, alternative);
+       (consequent is LexicalVariable) ? PCondIsSymbolA0L.Make (predicate, (LexicalVariable) consequent, alternative)
+       : (consequent is Quotation) ? PCondIsSymbolA0Q.Make (predicate, (Quotation) consequent, alternative)
+       : (alternative is LexicalVariable) ? PCondIsSymbolA0SL.Make (predicate, consequent, (LexicalVariable) alternative)
+       : (alternative is Quotation) ? PCondIsSymbolA0SQ.Make (predicate, consequent, (Quotation) alternative)
+       : new PCondIsSymbolA0 (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumA0L : PCondIsRatnumA0
+    class PCondIsSymbolA0L : PCondIsSymbolA0
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumA0L (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsSymbolA0L (PrimitiveIsSymbolA0 predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -241,23 +235,23 @@ namespace Microcode
             this.consequentOffset = consequent.Offset;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolA0 predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumA0LL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumA0LQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumA0L (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsSymbolA0LL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolA0LQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbolA0L (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA0L.EvalStep");
+            Warm ("PCondIsSymbolA0L.EvalStep");
 #endif
             object ev0 = environment.Argument0Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -274,15 +268,15 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA0LL : PCondIsRatnumA0L
+    class PCondIsSymbolA0LL : PCondIsSymbolA0L
     {
-        protected PCondIsRatnumA0LL (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsSymbolA0LL (PrimitiveIsSymbolA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA0LL (predicate, consequent, alternative);
+            return new PCondIsSymbolA0LL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -291,19 +285,19 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA0LQ : PCondIsRatnumA0L
+    class PCondIsSymbolA0LQ : PCondIsSymbolA0L
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumA0LQ (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsSymbolA0LQ (PrimitiveIsSymbolA0 predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, LexicalVariable consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolA0 predicate, LexicalVariable consequent, Quotation alternative)
         {
-            return new PCondIsRatnumA0LQ (predicate, consequent, alternative);
+            return new PCondIsSymbolA0LQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -314,7 +308,7 @@ namespace Microcode
             object ev0 = environment.Argument0Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -327,32 +321,32 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA0Q : PCondIsRatnumA0
+    class PCondIsSymbolA0Q : PCondIsSymbolA0
     {
         public readonly object consequentValue;
 
-        protected PCondIsRatnumA0Q (PrimitiveIsRatnumA0 predicate, Quotation consequent, SCode alternative)
+        protected PCondIsSymbolA0Q (PrimitiveIsSymbolA0 predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, Quotation consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolA0 predicate, Quotation consequent, SCode alternative)
         {
             return
-    (alternative is LexicalVariable) ? PCondIsRatnumA0QL.Make (predicate, consequent, (LexicalVariable) alternative)
-    : (alternative is Quotation) ? PCondIsRatnumA0QQ.Make (predicate, consequent, (Quotation) alternative)
-    : new PCondIsRatnumA0Q (predicate, consequent, alternative);
+    (alternative is LexicalVariable) ? PCondIsSymbolA0QL.Make (predicate, consequent, (LexicalVariable) alternative)
+    : (alternative is Quotation) ? PCondIsSymbolA0QQ.Make (predicate, consequent, (Quotation) alternative)
+    : new PCondIsSymbolA0Q (predicate, consequent, alternative);
 
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA0Q.EvalStep");
+            Warm ("PCondIsSymbolA0Q.EvalStep");
 #endif
             object ev0 = environment.Argument0Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -369,15 +363,15 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA0QL : PCondIsRatnumA0Q
+    class PCondIsSymbolA0QL : PCondIsSymbolA0Q
     {
-        protected PCondIsRatnumA0QL (PrimitiveIsRatnumA0 predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsSymbolA0QL (PrimitiveIsSymbolA0 predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, Quotation consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolA0 predicate, Quotation consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA0QL (predicate, consequent, alternative);
+            return new PCondIsSymbolA0QL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -388,12 +382,12 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA0QQ : PCondIsRatnumA0Q
+    class PCondIsSymbolA0QQ : PCondIsSymbolA0Q
     {
-        protected PCondIsRatnumA0QQ (PrimitiveIsRatnumA0 predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsSymbolA0QQ (PrimitiveIsSymbolA0 predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         { }
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, Quotation consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolA0 predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -407,7 +401,7 @@ namespace Microcode
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
                 return Sequence2.Make (predicate, consequent);
             }
-            return new PCondIsRatnumA0QQ (predicate, consequent, alternative);
+            return new PCondIsSymbolA0QQ (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -417,22 +411,22 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA0SL : PCondIsRatnumA0
+    class PCondIsSymbolA0SL : PCondIsSymbolA0
     {
         public readonly object alternativeName;
         public readonly int alternativeDepth;
         public readonly int alternativeOffset;
 
-        protected PCondIsRatnumA0SL (PrimitiveIsRatnumA0 predicate, SCode consequent, LexicalVariable alternative)
+        protected PCondIsSymbolA0SL (PrimitiveIsSymbolA0 predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeName = alternative.Name;
             this.alternativeDepth = alternative.Depth;
             this.alternativeOffset = alternative.Offset;
         }
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, SCode consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolA0 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA0SL (predicate, consequent, alternative);
+            return new PCondIsSymbolA0SL (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -442,7 +436,7 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
                 if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
                     throw new NotImplementedException ();
                 return false;
@@ -464,19 +458,19 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA0SQ : PCondIsRatnumA0
+    class PCondIsSymbolA0SQ : PCondIsSymbolA0
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumA0SQ (PrimitiveIsRatnumA0 predicate, SCode consequent, Quotation alternative)
+        protected PCondIsSymbolA0SQ (PrimitiveIsSymbolA0 predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA0 predicate, SCode consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolA0 predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumA0SQ (predicate, consequent, alternative);
+            return new PCondIsSymbolA0SQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -487,7 +481,7 @@ namespace Microcode
             object ev0 = environment.Argument0Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -503,22 +497,22 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA1 : PCondIsRatnumA
+    class PCondIsSymbolA1 : PCondIsSymbolA
     {
-        protected PCondIsRatnumA1 (PrimitiveIsRatnumA1 predicate, SCode consequent, SCode alternative)
+        protected PCondIsSymbolA1 (PrimitiveIsSymbolA1 predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA1.EvalStep");
+            Warm ("PCondIsSymbolA1.EvalStep");
 
 #endif
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 
@@ -538,24 +532,24 @@ namespace Microcode
             }
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, SCode consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolA1 predicate, SCode consequent, SCode alternative)
         {
             return
-                (consequent is LexicalVariable) ? PCondIsRatnumA1L.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsRatnumA1Q.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsRatnumA1SL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumA1SQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumA1 (predicate, consequent, alternative);
+                (consequent is LexicalVariable) ? PCondIsSymbolA1L.Make (predicate, (LexicalVariable) consequent, alternative)
+                : (consequent is Quotation) ? PCondIsSymbolA1Q.Make (predicate, (Quotation) consequent, alternative)
+                : (alternative is LexicalVariable) ? PCondIsSymbolA1SL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolA1SQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbolA1 (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumA1L : PCondIsRatnumA1
+    class PCondIsSymbolA1L : PCondIsSymbolA1
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumA1L (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsSymbolA1L (PrimitiveIsSymbolA1 predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -564,12 +558,12 @@ namespace Microcode
 
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolA1 predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumA1LL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumA1LQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumA1L (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsSymbolA1LL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolA1LQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbolA1L (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -580,7 +574,7 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument1Value;
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -600,15 +594,15 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA1LL : PCondIsRatnumA1L
+    class PCondIsSymbolA1LL : PCondIsSymbolA1L
     {
-        protected PCondIsRatnumA1LL (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsSymbolA1LL (PrimitiveIsSymbolA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA1LL (predicate, consequent, alternative);
+            return new PCondIsSymbolA1LL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -617,19 +611,19 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA1LQ : PCondIsRatnumA1L
+    class PCondIsSymbolA1LQ : PCondIsSymbolA1L
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumA1LQ (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsSymbolA1LQ (PrimitiveIsSymbolA1 predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, LexicalVariable consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolA1 predicate, LexicalVariable consequent, Quotation alternative)
         {
-            return new PCondIsRatnumA1LQ (predicate, consequent, alternative);
+            return new PCondIsSymbolA1LQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -640,7 +634,7 @@ namespace Microcode
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -653,30 +647,30 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA1Q : PCondIsRatnumA1
+    class PCondIsSymbolA1Q : PCondIsSymbolA1
     {
         public readonly object consequentValue;
-        protected PCondIsRatnumA1Q (PrimitiveIsRatnumA1 predicate, Quotation consequent, SCode alternative)
+        protected PCondIsSymbolA1Q (PrimitiveIsSymbolA1 predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, Quotation consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolA1 predicate, Quotation consequent, SCode alternative)
         {
             return
-    (alternative is LexicalVariable) ? PCondIsRatnumA1QL.Make (predicate, consequent, (LexicalVariable) alternative)
-    : (alternative is Quotation) ? PCondIsRatnumA1QQ.Make (predicate, consequent, (Quotation) alternative)
-    : new PCondIsRatnumA1Q (predicate, consequent, alternative);
+    (alternative is LexicalVariable) ? PCondIsSymbolA1QL.Make (predicate, consequent, (LexicalVariable) alternative)
+    : (alternative is Quotation) ? PCondIsSymbolA1QQ.Make (predicate, consequent, (Quotation) alternative)
+    : new PCondIsSymbolA1Q (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumA1Q.EvalStep");
+            Warm ("PCondIsSymbolA1Q.EvalStep");
 #endif
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -691,12 +685,12 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumA1QL : PCondIsRatnumA1Q
+    class PCondIsSymbolA1QL : PCondIsSymbolA1Q
     {
-        protected PCondIsRatnumA1QL (PrimitiveIsRatnumA1 predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsSymbolA1QL (PrimitiveIsSymbolA1 predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, Quotation quotation, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolA1 predicate, Quotation quotation, LexicalVariable alternative)
         {
 
             throw new NotImplementedException ();
@@ -709,12 +703,12 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA1QQ : PCondIsRatnumA1Q
+    class PCondIsSymbolA1QQ : PCondIsSymbolA1Q
     {
-        protected PCondIsRatnumA1QQ (PrimitiveIsRatnumA1 predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsSymbolA1QQ (PrimitiveIsSymbolA1 predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         { }
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, Quotation consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolA1 predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -738,22 +732,22 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA1SL : PCondIsRatnumA1
+    class PCondIsSymbolA1SL : PCondIsSymbolA1
     {
         public readonly object alternativeName;
         public readonly int alternativeDepth;
         public readonly int alternativeOffset;
 
-        protected PCondIsRatnumA1SL (PrimitiveIsRatnumA1 predicate, SCode consequent, LexicalVariable alternative)
+        protected PCondIsSymbolA1SL (PrimitiveIsSymbolA1 predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeName = alternative.Name;
             this.alternativeDepth = alternative.Depth;
             this.alternativeOffset = alternative.Offset;
         }
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, SCode consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolA1 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumA1SL (predicate, consequent, alternative);
+            return new PCondIsSymbolA1SL (predicate, consequent, alternative);
 
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -764,7 +758,7 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument1Value;
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
                 if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
                     throw new NotImplementedException ();
                 return false;
@@ -785,19 +779,19 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumA1SQ : PCondIsRatnumA1
+    class PCondIsSymbolA1SQ : PCondIsSymbolA1
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumA1SQ (PrimitiveIsRatnumA1 predicate, SCode consequent, Quotation alternative)
+        protected PCondIsSymbolA1SQ (PrimitiveIsSymbolA1 predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA1 predicate, SCode consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolA1 predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumA1SQ (predicate, consequent, alternative);
+            return new PCondIsSymbolA1SQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -808,7 +802,7 @@ namespace Microcode
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -824,13 +818,13 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumAL : PCondIsRatnumA
+    class PCondIsSymbolAL : PCondIsSymbolA
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumAL (PrimitiveIsRatnumA predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsSymbolAL (PrimitiveIsSymbolA predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -846,7 +840,7 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.predicateOffset);
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 
@@ -863,22 +857,22 @@ namespace Microcode
             #endregion
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA predicate, LexicalVariable consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolA predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumALL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumALQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumAL (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsSymbolALL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolALQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbolAL (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumAA : PCondIsRatnumAL
+    class PCondIsSymbolAA : PCondIsSymbolAL
     {
-        protected PCondIsRatnumAA (PrimitiveIsRatnumA predicate, Argument consequent, SCode alternative)
+        protected PCondIsSymbolAA (PrimitiveIsSymbolA predicate, Argument consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        static public SCode Make (PrimitiveIsRatnumA predicate, Argument consequent, SCode alternative)
+        static public SCode Make (PrimitiveIsSymbolA predicate, Argument consequent, SCode alternative)
         {
             throw new NotImplementedException ();
         }
@@ -889,12 +883,12 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumAL1 : PCondIsRatnumAL
+    class PCondIsSymbolAL1 : PCondIsSymbolAL
     {
-        protected PCondIsRatnumAL1 (PrimitiveIsRatnumA predicate, LexicalVariable1 consequent, SCode alternative)
+        protected PCondIsSymbolAL1 (PrimitiveIsSymbolA predicate, LexicalVariable1 consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         { }
-        static public SCode Make (PrimitiveIsRatnumA predicate, LexicalVariable1 consequent, SCode alternative)
+        static public SCode Make (PrimitiveIsSymbolA predicate, LexicalVariable1 consequent, SCode alternative)
         {
             throw new NotImplementedException ();
         }
@@ -904,12 +898,12 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumALL : PCondIsRatnumAL
+    class PCondIsSymbolALL : PCondIsSymbolAL
     {
-        protected PCondIsRatnumALL (PrimitiveIsRatnumA predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsSymbolALL (PrimitiveIsSymbolA predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
-        static public SCode Make (PrimitiveIsRatnumA predicate, LexicalVariable consequent, LexicalVariable alternative)
+        static public SCode Make (PrimitiveIsSymbolA predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
             throw new NotImplementedException ();
         }
@@ -919,12 +913,12 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumALQ : PCondIsRatnumAL
+    class PCondIsSymbolALQ : PCondIsSymbolAL
     {
-        protected PCondIsRatnumALQ (PrimitiveIsRatnumA predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsSymbolALQ (PrimitiveIsSymbolA predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         { }
-        static public SCode Make (PrimitiveIsRatnumA predicate, LexicalVariable consequent, Quotation alternative)
+        static public SCode Make (PrimitiveIsSymbolA predicate, LexicalVariable consequent, Quotation alternative)
         {
             throw new NotImplementedException ();
         }
@@ -934,11 +928,11 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumAQ : PCondIsRatnumA
+    class PCondIsSymbolAQ : PCondIsSymbolA
     {
         public readonly object consequentValue;
 
-        protected PCondIsRatnumAQ (PrimitiveIsRatnumA predicate, Quotation consequent, SCode alternative)
+        protected PCondIsSymbolAQ (PrimitiveIsSymbolA predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
@@ -953,7 +947,7 @@ namespace Microcode
             object ev0 = environment.ArgumentValue (this.predicateOffset);
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -969,18 +963,18 @@ namespace Microcode
 
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA predicate, Quotation consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolA predicate, Quotation consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumAQL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumAQQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumAQ (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsSymbolAQL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolAQQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbolAQ (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumAQL : PCondIsRatnumAQ
+    class PCondIsSymbolAQL : PCondIsSymbolAQ
     {
-        protected PCondIsRatnumAQL (PrimitiveIsRatnumA predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsSymbolAQL (PrimitiveIsSymbolA predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
         }
@@ -989,15 +983,15 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA predicate, Quotation consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolA predicate, Quotation consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumAQL (predicate, consequent, alternative);
+            return new PCondIsSymbolAQL (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumAQQ : PCondIsRatnumAQ
+    class PCondIsSymbolAQQ : PCondIsSymbolAQ
     {
-        protected PCondIsRatnumAQQ (PrimitiveIsRatnumA predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsSymbolAQQ (PrimitiveIsSymbolA predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
         }
@@ -1007,7 +1001,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal static SCode Make (PrimitiveIsRatnumA predicate, Quotation consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolA predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -1021,13 +1015,13 @@ namespace Microcode
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
                 return Sequence2.Make (predicate, consequent);
             }
-            return new PCondIsRatnumAQQ (predicate, consequent, alternative);
+            return new PCondIsSymbolAQQ (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumASL : PCondIsRatnumA
+    class PCondIsSymbolASL : PCondIsSymbolA
     {
-        protected PCondIsRatnumASL (PrimitiveIsRatnumA predicate, SCode consequent, SCode alternative)
+        protected PCondIsSymbolASL (PrimitiveIsSymbolA predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
@@ -1036,17 +1030,17 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal static PCondIsRatnumA Make (PrimitiveIsRatnumA predicate, SCode consequent, LexicalVariable lexicalVariable)
+        internal static PCondIsSymbolA Make (PrimitiveIsSymbolA predicate, SCode consequent, LexicalVariable lexicalVariable)
         {
             throw new NotImplementedException ();
         }
     }
 
-    class PCondIsRatnumASQ : PCondIsRatnumA
+    class PCondIsSymbolASQ : PCondIsSymbolA
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumASQ (PrimitiveIsRatnumA predicate, SCode consequent, Quotation alternative)
+        protected PCondIsSymbolASQ (PrimitiveIsSymbolA predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
@@ -1060,7 +1054,7 @@ namespace Microcode
             object ev0 = environment.ArgumentValue (predicateOffset);
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -1075,41 +1069,41 @@ namespace Microcode
             }
         }
 
-        internal static PCondIsRatnumA Make (PrimitiveIsRatnumA predicate, SCode consequent, Quotation alternative)
+        internal static PCondIsSymbolA Make (PrimitiveIsSymbolA predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumASQ (predicate, consequent, alternative);
+            return new PCondIsSymbolASQ (predicate, consequent, alternative);
         }
     }
 
-    class PCondIsRatnumL1 : PCondIsRatnumL
+    class PCondIsSymbolL1 : PCondIsSymbolL
     {
-        protected PCondIsRatnumL1 (PrimitiveIsRatnumL1 predicate, SCode consequent, SCode alternative)
+        protected PCondIsSymbolL1 (PrimitiveIsSymbolL1 predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumL1 predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsSymbolL1 predicate, SCode consequent, SCode alternative)
         {
             return
-       (consequent is LexicalVariable) ? PCondIsRatnumL1L.Make (predicate, (LexicalVariable) consequent, alternative)
-       : (consequent is Quotation) ? PCondIsRatnumL1Q.Make (predicate, (Quotation) consequent, alternative)
-       : (alternative is LexicalVariable) ? PCondIsRatnumL1SL.Make (predicate, consequent, (LexicalVariable) alternative)
-       : (alternative is Quotation) ? PCondIsRatnumL1SQ.Make (predicate, consequent, (Quotation) alternative)
-       : new PCondIsRatnumL1 (predicate, consequent, alternative);
+       (consequent is LexicalVariable) ? PCondIsSymbolL1L.Make (predicate, (LexicalVariable) consequent, alternative)
+       : (consequent is Quotation) ? PCondIsSymbolL1Q.Make (predicate, (Quotation) consequent, alternative)
+       : (alternative is LexicalVariable) ? PCondIsSymbolL1SL.Make (predicate, consequent, (LexicalVariable) alternative)
+       : (alternative is Quotation) ? PCondIsSymbolL1SQ.Make (predicate, consequent, (Quotation) alternative)
+       : new PCondIsSymbolL1 (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
             #region EvalStepBody
 #if DEBUG
-            Warm ("PCondIsRatnumL1.EvalStep");
+            Warm ("PCondIsSymbolL1.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
                 throw new NotImplementedException ();
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 
@@ -1131,13 +1125,13 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumL1L : PCondIsRatnumL1
+    class PCondIsSymbolL1L : PCondIsSymbolL1
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumL1L (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsSymbolL1L (PrimitiveIsSymbolL1 predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -1146,12 +1140,12 @@ namespace Microcode
 
         }
 
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolL1 predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumL1LL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumL1LQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumL1L (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsSymbolL1LL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolL1LQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbolL1L (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -1163,7 +1157,7 @@ namespace Microcode
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
                 throw new NotImplementedException ();
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 
@@ -1184,15 +1178,15 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumL1LL : PCondIsRatnumL1L
+    class PCondIsSymbolL1LL : PCondIsSymbolL1L
     {
-        protected PCondIsRatnumL1LL (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsSymbolL1LL (PrimitiveIsSymbolL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
 
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumL1LL (predicate, consequent, alternative);
+            return new PCondIsSymbolL1LL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1201,19 +1195,19 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumL1LQ : PCondIsRatnumL1L
+    class PCondIsSymbolL1LQ : PCondIsSymbolL1L
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumL1LQ (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsSymbolL1LQ (PrimitiveIsSymbolL1 predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, LexicalVariable consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolL1 predicate, LexicalVariable consequent, Quotation alternative)
         {
-            return new PCondIsRatnumL1LQ (predicate, consequent, alternative);
+            return new PCondIsSymbolL1LQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1224,7 +1218,7 @@ namespace Microcode
             object ev0 = environment.Argument1Value;
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 
                 answer = this.alternativeValue;
                 return false;
@@ -1237,32 +1231,32 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumL1Q : PCondIsRatnumL1
+    class PCondIsSymbolL1Q : PCondIsSymbolL1
     {
         public readonly object consequentValue;
 
-        protected PCondIsRatnumL1Q (PrimitiveIsRatnumL1 predicate, Quotation consequent, SCode alternative)
+        protected PCondIsSymbolL1Q (PrimitiveIsSymbolL1 predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, Quotation consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsSymbolL1 predicate, Quotation consequent, SCode alternative)
         {
             return
-    (alternative is LexicalVariable) ? PCondIsRatnumL1QL.Make (predicate, consequent, (LexicalVariable) alternative)
-    : (alternative is Quotation) ? PCondIsRatnumL1QQ.Make (predicate, consequent, (Quotation) alternative)
-    : new PCondIsRatnumL1Q (predicate, consequent, alternative);
+    (alternative is LexicalVariable) ? PCondIsSymbolL1QL.Make (predicate, consequent, (LexicalVariable) alternative)
+    : (alternative is Quotation) ? PCondIsSymbolL1QQ.Make (predicate, consequent, (Quotation) alternative)
+    : new PCondIsSymbolL1Q (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnum.EvalStep");
+            Warm ("PCondIsSymbol.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
                 throw new NotImplementedException ();
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -1277,12 +1271,12 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumL1QL : PCondIsRatnumL1Q
+    class PCondIsSymbolL1QL : PCondIsSymbolL1Q
     {
-        protected PCondIsRatnumL1QL (PrimitiveIsRatnumL1 predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsSymbolL1QL (PrimitiveIsSymbolL1 predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, Quotation quotation, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolL1 predicate, Quotation quotation, LexicalVariable alternative)
         {
 
             throw new NotImplementedException ();
@@ -1295,12 +1289,12 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumL1QQ : PCondIsRatnumL1Q
+    class PCondIsSymbolL1QQ : PCondIsSymbolL1Q
     {
-        protected PCondIsRatnumL1QQ (PrimitiveIsRatnumL1 predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsSymbolL1QQ (PrimitiveIsSymbolL1 predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         { }
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, Quotation consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolL1 predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -1314,7 +1308,7 @@ namespace Microcode
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
                 return Sequence2.Make (predicate, consequent);
             }
-            return new PCondIsRatnumL1QQ (predicate, consequent, alternative);
+            return new PCondIsSymbolL1QQ (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -1324,14 +1318,14 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumL1SL : PCondIsRatnumL1
+    class PCondIsSymbolL1SL : PCondIsSymbolL1
     {
-        protected PCondIsRatnumL1SL (PrimitiveIsRatnumL1 predicate, SCode consequent, LexicalVariable alternative)
+        protected PCondIsSymbolL1SL (PrimitiveIsSymbolL1 predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         { }
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, SCode consequent, LexicalVariable alternative)
+        internal static SCode Make (PrimitiveIsSymbolL1 predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumL1SL (predicate, consequent, alternative);
+            return new PCondIsSymbolL1SL (predicate, consequent, alternative);
 
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1342,19 +1336,19 @@ namespace Microcode
 
     }
 
-    class PCondIsRatnumL1SQ : PCondIsRatnumL1
+    class PCondIsSymbolL1SQ : PCondIsSymbolL1
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumL1SQ (PrimitiveIsRatnumL1 predicate, SCode consequent, Quotation alternative)
+        protected PCondIsSymbolL1SQ (PrimitiveIsSymbolL1 predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        internal static SCode Make (PrimitiveIsRatnumL1 predicate, SCode consequent, Quotation alternative)
+        internal static SCode Make (PrimitiveIsSymbolL1 predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumL1SQ (predicate, consequent, alternative);
+            return new PCondIsSymbolL1SQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1369,7 +1363,7 @@ namespace Microcode
                 throw new NotImplementedException ();
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
                 answer = this.alternativeValue;
                 return false;
             }
@@ -1387,19 +1381,19 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumLL : PCondIsRatnumL
+    class PCondIsSymbolLL : PCondIsSymbolL
     {
-        protected PCondIsRatnumLL (PrimitiveIsRatnumL predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsSymbolLL (PrimitiveIsSymbolL predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, LexicalVariable consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsSymbolL predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumLLL.Make (predicate, consequent, alternative)
-                : (alternative is Quotation) ? PCondIsRatnumLLQ.Make (predicate, consequent, alternative)
-                : new PCondIsRatnumLL (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsSymbolLLL.Make (predicate, consequent, alternative)
+                : (alternative is Quotation) ? PCondIsSymbolLLQ.Make (predicate, consequent, alternative)
+                : new PCondIsSymbolLL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1408,16 +1402,16 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumLLL : PCondIsRatnumLL
+    class PCondIsSymbolLLL : PCondIsSymbolLL
     {
-        protected PCondIsRatnumLLL (PrimitiveIsRatnumL predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsSymbolLLL (PrimitiveIsSymbolL predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, LexicalVariable consequent, LexicalVariable alternative)
+        public static SCode Make (PrimitiveIsSymbolL predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumLLL (predicate, consequent, alternative);
+            return new PCondIsSymbolLLL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1426,16 +1420,16 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumLLQ : PCondIsRatnumLL
+    class PCondIsSymbolLLQ : PCondIsSymbolLL
     {
-        protected PCondIsRatnumLLQ (PrimitiveIsRatnumL predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsSymbolLLQ (PrimitiveIsSymbolL predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, LexicalVariable consequent, Quotation alternative)
+        public static SCode Make (PrimitiveIsSymbolL predicate, LexicalVariable consequent, Quotation alternative)
         {
-            return new PCondIsRatnumLLQ (predicate, consequent, alternative);
+            return new PCondIsSymbolLLQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1444,35 +1438,35 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumLQ : PCondIsRatnumL
+    class PCondIsSymbolLQ : PCondIsSymbolL
     {
         protected readonly object consequentValue;
 
-        protected PCondIsRatnumLQ (PrimitiveIsRatnumL predicate, Quotation consequent, SCode alternative)
+        protected PCondIsSymbolLQ (PrimitiveIsSymbolL predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, Quotation consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsSymbolL predicate, Quotation consequent, SCode alternative)
         {
             return
-              (alternative is LexicalVariable) ? PCondIsRatnumLQL.Make (predicate, consequent, (LexicalVariable) alternative)
-              : (alternative is Quotation) ? PCondIsRatnumLQQ.Make (predicate, consequent, (Quotation) alternative)
-              : new PCondIsRatnumLQ (predicate, consequent, alternative);
+              (alternative is LexicalVariable) ? PCondIsSymbolLQL.Make (predicate, consequent, (LexicalVariable) alternative)
+              : (alternative is Quotation) ? PCondIsSymbolLQQ.Make (predicate, consequent, (Quotation) alternative)
+              : new PCondIsSymbolLQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsRatnumLQ.EvalStep");
+            Warm ("PCondIsSymbolLQ.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
                 throw new NotImplementedException ();
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -1487,16 +1481,16 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumLQL : PCondIsRatnumLQ
+    class PCondIsSymbolLQL : PCondIsSymbolLQ
     {
-        protected PCondIsRatnumLQL (PrimitiveIsRatnumL predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsSymbolLQL (PrimitiveIsSymbolL predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, Quotation consequent, LexicalVariable alternative)
+        public static SCode Make (PrimitiveIsSymbolL predicate, Quotation consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumLQL (predicate, consequent, alternative);
+            return new PCondIsSymbolLQL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1505,14 +1499,14 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumLQQ : PCondIsRatnumLQ
+    class PCondIsSymbolLQQ : PCondIsSymbolLQ
     {
-        protected PCondIsRatnumLQQ (PrimitiveIsRatnumL predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsSymbolLQQ (PrimitiveIsSymbolL predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, Quotation consequent, Quotation alternative)
+        public static SCode Make (PrimitiveIsSymbolL predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -1526,7 +1520,7 @@ namespace Microcode
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
                 return Sequence2.Make (predicate, consequent);
             }
-            return new PCondIsRatnumLQQ (predicate, consequent, alternative);
+            return new PCondIsSymbolLQQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1535,16 +1529,16 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumLSL : PCondIsRatnumL
+    class PCondIsSymbolLSL : PCondIsSymbolL
     {
-        protected PCondIsRatnumLSL (PrimitiveIsRatnumL predicate, SCode consequent, LexicalVariable alternative)
+        protected PCondIsSymbolLSL (PrimitiveIsSymbolL predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, SCode consequent, LexicalVariable alternative)
+        public static SCode Make (PrimitiveIsSymbolL predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumLSL (predicate, consequent, alternative);
+            return new PCondIsSymbolLSL (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1553,19 +1547,19 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumLSQ : PCondIsRatnumL
+    class PCondIsSymbolLSQ : PCondIsSymbolL
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumLSQ (PrimitiveIsRatnumL predicate, SCode consequent, Quotation alternative)
+        protected PCondIsSymbolLSQ (PrimitiveIsSymbolL predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        public static SCode Make (PrimitiveIsRatnumL predicate, SCode consequent, Quotation alternative)
+        public static SCode Make (PrimitiveIsSymbolL predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumLSQ (predicate, consequent, alternative);
+            return new PCondIsSymbolLSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1579,7 +1573,7 @@ namespace Microcode
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
                 throw new NotImplementedException ();
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
                 answer = this.alternativeValue;
                 return false;
             }
@@ -1597,13 +1591,13 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSL : PCondIsRatnum
+    class PCondIsSymbolSL : PCondIsSymbol
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
         public readonly int consequentOffset;
 
-        protected PCondIsRatnumSL (PrimitiveIsRatnum predicate, LexicalVariable consequent, SCode alternative)
+        protected PCondIsSymbolSL (PrimitiveIsSymbol predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentName = consequent.Name;
@@ -1611,12 +1605,12 @@ namespace Microcode
             this.consequentOffset = consequent.Offset;
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, LexicalVariable consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsSymbol predicate, LexicalVariable consequent, SCode alternative)
         {
             return
-     (alternative is LexicalVariable) ? PCondIsRatnumSLL.Make (predicate, consequent, (LexicalVariable) alternative)
-     : (alternative is Quotation) ? PCondIsRatnumSLQ.Make (predicate, consequent, (Quotation) alternative)
-     : new PCondIsRatnumSL (predicate, consequent, alternative);
+     (alternative is LexicalVariable) ? PCondIsSymbolSLL.Make (predicate, consequent, (LexicalVariable) alternative)
+     : (alternative is Quotation) ? PCondIsSymbolSLQ.Make (predicate, consequent, (Quotation) alternative)
+     : new PCondIsSymbolSL (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -1631,14 +1625,14 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsSymbolFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -1655,16 +1649,16 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSLL : PCondIsRatnumSL
+    class PCondIsSymbolSLL : PCondIsSymbolSL
     {
 
-        protected PCondIsRatnumSLL (PrimitiveIsRatnum predicate, LexicalVariable consequent, LexicalVariable alternative)
+        protected PCondIsSymbolSLL (PrimitiveIsSymbol predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
 
-        public static SCode Make (PrimitiveIsRatnum predicate, LexicalVariable consequent, LexicalVariable alternative)
+        public static SCode Make (PrimitiveIsSymbol predicate, LexicalVariable consequent, LexicalVariable alternative)
         {
             throw new NotImplementedException ();
         }
@@ -1675,21 +1669,21 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSLQ : PCondIsRatnumSL
+    class PCondIsSymbolSLQ : PCondIsSymbolSL
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumSLQ (PrimitiveIsRatnum predicate, LexicalVariable consequent, Quotation alternative)
+        protected PCondIsSymbolSLQ (PrimitiveIsSymbol predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
 
-        public static SCode Make (PrimitiveIsRatnum predicate, LexicalVariable consequent, Quotation alternative)
+        public static SCode Make (PrimitiveIsSymbol predicate, LexicalVariable consequent, Quotation alternative)
         {
 
-            return new PCondIsRatnumSLQ (predicate, consequent, alternative);
+            return new PCondIsSymbolSLQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1704,14 +1698,14 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsSymbolFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
                 answer = this.alternativeValue;
                 return false;
             }
@@ -1723,22 +1717,22 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSQ : PCondIsRatnum
+    class PCondIsSymbolSQ : PCondIsSymbol
     {
         public readonly object consequentValue;
 
-        protected PCondIsRatnumSQ (PrimitiveIsRatnum predicate, Quotation consequent, SCode alternative)
+        protected PCondIsSymbolSQ (PrimitiveIsSymbol predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, Quotation consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsSymbol predicate, Quotation consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsRatnumSQL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsRatnumSQQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsRatnumSQ (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsSymbolSQL.Make (predicate, consequent, (LexicalVariable) alternative)
+                : (alternative is Quotation) ? PCondIsSymbolSQQ.Make (predicate, consequent, (Quotation) alternative)
+                : new PCondIsSymbolSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1753,14 +1747,14 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsSymbolFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -1775,15 +1769,15 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSQL : PCondIsRatnumSQ
+    class PCondIsSymbolSQL : PCondIsSymbolSQ
     {
-        protected PCondIsRatnumSQL (PrimitiveIsRatnum predicate, Quotation consequent, LexicalVariable alternative)
+        protected PCondIsSymbolSQL (PrimitiveIsSymbol predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
 
-        public static SCode Make (PrimitiveIsRatnum predicate, Quotation consequent, LexicalVariable alternative)
+        public static SCode Make (PrimitiveIsSymbol predicate, Quotation consequent, LexicalVariable alternative)
         {
             throw new NotImplementedException ();
         }
@@ -1794,18 +1788,18 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSQQ : PCondIsRatnumSQ
+    class PCondIsSymbolSQQ : PCondIsSymbolSQ
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumSQQ (PrimitiveIsRatnum predicate, Quotation consequent, Quotation alternative)
+        protected PCondIsSymbolSQQ (PrimitiveIsSymbol predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
 
-        public static SCode Make (PrimitiveIsRatnum predicate, Quotation consequent, Quotation alternative)
+        public static SCode Make (PrimitiveIsSymbol predicate, Quotation consequent, Quotation alternative)
         {
             if (consequent.Quoted == alternative.Quoted) {
                 Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
@@ -1820,7 +1814,7 @@ namespace Microcode
                 return Sequence2.Make (predicate, consequent);
             }
 
-            return new PCondIsRatnumSQQ (predicate, consequent, alternative);
+            return new PCondIsSymbolSQQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1836,14 +1830,14 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsSymbolFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
                 answer = this.alternativeValue;
                 return false;
             }
@@ -1855,13 +1849,13 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSSL : PCondIsRatnum
+    class PCondIsSymbolSSL : PCondIsSymbol
     {
         public readonly object alternativeName;
         public readonly int alternativeDepth;
         public readonly int alternativeOffset;
 
-        protected PCondIsRatnumSSL (PrimitiveIsRatnum predicate, SCode consequent, LexicalVariable alternative)
+        protected PCondIsSymbolSSL (PrimitiveIsSymbol predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeName = alternative.Name;
@@ -1869,9 +1863,9 @@ namespace Microcode
             this.alternativeOffset = alternative.Offset;
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, SCode consequent, LexicalVariable alternative)
+        public static SCode Make (PrimitiveIsSymbol predicate, SCode consequent, LexicalVariable alternative)
         {
-            return new PCondIsRatnumSSL (predicate, consequent, alternative);
+            return new PCondIsSymbolSSL (predicate, consequent, alternative);
         }
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
@@ -1885,7 +1879,7 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsSymbolFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
@@ -1893,7 +1887,7 @@ namespace Microcode
 
 
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
                 if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
                     throw new NotImplementedException ();
                 return false;
@@ -1909,19 +1903,19 @@ namespace Microcode
         }
     }
 
-    class PCondIsRatnumSSQ : PCondIsRatnum
+    class PCondIsSymbolSSQ : PCondIsSymbol
     {
         public readonly object alternativeValue;
 
-        protected PCondIsRatnumSSQ (PrimitiveIsRatnum predicate, SCode consequent, Quotation alternative)
+        protected PCondIsSymbolSSQ (PrimitiveIsSymbol predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
         }
 
-        public static SCode Make (PrimitiveIsRatnum predicate, SCode consequent, Quotation alternative)
+        public static SCode Make (PrimitiveIsSymbol predicate, SCode consequent, Quotation alternative)
         {
-            return new PCondIsRatnumSSQ (predicate, consequent, alternative);
+            return new PCondIsSymbolSSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1936,13 +1930,13 @@ namespace Microcode
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsRatnumFrame0 (this, environment));
+                //((UnwinderState) env).AddFrame (new PrimitiveIsSymbolFrame0 (this, environment));
                 //answer = Interpreter.UnwindStack;
                 //environment = env;
                 //return false;
             }
 
-            if (!(ev0 is Ratnum)) {
+            if (!(ev0 is Symbol)) {
                 answer = this.alternativeValue;
                 return false;
             }

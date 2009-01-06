@@ -104,6 +104,27 @@ namespace Microcode
             return result;
         }
 
+        // Too important to be interpreted
+        [SchemePrimitive ("ASSQ", 2, false)]
+        public static bool Assq (out object answer, object arg0, object arg1)
+        {
+            if (arg0 == null ||
+                arg0 is bool ||
+                arg0 is int ||
+                arg0 is char ||
+                arg0 is long)
+                throw new NotImplementedException ();
+            for (Cons tail = (Cons) arg1; tail != null; tail = (Cons) tail.Cdr) {
+                Cons entry = (Cons) tail.Car;
+                if (entry.Car == arg0) {
+                    answer = entry;
+                    return false;
+                }
+            }
+            answer = false;
+            return false;
+        }
+
         [SchemePrimitive ("CAR", 1 ,false)]
         public static bool PrimitiveCar (out object answer, object arg0)
         {
@@ -127,10 +148,7 @@ namespace Microcode
                 Cons pair = result as Cons;
                 if (pair == null)
                     throw new NotImplementedException ();
-                if ((pattern & 0x01) == 0x01)
-                    result = pair.Car;
-                else
-                    result = pair.Cdr;
+                result = ((pattern & 0x01) == 0x01) ? pair.Car : pair.Cdr;
                 pattern >>= 1;
             }
             answer = result;

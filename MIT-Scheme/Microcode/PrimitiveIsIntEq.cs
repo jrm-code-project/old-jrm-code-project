@@ -358,11 +358,11 @@ namespace Microcode
         }
     }
 
-    class PrimitiveIsIntEqSQ : PrimitiveIsIntEq
+    sealed class PrimitiveIsIntEqSQ : PrimitiveIsIntEq
     {
         public readonly int rand1Value;
 
-        protected PrimitiveIsIntEqSQ (Primitive2 rator, SCode rand0, Quotation rand1)
+        PrimitiveIsIntEqSQ (Primitive2 rator, SCode rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value = (int) rand1.Quoted;
@@ -379,7 +379,15 @@ namespace Microcode
 #if DEBUG
             Warm ("PrimitiveIsIntEqSQ.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            object ev0;
+            Control unev = this.rand0;
+            Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsIntEqSQ.EvalStep";
+#endif
+            answer = ((int) ev0 == this.rand1Value) ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
     }
 

@@ -17,7 +17,7 @@ namespace Microcode
         [SchemePrimitive ("STRING->SYMBOL", 1, false)]
         public static bool StringToSymbol (ref object result, object arg)
         {
-            result = String.Intern (new String ((char []) arg));
+            result = Symbol.Make (new String ((char []) arg));
             return false;
         }
 
@@ -25,6 +25,15 @@ namespace Microcode
         public static bool StringAllocate (out object answer, object arg)
         {
             answer = new char [(int) arg];
+            return false;
+        }
+
+        [SchemePrimitive ("STRING-HASH", 1, false)]
+        public static bool StringHashMod (out object answer, object str)
+        {
+            int tmp = new string ((char []) str).GetHashCode ();
+            if (tmp < 0) tmp = -tmp;
+            answer = tmp;
             return false;
         }
 

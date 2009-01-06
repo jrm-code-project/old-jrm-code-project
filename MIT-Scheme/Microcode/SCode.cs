@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
@@ -18,6 +20,7 @@ namespace Microcode
             this.callee = callee;
         }
 
+        [DebuggerStepThrough]
         public static TypePair Make (Type caller, Type callee)
         {
             Dictionary <Type, TypePair> subtable;
@@ -51,11 +54,17 @@ namespace Microcode
 
         public static void TopOfStackProbe (object ignore)
         {
-            topOfStack.Note (location);
+            string loc = location;
+            if (loc != "-")
+                topOfStack.Note (loc);
         }
 
+        [DebuggerStepThrough]
         protected void noteCalls (SCode callee)
         {
+            string oldLocation = SCode.location;
+            SCode.location = "-";
+
             Type callerType = this.GetType ();
             Type calleeType = callee.GetType ();
 //            if (callee is Argument0
@@ -76,6 +85,7 @@ namespace Microcode
             }
             histogram.Note (callerType);
             callTable.Note (TypePair.Make (callerType, calleeType));
+            SCode.location = oldLocation;
         }
 
         protected void Warm ()
@@ -83,6 +93,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
+        [DebuggerStepThrough]
         protected void Warm (String location)
         {
             SCode.location = "-";
@@ -103,8 +114,8 @@ namespace Microcode
 	// Abstract functions that define the SCode API
         public abstract SCode Bind (LexicalMap ctenv);
         public abstract bool CallsTheEnvironment ();
-        public abstract bool MutatesAny (object [] formals);
-        public abstract SCode Substitute (object name, object newObject);
+        public abstract bool MutatesAny (Symbol [] formals);
+        public abstract bool Uses (Symbol formal);
 
 #if DEBUG
         // for hash consing
@@ -132,6 +143,7 @@ namespace Microcode
                 || obj is Ratnum
                 || obj is ReferenceTrap
                 || obj is ReturnCode
+                || obj is Symbol
                 ;
         }
 
@@ -202,7 +214,12 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Uses (Symbol formal)
         {
             throw new NotImplementedException ();
         }
@@ -247,40 +264,35 @@ namespace Microcode
 
         #endregion
 
-
-        public override SCode Substitute (object name, object newObject)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
      [Serializable]
     sealed class Definition : SCode, ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly object name;
+        readonly Symbol name;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode value;
 
-        public Definition (object name, SCode value)
+        public Definition (Symbol name, SCode value)
             : base (TC.DEFINITION)
         {
-            if (name == null) throw new ArgumentNullException ("varname");
+            if (name == null) throw new ArgumentNullException ("ratorName");
             if (value == null) throw new ArgumentNullException ("value");
             this.name = name;
             this.value = value;
         }
 
-        public Definition (object name, object value)
+        public Definition (Symbol name, object value)
             :base (TC.DEFINITION)
         {
-            if (name == null) throw new ArgumentNullException ("varname");
+            if (name == null) throw new ArgumentNullException ("ratorName");
             this.name = name;
             this.value = EnsureSCode (value);
         }
 
-        public object Name
+        public Symbol Name
         {
             [DebuggerStepThrough]
             get
@@ -325,7 +337,7 @@ namespace Microcode
             Environment env = environment;
             while (expr.EvalStep (out value, ref expr, ref env)) { };
 #if DEBUG
-            SCode.location = "Definition.EvalStep.1";
+            SCode.location = "Definition.EvalStep";
 #endif
             if (value == Interpreter.UnwindStack) throw new NotImplementedException();
             if (environment.Define (this.name, value)) throw new NotImplementedException ();
@@ -333,7 +345,12 @@ namespace Microcode
             return false;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Uses (Symbol formal)
         {
             throw new NotImplementedException ();
         }
@@ -373,15 +390,10 @@ namespace Microcode
 
         #endregion
 
-
-        public override SCode Substitute (object name, object newObject)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
-    sealed class Delay : SCode
+    sealed class Delay : SCode, ISystemPair
     {
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
         readonly SCode body;
@@ -390,6 +402,12 @@ namespace Microcode
             : base (TC.DELAY)
         {
             this.body = EnsureSCode(body);
+        }
+
+        public Delay (object body, object other)
+            : base (TC.DELAY)
+        {
+            this.body = EnsureSCode (body);
         }
 
         [SchemePrimitive ("DELAY?", 1, true)]
@@ -418,15 +436,43 @@ namespace Microcode
             return false;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             return this.body.MutatesAny (formals);
         }
 
-        public override SCode Substitute (object name, object newObject)
+        public override bool Uses (Symbol formal)
         {
-            throw new NotImplementedException ();
+            return this.body.Uses (formal);
         }
+
+        #region ISystemPair Members
+
+        public object SystemPairCar
+        {
+            get
+            {
+                return this.body;
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemPairCdr
+        {
+            get
+            {
+                throw new NotImplementedException ();
+            }
+            set
+            {
+                throw new NotImplementedException ();
+            }
+        }
+
+        #endregion
     }
 
     [Serializable]
@@ -515,7 +561,6 @@ namespace Microcode
             }
         }
 
-
         public static Quotation Unassigned
         {
             get
@@ -545,7 +590,12 @@ namespace Microcode
             return false;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
+        {
+            return false;
+        }
+
+        public override bool Uses (Symbol formal)
         {
             return false;
         }
@@ -577,20 +627,17 @@ namespace Microcode
         }
 
         #endregion
-
-        public override SCode Substitute (object name, object newObject)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
-    class Sequence2 : SCode, ISystemPair
+    class Sequence2 : SCode, ISerializable, ISystemPair
     {
 #if DEBUG
-        static public Histogram<Type> firstTypeHistogram = new Histogram<Type>();
+        static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
         static public Histogram<Type> secondTypeHistogram = new Histogram<Type> ();
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public Type firstType;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public Type secondType;
 #endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -602,65 +649,67 @@ namespace Microcode
         protected Sequence2 (SCode first, SCode second)
             : base (TC.SEQUENCE_2)
         {
-            if (first == null)
-                throw new ArgumentNullException ("first");
-            if (second == null)
-                throw new ArgumentNullException ("second");
             this.first = first;
             this.second = second;
 #if DEBUG
-            this.firstType = first.GetType();
-            this.secondType = second.GetType();
+            this.firstType = first.GetType ();
+            this.secondType = second.GetType ();
 #endif
         }
 
-        static SCode SpecialMake (LexicalVariable first, SCode second)
+        static SCode SwapConditional (Conditional first, SCode second)
         {
-            //Debug.WriteLine ("; Optimize (begin <variable> <expr>) => <expr>");
-            return second;
+            //Debug.Write ("\n; Sequence2.SwapConditional");
+            return Conditional.Make (first.Predicate,
+                                    Sequence2.Make (first.Consequent, second),
+                                    Sequence2.Make (first.Alternative, second));
+        }
+
+        static SCode Flatten (SCode first, Sequence2 second)
+        {
+            //Debug.Write ("\n; Sequence2.Flatten(a)");
+            return Sequence3.Make (first, second.First, second.Second);
+        }
+
+        static SCode Flatten (Sequence2 first, SCode second)
+        {
+            //Debug.Write ("\n; Sequence2.Flatten(b)");
+            return Sequence3.Make (first.First, first.Second, second);
+        }
+
+        static SCode Flatten (Sequence3 first, SCode second)
+        {
+            //Debug.Write ("\n; Sequence2.Flatten(c)");
+            return Sequence2.Make (first.First, 
+                        Sequence3.Make (first.Second, 
+                                        first.Third, second));
         }
 
         static public SCode Make (SCode first, SCode second)
         {
-            if (first is Argument)
-                throw new NotImplementedException ();
-            if (first is Sequence2) {
-                //Debug.WriteLine ("; Rewrite (begin (begin <expr1> <expr2>) <expr3>) => (begin <expr1> (begin <expr2> <expr3>))");
-                return Sequence3.Make (((Sequence2) first).First,
-                                       ((Sequence2) first).Second,
-                                       second);
-            }
-            if (first is Sequence3) {
-               // Debug.WriteLine ("; Rewrite (begin (begin <expr1> <expr2> <expr3>) <expr4>) => (begin <expr1> <expr2> (begin <expr3> <expr4>))");
-                return Sequence3.Make (((Sequence3) first).First,
-                                       ((Sequence3) first).Second,
-                                       Sequence2.Make (((Sequence3) first).Third, second));
-            }
-            else if (second is Sequence2) {
-               // Debug.WriteLine ("; Rewrite (begin <expr1> (begin <expr2> <expr3>)) => (begin <expr1> <expr2> <expr3>)");
-                return Sequence3.Make (first,
-                                       ((Sequence2) second).First,
-                                       ((Sequence2) second).Second);
-            }
-            else if (second is Sequence3) {
-                //Debug.WriteLine ("; Rewrite (begin <expr1> (begin <expr2> <expr3> <expr4>)) => (begin <expr1> <expr2> (begin <expr3> <expr4>))");
-                return Sequence3.Make (first,
-                                       ((Sequence3) second).First,
-                                       Sequence2.Make (((Sequence3) second).Second,
-                                                       ((Sequence3) second).Third));
-            }
-            else if (first is Conditional) {
-                return Conditional.Make (((Conditional) first).Predicate,
-                                         Sequence2.Make (((Conditional) first).Consequent, second),
-                                         Sequence2.Make (((Conditional) first).Alternative, second));
-            }
-
             return
-                (Configuration.EnableSuperOperators && first is LexicalVariable) ? SpecialMake ((LexicalVariable) first, second)
-                : (Configuration.EnableSuperOperators && first is Quotation) ? Sequence2Q.Make ((Quotation) first, second)
-                : (Configuration.EnableSuperOperators && second is LexicalVariable) ? Sequence2SL.Make (first, (LexicalVariable) second)
-                : (Configuration.EnableSuperOperators && second is Quotation) ? Sequence2SQ.Make (first, (Quotation) second)
-                : new Sequence2 (first, second);
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableSequenceConditionalSwap &&
+                 first is Conditional) ? SwapConditional ((Conditional) first, second) :
+                (Configuration.EnableSuperOperators && 
+                 first is LexicalVariable) ? Sequence2L.Make ((LexicalVariable) first, second) :
+                (Configuration.EnableSuperOperators && 
+                 Configuration.EnableSequenceSpecialization &&
+                 first is Quotation) ? Sequence2Q.Make ((Quotation) first, second) :
+               (Configuration.EnableCodeRewriting &&
+                first is Sequence2) ? Flatten ((Sequence2) first, second) :
+               (Configuration.EnableCodeRewriting &&
+                first is Sequence3) ? Flatten ((Sequence3) first, second) :
+                (Configuration.EnableSuperOperators &&
+                Configuration.EnableSequenceSpecialization &&
+                second is LexicalVariable) ? Sequence2SL.Make (first, (LexicalVariable) second) :
+                (Configuration.EnableSuperOperators &&
+                 Configuration.EnableSequenceSpecialization &&
+                second is Quotation) ? Sequence2SQ.Make (first, (Quotation) second) :
+                (Configuration.EnableCodeRewriting &&
+                second is Sequence2) ? Flatten (first, (Sequence2) second) :
+
+                new Sequence2 (first, second);
         }
 
         static public SCode Make (object first, object second)
@@ -723,25 +772,43 @@ namespace Microcode
             Environment env = environment;
             while (first.EvalStep (out ev, ref first, ref env)) { };
 #if DEBUG
-                        SCode.location = "Sequence2.EvalStep.1";
+            SCode.location = "Sequence2.EvalStep";
 #endif
             if (ev == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
                 environment = env;
                 answer = Interpreter.UnwindStack;
                 return false;
-            } 
+            }
 
             expression = this.second;
             answer = null;
             return true; //tailcall  to second
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             return this.first.MutatesAny (formals)
                 || this.second.MutatesAny (formals);
         }
+
+        public override bool Uses (Symbol formal)
+        {
+            return this.first.Uses (formal) ||
+                   this.second.Uses (formal);
+        }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (Sequence2Deserializer));
+            info.AddValue ("first", this.first);
+            info.AddValue ("second", this.second);
+        }
+
+        #endregion
 
         #region ISystemPair Members
 
@@ -750,7 +817,7 @@ namespace Microcode
         {
             get
             {
-                return UnwrapQuoted(this.first) ;
+                return UnwrapQuoted (this.first);
             }
             set
             {
@@ -763,7 +830,7 @@ namespace Microcode
         {
             get
             {
-                return UnwrapQuoted(this.second);
+                return UnwrapQuoted (this.second);
             }
             set
             {
@@ -773,9 +840,60 @@ namespace Microcode
 
         #endregion
 
-        public override SCode Substitute (object name, object newObject)
+    }
+
+    [Serializable]
+    internal sealed class Sequence2Deserializer : IObjectReference
+    {
+        SCode first;
+        SCode second;
+
+        // GetRealObject is called after this object is deserialized.
+        public Object GetRealObject (StreamingContext context)
         {
-            throw new NotImplementedException ();
+            return Sequence2.Make (this.first, this.second);
+        }
+
+        public void SetFirst (SCode value) { this.first = value; }
+        public void SetSecond (SCode value) { this.second = value; }
+    }
+
+    /// <summary>
+    /// This one is odd, but it signals that the variable is intended
+    /// to be ignored.
+    /// </summary>
+    [Serializable]
+    class Sequence2L : Sequence2
+    {
+        protected Sequence2L (LexicalVariable first, SCode second)
+            : base (first, second)
+        {
+        }
+
+        static SCode Simplify (SCode second)
+        {
+            //Debug.Write ("\n; Sequence2L.Simplify");
+            return second;
+        }
+
+        static public SCode Make (LexicalVariable first, SCode second)
+        {
+            return
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableSequenceSimplification) ? Simplify(second) :
+                new Sequence2L (first, second);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.second);
+            SCode.location = "Sequence2L.EvalStep";
+#endif
+            expression = this.second;
+            answer = null;
+            return true;
         }
     }
 
@@ -790,13 +908,19 @@ namespace Microcode
         {
         }
 
+        static SCode Simplify (SCode second)
+        {
+            //Debug.Write ("\n; Sequence2Q.Simplify");
+            return second;
+        }
+
         static public SCode Make (Quotation first, SCode second)
         {
-#if DEBUG
-            //Debug.WriteLineIf (first.Quoted is Constant, "; Optimize (begin <constant> <expr>) => <expr>");
-#endif
-            return (first.Quoted is Constant) ? second
-                : new Sequence2Q (first, second);
+            return 
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableSequenceSimplification &&
+                 !(first.Quoted is object [])) ? Simplify(second) :
+                new Sequence2Q (first, second);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -812,7 +936,6 @@ namespace Microcode
         }
     }
 
-    [Serializable]
     class Sequence2SL : Sequence2
     {
         public readonly object secondName;
@@ -830,9 +953,9 @@ namespace Microcode
         static public SCode Make (SCode first, LexicalVariable second)
         {
             return 
-                (second is Argument) ? Sequence2SA.Make (first, (Argument) second)
-                : (second is LexicalVariable1) ? Sequence2SL1.Make (first, (LexicalVariable1) second)
-                :  new Sequence2SL (first, second);
+                (second is Argument) ? Sequence2SA.Make (first, (Argument) second) :
+                (second is LexicalVariable1) ? Sequence2SL1.Make (first, (LexicalVariable1) second) :
+                new Sequence2SL (first, second);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -862,7 +985,6 @@ namespace Microcode
         }
     }
 
-    [Serializable]
     class Sequence2SA : Sequence2SL
     {
         protected Sequence2SA (SCode first, Argument second)
@@ -873,9 +995,9 @@ namespace Microcode
         static public SCode Make (SCode first, Argument second)
         {
             return
-                (second is Argument0) ? Sequence2SA0.Make (first, (Argument0) second)
-                : (second is Argument1) ? Sequence2SA1.Make (first, (Argument1) second)
-                : new Sequence2SA (first, second);
+                (second is Argument0) ? Sequence2SA0.Make (first, (Argument0) second) :
+                (second is Argument1) ? Sequence2SA1.Make (first, (Argument1) second) :
+                new Sequence2SA (first, second);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -900,8 +1022,7 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    class Sequence2SA0 : Sequence2SA
+    sealed class Sequence2SA0 : Sequence2SA
     {
         Sequence2SA0 (SCode first, Argument0 second)
             : base (first, second)
@@ -923,11 +1044,10 @@ namespace Microcode
             Environment env = environment;
             while (first.EvalStep (out answer, ref first, ref env)) { };
             if (answer == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
-                //environment = env;
-                //answer = Interpreter.UnwindStack;
-                //return false;
+                ((UnwinderState) env).AddFrame (new Sequence2SA0Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
             }
 
             answer = environment.Argument0Value;
@@ -935,8 +1055,44 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    class Sequence2SA1 : Sequence2SA
+    sealed class Sequence2SA0Frame0 : SubproblemContinuation<Sequence2SA0>, ISystemVector
+    {
+        public Sequence2SA0Frame0 (Sequence2SA0 expression, Environment environment)
+            : base (expression, environment)
+        {
+        }
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
+        {
+            answer = this.environment.Argument0Value;
+            return false;
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { return 3; }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            switch (index) {
+                case 0: return ReturnCode.SEQ_2_DO_2;
+                default:
+                    throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+    }
+
+    sealed class Sequence2SA1 : Sequence2SA
     {
         Sequence2SA1 (SCode first, Argument1 second)
             : base (first, second)
@@ -970,10 +1126,9 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    class Sequence2SL1 : Sequence2SL
+    sealed class Sequence2SL1 : Sequence2SL
     {
-        protected Sequence2SL1 (SCode first, LexicalVariable1 second)
+        Sequence2SL1 (SCode first, LexicalVariable1 second)
             : base (first, second)
         {
         }
@@ -1007,7 +1162,7 @@ namespace Microcode
     }
 
     [Serializable]
-    class Sequence2SQ : Sequence2
+    sealed class Sequence2SQ : Sequence2
     {
 #if DEBUG
         static public new Histogram<Type> firstTypeHistogram = new Histogram<Type>();
@@ -1015,7 +1170,7 @@ namespace Microcode
 #endif
         public object quoted;
 
-        protected Sequence2SQ (SCode first, Quotation second)
+        Sequence2SQ (SCode first, Quotation second)
             : base (first, second)
         {
             this.quoted = second.Quoted;
@@ -1024,11 +1179,11 @@ namespace Microcode
         static public SCode Make (SCode first, Quotation second)
         {
             return 
-                (Configuration.EnableTrueUnspecific && second.Quoted == Constant.Unspecific)? first
-                : (first is Conditional) ? Conditional.Make (((Conditional)first).Predicate,
-                                                             Sequence2.Make (((Conditional)first).Consequent, second),
-                                                             Sequence2.Make (((Conditional) first).Alternative, second))
-                : new Sequence2SQ (first, second);
+                //(Configuration.EnableTrueUnspecific && second.Quoted == Constant.Unspecific)? first
+                //: (first is Conditional) ? Conditional.Make (((Conditional)first).Predicate,
+                //                                             Sequence2.Make (((Conditional)first).Consequent, second),
+                //                                             Sequence2.Make (((Conditional) first).Alternative, second))
+                new Sequence2SQ (first, second);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1058,7 +1213,6 @@ namespace Microcode
             return false;
         }
     }
-
 
     [Serializable]
     sealed class Sequence2Frame0 : SubproblemContinuation<Sequence2>, ISystemVector
@@ -1149,12 +1303,12 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode third;
 
-        Sequence3 (object first, object second, object third)
+        Sequence3 (SCode first, SCode second, SCode third)
             : base (TC.SEQUENCE_3)
         {
-            this.first = EnsureSCode(first);
-            this.second = EnsureSCode(second);
-            this.third = EnsureSCode(third);
+            this.first = first;
+            this.second = second;
+            this.third = third;
         }
 
         public Sequence3 (Hunk3 init)
@@ -1165,17 +1319,118 @@ namespace Microcode
             this.third = EnsureSCode (init.Cxr2);
         }
 
+        static SCode Simplify (SCode first, SCode second)
+        {
+            //Debug.Write ("\n; Sequence3.Simplify");
+            return Sequence2.Make (first, second);
+        }
+
+        static SCode SwapConditional (Conditional first, SCode second, SCode third)
+        {
+            //Debug.Write ("\n; Sequence3.SwapConditional(1)");
+            return
+               Conditional.Make (first.Predicate,
+                                 Sequence3.Make (first.Consequent, second, third),
+                                 Sequence3.Make (first.Alternative, second, third));
+        }
+
+        static SCode SwapConditional (SCode first, Conditional second, SCode third)
+        {
+            //Debug.Write ("\n; Sequence3.SwapConditional(2)");
+            return 
+               Sequence2.Make (first,         
+                               Conditional.Make (second.Predicate,
+                                    Sequence2.Make (second.Consequent, third),
+                                    Sequence2.Make (second.Alternative, third)));
+        }
+
+        static SCode Flatten (SCode first, SCode second, Sequence2 third)
+        {
+            //Debug.Write ("\n; Sequence3.Flatten(1)");
+            return
+                Sequence2.Make (first,
+                                Sequence3.Make (second,
+                                                third.First,
+                                                third.Second));
+        }
+
+        static SCode Flatten (SCode first, Sequence2 second, SCode third)
+        {
+            //Debug.Write ("\n; Sequence3.Flatten(2)");
+            return
+                Sequence2.Make (first,
+                                Sequence3.Make (second.First,
+                                                second.Second,
+                                                third));
+        }
+
+        static SCode Flatten (SCode first, Sequence3 second, SCode third)
+        {
+            //Debug.Write ("\n; Sequence3.Flatten(3)");
+            return
+                Sequence3.Make (first,
+                                second.First,
+                                Sequence3.Make (second.Second,
+                                                second.Third,
+                                                third));
+        }
+
+        static SCode Flatten (Sequence2 first, SCode second, SCode third)
+        {
+            //Debug.Write ("\n; Sequence3.Flatten(4)");
+            return
+                Sequence2.Make (first.First,
+                                Sequence3.Make (first.Second,
+                                                second,
+                                                third));
+        }
+
+        static SCode Flatten (Sequence3 first, SCode second, SCode third)
+        {
+            //Debug.Write ("\n; Sequence3.Flatten(5)");
+            return
+                Sequence3.Make (first.First,
+                                first.Second,
+                                Sequence3.Make (first.Third,
+                                                second,
+                                                third));
+        }
+
         public static SCode Make (SCode first, SCode second, SCode third)
         {
             return
-                (first is LexicalVariable || (first is Quotation && !(((Quotation) first).Quoted is object []))) ? Sequence2.Make (second, third)
-                : (first is Sequence2) ? Sequence3.Make (((Sequence2) first).First, ((Sequence2) first).Second, Sequence2.Make (second, third))
-                : (first is Sequence3) ? Sequence3.Make (((Sequence3) first).First, ((Sequence3) first).Second, Sequence3.Make (((Sequence3) first).Third, second, third))
-                : (second is LexicalVariable || second is Quotation) ?  Sequence2.Make (first, third)
-                : (second is Sequence2) ? Sequence3.Make (first, ((Sequence2) second).First, Sequence2.Make (((Sequence2) second).Second, third))
-                : (second is Sequence3) ? Sequence3.Make (first, ((Sequence3) second).First, Sequence3.Make (((Sequence3) second).Second, ((Sequence3) second).Third, third))
-                : (Configuration.EnableTrueUnspecific && third is Quotation && ((Quotation) third).Quoted == Constant.Unspecific) ? Sequence2.Make (first, second)
-                : new Sequence3 (first, second, third);
+                //: (Configuration.EnableTrueUnspecific && third is Quotation && ((Quotation) third).Quoted == Constant.Unspecific) ? Sequence2.Make (first, second)
+                //: 
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableSequenceConditionalSwap &&
+                 first is Conditional) ? SwapConditional ((Conditional) first, second, third) :
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableSequenceConditionalSwap &&
+                 second is Conditional) ? SwapConditional (first, (Conditional) second, third) :
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableSequenceSimplification &&
+                 (first is Variable ||
+                 first is Quotation)) ? Simplify (second, third) :
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableSequenceSimplification &&
+                 (second is Variable ||
+                 second is Quotation)) ? Simplify (first, third) :
+                 (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableFlattenSequence &&
+                 third is Sequence2) ? Flatten (first, second, (Sequence2) third) :
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableFlattenSequence &&
+                 second is Sequence2) ? Flatten (first, (Sequence2) second, third) :
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableFlattenSequence &&
+                 second is Sequence3) ? Flatten (first, (Sequence3) second, third) :
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableFlattenSequence &&
+                 first is Sequence2) ? Flatten ((Sequence2) first, second, third) :
+                (Configuration.EnableCodeRewriting &&
+                 Configuration.EnableFlattenSequence &&
+                 first is Sequence3) ? Flatten ((Sequence3) first, second, third) :
+                new Sequence3 (first, second, third);
         }
 
         public static SCode Make (object first, object second, object third)
@@ -1265,7 +1520,7 @@ namespace Microcode
             return true;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             return this.first.MutatesAny (formals)
                 || this.second.MutatesAny (formals)
@@ -1277,6 +1532,13 @@ namespace Microcode
             return this.first.CallsTheEnvironment ()
                 || this.second.CallsTheEnvironment ()
                 || this.third.CallsTheEnvironment ();
+        }
+
+        public override bool Uses (Symbol formal)
+        {
+            return this.first.Uses (formal) ||
+                this.second.Uses (formal) ||
+                this.third.Uses (formal);
         }
 
         #region ISystemHunk3 Members
@@ -1322,10 +1584,6 @@ namespace Microcode
 
         #endregion
 
-        public override SCode Substitute (object name, object newObject)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
@@ -1453,12 +1711,12 @@ namespace Microcode
             return false;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             throw new NotImplementedException ();
         }
 
-        public override SCode Substitute (object name, object newObject)
+        public override bool Uses (Symbol formal)
         {
             throw new NotImplementedException ();
         }

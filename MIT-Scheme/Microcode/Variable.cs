@@ -10,13 +10,12 @@ namespace Microcode
     [Serializable]
     sealed class Access : SCode, ISystemPair
     {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly string var;
+        readonly Symbol var;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode env;
 
-        public Access (object env, string name)
+        public Access (object env, Symbol name)
             : base (TC.ACCESS)
         {
             this.var = name;
@@ -60,9 +59,13 @@ namespace Microcode
             return false;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             return this.env.MutatesAny (formals);
+        }
+        public override bool Uses (Symbol formal)
+        {
+            return this.env.Uses (formal);
         }
 
         #region ISystemPair Members
@@ -93,41 +96,41 @@ namespace Microcode
 
         #endregion
 
-        public override SCode Substitute (object name, object newObject)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
-    sealed class Assignment : SCode, ISystemPair
+    class Assignment : SCode, ISystemPair
     {
+#if DEBUG
+        protected readonly Type valueType; 
+        static Histogram<Type> valueTypeHistogram = new Histogram<Type>();
+#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Variable target;
+        protected readonly Variable target;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode value;
+        protected readonly SCode value;
 
-        public Assignment (Variable target, SCode value)
+        protected Assignment (Variable target, SCode value)
             : base (TC.ASSIGNMENT)
         {
-            if (target == null) throw new ArgumentNullException ("target");
-            if (value == null) throw new ArgumentNullException ("value");
             this.target = target;
             this.value = value;
+#if DEBUG
+            this.valueType = value.GetType();
+#endif
         }
 
-        public Assignment (object target, object value)
-            : base (TC.ASSIGNMENT)
+        static public SCode Make (Variable target, SCode value)
         {
-            Variable vtarget = target as Variable;
-            if (vtarget != null) {
-                this.target = vtarget;
-                this.value = EnsureSCode (value);
-            }
-            else
-                throw new NotImplementedException ();
+            return
+                //(value is Quotation) ? AssignmentQ.Make (target, (Quotation) value) :
+                new Assignment (target, value);
+        }
 
+        static public SCode Make (object target, object value)
+        {
+            return Make ((Variable) target, EnsureSCode (value));
         }
 
         public object Name
@@ -192,9 +195,12 @@ namespace Microcode
         public override SCode Bind (LexicalMap ctenv)
         {
             SCode optVal = this.value.Bind (ctenv);
-            return optVal == this.value
-                ? this
-                : new Assignment (this.target, optVal);
+            return (optVal == this.value) ? this : Assignment.Make (this.target, optVal);
+            //BoundVariable boundTarget = ctenv.Bind (this.target.Name);
+            //if (boundTarget is Argument)
+            //    return AssignArg.Make ((Argument) boundTarget, optVal);
+            //else
+            //    return Assignment.Make (this.target, optVal);
         }
 
         public override bool CallsTheEnvironment ()
@@ -205,13 +211,18 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("Assignment.EvalStep");
+            Warm ("-");
             noteCalls (this.value);
+            valueTypeHistogram.Note (this.valueType);
+            SCode.location = "Assignment.EvalStep";
 #endif
             Control expr = this.value;
             Environment env = environment;
             object newValue;
             while (expr.EvalStep (out newValue, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Assignment.EvalStep.1";
+#endif
             if (newValue == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
                 answer = Interpreter.UnwindStack;
@@ -223,15 +234,16 @@ namespace Microcode
             return false;
         }
 
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
-            return formals.Contains<object> (this.target.Name)
+            return formals.Contains<Symbol> (this.target.Name)
                 || this.value.MutatesAny (formals);
         }
 
-        public override SCode Substitute (object name, object newObject)
+        public override bool Uses (Symbol formal)
         {
-            throw new NotImplementedException ();
+            return this.target.Name == formal ||
+                this.value.Uses (formal);
         }
     }
 
@@ -275,42 +287,119 @@ namespace Microcode
         #endregion
     }
 
+    class AssignArg : Assignment
+    {
+#if DEBUG
+        static Histogram<Type> valueTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int offset;
+
+        AssignArg (Argument target, SCode value)
+            : base (target, value)
+        {
+            this.offset = target.Offset;
+        }
+
+        static public SCode Make (Argument target, SCode value)
+        {
+            return
+                new AssignArg (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.value);
+            valueTypeHistogram.Note (this.valueType);
+            SCode.location = "AssignArg.EvalStep";
+#endif
+            Control expr = this.value;
+            Environment env = environment;
+            object newValue;
+            while (expr.EvalStep (out newValue, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "AssignArg.EvalStep.1";
+#endif
+            if (newValue == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            if (environment.AssignArg (out answer, this.offset, newValue)) throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentQ : Assignment
+    {
+        public readonly object assignmentValue;
+
+        AssignmentQ (Variable target, Quotation value)
+            : base (target, value)
+        {
+           this.assignmentValue = value.Quoted;
+        }
+
+        static public SCode Make (Variable target, Quotation value)
+        {
+            return
+                new AssignmentQ (target, value);
+        }
+
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentQ.EvalStep");
+#endif
+            if (environment.Assign (out answer, this.target.Name, this.assignmentValue)) 
+                throw new NotImplementedException ();
+            return false;
+        }
+    }
+
     [Serializable]
     public class Variable : SCode, ISystemHunk3
     {
 #if DEBUG
         [NonSerialized]
-        protected readonly bool breakOnReference;
+        public readonly bool breakOnReference;
 #endif
-        static Dictionary<object,Variable> variableTable = new Dictionary<object, Variable> ();
+        static Dictionary<Symbol,Variable> variableTable = new Dictionary<Symbol, Variable> ();
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly object varname;
+        protected readonly Symbol varname;
 
-        protected Variable (object name)
+        protected Variable (Symbol name)
             : base (TC.VARIABLE)
         {
             if (name == null)
-                throw new ArgumentNullException ("varname");
+                throw new ArgumentNullException ("ratorName");
             this.varname = name;
 #if DEBUG
-           if (name is string &&
-               (((string) name) == "no symbol has this lambdaName"
-               || ((string)name) == "lambda-wrap-lambdaBody!")
-               //|| lambdaName == "syntax*"
-               //|| lambdaName == "hash-table/get"
-            //   || lambdaName == "error"
-            //   || lambdaName == "loop"
-            //   || lambdaName == "copy-record"
-            //   || lambdaName == "deferred-unparser-methods"
-            //   || lambdaName == "microcode-identification"
-            //   || lambdaName == "extend-package-environment"
+           if (name is Symbol &&
+               (
+               ((name.ToString()) == "no symbol has this name") ||
+               //((name.ToString()) == "grow-table!") ||
+               //(((string) name) == "cgen/expression") ||
+               //(((string) name) == "make-conditional") ||
+               //(((string) name) == "analyze-file") ||
+               //(((string) name) == "sf-conditionally") ||
+               //(((string) name) == "load-option") ||
+               //(((string) name) == "string-copy") ||
+               //(((string) name) == "guarantee-port-type") ||
+               false)
                )
                 breakOnReference = true;
 #endif  
         }
 
-        static public Variable Make (object name)
+        static public Variable Make (Symbol name)
         {
             Variable answer;
             if (!variableTable.TryGetValue (name, out answer)) {
@@ -322,10 +411,10 @@ namespace Microcode
 
         static public Variable Make (Hunk3 init)
         {
-            return Variable.Make (init.Cxr0);
+            return Variable.Make ((Symbol) init.Cxr0);
         }
 
-        public object Name
+        public Symbol Name
         {
             get
             {
@@ -387,7 +476,7 @@ namespace Microcode
 
         public override SCode Bind (LexicalMap btenv)
         {
-            return btenv.Bind (this.Name);
+            return Configuration.EnableVariableBinding ? btenv.Bind (this.Name) : this;
         }
 
         public override bool CallsTheEnvironment ()
@@ -399,7 +488,6 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("Variable.EvalStep");
-            Debug.WriteIf (Primitive.Noisy, this.Name);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
@@ -410,14 +498,14 @@ namespace Microcode
             else return false;
         }
     
-        public override bool MutatesAny (object [] formals)
+        public override bool MutatesAny (Symbol [] formals)
         {
             return false;
         }
 
-        public override SCode Substitute (object name, object newObject)
+        public override bool Uses (Symbol formal)
         {
-            throw new NotImplementedException ();
+            return formal == this.Name;
         }
     }
 
@@ -429,7 +517,7 @@ namespace Microcode
     {
         protected readonly LambdaBase binder;
 
-        protected BoundVariable (object name, LambdaBase binder)
+        protected BoundVariable (Symbol name, LambdaBase binder)
             : base (name)
         {
             this.binder = binder;
@@ -484,10 +572,13 @@ namespace Microcode
     [Serializable]
     class LexicalVariable : BoundVariable
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly int depth;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly int offset;
 
-        protected LexicalVariable (object name, LambdaBase binder, int depth, int offset)
+        protected LexicalVariable (Symbol name, LambdaBase binder, int depth, int offset)
             : base (name, binder)
         {
             this.depth = depth;
@@ -497,7 +588,7 @@ namespace Microcode
         public int Depth { get { return this.depth; } }
         public int Offset { get { return this.offset; } }
 
-        public static LexicalVariable Make (object name, LambdaBase binder, int depth, int offset)
+        public static LexicalVariable Make (Symbol name, LambdaBase binder, int depth, int offset)
         {
             if (Configuration.EnableLexical1 && depth == 1)
                 return LexicalVariable1.Make (name, binder, offset);
@@ -509,7 +600,6 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("LexicalVariable.EvalStep");
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
@@ -533,12 +623,12 @@ namespace Microcode
     [Serializable]
     class Argument : LexicalVariable
     {
-        protected Argument (object name, LambdaBase binder, int offset)
+        protected Argument (Symbol name, LambdaBase binder, int offset)
             : base (name, binder, 0, offset)
         {
         }
 
-        static public Argument Make (object name, LambdaBase binder, int offset)
+        static public Argument Make (Symbol name, LambdaBase binder, int offset)
         {
             switch (offset) {
                 case 0: return new Argument0 (name, binder);
@@ -566,7 +656,7 @@ namespace Microcode
     [Serializable]
     sealed class Argument0 : Argument
     {
-        internal Argument0 (object name, LambdaBase binder)
+        internal Argument0 (Symbol name, LambdaBase binder)
             : base (name, binder, 0)
         {
         }
@@ -590,7 +680,7 @@ namespace Microcode
     [Serializable]
     sealed class Argument1 : Argument
     {
-        internal Argument1 (object name, LambdaBase binder)
+        internal Argument1 (Symbol name, LambdaBase binder)
             : base (name, binder, 1)
         {
         }
@@ -617,20 +707,20 @@ namespace Microcode
 //    class DangerousLexicalVariable : BoundVariable
 //    {
 //        readonly int shadowDepth;
-//        readonly int argDepth;
-//        readonly int argOffset;
+//        readonly int randDepth;
+//        readonly int randOffset;
 
-//        DangerousLexicalVariable (object lambdaName, int shadowDepth, int argDepth, int argOffset)
+//        DangerousLexicalVariable (object lambdaName, int shadowDepth, int randDepth, int randOffset)
 //            : base (lambdaName)
 //        {
 //            this.shadowDepth = shadowDepth;
-//            this.argDepth = argDepth;
-//            this.argOffset = argOffset;
+//            this.randDepth = randDepth;
+//            this.randOffset = randOffset;
 //        }
 
-//        public static DangerousLexicalVariable Make (object lambdaName, int shadowDepth, int argDepth, int argOffset)
+//        public static DangerousLexicalVariable Make (object lambdaName, int shadowDepth, int randDepth, int randOffset)
 //        {
-//            return new DangerousLexicalVariable (lambdaName, shadowDepth, argDepth, argOffset);
+//            return new DangerousLexicalVariable (lambdaName, shadowDepth, randDepth, randOffset);
 //        }
 
 //        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
@@ -642,8 +732,8 @@ namespace Microcode
 //                Debugger.Break ();
 //            }
 //#endif
-//            if (environment.DangerousLexicalRef (out value, this.varname, this.shadowDepth, this.argDepth, this.argOffset))
-//                throw new NotImplementedException ("Error on lookup of " + this.varname);
+//            if (environment.DangerousLexicalRef (out value, this.ratorName, this.shadowDepth, this.randDepth, this.randOffset))
+//                throw new NotImplementedException ("Error on lookup of " + this.ratorName);
 //            return false;
 //        }
 //    }
@@ -655,12 +745,12 @@ namespace Microcode
     [Serializable]
     sealed class LexicalVariable1 : LexicalVariable
     {
-        LexicalVariable1 (object name, LambdaBase binder, int offset)
+        LexicalVariable1 (Symbol name, LambdaBase binder, int offset)
             : base (name, binder, 1, offset)
         {
         }
 
-        public static LexicalVariable1 Make (object name, LambdaBase binder, int offset)
+        public static LexicalVariable1 Make (Symbol name, LambdaBase binder, int offset)
         {
             return new LexicalVariable1 (name, binder, offset);
         }
@@ -669,7 +759,6 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("LexicalVariable1.EvalStep");
-            Debug.WriteLineIf (Primitive.Noisy, this.Name);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
@@ -689,7 +778,7 @@ namespace Microcode
     [Serializable]
     sealed class FreeVariable : BoundVariable
     {
-        public FreeVariable (object name)
+        public FreeVariable (Symbol name)
             : base (name, null)
         {
         }
@@ -698,7 +787,6 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("FreeVariable.EvalStep");
-            Debug.WriteLineIf (Primitive.Noisy, this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
@@ -726,31 +814,75 @@ namespace Microcode
     sealed class DeepVariable : BoundVariable
     {
 #if DEBUG
-        static Histogram<string> variableNameHistogram = new Histogram<string> ();
+        static Histogram<Symbol> variableNameHistogram = new Histogram<Symbol> ();
 #endif
         Environment baseEnvironment;
+        Environment [] environmentChain;
+        ValueCell cachedValueCell;
+        int cachedValueCellDepth;
 
-        public DeepVariable (object name, Environment baseEnvironment)
+        public DeepVariable (Symbol name, Environment baseEnvironment)
             : base (name, null)
         {
             this.baseEnvironment = baseEnvironment;
+            this.environmentChain = new Environment [baseEnvironment.GetDepth()];
+            if (environmentChain.Length > 4) 
+                Debugger.Break ();
+            for (int i = environmentChain.Length - 1; i > 0; i--) {
+                environmentChain [i] = baseEnvironment.GetAncestorEnvironment (i);
+            }
+            environmentChain [0] = baseEnvironment;
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            variableNameHistogram.Note ((string)this.varname);
+            variableNameHistogram.Note (this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
             SCode.location = "DeepVariable.EvalStep";
 #endif
-            // Don't know where it is.
-            if (baseEnvironment.FreeRef (out value, this.varname)) throw new NotImplementedException ();
-            else return false;
-        }
+            if (this.cachedValueCell == null) {
+                // First time through, 
+                // search the environment chain to find the nearest
+                // place the value cell exists.
+                for (int i = 0; i < environmentChain.Length; i++) {
+                    Environment env = environmentChain [i];
+                    ValueCell vc = env.SearchFixed (this.varname);
+                    if (vc != null) {
+                        this.cachedValueCell = vc;
+                        this.cachedValueCellDepth = i;
+                        break;
+                    }
+                    vc = env.SearchIncrementals (this.varname);
+                    if (vc != null) {
+                        this.cachedValueCell = vc;
+                        this.cachedValueCellDepth = i;
+                        break;
+                    }
+                }
+            }
+            else {
+                // On the subsequent passes, we might shadow the variable
+                // with incrementals, but we cannot add fixed bindings.
+                for (int i = 0; i < this.cachedValueCellDepth; i++) {
+                    Environment env = environmentChain [i];
+                    ValueCell vc = env.SearchIncrementals (this.varname);
+                    if (vc != null) {
+                        // Someone shadowed it.
+                        throw new NotImplementedException ();
+                    }
+                }
+                // if we fall through, no one shadowed us and we can
+                // simply drop into the case where we fetch from the cell.
+            }
 
+            if (this.cachedValueCell.GetValue (out value))
+                throw new NotImplementedException ();
+            return false;
+        }
 
         internal override BoundVariable IncreaseStaticLexicalDepth ()
         {
@@ -767,25 +899,25 @@ namespace Microcode
 //    sealed class DangerousFreeVariable : BoundVariable
 //    {
 //        readonly Environment env;
-//        readonly int argDepth;
+//        readonly int randDepth;
 
-//        DangerousFreeVariable (object lambdaName, Environment env, int argDepth)
+//        DangerousFreeVariable (object lambdaName, Environment env, int randDepth)
 //            : base (lambdaName)
 //        {
 //            this.env = env;
-//            this.argDepth = argDepth;
+//            this.randDepth = randDepth;
 //        }
 
-//        public static DangerousFreeVariable Make (object lambdaName, Environment env, int argDepth)
+//        public static DangerousFreeVariable Make (object lambdaName, Environment env, int randDepth)
 //        {
-//            return new DangerousFreeVariable (lambdaName, env, argDepth);
+//            return new DangerousFreeVariable (lambdaName, env, randDepth);
 //        }
 
 //        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ();
-//            Debug.WriteLineIf (Primitive.Noisy, this.varname);
+//            Debug.WriteLineIf (Primitive.Noisy, this.ratorName);
 //            if (this.breakOnReference) {
 //                Debugger.Break ();
 //            }
@@ -807,7 +939,7 @@ namespace Microcode
 #endif
         public readonly ValueCell cell;
 
-        public TopLevelVariable (object name, ValueCell cell)
+        public TopLevelVariable (Symbol name, ValueCell cell)
             : base (name, null)
         {
             this.cell = cell;
@@ -818,7 +950,6 @@ namespace Microcode
 #if DEBUG
             Warm ("TopLevelVariable.EvalStep");
             nameHistogram.Note (this.varname);
-            Debug.WriteLineIf (Primitive.Noisy, this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
@@ -860,7 +991,7 @@ namespace Microcode
 //        {
 //#if DEBUG
 //            Warm ();
-//            Debug.WriteLineIf (Primitive.Noisy, this.varname);
+//            Debug.WriteLineIf (Primitive.Noisy, this.ratorName);
 //            if (this.breakOnReference) {
 //                Debugger.Break ();
 //            }
@@ -882,7 +1013,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly Environment environment;
 
-        public GlobalVariable (object name, Environment environment)
+        public GlobalVariable (Symbol name, Environment environment)
             : base (name, null)
         {
             this.environment = environment;
@@ -897,7 +1028,6 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("GlobalVariable.EvalStep");
-            Debug.WriteLineIf (Primitive.Noisy, this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
@@ -930,19 +1060,19 @@ namespace Microcode
 //        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
 //        readonly Environment environment;
 //        readonly int safeDepth;
-//        readonly int argDepth;
+//        readonly int randDepth;
 
-//        DangerousGlobalVariable (object lambdaName, Environment environment, int safeDepth, int argDepth)
+//        DangerousGlobalVariable (object lambdaName, Environment environment, int safeDepth, int randDepth)
 //            : base (lambdaName)
 //        {
 //            this.environment = environment;
 //            this.safeDepth = safeDepth;
-//            this.argDepth = argDepth;
+//            this.randDepth = randDepth;
 //        }
 
-//        public static DangerousGlobalVariable Make (object lambdaName, Environment environment, int safeDepth, int argDepth)
+//        public static DangerousGlobalVariable Make (object lambdaName, Environment environment, int safeDepth, int randDepth)
 //        {
-//            return new DangerousGlobalVariable (lambdaName, environment, safeDepth, argDepth);
+//            return new DangerousGlobalVariable (lambdaName, environment, safeDepth, randDepth);
 //        }
 
 //        public override SCode Bind (LexicalMap ctenv)
@@ -954,16 +1084,16 @@ namespace Microcode
 //        {
 //#if DEBUG
 //            Warm ();
-//            Debug.WriteLineIf (Primitive.Noisy, this.varname);
+//            Debug.WriteLineIf (Primitive.Noisy, this.ratorName);
 //            if (this.breakOnReference) {
 //                Debugger.Break ();
 //            }
 
 //#endif
 //            //if (this.cell == null)
-//            //    this.cell = this.environment.GetValueCell (this.varname);
+//            //    this.cell = this.environment.GetValueCell (this.ratorName);
 //            //if (this.cell.GetValue (out value))
-//                throw new NotImplementedException ("Error on lookup of " + this.varname);
+//                throw new NotImplementedException ("Error on lookup of " + this.ratorName);
 //        }
 //    }
 

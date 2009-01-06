@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     class PrimitiveCons : PrimitiveCombination2
     {
         protected PrimitiveCons (Primitive2 rator, SCode rand0, SCode rand1)
@@ -12,15 +13,15 @@ namespace Microcode
         {
         }
 
- 
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rand0 is LexicalVariable) ? PrimitiveConsL.Make (rator, (LexicalVariable) rand0, rand1)
-                : (rand0 is Quotation) ? PrimitiveConsQ.Make (rator, (Quotation) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitiveConsSL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveConsSQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveCons (rator, rand0, rand1);
+                (rand0 is LexicalVariable) ? PrimitiveConsL.Make (rator, (LexicalVariable) rand0, rand1) :
+                (rand0 is PrimitiveCar) ? PrimitiveConsCar.Make (rator, (PrimitiveCar) rand0, rand1) :
+                (rand0 is Quotation) ? PrimitiveConsQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveConsSL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveConsSQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveCons (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -37,11 +38,10 @@ namespace Microcode
             Environment env = environment;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
             if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
+                ((UnwinderState) env).AddFrame (new PrimitiveConsFrame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
             }
 
             // Eval argument0
@@ -51,14 +51,95 @@ namespace Microcode
             env = environment;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
+                ((UnwinderState) env).AddFrame (new PrimitiveConsFrame1 (this, environment, ev1));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
             }
 
             answer = new Cons (ev0, ev1);
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveConsFrame0 : SubproblemContinuation<PrimitiveCons>, ISystemVector
+    {
+        public PrimitiveConsFrame0 (PrimitiveCons expression, Environment environment)
+            : base (expression, environment)
+        {
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev1)
+        {
+            Control unev = this.expression.Rand0;
+            Environment env = this.environment;
+            object ev0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveConsFrame1 (this.expression, this.environment, ev1));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            answer = new Cons (ev0, ev1);
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveConsFrame1 : SubproblemContinuation<PrimitiveCons>, ISystemVector
+    {
+        readonly object ev1;
+
+        internal PrimitiveConsFrame1 (PrimitiveCons expression, Environment environment, object ev1)
+            : base (expression, environment)
+        {
+            this.ev1 = ev1;
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev0)
+        {
+            answer = new Cons (ev0, this.ev1);
             return false;
         }
     }
@@ -286,8 +367,6 @@ namespace Microcode
         }
     }
 
-
-
     class PrimitiveConsA0A1 : PrimitiveConsA0A
     {
         protected PrimitiveConsA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
@@ -422,9 +501,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument1 rand0, LexicalVariable rand1)
         {
             return
-                (rand1 is Argument) ? PrimitiveConsA1A.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? Unimplemented ()
-                : new PrimitiveConsA1L (rator, rand0, rand1);
+                (rand1 is Argument) ? PrimitiveConsA1A.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is LexicalVariable1) ? PrimitiveConsA1L1.Make (rator, rand0, (LexicalVariable1) rand1) :
+                new PrimitiveConsA1L (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -469,8 +548,6 @@ namespace Microcode
         }
 
     }
-
-
 
     class PrimitiveConsA1A0 : PrimitiveConsA1A
     {
@@ -517,14 +594,14 @@ namespace Microcode
         }
     }
 
-    class PrimitiveConsA1L1 : PrimitiveConsA1L
+    sealed class PrimitiveConsA1L1 : PrimitiveConsA1L
     {
-        protected PrimitiveConsA1L1 (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
+        PrimitiveConsA1L1 (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
             : base (rator, rand0, rand1)
         {
         }
 
-        public static SCode Make (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
+        internal static SCode Make (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
         {
             return
                 new PrimitiveConsA1L1 (rator, rand0, rand1);
@@ -533,19 +610,15 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveConsA1L1.EvalStep");
 #endif
             // Eval argument1
             object ev1;
             if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
                 throw new NotImplementedException ();
 
-            // Eval argument0
-            object ev0 = (int) environment.Argument1Value;
-
-            // Greater-than-fixnum?
-            answer = (int) ev0 < (int) ev1 ? Constant.sharpT : Constant.sharpF;
-            return false; throw new NotImplementedException ();
+            answer = new Cons (environment.Argument1Value, ev1);
+            return false;
         }
     }
 
@@ -1135,8 +1208,7 @@ namespace Microcode
         }
     }
 
-
-
+    [Serializable]
     class PrimitiveConsQ : PrimitiveCons
     {
         public readonly object rand0Value;
@@ -1150,22 +1222,19 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
         {
             return
-                (rand1 is LexicalVariable) ? PrimitiveConsQL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveConsQQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveConsQ (rator, rand0, rand1);
+                (rand1 is LexicalVariable) ? PrimitiveConsQL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveConsQQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveConsQ (rator, rand0, rand1);
         }
 
-
-                    public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("PrimitiveConsQ.EvalStep");
-
             noteCalls (this.rand1);
 #endif
             // Eval argument1
             object ev1;
-
             Control unev = this.rand1;
             Environment env = environment;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
@@ -1261,14 +1330,14 @@ namespace Microcode
         }
     }
 
-    class PrimitiveConsQA1 : PrimitiveConsQA
+    sealed class PrimitiveConsQA1 : PrimitiveConsQA
     {
-        protected PrimitiveConsQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
+        PrimitiveConsQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
             : base (rator, rand0, rand1)
         {
         }
 
-        public static SCode Make (Primitive2 rator, Quotation rand0, Argument1 rand1)
+        internal static SCode Make (Primitive2 rator, Quotation rand0, Argument1 rand1)
         {
             return
                  new PrimitiveConsQA1 (rator, rand0, rand1);
@@ -1277,7 +1346,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveConsQA1.EvalStep");
 #endif
             answer = new Cons (this.rand0Value, environment.Argument1Value);
             return false;
@@ -1314,13 +1383,12 @@ namespace Microcode
 
     }
 
-
-
-    class PrimitiveConsQQ : PrimitiveConsQ
+    [Serializable]
+    sealed class PrimitiveConsQQ : PrimitiveConsQ
     {
         public readonly object rand1Value;
 
-        protected PrimitiveConsQQ (Primitive2 rator, Quotation rand0, Quotation rand1)
+        PrimitiveConsQQ (Primitive2 rator, Quotation rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value = rand1.Quoted;
@@ -1424,17 +1492,47 @@ namespace Microcode
             Environment env = environment;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
+                ((UnwinderState) env).AddFrame (new PrimitiveConsSAFrame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
             }
 
             answer = new Cons (ev0, environment.ArgumentValue(this.rand1Offset));
             return false;
         }
+    }
 
+    sealed class PrimitiveConsSAFrame0 : SubproblemContinuation<PrimitiveConsSA>, ISystemVector
+    {
+        public PrimitiveConsSAFrame0 (PrimitiveConsSA expr, Environment env)
+            : base (expr, env)
+        {}
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev0)
+        {
+            answer = new Cons (ev0, this.environment.ArgumentValue (this.expression.rand1Offset));
+            return false;
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
     }
 
     class PrimitiveConsSA0 : PrimitiveConsSA
@@ -1521,7 +1619,6 @@ namespace Microcode
 
     }
 
-
     class PrimitiveConsSL1 : PrimitiveConsSL
     {
         protected PrimitiveConsSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
@@ -1568,11 +1665,12 @@ namespace Microcode
 
     }
 
-    class PrimitiveConsSQ : PrimitiveCons
+    [Serializable]
+    sealed class PrimitiveConsSQ : PrimitiveCons
     {
         public readonly object rand1Value;
 
-        protected PrimitiveConsSQ (Primitive2 rator, SCode rand0, Quotation rand1)
+        PrimitiveConsSQ (Primitive2 rator, SCode rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value = rand1.Quoted;
@@ -1587,14 +1685,115 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PrimitiveConsSQ.EvalStep");
+            Warm ("-");
             noteCalls (this.rand0);
+            SCode.location = "PrimitiveConsSQ.EvalStep";
 #endif
             // Eval argument0
             object ev0;
-
             Control unev = this.rand0;
             Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveConsSQFrame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            answer = new Cons (ev0, this.rand1Value);
+            return false;
+        }
+    }
+
+    sealed class PrimitiveConsSQFrame0 : SubproblemContinuation<PrimitiveConsSQ>, ISystemVector
+    {
+        public PrimitiveConsSQFrame0 (PrimitiveConsSQ expression, Environment env)
+            : base (expression, env)
+        {
+        }
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment env, object ev0)
+        {
+            answer = new Cons (ev0, this.expression.rand1Value);
+            return false;
+        }
+
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    class PrimitiveConsCar : PrimitiveCons
+    {
+#if DEBUG
+        static Histogram<Type> carArgTypeHistogram = new Histogram<Type>();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        protected Type carArgType;
+#endif
+        public readonly SCode carArg;
+
+        protected PrimitiveConsCar (Primitive2 rator, PrimitiveCar rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.carArg = rand0.Operand;
+#if DEBUG
+            this.carArgType = rand0.Operand.GetType();
+#endif
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, SCode rand1)
+        {
+            return
+                (rand0 is PrimitiveCarL) ? PrimitiveConsCarL.Make (rator, (PrimitiveCarL) rand0, rand1) :
+                new PrimitiveConsCar (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.carArg);
+            noteCalls (this.rand1);
+            carArgTypeHistogram.Note (this.carArgType);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveCons.EvalStep";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            // Eval argument0
+            object ev0;
+
+            unev = this.carArg;
+            env = environment;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
@@ -1604,12 +1803,308 @@ namespace Microcode
                 //return false;
             }
 
-            // Greater-than-fixnum?
-            answer = new Cons (ev0, this.rand1Value);
+            answer = new Cons (((Cons)ev0).Car, ev1);
             return false;
         }
     }
 
+    class PrimitiveConsCarL : PrimitiveConsCar
+    {
+#if DEBUG
+        static Histogram<Type> carArgTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object rand0Name;
+        public readonly int rand0Depth;
+        public readonly int rand0Offset;
+
+        protected PrimitiveConsCarL (Primitive2 rator, PrimitiveCarL rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Name = rand0.OperandName;
+            this.rand0Depth = rand0.OperandDepth;
+            this.rand0Offset = rand0.OperandOffset;
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, SCode rand1)
+        {
+            return
+                (rand0 is PrimitiveCarA) ? PrimitiveConsCarA.Make (rator, (PrimitiveCarA) rand0, rand1) :
+                (rand0 is PrimitiveCarL1) ? PrimitiveConsCarL1.Make (rator, (PrimitiveCarL1) rand0, rand1) :
+                new PrimitiveConsCarL (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.carArg);
+            noteCalls (this.rand1);
+            carArgTypeHistogram.Note (this.carArgType);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveCons.EvalStep";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            // Eval argument0
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            answer = new Cons (((Cons) ev0).Car, ev1);
+            return false;
+        }
+    }
+
+    class PrimitiveConsCarA : PrimitiveConsCarL
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected PrimitiveConsCarA (Primitive2 rator, PrimitiveCarA rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCarA rand0, SCode rand1)
+        {
+            return
+                (rand0 is PrimitiveCarA0) ? PrimitiveConsCarA0.Make (rator, (PrimitiveCarA0) rand0, rand1) :
+                (rand0 is PrimitiveCarA1) ? PrimitiveConsCarA1.Make (rator, (PrimitiveCarA1) rand0, rand1) :
+                new PrimitiveConsCarA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveConsCarA.EvalStep";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            // Eval argument0
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+            answer = new Cons (((Cons) ev0).Car, ev1);
+            return false;
+        }
+    }
+
+    class PrimitiveConsCarA0 : PrimitiveConsCarA
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected PrimitiveConsCarA0 (Primitive2 rator, PrimitiveCarA0 rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, SCode rand1)
+        {
+            return
+                (rand1 is Quotation) ? PrimitiveConsCarA0Q.Make (rator, rand0, (Quotation) rand1) :
+                 new PrimitiveConsCarA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveConsCarA0.EvalStep";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            answer = new Cons (((Cons) environment.Argument0Value).Car, ev1);
+            return false;
+        }
+    }
+
+    sealed class PrimitiveConsCarA0Q : PrimitiveConsCarA0
+    {
+        public readonly object rand1Value;
+
+        PrimitiveConsCarA0Q (Primitive2 rator, PrimitiveCarA0 rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveConsCarA0Q (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            SCode.location = "PrimitiveConsCarA0.EvalStep";
+#endif
+            answer = new Cons (((Cons) environment.Argument0Value).Car, this.rand1Value);
+            return false;
+        }
+    }
+
+    class PrimitiveConsCarA1 : PrimitiveConsCarA
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        protected PrimitiveConsCarA1 (Primitive2 rator, PrimitiveCarA1 rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCarA1 rand0, SCode rand1)
+        {
+            return
+                (rand1 is Quotation) ? PrimitiveConsCarA1Q.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveConsCarA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveConsCarA1.EvalStep";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            answer = new Cons (((Cons) environment.Argument1Value).Car, ev1);
+            return false;
+        }
+    }
+
+    sealed class PrimitiveConsCarA1Q : PrimitiveConsCarA1
+    {
+        public readonly object rand1Value;
+        PrimitiveConsCarA1Q (Primitive2 rator, PrimitiveCarA1 rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCarA1 rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveConsCarA1Q (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveConsCarA1Q.EvalStep");
+#endif
+            answer = new Cons (((Cons) environment.Argument1Value).Car, this.rand1Value);
+            return false;
+            // Eval argument1
+        }
+    }
+
+    class PrimitiveConsCarL1 : PrimitiveConsCarL
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected PrimitiveConsCarL1 (Primitive2 rator, PrimitiveCarL1 rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCarL1 rand0, SCode rand1)
+        {
+            return
+                 new PrimitiveConsCarL1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveConsCarL1.EvalStep";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            // Eval argument0
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            answer = new Cons (((Cons) ev0).Car, ev1);
+            return false;
+        }
+    }
 
 
 
