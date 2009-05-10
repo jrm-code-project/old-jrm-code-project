@@ -7,6 +7,19 @@ namespace Microcode
 {
     static class SchemeString
     {
+        [SchemePrimitive ("SET-STRING-MAXIMUM-LENGTH!", 2, false)]
+        public static bool SetStringMaximumLength (out object answer, object arg0, object arg1)
+        {
+            char [] str = (char []) arg0;
+            int len = (int) arg1;
+            char [] result = new char [len];
+            for (int i = 0; i < len; i++) {
+                result [i] = str [i];
+            }
+            answer = result;
+            return false;
+        }
+
         [SchemePrimitive ("STRING?", 1, true)]
         public static bool IsString (out object answer, object arg)
         {
@@ -15,7 +28,7 @@ namespace Microcode
         }
 
         [SchemePrimitive ("STRING->SYMBOL", 1, false)]
-        public static bool StringToSymbol (ref object result, object arg)
+        public static bool StringToSymbol (out object result, object arg)
         {
             result = Symbol.Make (new String ((char []) arg));
             return false;

@@ -9,15 +9,20 @@ namespace Microcode
     sealed public class Histogram<T>
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        private object l = new Object ();
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Dictionary<T, long> entries = new Dictionary<T, long> ();
 
         [DebuggerStepThrough]
         public void Note (T item)
         {
-            if (entries.ContainsKey (item))
-                entries [item] += 1;
-            else
-                entries [item] = 1;
+            lock (this.l) {
+                if (entries.ContainsKey (item))
+                    entries [item] += 1;
+                else
+                    entries [item] = 1;
+            }
         }
 
         static public long GetKey (KeyValuePair<T, long> entry) { return entry.Value; }

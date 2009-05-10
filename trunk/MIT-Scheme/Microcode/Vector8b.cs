@@ -21,5 +21,27 @@ namespace Microcode
             ((char []) vec) [(int) idx] = (char) (int) val;
             return false;
         }
+
+        [SchemePrimitive ("VECTOR-8B-FIND-PREVIOUS-CHAR", 4, false)]
+        public static bool Vector8bFindPreviousChar (out object answer, object [] arglist)
+        {
+            //throw new NotImplementedException ();
+            char [] str = (char []) (arglist [0]);
+            int start = (int) (arglist [1]);
+            int scan = (int) (arglist [2]);
+            char target = (char) (int) (arglist [3]);
+
+            while (start < scan) {
+                int scan1 = scan - 1;
+                if (str [scan1] == target) {
+                    answer = scan1;
+                    return false;
+                }
+                scan = scan1;
+            }
+
+            answer = false;
+            return false;
+        }
     }
 }

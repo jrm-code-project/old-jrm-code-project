@@ -134,6 +134,8 @@ namespace Microcode
         internal abstract bool IsUnbound (object name);
         internal abstract bool IsUnreferenceable (object name);
 
+        internal abstract bool UnbindVariable (out object answer, object name);
+
         [SchemePrimitive ("LEXICAL-UNBOUND?", 2, false)]
         public static bool IsLexicalUnbound (out object answer, object env, object name)
         {
@@ -219,6 +221,14 @@ namespace Microcode
         public static bool IsEnvironment (out object answer, object arg)
         {
             answer = arg is Environment || (arg is bool && (bool) arg == false);
+            return false;
+        }
+
+        [SchemePrimitive ("UNBIND-VARIABLE", 2, false)]
+        public static bool UnbindVariable (out object answer, object env, object name)
+        {
+            if (ToEnvironment (env).UnbindVariable (out answer, (Symbol) name))
+                throw new NotImplementedException ("Error during lexical-reference-type.");
             return false;
         }
 
@@ -382,6 +392,11 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
+
+        internal override bool UnbindVariable (out object answer, object name)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     [Serializable]
@@ -485,7 +500,11 @@ namespace Microcode
         {
             ValueCell cell = null;
             if (this.globalBindings.TryGetValue (name, out cell)) {
-                throw new NotImplementedException ("Value cell already exists.");
+                if (cell != newCell)
+                    throw new NotImplementedException ("Value cell already exists.");
+                else
+                    // No effect to just do it again, even if it is weird.
+                    return false;
             }
             this.globalBindings.Add (name, newCell);
             return false; // copacetic
@@ -577,6 +596,11 @@ namespace Microcode
         internal override ValueCell SearchFixed (object name)
         {
             return (ValueCell) null;
+        }
+
+        internal override bool UnbindVariable (out object answer, object name)
+        {
+            throw new NotImplementedException ();
         }
     }
 
@@ -1063,6 +1087,25 @@ namespace Microcode
             int offset = this.closure.FormalOffset (name);
             return (offset == -1) ? (ValueCell) null : (ValueCell) this.bindings [offset];
         }
+
+        internal override bool UnbindVariable (out object answer, object name)
+        {
+            int offset = this.closure.FormalOffset (name);
+            if (offset == -1) {
+                ValueCell vcell;
+                if (incrementals != null
+                    && incrementals.TryGetValue (name, out vcell)) {
+                    // Ugh!  Delete the cell!
+                    incrementals.Remove (name);
+                    answer = Constant.sharpT;
+                    return false;
+                }
+
+                else
+                    return this.closure.Environment.UnbindVariable (out answer, name);
+            }
+            throw new NotImplementedException ("Found in bindings.");
+        }
     }
 
     /// <summary>
@@ -1250,6 +1293,11 @@ namespace Microcode
             }
             else throw new NotImplementedException();
         }
+
+        internal override bool UnbindVariable (out object answer, object name)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     /// <summary>
@@ -1406,6 +1454,11 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
+
+        internal override bool UnbindVariable (out object answer, object name)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     /// <summary>
@@ -1556,6 +1609,11 @@ namespace Microcode
         }
 
         internal override ValueCell SearchFixed (object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool UnbindVariable (out object answer, object name)
         {
             throw new NotImplementedException ();
         }
@@ -1710,6 +1768,11 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
+
+        internal override bool UnbindVariable (out object answer, object name)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     [Serializable]
@@ -1787,7 +1850,8 @@ namespace Microcode
 #if DEBUG
             foundAtDepth [depth] += 1;
 #endif
-            value = (offset == 1) ? value1 : value0;
+            value = (offset == 0) ? value0 :
+                    (offset == 1) ? value1 : value2;
             return false;
         }
 
@@ -1858,6 +1922,11 @@ namespace Microcode
         }
 
         internal override ValueCell SearchFixed (object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool UnbindVariable (out object answer, object name)
         {
             throw new NotImplementedException ();
         }
@@ -1945,7 +2014,9 @@ namespace Microcode
 #if DEBUG
             foundAtDepth [depth] += 1;
 #endif
-            value = (offset == 1) ? value1 : value0;
+            value = (offset == 0) ? value0 :
+                (offset == 1) ? value1 :
+                (offset == 2) ? value2 : value3;
             return false;
         }
 
@@ -2016,6 +2087,11 @@ namespace Microcode
         }
 
         internal override ValueCell SearchFixed (object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool UnbindVariable (out object answer, object name)
         {
             throw new NotImplementedException ();
         }
@@ -2147,6 +2223,11 @@ namespace Microcode
         }
 
         internal override ValueCell SearchFixed (object name)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool UnbindVariable (out object answer, object name)
         {
             throw new NotImplementedException ();
         }

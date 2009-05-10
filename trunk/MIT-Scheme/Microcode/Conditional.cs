@@ -4949,6 +4949,7 @@ namespace Microcode
         public static SCode Make (SCode predicate, SCode alternative)
         {
             return 
+                (! Configuration.EnableSuperOperators) ? new Disjunction (predicate, alternative) :
                 (predicate is Conditional) ? DistributeDisjunction((Conditional) predicate, alternative) :
                 (predicate is Disjunction) ? RewriteDisjunction ((Disjunction) predicate, alternative):
 

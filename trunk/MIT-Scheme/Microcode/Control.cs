@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Microcode
 {
@@ -10,6 +11,7 @@ namespace Microcode
     [Serializable]
     public abstract class Control : SchemeObject
     {
+        [DebuggerStepThrough]
         protected Control (TC typeCode) : base (typeCode) { }
 
         /// <summary>
