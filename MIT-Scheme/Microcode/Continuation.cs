@@ -10,6 +10,7 @@ namespace Microcode
     {
         public ContinuationFrameList continuation;
 
+        [DebuggerStepThrough]
         protected ContinuationFrame ()
             : base (TC.CONTROL_POINT)
         {

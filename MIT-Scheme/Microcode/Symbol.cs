@@ -11,14 +11,17 @@ namespace Microcode
         static Dictionary<string,Symbol> symbolTable = new Dictionary<string, Symbol> ();
         readonly string name;
         readonly int hashCode;
+        static object [] obarray = new object [1];
 
         Symbol (string name, bool intern)
             : base (intern ? TC.INTERNED_SYMBOL : TC.UNINTERNED_SYMBOL)
         {
             this.name = name;
             this.hashCode = name.GetHashCode ();
-            if (intern)
-                symbolTable.Add(name, this);
+            if (intern) {
+                symbolTable.Add (name, this);
+                obarray [0] = new Cons (this, obarray [0]);
+            }
         }
 
         static public Symbol Make (string name)
@@ -28,6 +31,11 @@ namespace Microcode
             if (symbolTable.TryGetValue (name, out canonicalSymbol) == false)
                 canonicalSymbol = new Symbol (canonicalName, true);
             return canonicalSymbol;
+        }
+
+        static public object [] GetObarray ()
+        {
+            return obarray;
         }
 
         void CheckInterning ()
@@ -59,9 +67,6 @@ namespace Microcode
 
         public override string ToString ()
         {
-#if DEBUG
-            CheckInterning();
-#endif
             return this.name;
         }
 
@@ -91,7 +96,11 @@ namespace Microcode
         {
             get
             {
-                throw new NotImplementedException ();
+                ValueCell cell = Environment.Global.GetValueCell(this.name);
+                if (cell == null) return ReferenceTrap.Unbound;
+                object result;
+                cell.GetValue(out result);
+                return result;
             }
             set
             {

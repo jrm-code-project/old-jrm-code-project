@@ -279,7 +279,7 @@ namespace Microcode
         [SchemePrimitive ("MICROCODE-LIBRARY-PATH", 0, true)]
         public static bool MicrocodeLibraryPath (out object answer)
         {
-            answer = new object [] { "C:\\Program Files\\MIT\\lib\\".ToCharArray () };
+            answer = new object [] { "C:\\Program Files\\MIT-GNU Scheme\\lib\\".ToCharArray () };
             return false;
 
         //    //return new object [] {"Program Files".ToCharArray(),

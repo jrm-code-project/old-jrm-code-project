@@ -6,6 +6,7 @@ namespace Microcode
     public static class FixedObjectsVector
     {
         const int SystemInterruptVector = 0x01;
+        const int Obarray = 0x03;
         const int SystemCallNames = 0x09;
         const int SystemErrorNames = 0x0A;
         const int DummyHistory = 0x13;
@@ -223,6 +224,7 @@ namespace Microcode
         [SchemePrimitive ("GET-FIXED-OBJECTS-VECTOR", 0, true)]
         public static bool GetFixedObjectsVector (out object answer)
         {
+            theFixedObjectsVector [Obarray] = Symbol.GetObarray ();
             answer = theFixedObjectsVector;
             return false;
         }

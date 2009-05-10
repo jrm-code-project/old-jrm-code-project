@@ -22,49 +22,49 @@ namespace Microcode
         /// <summary>
         /// Cache the parent frames in a vector in the lexical frame.
         /// </summary>
-        public const bool EnableLexicalCache = true;
+        public const bool EnableLexicalCache = false;
 
-        public const bool EnableSuperOperators = true;
+        public const bool EnableSuperOperators = false;
 
-        public const bool EnableCombination1Specialization = true;
-        public const bool EnableCombination2Specialization = true;
-        public const bool EnableCombination3 = true;
+        public const bool EnableCombination1Specialization = false;
+        public const bool EnableCombination2Specialization = false;
+        public const bool EnableCombination3 = false;
         public const bool EnableCombination3Specialization = false;
-        public const bool EnableConditionalSpecialization = true;
-        public const bool EnablePrimitive1Specialization = true;
-        public const bool EnablePrimitive2Specialization = true;
-        public const bool EnablePrimitiveConditional1 = true;
-        public const bool EnablePrimitiveConditional2 = true;
-        public const bool EnableSequenceSpecialization = true;
+        public const bool EnableConditionalSpecialization = false;
+        public const bool EnablePrimitive1Specialization = false;
+        public const bool EnablePrimitive2Specialization = false;
+        public const bool EnablePrimitiveConditional1 = false;
+        public const bool EnablePrimitiveConditional2 = false;
+        public const bool EnableSequenceSpecialization = false;
 
-        public const bool EnableInlinePrimitive1 = true;
-        public const bool EnableInlinePrimitive2 = true;
+        public const bool EnableInlinePrimitive1 = false;
+        public const bool EnableInlinePrimitive2 = false;
 
         /// <summary>
         /// Special case combination1.
         /// </summary>
-        public const bool EnableLet1 = true;
+        public const bool EnableLet1 = false;
 
         /// <summary>
         /// If true, allow interpreter to rewrite code to improve performance.
         /// </summary>
-        public const bool EnableCodeRewriting = true;
+        public const bool EnableCodeRewriting = false;
 
         /// <summary>
         /// If true, allow interpreter to flatten sequences by rewriting.
         /// </summary>
-        public const bool EnableFlattenSequence = true;
+        public const bool EnableFlattenSequence = false;
 
         /// <summary>
         /// If true, allow interpreter to elide non-side-effects from sequences.
         /// </summary>
-        public const bool EnableSequenceSimplification = true;
+        public const bool EnableSequenceSimplification = false;
 
         /// <summary>
         /// If true, sequences that begin with conditionals may be
         /// distributed to inside the conditional.
         /// </summary>
-        public const bool EnableSequenceConditionalSwap = true;
+        public const bool EnableSequenceConditionalSwap = false;
 
         /// <summary>
         /// Enable replacement of chains of car/cdr with call to GeneralCarCdr.
@@ -74,29 +74,29 @@ namespace Microcode
         /// <summary>
         /// Enable conversion of (if (not ...)  to if.
         /// </summary>
-        public const bool EnableInvertConditional = true;
+        public const bool EnableInvertConditional = false;
 
         /// <summary>
         /// Enable conversion of conditionals to disjunctions if predicate
         /// and consequent are the same.
         /// </summary>
-        public const bool EnableDisjunctionConversion = true;
+        public const bool EnableDisjunctionConversion = false;
 
         /// <summary>
         /// Enable conditional folding if predicate is compile-time constant.
         /// </summary>
-        public const bool EnableFoldConditional = true;
+        public const bool EnableFoldConditional = false;
 
         /// <summary>
         /// Enable conditional distribution if predicate is conditional.
         /// </summary>
-        public const bool EnableConditionalDistribution = true;
+        public const bool EnableConditionalDistribution = false;
 
         /// <summary>
         /// Enable conversion of conditional to sequence2 if both branches
         /// produce the same constant answer.
         /// </summary>
-        public const bool EnableMergeConditionalResult = true;
+        public const bool EnableMergeConditionalResult = false;
 
         // If true, literal unspecific values may be replaced
         // by arbitrary convenient values.

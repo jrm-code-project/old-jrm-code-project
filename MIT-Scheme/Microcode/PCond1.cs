@@ -3502,14 +3502,12 @@ namespace Microcode
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            throw new NotImplementedException ();
 #if DEBUG
-            Warm ("PCond1LSL.EvalStep");
+            Warm ("PCond1LSA0.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
                 throw new NotImplementedException ();
-
 #if DEBUG
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
@@ -3526,8 +3524,7 @@ namespace Microcode
             }
 
             if ((answer is bool) && (bool) answer == false) {
-                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
-                    throw new NotImplementedException ();
+                answer = environment.Argument0Value;
                 return false;
             }
             else {

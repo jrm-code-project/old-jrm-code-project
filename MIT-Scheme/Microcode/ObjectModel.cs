@@ -628,6 +628,10 @@ namespace Microcode
                     banswer = arg1 is Symbol && ((Symbol) arg1).TypeCode == TC.UNINTERNED_SYMBOL;
                     break;
 
+                case TC.VARIABLE:
+                    banswer = arg1 is Variable;
+                    break;
+
                 case TC.VECTOR:
                     banswer = arg1 is object [];
                     break;

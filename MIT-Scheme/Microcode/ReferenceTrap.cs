@@ -24,8 +24,10 @@ namespace Microcode
                 return TrapKind.NON_TRAP_KIND;
             else if (reftrap == unassigned)
                 return TrapKind.TRAP_UNASSIGNED;
-            else 
-                return (TrapKind)(((Cons)(reftrap.contents)).Car);
+            else if (reftrap == unbound)
+                return TrapKind.TRAP_UNBOUND;
+            else
+                return (TrapKind) (((Cons) (reftrap.contents)).Car);
         }
         
         static ReferenceTrap expensive;

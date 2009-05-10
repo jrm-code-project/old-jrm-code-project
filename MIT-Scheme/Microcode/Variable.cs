@@ -385,6 +385,7 @@ namespace Microcode
            if (name is Symbol &&
                (
                ((name.ToString()) == "no symbol has this name") ||
+               //((name.ToString()) == "fixed-objects") ||
                //((name.ToString()) == "grow-table!") ||
                //(((string) name) == "cgen/expression") ||
                //(((string) name) == "make-conditional") ||
@@ -393,6 +394,7 @@ namespace Microcode
                //(((string) name) == "load-option") ||
                //(((string) name) == "string-copy") ||
                //(((string) name) == "guarantee-port-type") ||
+               //((name.ToString()) == "extend-package-environment") ||
                false)
                )
                 breakOnReference = true;
@@ -790,7 +792,6 @@ namespace Microcode
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
-
 #endif
             // Don't know where it is.
             if (environment.DeepSearch (out value, this.varname)) throw new NotImplementedException ();

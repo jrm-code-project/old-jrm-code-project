@@ -222,9 +222,13 @@ namespace Microcode
 
         static bool firstTime = true;
         static readonly string cannedString = "(doit)\n";
+        static object promptTime = 0;
         public override int Read (char [] buffer, int start, int limit)
         {
             if (firstTime) {
+                Misc.SystemClock (out promptTime);
+                Console.WriteLine ("Cold load time: {0}", promptTime);
+                Console.WriteLine (";; Hack:  pretending the user typed (doit)");
                 for (int i = 0; i < cannedString.Length; i++)
                     buffer [start + i] = cannedString [i];
                 firstTime = false;

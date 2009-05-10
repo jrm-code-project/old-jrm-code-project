@@ -162,11 +162,8 @@ namespace Microcode
             else if (rator == Primitive.IntIsEq) {
                 if ((int) rand0.Quoted == 0)
                     return Rewrite (rator, Primitive.ObjectIsZero, rand1);
-                else if ((int) rand0.Quoted != 2
-                    && (int) rand0.Quoted != 8
-                    && (int) rand0.Quoted != 10
-                    && (int) rand0.Quoted != 16)
-                    Debugger.Break ();
+                else
+                    return StandardMake (rator, rand0, rand1);
             }
             else if (rator == Primitive.IsEq) {
                 if (rand0.Quoted == null)
@@ -365,6 +362,7 @@ namespace Microcode
                                                      || (int) rand1.Quoted == 15
                                                      || (int) rand1.Quoted == 31
                                                      || (int) rand1.Quoted == 63
+                                                     || (int) rand1.Quoted == 240
                                                      || (int) rand1.Quoted == 255
                                                      || (int) rand1.Quoted == 1023
                                                      || (int) rand1.Quoted == 2097151)

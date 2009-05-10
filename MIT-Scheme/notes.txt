@@ -2647,3 +2647,1161 @@ ExtendedLambda           3983881
 TheEnvironment                32
 Sequence3                 698000
 Sequence2               12137919
+--------
+September 10
+Without argument   1.7   seconds to cold load
+                  52.242 seconds to scheme.init
+
+with argument
+Jrm Scheme takes   1.644 seconds to cold load,
+                  45.348 to load scheme.init
+
+(debug)            5.801 coldload
+                 379.934 to load scheme.init
+		 
+
+Variable                72502009
+Argument               157195040
+
+Not surprising it isn't a big difference because a deep search finds
+the argument fairly quickly.  But if we can avoid the value cell
+as well....
+
+Of the arguments, the histogram is like this:
+Argument1	115385156	int
+Argument2        14277575	int
+Argument3         5676844	int
+Argument4          895704	int
+Argument5            1737	int
+
+So arguments 1-4 are clearly much more important than 5 onward.
+How about environment extension?
+
+		[1]	 4679477 int
+		[2]	37722239 int
+		[3]	 9757937 int
+		[4]	 4200869 int
+		[5]	 1392424 int
+		[6]	  121289 int
+		[7]          843 int
+
+--------
+September 11
+
+Fixed environments to not have a duplicate of the closure
+in slot 0.  Argument histogram is same, but moved down by one.
+Environment histogram is same, but moved down by one, also.
+
+Variable                72502009
+Argument               157195040
+
+Added  
+    *FreeVariable         6940036
+    *TopLevelVariable     4337378
+                         11277414
+
+    Variable            218380140
+
+Argument         evaluationCount = 136234413
+Variable         evaluationCount =  82141671  (lexical)
+TopLevelVariable evaluationCount =   4335759
+FreeVariable     evaluationCount =   6939353
+
+Argument0        evaluationCount = 115376735
+Variable         evaluationCount =  82137510
+Argument         evaluationCount =  20853745
+TopLevelVariable evaluationCount =   4337676
+FreeVariable     evaluationCount =   6940059
+
+--------
+September 15
+Fix-up disjunctions
+
+Disjunction              6701055
+Combination              5746405
+Combination0             4679665
+Combination1            37802668
+Combination2             9756211
+Conditional             56910055
+PrimitiveCombination0       4647
+PrimitiveCombination1   12864680
+PrimitiveCombination1a  53084079
+PrimitiveCombination2   82035616
+PrimitiveCombination3    2254972
+Variable                82105312
+FreeVariable             6940042
+TopLevelVariable         4337414
+Argument0               62337479
+Argument1               14285815
+ArgumentN                6573083 
+Lambda                   4097153
+ExtendedLambda           3984585
+SimpleLambda            16738925
+
+Closure                  4097315
+ExtendedClosure          5551545
+SimpleClosure           48231988
+
+Still gotta fix the variable lookup.  See if `closing' the closure
+would work.
+--------
+September 16
+Make `lexical-ref' work.
+Jrm Scheme takes   1.700 seconds to cold load,
+                  26.00  to load scheme.init
+
+--------
+September 17
+Fixup `object-type?'
+
+PrimitiveCombination1    12960479
+PrimitiveCombination1a   54580090
+PrimitiveCombination2    80416132
+FreeVariable              6939339
+GlobalVariable                279
+LexicalVariable          82089261  <-- gotta work on this
+  Level1             29868752
+  Level2              1725000
+  Level3             11467775
+  Level4             31725464
+  Level5              4895555
+
+TopLevelVariable          4335474
+Argument                  6576422
+Argument0                60819182
+Argument1                14283957
+
+It seems a display would be worth it because we often go fairly deep
+in the lexical chain.
+
+LexicalVariable      52235747
+  LexicalVariable1   29884446  
+
+--------
+Hash cons the SCode
+--------
+September 21
+
+Redid the test code.  Now load bhc, and one section of the data.  With
+no optimizations, these are the stats:
+
+		SCode.evaluations	125067038	int
+
+                Environment.extendedBy
+		[0]	1046482	int    <--- this is odd
+		[1]	8051700	int
+		[2]	2496595	int
+		[3]	796938	int
+		[4]	253555	int
+		[5]	22186	int
+		[6]	550	int
+		[7]	233	int
+		[8]	54	int
+		[9]	1	int
+
+-		Primitive.hotPrimitives.Entries	{System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>[185]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>[]
++		[0]	{[#<PRIMITIVE CAR 1>, 4274160]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[1]	{[#<PRIMITIVE EQ? 2>, 3151998]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[2]	{[#<PRIMITIVE STRING-REF 2>, 2297925]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[3]	{[#<PRIMITIVE LESS-THAN-FIXNUM? 2>, 2097777]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[4]	{[#<PRIMITIVE CDR 1>, 1948850]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[5]	{[#<PRIMITIVE EQUAL-FIXNUM? 2>, 1931955]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[6]	{[#<PRIMITIVE PLUS-FIXNUM 2>, 1837594]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[7]	{[#<PRIMITIVE OBJECT-TYPE? 2>, 1705988]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[8]	{[#<PRIMITIVE %RECORD-REF 2>, 1632743]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[9]	{[#<PRIMITIVE PAIR? 1>, 1551007]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
+
+-		SCode.scodeHistogram.Entries	{System.Collections.Generic.KeyValuePair<System.Type,long>[22]}	System.Collections.Generic.KeyValuePair<System.Type,long>[]
++		[0]	{[Microcode.Variable, 46051462]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[1]	{[Microcode.PrimitiveCombination2, 18677906]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[2]	{[Microcode.Quotation, 12239288]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[3]	{[Microcode.PrimitiveCombination1, 12066798]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[4]	{[Microcode.Conditional, 11231909]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[5]	{[Microcode.Combination1, 8064558]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[6]	{[Microcode.Lambda, 5228691]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[7]	{[Microcode.Sequence2, 3288628]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[8]	{[Microcode.Combination2, 2389404]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[9]	{[Microcode.Disjunction, 1129126]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[10]	{[Microcode.Combination, 1091544]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[11]	{[Microcode.Combination0, 1046257]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[12]	{[Microcode.Assignment, 1021261]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[13]	{[Microcode.ExtendedLambda, 909504]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[14]	{[Microcode.PrimitiveCombination3, 451820]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[15]	{[Microcode.Sequence3, 153704]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[16]	{[Microcode.Delay, 12280]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[17]	{[Microcode.Definition, 7364]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[18]	{[Microcode.PrimitiveCombination0, 4152]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[19]	{[Microcode.Access, 1214]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[20]	{[Microcode.Comment, 135]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[21]	{[Microcode.TheEnvironment, 33]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+-		SCode.hotSCode.Entries	{System.Collections.Generic.KeyValuePair<Microcode.SCode,long>[85799]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>[]
++		[0]	{[#<VARIABLE i>, 4646087]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[1]	{[#<VARIABLE ps>, 3621774]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[2]	{[#<VARIABLE loop>, 3287049]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[3]	{[Microcode.PrimitiveCombination1, 2762308]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[4]	{[#<VARIABLE promise>, 2657499]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[5]	{[#<VARIABLE n>, 2421095]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[6]	{[#<SCODE-QUOTE 1>, 2147230]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[7]	{[#<VARIABLE table>, 1942065]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[8]	{[#<VARIABLE items>, 1840985]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[9]	{[#<SCODE-QUOTE #!Unspecific>, 1745915]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
+
+(/ 46051462.0 125067038.0) 0.368214221240292
+(/ 18677906.0 125067038.0) 0.1493431546687785
+
+12.198 seconds
+10.265 seconds
+10.203 seconds
+
+10.371
+
+
+With lexical variable addressing, 
+8.403
+8.438
+
+With argument addressing
+8.306
+8.263
+
+----
+Effect of eliding (let () ...)
+  Before evaluations:		SCode.evaluations	125054400
+  Before combination0:[11]	{[Microcode.Combination0, 1046082]}
+
+  After evaluations:		SCode.evaluations	123243042
+  After combination0:[14]	{[Microcode.Combination0,  138931]}
+
+------
+Sept. 25
+
+128.231 s for doit in debug
+--------
+The idea behind `superoperators' is that you combine common subgraphs
+into specialized nodes that run quicker than the individual nodes
+would.
+
+Most primitiveCombination1 have Argument0 as their operand.
+
+Most primitiveCombination2 have a Quotation as their second operand.
+--------
+Sept 27
+Instrumented callers.
+Argument0 is called most 		Value	12994885	long
+but where from?
++		[0]	{[Microcode.PrimitiveCombination2A2, 3181056]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+Miscount.  It was counting a call to argument, but shortcutting.
+
+PrimComb2Q2.
+
+Now lexical.  Combination1
+
+--------
+Sept 28
+		SCode.evaluations                   76041340	int
++		[0]	{[Microcode.LexicalVariable, 7413926]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+used by
++		[0]	{[Microcode.PrimitiveConditional2, 1900579]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+Rand0           [0] = {[Microcode.LexicalVariable, 1200147]}
+
+		SCode.evaluations	82462563	int
++		[0]	{[Microcode.Conditional, 9010243]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	74853633	int
++		[0]	{[Microcode.Argument0, 6476407]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveConditional1, 2193579]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	74844429	int
++		[0]	{[Microcode.Argument0, 6475377]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveConditional1, 2192787]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	72568977	int
++		[0]	{[Microcode.Quotation, 6262585]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveConditional2A0, 1695999]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	71454725	int
++		[0]	{[Microcode.LexicalVariable, 6213227]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveConditional2A0, 1058330]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	70408494	int
++		[0]	{[Microcode.LexicalVariable, 5159443]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	69456551	int
++		[0]	{[Microcode.Quotation, 5141707]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveConditional2, 1357804]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	68885055	int
++		[0]	{[Microcode.Quotation, 4561503]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.Letrec1, 914793]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	67978054	int
++		[0]	{[Microcode.Argument0, 4379574]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	67983567	int
++		[0]	{[Microcode.Argument0, 4380246]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveConditional2QSQS, 901338]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+100.791
+		SCode.evaluations	67080970	int
++		[0]	{[Microcode.LexicalVariable, 4209993]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveCombination2L0, 947058]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+101.484
+		SCode.evaluations	67081996	int
++		[0]	{[Microcode.LexicalVariable, 4210227]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.Combination2, 819469]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+102.962
+		SCode.evaluations	66477313	int
++		[0]	{[Microcode.SimpleLambda, 4077491]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.Let1, 2582467]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+Boot:  1.336  Doit:  4.357
+       1.376         4.342
+       1.372         4.314
+
+		SCode.evaluations	62967799	int
+
+96.27
+		SCode.evaluations	62227001	int
++		[0]	{[Microcode.Argument0, 3478310]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveCombination2L1, 650280]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+94.341
+		SCode.evaluations	61503932	int
++		[0]	{[Microcode.LexicalVariable, 2859121]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveConditional2, 677316]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+95.902
+		SCode.evaluations	60820113	int
++		[0]	{[Microcode.Argument0, 2828947]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.Combination1, 587672]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+Boot: 1.371  Doit:  4.28
+      1.347         4.189
+      1.378         4.195
+
+--------
+transitThreshold 2
+ 95.957		LexicalEnvironment.lexicalCacheHits	3730055	long
+
+transitThreshold 3
+ 95.181  	LexicalEnvironment.lexicalCacheHits	3509552	long
+
+transitThreshold 4
+104.94 		LexicalEnvironment.lexicalCacheHits	3331231	long
+
+transitThreshold 1024
+107.189		LexicalEnvironment.lexicalCacheHits	 164751	long
+--------
+		SCode.evaluations	60235903	int
++		[0]	{[Microcode.Quotation, 2758540]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.Conditional, 487030]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+		SCode.evaluations	59771951	int
++		[0]	{[Microcode.PrimitiveCombination2LA, 2742493]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveConditional2, 1316168]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+--------
+91.92
+		SCode.evaluations	59762136	int
++		[0]	{[Microcode.PrimitiveCombination2LA, 2742504]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[0]	{[Microcode.PrimitiveConditional2, 1316168]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+----------------
+Just for kicks.
+sboyer.sch  unsyntaxed  MIT-Scheme (power save)  38.484
+                                   (high perf)   19.44   19.18
+
+sboyer.sch  syntaxed  MIT-Scheme (high perf)  7.066  6.741 6.333
+
+sboyer.sch  compiled  MIT-Scheme (high perf)   .04  .032  .078 .046
+
+
+sboyer.scm  unsyntaxed JRM-Scheme debug    400. s
+sboyer.scm  unsyntaxed JRM-Scheme debug    388.s
+
+sboyer.scm  unsyntaxed JRM-Scheme release   23.792s  23.743s  23.587s
+                                  high      20.6     20.6     20.8
+                                            20.339   20.427   20.27
+
+            syntaxed   JRM-Scheme high       6.45    6.681     6.504
+
+               with enablelexicaladdressing, 5.117, 5.231, 5.436
+                                            
+
+--------
+Gotta bug.
+
+Let's try to find where the .x.1 is coming from.
+It's created at the call to `map-interned-symbol'.
+called from finalize-mapped-identifier
+called from anonymous lambda created by unmapping->substitution
+
+which is passed in to alpha-substitute
+
+Could lambda-components** be failing?
+
+Backtrace has pending calls (not called yet)
+
+system-pair-cons
+    Creating an uninterned symbol
+
+(let ((mapped-identifier ...)) ...
+    In RENAME-IDENTIFIER where key is 'x and rename-id is a promise
+    mapping-table is extracted from the *rename-database*
+
+(let ((rename ...)) ...  bind-variable!
+CONS
+(let ((bvl ...)) ...     compile/lambda
+....?....
+CONS
+(let ((head ...)) ...
+output/top-level-sequence       compile-body-items/top-level
+output/post-process-expression
+ 
+it was gensyms.
+--------
+Now I have to go back and yank out the slow debugging code.
+--------
+Ok, this is bizarre.  
+
+The CLR has immutable strings and a way to intern them.  For all
+intents and purposes, CLR strings are equivalent to Scheme symbols.
+It is natural to use them as the implementation for symbols.
+
+The CLR also has uninterned strings.  A string created at runtime will
+be uninterned unless the String.Intern function is invoked.  It seems
+natural to use uninterned strings as the implementation for uninterned
+symbols.
+
+MIT-Scheme uses uninterned symbols when analyzing the source code.
+This is done to give each binding a unique name.  After expanding
+macros, the unique names are mapped back to the original names
+provided that it does not cause a name conflict.  If the names would
+conflict, a new symbol is generated for that binding.
+
+The bug was that the name conflict machinery was sometimes determining
+that there was a conflict where there was in fact none.  So when
+the renaming code encountered the X in the body of (lambda (x) x), it
+determined that it was a different X from the binding of X, and
+therefore renamed it.
+
+I had suspected a bug in the hash tables because that was where the
+renaming information was stored.
+
+ 
+------
+Back to benchmarking.  
+
+Jrm-scheme
+   lattice benchmark, 
+   under debugger,      5392.614 s   37.31799334868253
+
+Jrm-scheme
+   lattice benchmark,
+   syntaxed              172.408 s   22.36557413897315
+
+MIT-Scheme
+   lattice benchmark
+   syntaxed              178.295     22.51139164247385
+
+Mit-scheme
+   lattice benchmark
+   compiled                1.95 s     2.90034611362518
+
+
+
+
+		SCode.evaluations	2,917,535,606	long              94.65016164938474
+
++		[0]	{[Microcode.Variable,              991558268]}  89.96318240202774
+                                                                        --
+                                                                        --
+                                                                        --
++		[1]	{[Microcode.PrimitiveCombination1, 345678993]}  85.38672988158588
++		[2]	{[Microcode.Conditional,           310346033]}	84.91846198385116
++		[3]	{[Microcode.Quotation,             302574365]}	84.80832130525744
++		[4]	{[Microcode.PrimitiveCombination2, 245607920]}  83.90242367179383
++		[5]	{[Microcode.StandardLambda,        234187559]}	83.69563819851788
++		[6]	{[Microcode.Combination1,          223005362]}	83.48315305465272
+                                                                        --
++		[7]	{[Microcode.Combination2,          127966222]}	81.07095348281186
+                                                                        --
+                                                                        --
+                                                                        --
++		[8]	{[Microcode.Disjunction,            53975991]}	77.32200624732634
+                                                                        --
+                                                                        --
++		[9]	{[Microcode.Sequence2,              27237467]}	74.35166717078025
++		[10]	{[Microcode.Combination,            24720705]}	73.930608520658
++		[11]	{[Microcode.Assignment,             24635704]}	73.91564977365816
+                                                                        --
+                                                                        --
+                                                                        --
+                                                                        --
+                                                                        --
++		[12]	{[Microcode.ExtendedLambda,          5346398]}	67.28061285653209
+                                                                        --
+                                                                        --
+                                                                        --
+                                                                        --
+                                                                        --
+                                                                        --
+                                                                        --
+                                                                        --
+                                                                        --
+                                                                        --
++		[13]	{[Microcode.Sequence3,                453539]}	56.5661463815806
++		[14]	{[Microcode.Access,                   156845]}	51.95470678551641
++		[15]	{[Microcode.PrimitiveCombination3,     72579]}	48.60810980157267
++		[16]	{[Microcode.Definition,                 7153]}	38.5448822504443
++		[17]	{[Microcode.PrimitiveCombination0,      4318]}	36.35282637998211
++		[18]	{[Microcode.Comment,                     130]}	21.13943352306837
++		[19]	{[Microcode.Delay,                        32]}	15.05149978319906
++		[20]	{[Microcode.TheEnvironment,               23]}	13.61727836017593
+
+
+--------
+
+(defun 10log10 (x)
+  (* 10.0 (/ (log x) (log 10.0))))
+
+(10log10 2917535606.0)
+
+(/ .99155 2.917535606)0.3398587485824843
+--------
+Jrm Scheme
+no scode optimizations
+optimized, high priority
+
+boot                                    1.397    1.395    1.415
+dynamic                                 1.739    1.668    1.745
+sboyer      104,987,422 evaluations     6.0734   6.024    6.247
+lattice                               175.325  168.038  173.681
+
+--------
+EnableLexicalAddressing
+EnableStaticBinding
+optimized, high priority
+
+boot                                     1.394   1.388   1.406  1.378
+dynamic                                  1.126   1.114   1.109
+sboyer      104,992,662 evaluations      3.47    3.468   3.624
+lattice                                 95.15   98.855  94.799
+
+--------
+--------
+EnableLexicalAddressing
+EnableStaticBinding
+EnableSimpleLambda
+optimized, high priority
+
+boot                                      1.456   1.468   1.501
+dynamic                                   1.015   1.052   1.041
+sboyer                                    3.468   3.332   3.375
+lattice                                  96.644  95.153  97.984
+
+--------
+EnableSuperOperators
+PrimitiveCombination1A
+PrimitiveCombination1A0
+PrimitiveCombination1A1
+
+boot                                       1.368   1.389   1.379
+dynamic                                     .955    .979    .975
+sboyer                                     2.736   2.741   2.78
+lattice                                   90.538  88.659  91.984
+--------
+More Supers
+
+boot                                       1.355   1.398   1.418  1.352
+dynamic                                     .852    .840    .849
+sboyer                                     2.369   2.423   2.45
+lattice                                   87.002  83.679  83.25
+
+boot                                       1.489   1.411   1.398
+dynamic                                     .831    .835    .853
+sboyer                                     2.207   2.207   2.292
+lattice                                   75.839  71.435  71.892
+
+--------
+October 13
+
+unoptimized
+SCode.evaluations	288,232,383	long
+
++		[0]	{[Microcode.Variable, 104933785]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[1]	{[Microcode.PrimitiveCombination1, 46272898]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[2]	{[Microcode.Conditional, 34478374]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[3]	{[Microcode.Combination1, 21954809]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[4]	{[Microcode.Quotation, 21831894]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[5]	{[Microcode.PrimitiveCombination2, 20050361]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[6]	{[Microcode.StandardLambda, 12914593]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[7]	{[Microcode.Sequence2, 7113101]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[8]	{[Microcode.Combination2, 7104798]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[9]	{[Microcode.Combination, 3416988]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[10]	{[Microcode.Disjunction, 3228289]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[11]	{[Microcode.Assignment, 2592710]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[12]	{[Microcode.StandardExtendedLambda, 1138482]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[13]	{[Microcode.Sequence3, 654360]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[14]	{[Microcode.PrimitiveCombination3, 491861]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[15]	{[Microcode.Access, 33573]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[16]	{[Microcode.PrimitiveCombination0, 13924]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[17]	{[Microcode.Definition, 7389]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[18]	{[Microcode.Comment, 132]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[19]	{[Microcode.Delay, 39]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[20]	{[Microcode.TheEnvironment, 23]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+
+optimized
+
+SCode.evaluations	131,862,503	long
++		[0]	{[Microcode.SimpleLet1, 6092219]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[1]	{[Microcode.PrimitiveIsPairA0CarA0, 5474292]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[2]	{[Microcode.PrimitiveIsPairA0, 5345110]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[3]	{[Microcode.Quotation, 4832236]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[4]	{[Microcode.Combination1L1S, 4715995]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[5]	{[Microcode.Sequence2, 4644201]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[6]	{[Microcode.SimpleLambda, 4608065]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[7]	{[Microcode.LexicalVariable, 4576156]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[8]	{[Microcode.Argument0, 4350629]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[9]	{[Microcode.Combination1TLVA0, 4277310]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[10]	{[Microcode.PrimitiveConditional2, 4024285]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[11]	{[Microcode.Argument1, 4022938]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[12]	{[Microcode.Combination1SA0, 3674837]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[13]	{[Microcode.LexicalVariable1, 3479316]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[14]	{[Microcode.Disjunction, 3228289]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[15]	{[Microcode.PrimitiveCombination2, 3219405]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[16]	{[Microcode.PrimitiveCombination2A0Q, 3078268]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[17]	{[Microcode.PrimitiveCombination2QA0, 2969878]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[18]	{[Microcode.Conditional, 2794143]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[19]	{[Microcode.PrimitiveConditional1SQS, 2722925]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[20]	{[Microcode.FreeVariable, 2599693]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[21]	{[Microcode.Assignment, 2592708]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[22]	{[Microcode.Combination2L1SS, 2232234]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[23]	{[Microcode.PrimitiveCombination1A, 2219932]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[24]	{[Microcode.StaticLambda, 2214547]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[25]	{[Microcode.Combination2SAS, 1946720]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[26]	{[Microcode.PrimitiveIsNullA1, 1868490]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[27]	{[Microcode.TopLevelVariable, 1726782]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[28]	{[Microcode.PrimitiveCombination2SQ, 1710354]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[29]	{[Microcode.PrimitiveIsNullA0QS, 1708293]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[30]	{[Microcode.Combination2L1A0S, 1686063]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[31]	{[Microcode.Combination0, 1669037]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[32]	{[Microcode.Sequence2SA0, 1641995]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[33]	{[Microcode.PrimitiveIsPairA1, 1431573]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[34]	{[Microcode.Combination1, 1358055]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[35]	{[Microcode.Argument, 1307580]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[36]	{[Microcode.PrimitiveConditional1A0, 1189985]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[37]	{[Microcode.Let1SQ, 1155992]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[38]	{[Microcode.StaticExtendedLambda, 1138480]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[39]	{[Microcode.ConditionalPC2, 1112722]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[40]	{[Microcode.ConditionalA, 1112204]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[41]	{[Microcode.Combination3L1SSA, 1081947]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[42]	{[Microcode.PrimitiveIsNullA0, 956333]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[43]	{[Microcode.ConditionalSQS, 939426]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[44]	{[Microcode.Combination2, 937284]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[45]	{[Microcode.PrimitiveCombination1L, 919240]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[46]	{[Microcode.Sequence2SQ, 822794]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[47]	{[Microcode.PrimitiveConditional2QS, 793055]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[48]	{[Microcode.Sequence3, 654405]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[49]	{[Microcode.PrimitiveConditional2A0Q, 614506]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[50]	{[Microcode.PrimitiveCombination1A0, 608351]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+;Loading "dynamic.bin"... done
+; Load dynamic took 141.182
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took 26.379999999999995
+591777 rewrites
+; Run boyer took 95.60999999999999
+; Run lattice took 3.7549999999999955
+; Total took 268.668
+;Value 1: (175 126)
+		SCode.evaluations	187,339,663	long
+
+;Loading "dynamic.bin"... done
+; Load dynamic took 96.75899999999999
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took 21.591000000000008
+591777 rewrites
+; Run boyer took 74.57999999999998
+; Run lattice took 3.630999999999972
+; Total took 197.66400000000002
+;Value 1: (175 126)
+		SCode.evaluations	140,944,004	long
+
+--------
+Oct 22
+
+boot                                       1.413
+Load Dynamic                               3.804
+dynamic                                     .817
+sboyer                                     2.124
+lattice3                                    .093
+lattice                                   70.623
+
+Oct 23
+
+boot                                       1.448
+Load Dynamic                               3.669
+dynamic                                     .786
+sboyer                                     1.824
+lattice3                                    .095
+lattice                                   70.907
+
+Looks like we took a hit in lattice, but made big improvements in sboyer.
+--------
+Oct 25
+Rationalized Prim1, Prim2, PCond1, PCond2
+
+		SCode.evaluations	132589695	long
+;Loading "dynamic.bin"... done
+; Load dynamic took 6.1310151696691255
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -.3432802877989354
+591777 rewrites
+; Run boyer took 3.8845645270026656
+; Run lattice took -10.043648054024567
+; Total took 8.825245379548802
+;Value 1: (175 126)
+; lb3 took 18.88
+
+		SCode.evaluations	114090733	long
+;Loading "dynamic.bin"... done
+; Load dynamic took 5.923988461155637
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -.5749589383191954
+591777 rewrites
+; Run boyer took 3.6116099519502614
+; Run lattice took -10.13228265733757
+; Total took 8.597985474805656
+;Value 1: (175 126)
+;Value: 18.71806364458729
+
+		SCode.evaluations	142718291	long
+;Loading "dynamic.bin"... done
+; Load dynamic took 5.852350633657753
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -1.0017949757290345
+591777 rewrites
+; Run boyer took 3.174364965350992
+; Run lattice took -10.555173278498264
+; Total took 8.367037990897312
+;Value 1: (175 126)
+lb3:  18.26910177682214
+
+--------
+Oct 28
+
+Very happy with PComb1 now.  Measure before and after.
+
+Boot
+		SCode.evaluations	6477043	long
+		SCode.evaluations	252580274	long
+;Loading "dynamic.bin"... done
+; Load dynamic took 22.70702122087818
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took 16.23600719895257
+591777 rewrites
+; Run boyer took 22.11318145691329
+; Run lattice took 7.534298415754188
+; Total took 26.01013166741453
+;Value 1: (175 126)
+
+
+Top 10 1-arg primitives
+
++		[0]	{[#<PRIMITIVE CAR 1>, 12728140]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[1]	{[#<PRIMITIVE PAIR? 1>, 9782954]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[3]	{[#<PRIMITIVE CDR 1>, 7793742]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[4]	{[#<PRIMITIVE NULL? 1>, 4610331]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[10]	{[#<PRIMITIVE %RECORD? 1>, 669286]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[13]	{[#<PRIMITIVE 1+ 1>, 626385]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[14]	{[#<PRIMITIVE CHAR->INTEGER 1>, 363223]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[15]	{[#<PRIMITIVE OBJECT-TYPE 1>, 310527]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[18]	{[#<PRIMITIVE FIXNUM? 1>, 278400]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[19]	{[#<PRIMITIVE NOT 1>, 183933]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
+
+		SCode.evaluations	5878279	long
+		SCode.evaluations	215553622	long
+
+--------
+Oct 29
+
+Boot
+		SCode.evaluations	3638750	long
+		SCode.evaluations	140811173	long
+
+DEBUG
+;Loading "dynamic.bin"... done
+; Load dynamic took 20.156321520246497
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took 13.52684079777267
+591777 rewrites
+; Run boyer took 19.02144367759702
+; Run lattice took 4.643404846276688
+; Total took 23.224405217573604
+;Value 1: (175 126)
+
+Release
+;Loading "dynamic.bin"... done
+; Load dynamic took 5.94060901270418
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -.6651271215129427
+591777 rewrites
+; Run boyer took 3.4004731766139322
+; Run lattice took -10.22276394711149
+; Total took 8.531504364478426
+;Value 1: (175 126)
+lb3:  18.50272421835552
+
+;Loading "dynamic.bin"... done
+; Load dynamic took 5.764565324056202
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -.969100130080565
+591777 rewrites
+; Run boyer took 2.9136885045158265
+; Run lattice took -10.457574905606757
+; Total took 8.24516328007209
+;Value 1: (175 126)
+lb3: 18.17902362350834
+
+(* 10.0 (/ (log 64.764) (log 10.0)))
+18.11333664112838
+
+--------
+Nov 7
+
+2300 prim2conditionals didn't work so well.
+
+Fixed up 7 of the prim2s, though.
+
+;Loading "dynamic.bin"... done
+; Load dynamic took 5.653755027140735
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -.8990945440593197
+591777 rewrites
+; Run boyer took 2.8623185402855293
+; Run lattice took -10.705810742857118
+; Total took 8.176314671905152
+;Value 1: (175 126)
+(* 10.0 (/ (log 64.964) (log 10.0)))
+lb3 18.1267275768086
+
+--------
+Nov 8
+Try splitting sequences at conditionals.
+
+with split
+		SCode.evaluations	3352096	long
+		SCode.evaluations	112150192	long
+
+Without
+		SCode.evaluations	3385360	long
+		SCode.evaluations	116130289	long
+
+
+split disjunction, too
+		SCode.evaluations	3238234	long
+		SCode.evaluations	107856137	long
+
+--------
+Nov 9
+;Loading "dynamic.bin"... done
+; Load dynamic took 5.208763816883419
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -1.8842499412940625
+591777 rewrites
+; Run boyer took 2.16429830876251
+; Run lattice took -10.915149811213478
+; Total took 7.598943740254992
+;Value 1: (175 126)
+
+--------
+Nov 10
+
+Big consolidation of assq fragment.
+
+		SCode.evaluations	3319694	long
+		SCode.evaluations	98066806	long
+
+;purifying...done took 1957
+;Cold load finished
+;Package: (user)
+
+1 ]=> (doit)
+
+purifying...done took 1929
+;Cold load finished
+;Package: (user)
+
+1 ]=> (doit)
+
+;Loading "dynamic.bin"... done
+; Load dynamic took 5.256925245050109
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -1.8442225167573274
+591777 rewrites
+; Run boyer took 2.263420871636305
+; Run lattice took -10.757207139381201
+; Total took 7.661896933101598
+;Value 1: (175 126)
+(* 10.0 (/ (log 63.545) (log 10.0)))18.03081384034987
+
+--------
+Nov 11.
+Fixed disjunctions:
+  (or (is-foo? x)
+      y)  =>  (prim-is-foo? x #t y)
+
+purifying...done took 1995
+;Cold load finished
+;Package: (user)
+
+1 ]=> (doit)
+
+;Loading "dynamic.bin"... done
+; Load dynamic took 5.255630582700668
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -1.713401034646805
+591777 rewrites
+; Run boyer took 2.286569581089351
+; Run lattice took -10.655015487564306
+; Total took 7.681198941847971
+;Value 1: (175 126)
+
+;Loading "dynamic.bin"... done
+; Load dynamic took 5.1507867507592255
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -1.804560644581312
+591777 rewrites
+; Run boyer took 2.092468487533734
+; Run lattice took -10.861861476162792
+; Total took 7.5541746281093625
+;Value 1: (175 126)
+
+(10log10 60.772) 17.83703529167311
+
+--- (10log10 6.333)  8.016094880273188 <-- sboyer syntaxed in MIT Scheme
+
+MIT-Scheme
+   lattice benchmark
+   syntaxed              178.295     22.51139164247385
+
+mine                                 17.83703529167311
+
+CommonLarceny interpreter
+(sboyer 1)  
+(10log10 23.228) 13.66011817361287
+(10log10 22.823) 13.5837273025802
+
+(dynamic 1)
+(10log10 1.825)  2.612628687924935
+
+(lattice)
+(10log10 1.419)  1.51982395457474
+
+Lattice
+Words allocated: 0
+Words reclaimed: 0
+Elapsed time...: 1103582 ms (User: 1103582 ms; System: 0 ms)
+Elapsed GC time: 0 ms (CPU: 0 in 0 collections.)
+
+;    #t
+ (10log10 1103.0) 30.42575512440191
+
+
+
+                 jrm  MIT    CL
+------------------|----|------|     Lattice 4
+
+ jrm   MIT                   CL
+--|-----|---------------------|     SBoyer
+
+(10log10 .05)
+
+-------- smaller is better
+Nov 13
+MIT-Scheme, compiled runtime, unsyntaxed dynamic.scm (10log10  2.37)     3.75
+MIT-Scheme, compiled runtime, syntaxed dynamic.scm   (10log10  1.90)     2.79
+CommonLarceny                 unsyntaxed dynamic.sch (10log10  1.825)    2.61
+Jrm                           syntaxed                                  -1.80
+MIT-Scheme                    comiled    dynamic.sch (10log10 .012)    -19.21
+
+CommonLarceny                 unsyntaxed sboyer.sch  (10log10 22.823)   13.58
+MIT-Scheme, compiled runtime, unsyntaxed sboyer.scm  (10log10 13.185)   11.20
+MIT-Scheme, compiled runtime, syntaxed sboyer.scm    (10log10  7.055)    8.48
+Jrm                           syntaxed sboyer.scm                        2.09
+MIT-Scheme,                   compiled   sboyer.com  (10log10   .047)  -13.28
+
+CommonLarceny,                unsyntaxed lattice.scm (10log10 1103.0)   30.43
+MIT-Scheme, compiled runtime, unsyntaxed lattice.scm (10log10 307.106)  24.87
+MIT-Scheme, compiled runtime, syntaxed   lattice.scm (10log10 184.181)  22.65
+jrm                           syntaxed   lattice.scm (10log10 60.772)   17.84
+Mit-Scheme,                   compiled   lattice.com (10log10  1.872)    2.72
+--------
+Nov 17
+
+purifying...done took 1584
+;Cold load finished
+;Package: (user)
+
+1 ]=>
+;Loading "dynamic.bin"... done
+; Load dynamic took 4.232458739368078
+;Loading "sboyer.bin"... done
+;Loading "lattice.bin"... done
+; Run dynamic took -2.3284413391781955
+591777 rewrites
+; Run boyer took 1.8667386749974506
+; Run lattice took -11.079053973095178
+; Total took 6.902847025126294
+;Value 1: (175 126)
+(10log10 56.077) 17.48784771750759
+
+(10log10 48.42)  16.85024785105714
+
+--------
+(if (if (p1)
+        (p2)
+        #f)      =>   
+    (c1)
+    (a1))
+
+
+; Run dynamic took -2.724587429714437
+591777 rewrites
+; Run boyer took 1.7318626841227407
+; Run lattice took -12.07608310501744
+; Total took 6.800634274819485
+;Value 1: (175 126)
+
+1 ]=> (let ((start (runtime))) (lb3) (- (runtime) start))
+
+;Value: 43.10900000000001
+(10log10 43.109) 16.34567948636327
+--------
+transitCount = 0
+lexicalCacheCreations =  2193096
+lexicalCacheHits =       1759294
+lexicalCacheResizes =        364
+lexicalCacheSavings =   10997889
+total = 20.67
+
+transitCount = 1
+lexicalCacheCreations = 1125750
+lexicalCacheHits =      1542136
+lexicalCacheResizes =       217
+lexicalCacheSavings =   9865724
+total = 20.7
+
+transitCount = 2
+lexicalCacheCreations =   769047
+lexicalCacheHits =       1507927
+lexicalCacheResizes =        156
+lexicalCacheSavings =    9713888
+20.66
+
+transitCount = 3
+lexicalCacheCreations     794731
+lexicalCacheHits         1552737
+lexicalCacheResizes       203983
+lexicalCacheSavings     10066938
+total = 20.64
+
+
+lexicalCacheCreations =    792632
+lexicalCacheHits =        1773229
+
+12
+lexicalCacheCreations =    713062
+lexicalCacheHits =        1677834
+lexicalCacheSavings =    10582722
+
+10
+lexicalCacheCreations =    723078
+lexicalCacheHits =        1682567
+lexicalCacheSavings =    10640017 (/ 10640017.0 723078)14.7148952118582
+
+9
+lexicalCacheCreations =    727163
+lexicalCacheHits =        1683329
+lexicalCacheSavings =    10649838 (/ 10649838.0 727163)14.64573692555864
+
+8
+lexicalCacheCreations =    733345   1264965
+lexicalCacheHits =        1685730   3250360
+lexicalCacheSavings =    10675726  19716046 
+
+7
+lexicalCacheCreations =    761511
+lexicalCacheHits =        1705772
+lexicalCacheSavings =    10799296 (/ 10799296.0 761511)14.18140512743742
+
+6
+lexicalCacheCreations =    763673
+lexicalCacheHits =        1706314
+lexicalCacheSavings =    10803567 (/ 10803567.0 763673)14.14684950233935
+
+5
+lexicalCacheCreations =    769243 
+lexicalCacheHits =        1721647
+lexicalCacheSavings =    10839043 (/ 10839043.0 769243)14.09053186054342
+
+4
+lexicalCacheCreations =    779246
+lexicalCacheHits =        1726532
+lexicalCacheSavings =    10861789 (/ 10861789.0 779246)13.93884472939226
+
+3
+lexicalCacheCreations =    927757
+lexicalCacheHits =        1783941
+lexicalCacheSavings =    11287990   (/ 11287990.0 927757)12.16696829018806
+
+2
+lexicalCacheCreations =   1010406
+lexicalCacheHits =        1739342
+lexicalCacheSavings =    10952544 (/ 10952544.0 1010406)
+10.83974560721136
+
+
+
+
+with opt
+lexicalRefCount = 9493492
+without
+lexicalRefCount = 2899193
+----------------
+Sat Feb 28 15:35:43 2009
+
+I don't care for the myriad of specializations.  Let's return to no
+optimizations and get some benchmark times again.
+================================================================================
+(insert (current-time-string))Sun Apr 05 11:45:44 2009
+
+Time to cold load in debugger = 36.147 seconds
+Evaluations =                 13907549
+
+PrimitiveCombination1.EvalStep = 134
+Variable.EvalStep              = 104
+PrimitiveCombination2.EvalStep = 60
+StandardClosure.Apply          = 54
+
+Clearly have to improve PrimitiveCombination1.EvalStep, called 2719261
+times, (+ 810413 775973 750523) 2336909
+
+Time to cold load in debugger = 33.243 seconds

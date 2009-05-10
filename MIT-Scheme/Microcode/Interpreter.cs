@@ -95,6 +95,22 @@ namespace Microcode
         // #define MAX_RETURN_CODE			0x5F
     }
 
+    public sealed class UnwindStack
+    {
+        private static readonly UnwindStack instance = new UnwindStack ();
+
+        private UnwindStack () { }
+
+        public static UnwindStack Instance
+        {
+            get
+            {
+                return instance;
+            }
+        }
+    }
+
+
     public sealed class ExitInterpreterException : Exception
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -126,8 +142,8 @@ namespace Microcode
 
         // If you return this object, the stack will unwind.
         // You should not return this object from a primitive.   
-        public static readonly object [] UnwindStack = new object [] { };
-        public static readonly SCode UnwindStackExpression = Quotation.Make (UnwindStack);
+        public static readonly UnwindStack UnwindStack = UnwindStack.Instance;
+        public static readonly SCode UnwindStackExpression = Quotation.Make (UnwindStack.Instance);
 
         public Interpreter ()
         { }

@@ -613,9 +613,13 @@ namespace Microcode
             if (this.argumentCount != 1)
                 throw new NotImplementedException ();
             expression = this.body;
+#if DEBUG
             SCode.location = "new SmallEnvironment1";
+#endif
             environment = new SmallEnvironment1 (this, arg0);
+#if DEBUG
             SCode.location = "SimpleClosure.Call.1";
+#endif
             answer = null; // keep the compiler happy
             return true;
         }
@@ -630,9 +634,13 @@ namespace Microcode
             if (this.argumentCount != 2)
                 throw new NotImplementedException ();
             expression = this.body;
+#if DEBUG
             SCode.location = "new SmallEnvironment2";
+#endif
             environment = new SmallEnvironment2 (this, arg0, arg1);
+#if DEBUG
             SCode.location = "SimpleClosure.Call.2";
+#endif
             answer = null; // keep the compiler happy
             return true;
         }
