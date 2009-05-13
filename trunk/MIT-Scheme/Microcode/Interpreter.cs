@@ -186,7 +186,7 @@ namespace Microcode
             return true; // special return
         }
 
-        static int cwccTroubleCount;
+        //static int cwccTroubleCount;
 
         [SchemePrimitive ("CALL-WITH-CURRENT-CONTINUATION", 1, false)]
         public static bool CallWithCurrentContinuation (out object answer, object arg)

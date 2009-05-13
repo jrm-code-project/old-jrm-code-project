@@ -403,50 +403,25 @@ namespace Microcode
             // implementation that simply throws an error.  Saves time while
             // developing, but puts time bombs in the code!
             else if (arity == 0) {
-                AddPrimitive (name, (PrimitiveMethod0) MissingPrimitive0);
+                AddPrimitive (name, new UnimplementedPrimitive(name).Call0);
                 return Find (name, arity);
             }
             else if (arity == 1) {
-                AddPrimitive (name, (PrimitiveMethod1) MissingPrimitive1);
+                AddPrimitive (name, new UnimplementedPrimitive(name).Call1);
                 return Find (name, arity);
             }
             else if (arity == 2) {
-                AddPrimitive (name, (PrimitiveMethod2) MissingPrimitive2);
+                AddPrimitive (name, new UnimplementedPrimitive(name).Call2);
                 return Find (name, arity);
             }
             else if (arity == 3) {
-                AddPrimitive (name, (PrimitiveMethod3) MissingPrimitive3);
+                AddPrimitive (name, new UnimplementedPrimitive(name).Call3);
                 return Find (name, arity);
             }
             else {
-                AddPrimitive (name, arity, (PrimitiveMethod) MissingPrimitive);
+                AddPrimitive (name, arity, new UnimplementedPrimitive(name).Call);
                 return Find (name, arity);
             }
-        }
-
-        static bool MissingPrimitive (out object answer, object [] arglist)
-        {
-            throw new NotImplementedException ();
-        }
-
-        static bool MissingPrimitive0 (out object answer)
-        {
-            throw new NotImplementedException ();
-        }
-
-        static bool MissingPrimitive1 (out object answer, object arg)
-        {
-            throw new NotImplementedException ();
-        }
-
-        static bool MissingPrimitive2 (out object answer, object arg0, object arg1)
-        {
-            throw new NotImplementedException ();
-        }
-
-        static bool MissingPrimitive3 (out object answer, object arg0, object arg1, object arg2)
-        {
-            throw new NotImplementedException ();
         }
 
         [SchemePrimitive ("GET-PRIMITIVE-ADDRESS", 2, false)]
@@ -798,6 +773,41 @@ namespace Microcode
         }
 
         #endregion
+    }
+
+    class UnimplementedPrimitive
+    {
+        string name;
+
+        public UnimplementedPrimitive (string name)
+        {
+            this.name = name;
+        }
+
+        public bool Call (out object answer, object [] arglist)
+        {
+            throw new NotImplementedException ("Unimplemented primitive:  " + name);
+        }
+
+        public bool Call0 (out object answer)
+        {
+            throw new NotImplementedException ("Unimplemented primitive:  " + name);
+        }
+
+        public bool Call1 (out object answer, object arg1)
+        {
+            throw new NotImplementedException ("Unimplemented primitive:  " + name);
+        }
+
+        public bool Call2 (out object answer, object arg0, object arg1)
+        {
+            throw new NotImplementedException ("Unimplemented primitive:  " + name);
+        }
+
+        public bool Call3 (out object answer, object arg0, object arg1, object arg2)
+        {
+            throw new NotImplementedException ("Unimplemented primitive:  " + name);
+        }
     }
 
     [Serializable]
