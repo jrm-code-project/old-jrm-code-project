@@ -369,10 +369,22 @@ namespace Microcode
             return false;
         }
 
-        [SchemePrimitive ("RELOAD-RETRIEVE-STRING", 0, true)]
+        static char [] saveString = null;
+
+        [SchemePrimitive ("RELOAD-SAVE-STRING", 1, false)]
+        public static bool ReloadSaveString (out object answer, object arg)
+        {
+            if (arg != Constant.sharpF)
+                saveString = (char []) arg;
+
+            answer = Constant.Unspecific;
+            return false;
+        }
+
+        [SchemePrimitive ("RELOAD-RETRIEVE-STRING", 0, false)]
         public static bool ReloadRetrieveString (out object answer)
         {
-            answer = "I'm the reload retrieve string!".ToCharArray ();
+            answer = saveString == null ? Constant.sharpF : saveString;
             return false;
         }
 
