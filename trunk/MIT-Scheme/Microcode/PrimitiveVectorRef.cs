@@ -63,6 +63,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefL : PrimitiveVectorRef
     {
         public readonly object rand0Name;
@@ -119,6 +120,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveVectorRefA : PrimitiveVectorRefL
     {
         protected PrimitiveVectorRefA (Primitive2 rator, Argument rand0, SCode rand1)
@@ -162,6 +164,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA0 : PrimitiveVectorRefA
     {
         protected PrimitiveVectorRefA0 (Primitive2 rator, Argument0 rand0, SCode rand1)
@@ -206,6 +209,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA0L : PrimitiveVectorRefA0
     {
         public readonly object rand1Name;
@@ -231,7 +235,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveVectorRefA0L.EvalStep");
 #endif
             // Eval argument1
             object ev1;
@@ -243,6 +247,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA0A : PrimitiveVectorRefA0L
     {
         protected PrimitiveVectorRefA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
@@ -268,6 +273,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA0A0 : PrimitiveVectorRefA0A
     {
         protected PrimitiveVectorRefA0A0 (Primitive2 rator, Argument0 rand0, Argument0 rand1)
@@ -288,6 +294,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PrimitiveVectorRefA0A1 : PrimitiveVectorRefA0A
     {
         protected PrimitiveVectorRefA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
@@ -311,6 +318,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA0L1 : PrimitiveVectorRefA0L
     {
         protected PrimitiveVectorRefA0L1 (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
@@ -339,6 +347,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA0Q : PrimitiveVectorRefA0
     {
         public readonly int rand1Value;
@@ -365,6 +374,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA1 : PrimitiveVectorRefA
     {
         protected PrimitiveVectorRefA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
@@ -405,6 +415,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA1L : PrimitiveVectorRefA1
     {
         public readonly object rand1Name;
@@ -443,6 +454,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA1A : PrimitiveVectorRefA1L
     {
         protected PrimitiveVectorRefA1A (Primitive2 rator, Argument1 rand0, Argument rand1)
@@ -468,6 +480,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA1A0 : PrimitiveVectorRefA1A
     {
         protected PrimitiveVectorRefA1A0 (Primitive2 rator, Argument1 rand0, Argument0 rand1)
@@ -491,6 +504,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA1A1 : PrimitiveVectorRefA1A
     {
         protected PrimitiveVectorRefA1A1 (Primitive2 rator, Argument1 rand0, Argument1 rand1)
@@ -513,6 +527,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA1L1 : PrimitiveVectorRefA1L
     {
         protected PrimitiveVectorRefA1L1 (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
@@ -545,6 +560,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefA1Q : PrimitiveVectorRefA1
     {
         public readonly int rand1Value;
@@ -571,6 +587,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefAL : PrimitiveVectorRefA
     {
         public readonly object rand1Name;
@@ -602,6 +619,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefAA : PrimitiveVectorRefAL
     {
         protected PrimitiveVectorRefAA (Primitive2 rator, Argument rand0, Argument rand1)
@@ -627,6 +645,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefAA0 : PrimitiveVectorRefAA
     {
         protected PrimitiveVectorRefAA0 (Primitive2 rator, Argument rand0, Argument0 rand1)
@@ -649,6 +668,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefAA1 : PrimitiveVectorRefAA
     {
         protected PrimitiveVectorRefAA1 (Primitive2 rator, Argument rand0, Argument1 rand1)
@@ -670,6 +690,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefAL1 : PrimitiveVectorRefAL
     {
         protected PrimitiveVectorRefAL1 (Primitive2 rator, Argument rand0, LexicalVariable1 rand1)
@@ -688,6 +709,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefAQ : PrimitiveVectorRefA
     {
         public readonly int rand1Value;
@@ -714,6 +736,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefL1 : PrimitiveVectorRefL
     {
         protected PrimitiveVectorRefL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
@@ -763,6 +786,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefL1L : PrimitiveVectorRefL1
     {
         public readonly object rand1Name;
@@ -806,6 +830,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveVectorRefL1A : PrimitiveVectorRefL1L
     {
         protected PrimitiveVectorRefL1A (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
@@ -830,6 +855,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefL1A0 : PrimitiveVectorRefL1A
     {
         protected PrimitiveVectorRefL1A0 (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
@@ -858,6 +884,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefL1A1 : PrimitiveVectorRefL1A
     {
         protected PrimitiveVectorRefL1A1 (Primitive2 rator, LexicalVariable1 rand0, Argument1 rand1)
@@ -888,6 +915,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveVectorRefL1L1 : PrimitiveVectorRefL1L
     {
         protected PrimitiveVectorRefL1L1 (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
@@ -921,6 +949,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefL1Q : PrimitiveVectorRefL1
     {
         public readonly int rand1Value;
@@ -950,6 +979,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefLL : PrimitiveVectorRefL
     {
         public readonly object rand1Name;
@@ -992,6 +1022,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefLA : PrimitiveVectorRefLL
     {
         protected PrimitiveVectorRefLA (Primitive2 rator, LexicalVariable rand0, Argument rand1)
@@ -1020,6 +1051,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefLA0 : PrimitiveVectorRefLA
     {
         protected PrimitiveVectorRefLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
@@ -1046,6 +1078,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefLA1 : PrimitiveVectorRefLA
     {
         protected PrimitiveVectorRefLA1 (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
@@ -1075,6 +1108,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveVectorRefLL1 : PrimitiveVectorRefLL
     {
         protected PrimitiveVectorRefLL1 (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
@@ -1110,6 +1144,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveVectorRefLQ : PrimitiveVectorRefL
     {
         public readonly int rand1Value;
@@ -1138,8 +1173,7 @@ namespace Microcode
         }
     }
 
-
-
+    [Serializable]
     class PrimitiveVectorRefQ : PrimitiveVectorRef
     {
         public readonly object [] rand0Value;
@@ -1153,9 +1187,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
         {
             return
-                (rand1 is LexicalVariable) ? PrimitiveVectorRefQL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveVectorRefQQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveVectorRefQ (rator, rand0, rand1);
+                (rand1 is LexicalVariable) ? PrimitiveVectorRefQL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveVectorRefQQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveVectorRefQ (rator, rand0, rand1);
         }
 
 
@@ -1163,7 +1197,6 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-
             noteCalls (this.rand1);
             SCode.location = "PrimitiveVectorRefQ.EvalStep";
 #endif
@@ -1189,6 +1222,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefQL : PrimitiveVectorRefQ
     {
         public readonly object rand1Name;
@@ -1220,6 +1254,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefQA : PrimitiveVectorRefQL
     {
         protected PrimitiveVectorRefQA (Primitive2 rator, Quotation rand0, Argument rand1)
@@ -1245,6 +1280,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefQA0 : PrimitiveVectorRefQA
     {
         protected PrimitiveVectorRefQA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
@@ -1268,6 +1304,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefQA1 : PrimitiveVectorRefQA
     {
         protected PrimitiveVectorRefQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
@@ -1291,6 +1328,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefQL1 : PrimitiveVectorRefQL
     {
         protected PrimitiveVectorRefQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
@@ -1323,6 +1361,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PrimitiveVectorRefQQ : PrimitiveVectorRefQ
     {
         public readonly int rand1Value;
@@ -1350,6 +1389,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefSL : PrimitiveVectorRef
     {
         public readonly object rand1Name;
@@ -1402,6 +1442,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVectorRefSA : PrimitiveVectorRefSL
     {
         protected PrimitiveVectorRefSA (Primitive2 rator, SCode rand0, Argument rand1)
@@ -1445,6 +1486,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveVectorRefSA0 : PrimitiveVectorRefSA
     {
         protected PrimitiveVectorRefSA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
@@ -1485,6 +1527,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveVectorRefSA1 : PrimitiveVectorRefSA
     {
         protected PrimitiveVectorRefSA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
@@ -1530,6 +1573,7 @@ namespace Microcode
     }
 
 
+    [Serializable]
     class PrimitiveVectorRefSL1 : PrimitiveVectorRefSL
     {
         protected PrimitiveVectorRefSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)

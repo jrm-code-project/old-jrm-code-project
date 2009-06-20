@@ -23,12 +23,12 @@ namespace Microcode
         public static SCode Make (PrimitiveIsNegative predicate, SCode consequent, SCode alternative)
         {
             return
-                 (predicate is PrimitiveIsNegativeL) ? PCondIsNegativeL.Make ((PrimitiveIsNegativeL) predicate, consequent, alternative)
-                : (consequent is LexicalVariable) ? PCondIsNegativeSL.Make (predicate, (LexicalVariable) consequent, alternative)
-                : (consequent is Quotation) ? PCondIsNegativeSQ.Make (predicate, (Quotation) consequent, alternative)
-                : (alternative is LexicalVariable) ? PCondIsNegativeSSL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsNegativeSSQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsNegative (predicate, consequent, alternative);
+                (predicate is PrimitiveIsNegativeL) ? PCondIsNegativeL.Make ((PrimitiveIsNegativeL) predicate, consequent, alternative) :
+                (consequent is LexicalVariable) ? PCondIsNegativeSL.Make (predicate, (LexicalVariable) consequent, alternative) :
+                (consequent is Quotation) ? PCondIsNegativeSQ.Make (predicate, (Quotation) consequent, alternative) :
+                (alternative is LexicalVariable) ? PCondIsNegativeSSL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                (alternative is Quotation) ? PCondIsNegativeSSQ.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsNegative (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -75,6 +75,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeL : PCondIsNegative
     {
         public readonly object predicateName;
@@ -132,6 +133,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA : PCondIsNegativeL
     {
         protected PCondIsNegativeA (PrimitiveIsNegativeA predicate, SCode consequent, SCode alternative)
@@ -183,6 +185,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA0 : PCondIsNegativeA
     {
         protected PCondIsNegativeA0 (PrimitiveIsNegativeA0 predicate, SCode consequent, SCode alternative)
@@ -214,6 +217,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA0L : PCondIsNegativeA0
     {
         public readonly object consequentName;
@@ -261,6 +265,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA0LL : PCondIsNegativeA0L
     {
         protected PCondIsNegativeA0LL (PrimitiveIsNegativeA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -278,6 +283,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA0LQ : PCondIsNegativeA0L
     {
         public readonly object alternativeValue;
@@ -314,6 +320,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA0Q : PCondIsNegativeA0
     {
         public readonly object consequentValue;
@@ -356,6 +363,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeA0QL : PCondIsNegativeA0Q
     {
         protected PCondIsNegativeA0QL (PrimitiveIsNegativeA0 predicate, Quotation consequent, LexicalVariable alternative)
@@ -375,6 +383,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeA0QQ : PCondIsNegativeA0Q
     {
         protected PCondIsNegativeA0QQ (PrimitiveIsNegativeA0 predicate, Quotation consequent, Quotation alternative)
@@ -404,6 +413,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeA0SL : PCondIsNegativeA0
     {
         public readonly object alternativeName;
@@ -449,6 +459,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeA0SQ : PCondIsNegativeA0
     {
         public readonly object alternativeValue;
@@ -487,6 +498,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA1 : PCondIsNegativeA
     {
         protected PCondIsNegativeA1 (PrimitiveIsNegativeA1 predicate, SCode consequent, SCode alternative)
@@ -532,6 +544,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA1L : PCondIsNegativeA1
     {
         public readonly object consequentName;
@@ -583,6 +596,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeA1LL : PCondIsNegativeA1L
     {
         protected PCondIsNegativeA1LL (PrimitiveIsNegativeA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -600,6 +614,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA1LQ : PCondIsNegativeA1L
     {
         public readonly object alternativeValue;
@@ -636,6 +651,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA1Q : PCondIsNegativeA1
     {
         public readonly object consequentValue;
@@ -674,6 +690,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeA1QL : PCondIsNegativeA1Q
     {
         protected PCondIsNegativeA1QL (PrimitiveIsNegativeA1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -692,6 +709,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeA1QQ : PCondIsNegativeA1Q
     {
         protected PCondIsNegativeA1QQ (PrimitiveIsNegativeA1 predicate, Quotation consequent, Quotation alternative)
@@ -721,6 +739,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeA1SL : PCondIsNegativeA1
     {
         public readonly object alternativeName;
@@ -768,6 +787,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeA1SQ : PCondIsNegativeA1
     {
         public readonly object alternativeValue;
@@ -807,6 +827,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeAL : PCondIsNegativeA
     {
         public readonly object consequentName;
@@ -855,6 +876,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeAA : PCondIsNegativeAL
     {
         protected PCondIsNegativeAA (PrimitiveIsNegativeA predicate, Argument consequent, SCode alternative)
@@ -872,6 +894,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeAL1 : PCondIsNegativeAL
     {
         protected PCondIsNegativeAL1 (PrimitiveIsNegativeA predicate, LexicalVariable1 consequent, SCode alternative)
@@ -887,6 +910,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeALL : PCondIsNegativeAL
     {
         protected PCondIsNegativeALL (PrimitiveIsNegativeA predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -902,6 +926,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeALQ : PCondIsNegativeAL
     {
         protected PCondIsNegativeALQ (PrimitiveIsNegativeA predicate, LexicalVariable consequent, Quotation alternative)
@@ -917,6 +942,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeAQ : PCondIsNegativeA
     {
         public readonly object consequentValue;
@@ -961,6 +987,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeAQL : PCondIsNegativeAQ
     {
         protected PCondIsNegativeAQL (PrimitiveIsNegativeA predicate, Quotation consequent, LexicalVariable alternative)
@@ -978,6 +1005,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeAQQ : PCondIsNegativeAQ
     {
         protected PCondIsNegativeAQQ (PrimitiveIsNegativeA predicate, Quotation consequent, Quotation alternative)
@@ -1008,6 +1036,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeASL : PCondIsNegativeA
     {
         protected PCondIsNegativeASL (PrimitiveIsNegativeA predicate, SCode consequent, SCode alternative)
@@ -1025,6 +1054,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeASQ : PCondIsNegativeA
     {
         public readonly object alternativeValue;
@@ -1064,6 +1094,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeL1 : PCondIsNegativeL
     {
         protected PCondIsNegativeL1 (PrimitiveIsNegativeL1 predicate, SCode consequent, SCode alternative)
@@ -1114,6 +1145,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeL1L : PCondIsNegativeL1
     {
         public readonly object consequentName;
@@ -1167,6 +1199,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeL1LL : PCondIsNegativeL1L
     {
         protected PCondIsNegativeL1LL (PrimitiveIsNegativeL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1184,6 +1217,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeL1LQ : PCondIsNegativeL1L
     {
         public readonly object alternativeValue;
@@ -1220,6 +1254,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeL1Q : PCondIsNegativeL1
     {
         public readonly object consequentValue;
@@ -1261,6 +1296,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeL1QL : PCondIsNegativeL1Q
     {
         protected PCondIsNegativeL1QL (PrimitiveIsNegativeL1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -1279,6 +1315,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeL1QQ : PCondIsNegativeL1Q
     {
         protected PCondIsNegativeL1QQ (PrimitiveIsNegativeL1 predicate, Quotation consequent, Quotation alternative)
@@ -1308,11 +1345,20 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsNegativeL1SL : PCondIsNegativeL1
     {
+        public readonly object alternativeName;
+        public readonly int alternativeDepth;
+        public readonly int alternativeOffset;
+
         protected PCondIsNegativeL1SL (PrimitiveIsNegativeL1 predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
-        { }
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
+        }
 
         internal static SCode Make (PrimitiveIsNegativeL1 predicate, SCode consequent, LexicalVariable alternative)
         {
@@ -1324,10 +1370,32 @@ namespace Microcode
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            throw new NotImplementedException ();
+            #region EvalStepBody
+#if DEBUG
+            Warm ("PCondIsNegativeL1SL1.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((int) ev0 < 0) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            #endregion
         }
     }
 
+    [Serializable]
     class PCondIsNegativeL1SA : PCondIsNegativeL1SL
     {
         protected PCondIsNegativeL1SA (PrimitiveIsNegativeL1 predicate, SCode consequent, Argument alternative)
@@ -1349,6 +1417,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCondIsNegativeL1SA0 : PCondIsNegativeL1SA
     {
         PCondIsNegativeL1SA0 (PrimitiveIsNegativeL1 predicate, SCode consequent, Argument0 alternative)
@@ -1384,11 +1453,13 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCondIsNegativeL1SL1 : PCondIsNegativeL1SL
     {
         PCondIsNegativeL1SL1 (PrimitiveIsNegativeL1 predicate, SCode consequent, LexicalVariable1 alternative)
             : base (predicate, consequent, alternative)
-        { }
+        {
+        }
 
         internal static SCode Make (PrimitiveIsNegativeL1 predicate, SCode consequent, LexicalVariable1 alternative)
         {
@@ -1398,10 +1469,32 @@ namespace Microcode
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            throw new NotImplementedException ();
+            #region EvalStepBody
+#if DEBUG
+            Warm ("PCondIsNegativeL1SL1.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if ((int) ev0 < 0) {
+#if DEBUG
+                noteCalls (this.consequent);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.FastLexicalRef1 (out answer, this.alternativeName, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            #endregion
         }
     }
 
+    [Serializable]
     sealed class PCondIsNegativeL1SQ : PCondIsNegativeL1
     {
         public readonly object alternativeValue;
@@ -1447,6 +1540,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeLL : PCondIsNegativeL
     {
         protected PCondIsNegativeLL (PrimitiveIsNegativeL predicate, LexicalVariable consequent, SCode alternative)
@@ -1468,6 +1562,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeLLL : PCondIsNegativeLL
     {
         protected PCondIsNegativeLLL (PrimitiveIsNegativeL predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1486,6 +1581,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeLLQ : PCondIsNegativeLL
     {
         protected PCondIsNegativeLLQ (PrimitiveIsNegativeL predicate, LexicalVariable consequent, Quotation alternative)
@@ -1504,6 +1600,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeLQ : PCondIsNegativeL
     {
         protected readonly object consequentValue;
@@ -1547,6 +1644,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeLQL : PCondIsNegativeLQ
     {
         protected PCondIsNegativeLQL (PrimitiveIsNegativeL predicate, Quotation consequent, LexicalVariable alternative)
@@ -1565,6 +1663,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeLQQ : PCondIsNegativeLQ
     {
         protected PCondIsNegativeLQQ (PrimitiveIsNegativeL predicate, Quotation consequent, Quotation alternative)
@@ -1595,6 +1694,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeLSL : PCondIsNegativeL
     {
         protected PCondIsNegativeLSL (PrimitiveIsNegativeL predicate, SCode consequent, LexicalVariable alternative)
@@ -1613,6 +1713,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeLSQ : PCondIsNegativeL
     {
         public readonly object alternativeValue;
@@ -1657,6 +1758,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeSL : PCondIsNegative
     {
         public readonly object consequentName;
@@ -1715,6 +1817,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeSLL : PCondIsNegativeSL
     {
 
@@ -1735,6 +1838,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeSLQ : PCondIsNegativeSL
     {
         public readonly object alternativeValue;
@@ -1783,6 +1887,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeSQ : PCondIsNegative
     {
         public readonly object consequentValue;
@@ -1796,9 +1901,9 @@ namespace Microcode
         public static SCode Make (PrimitiveIsNegative predicate, Quotation consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsNegativeSQL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsNegativeSQQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsNegativeSQ (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsNegativeSQL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                (alternative is Quotation) ? PCondIsNegativeSQQ.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsNegativeSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1836,6 +1941,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeSQL : PCondIsNegativeSQ
     {
         protected PCondIsNegativeSQL (PrimitiveIsNegative predicate, Quotation consequent, LexicalVariable alternative)
@@ -1855,6 +1961,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeSQQ : PCondIsNegativeSQ
     {
         public readonly object alternativeValue;
@@ -1865,21 +1972,20 @@ namespace Microcode
             this.alternativeValue = alternative.Quoted;
         }
 
-
         public static SCode Make (PrimitiveIsNegative predicate, Quotation consequent, Quotation alternative)
         {
-            if (consequent.Quoted == alternative.Quoted) {
-                Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
-                return Sequence2.Make (predicate, consequent);
-            }
-            else if (Configuration.EnableTrueUnspecific && consequent.Quoted == Constant.Unspecific) {
-                Debug.WriteLine ("; Optimize (if <expr> <unspecific> <literal>) => (begin <expr> <literal>)");
-                return Sequence2.Make (predicate, alternative);
-            }
-            else if (Configuration.EnableTrueUnspecific && alternative.Quoted == Constant.Unspecific) {
-                Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
-                return Sequence2.Make (predicate, consequent);
-            }
+            //if (consequent.Quoted == alternative.Quoted) {
+            //    Debug.WriteLine ("; Optimize (if <expr> <literal> <literal>) => (begin <expr> <literal>)");
+            //    return Sequence2.Make (predicate, consequent);
+            //}
+            //else if (Configuration.EnableTrueUnspecific && consequent.Quoted == Constant.Unspecific) {
+            //    Debug.WriteLine ("; Optimize (if <expr> <unspecific> <literal>) => (begin <expr> <literal>)");
+            //    return Sequence2.Make (predicate, alternative);
+            //}
+            //else if (Configuration.EnableTrueUnspecific && alternative.Quoted == Constant.Unspecific) {
+            //    Debug.WriteLine ("; Optimize (if <expr> <literal> <unspecific>) => (begin <expr> <literal>)");
+            //    return Sequence2.Make (predicate, consequent);
+            //}
 
             return new PCondIsNegativeSQQ (predicate, consequent, alternative);
         }
@@ -1916,6 +2022,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeSSL : PCondIsNegative
     {
         public readonly object alternativeName;
@@ -1970,6 +2077,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsNegativeSSQ : PCondIsNegative
     {
         public readonly object alternativeValue;

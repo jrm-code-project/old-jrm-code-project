@@ -56,26 +56,19 @@ namespace Microcode
         static SCode StandardMake (SCode predicate, SCode consequent, SCode alternative)
         {
             return
-                (Configuration.EnableSuperOperators && 
-                 Configuration.EnablePrimitiveConditional1 &&
+                (Configuration.EnablePrimitiveConditional1 &&
                  predicate is PrimitiveCombination1) ? PCond1.Make ((PrimitiveCombination1) predicate, consequent, alternative) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnablePrimitiveConditional2 && 
+                (Configuration.EnablePrimitiveConditional2 && 
                  predicate is PrimitiveCombination2) ? PCond2.Make ((PrimitiveCombination2) predicate, consequent, alternative):
-                (Configuration.EnableSuperOperators &&
-                Configuration.EnableConditionalSpecialization &&
+                (Configuration.EnableConditionalSpecialization &&
                 predicate is LexicalVariable) ? ConditionalL.Make ((LexicalVariable) predicate, consequent, alternative) :
-                (Configuration.EnableSuperOperators &&
-                Configuration.EnableConditionalSpecialization &&
+                (Configuration.EnableConditionalSpecialization &&
                 consequent is LexicalVariable) ? ConditionalSL.Make (predicate, (LexicalVariable) consequent, alternative) :
-                (Configuration.EnableSuperOperators &&
-                Configuration.EnableConditionalSpecialization &&
+                (Configuration.EnableConditionalSpecialization &&
                 consequent is Quotation) ? ConditionalSQ.Make (predicate, (Quotation) consequent, alternative) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableConditionalSpecialization &&
+                (Configuration.EnableConditionalSpecialization &&
                 alternative is LexicalVariable) ? ConditionalSSL.Make (predicate, consequent, (LexicalVariable) alternative) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableConditionalSpecialization &&
+                (Configuration.EnableConditionalSpecialization &&
                  alternative is Quotation) ? ConditionalSSQ.Make (predicate, consequent, (Quotation) alternative) :
                 new Conditional (predicate, consequent, alternative);
         }
@@ -218,27 +211,29 @@ namespace Microcode
         public static SCode Make (SCode predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is Conditional && 
-                Configuration.EnableCodeRewriting &&
-                Configuration.EnableConditionalDistribution) ? SpecialMake ((Conditional) predicate, consequent, alternative) :
-                (predicate is Disjunction &&
-                Configuration.EnableCodeRewriting &&
-                Configuration.EnableConditionalDistribution) ? SpecialMake ((Disjunction) predicate, consequent, alternative) :
-                (predicate is Quotation &&
-                 Configuration.EnableFoldConditional) ? SpecialMake ((Quotation) predicate, consequent, alternative) :
-                 (predicate is Sequence2) ? SpecialMake ((Sequence2) predicate, consequent, alternative) :
-                 (predicate is Sequence3) ? SpecialMake ((Sequence3) predicate, consequent, alternative) :
-                (consequent is Quotation && alternative is Quotation) ? SpecialMake (predicate, (Quotation) consequent, (Quotation) alternative) :
-                (predicate is Variable &&
-                 consequent is Variable &&
-                 ((Variable) predicate).Name == ((Variable) consequent).Name &&
-                 Configuration.EnableDisjunctionConversion) ? RewriteAsDisjunction (predicate, alternative) :
-                (predicate is Variable &&
-                 alternative is Variable &&
-                 ((Variable) predicate).Name == ((Variable) alternative).Name) ? Conditional.Make (predicate, consequent, Quotation.Make(false)) :
-                 (consequent is Variable &&
-                  alternative is Variable &&
-                  ((Variable) consequent).Name == ((Variable) alternative).Name) ? Sequence2.Make (predicate, consequent) :
+                (! Configuration.EnableConditionalOptimization) ? new Conditional (predicate, consequent, alternative) :
+                
+                //(predicate is Conditional && 
+                //Configuration.EnableCodeRewriting &&
+                //Configuration.EnableConditionalDistribution) ? SpecialMake ((Conditional) predicate, consequent, alternative) :
+                //(predicate is Disjunction &&
+                //Configuration.EnableCodeRewriting &&
+                //Configuration.EnableConditionalDistribution) ? SpecialMake ((Disjunction) predicate, consequent, alternative) :
+                //(predicate is Quotation &&
+                // Configuration.EnableFoldConditional) ? SpecialMake ((Quotation) predicate, consequent, alternative) :
+                // (predicate is Sequence2) ? SpecialMake ((Sequence2) predicate, consequent, alternative) :
+                // (predicate is Sequence3) ? SpecialMake ((Sequence3) predicate, consequent, alternative) :
+                //(consequent is Quotation && alternative is Quotation) ? SpecialMake (predicate, (Quotation) consequent, (Quotation) alternative) :
+                //(predicate is Variable &&
+                // consequent is Variable &&
+                // ((Variable) predicate).Name == ((Variable) consequent).Name &&
+                // Configuration.EnableDisjunctionConversion) ? RewriteAsDisjunction (predicate, alternative) :
+                //(predicate is Variable &&
+                // alternative is Variable &&
+                // ((Variable) predicate).Name == ((Variable) alternative).Name) ? Conditional.Make (predicate, consequent, Quotation.Make(false)) :
+                // (consequent is Variable &&
+                //  alternative is Variable &&
+                //  ((Variable) consequent).Name == ((Variable) alternative).Name) ? Sequence2.Make (predicate, consequent) :
                 StandardMake (predicate, consequent, alternative);
         }
 
@@ -542,6 +537,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA : ConditionalL
     {
 #if DEBUG
@@ -593,6 +589,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0 : ConditionalA
     {
 #if DEBUG
@@ -643,6 +640,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0L : ConditionalA0
     {
 #if DEBUG
@@ -694,6 +692,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0A : ConditionalA0L
     {
 #if DEBUG
@@ -745,6 +744,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0A0 : ConditionalA0A
     {
 #if DEBUG
@@ -789,6 +789,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class ConditionalA0A1 : ConditionalA0A
     {
 #if DEBUG
@@ -805,7 +806,7 @@ namespace Microcode
         {
             return
                 (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
+                (alternative is Quotation) ? ConditionalA0A1Q.Make (predicate, consequent, (Quotation) alternative) :
                 new ConditionalA0A1 (predicate, consequent, alternative);
         }
 
@@ -832,6 +833,41 @@ namespace Microcode
         }
     }
 
+    [Serializable]
+    class ConditionalA0A1Q : ConditionalA0A1
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeValue;
+
+        protected ConditionalA0A1Q (Argument0 predicate, Argument1 consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (Argument0 predicate, Argument1 consequent, Quotation alternative)
+        {
+            return
+                new ConditionalA0A1Q (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConditionalA0A1Q.EvalStep");
+#endif
+            object ev = environment.Argument0Value;
+            answer = ((ev is bool) && (bool) ev == false) ? this.alternativeValue : environment.Argument1Value;
+            return false;
+        }
+    }
+
+
+
+    [Serializable]
     class ConditionalA0L1 : ConditionalA0L
     {
 #if DEBUG
@@ -856,6 +892,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0L1L : ConditionalA0L1
     {
         protected ConditionalA0L1L (Argument0 predicate, LexicalVariable1 consequent, LexicalVariable alternative)
@@ -877,6 +914,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0Q : ConditionalA0
     {
 #if DEBUG
@@ -920,6 +958,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0QL : ConditionalA0Q
     {
         protected readonly object alternativeName;
@@ -938,7 +977,7 @@ namespace Microcode
         {
             return
                 (alternative is Argument) ? ConditionalA0QA.Make (predicate, consequent, (Argument) alternative) :
-                (alternative is LexicalVariable1) ? Unimplemented() :
+                (alternative is LexicalVariable1) ? ConditionalA0QL1.Make (predicate, consequent, (LexicalVariable1) alternative) :
                 new ConditionalA0QL (predicate, consequent, alternative);
         }
 
@@ -961,6 +1000,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0QA : ConditionalA0QL
     {
 #if DEBUG
@@ -987,6 +1027,32 @@ namespace Microcode
         }
     }
 
+    [Serializable]
+    class ConditionalA0QL1 : ConditionalA0QL
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected ConditionalA0QL1 (Argument0 predicate, Quotation consequent, LexicalVariable1 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (Argument0 predicate, Quotation consequent, LexicalVariable1 alternative)
+        {
+            return
+                new ConditionalA0QL1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
     class ConditionalA0QQ : ConditionalA0Q
     {
 #if DEBUG
@@ -1025,6 +1091,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0SL : ConditionalA0
     {
 #if DEBUG
@@ -1075,6 +1142,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA0SA : ConditionalA0SL
     {
 #if DEBUG
@@ -1123,6 +1191,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalA0SA0 : ConditionalA0SA
     {
 #if DEBUG
@@ -1163,6 +1232,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalA0SA1 : ConditionalA0SA
     {
 #if DEBUG
@@ -1202,6 +1272,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalA0SL1 : ConditionalA0SL
     {
 #if DEBUG
@@ -1244,6 +1315,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalA0SQ : ConditionalA0
     {
 #if DEBUG
@@ -1286,6 +1358,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA1 : ConditionalA
     {
 #if DEBUG
@@ -1335,6 +1408,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA1L : ConditionalA1
     {
 #if DEBUG
@@ -1368,6 +1442,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA1A : ConditionalA1L
     {
 #if DEBUG
@@ -1394,6 +1469,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA1A1 : ConditionalA1A
     {
 #if DEBUG
@@ -1435,6 +1511,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class ConditionalA1Q : ConditionalA1
     {
 #if DEBUG
@@ -1479,6 +1556,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalA1QQ : ConditionalA1Q
     {
         public readonly object alternativeValue;
@@ -1507,6 +1585,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA1SL : ConditionalA1
     {
 #if DEBUG
@@ -1539,6 +1618,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalA1SA : ConditionalA1SL
     {
 #if DEBUG
@@ -1588,6 +1668,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalA1SA0 : ConditionalA1SA
     {
 #if DEBUG
@@ -1627,6 +1708,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalA1SL1 : ConditionalA1SL
     {
 #if DEBUG
@@ -1667,6 +1749,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalA1SQ : ConditionalA1
     {
 #if DEBUG
@@ -1710,6 +1793,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalAL : ConditionalA
     {
 #if DEBUG
@@ -1744,6 +1828,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalAA : ConditionalAL
     {
 #if DEBUG
@@ -1772,6 +1857,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalAAQ : ConditionalAA
     {
         readonly object alternativeValue;
@@ -1801,6 +1887,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalAQ : ConditionalA
     {
 #if DEBUG
@@ -1846,6 +1933,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalAQQ : ConditionalAQ
     {
 #if DEBUG
@@ -1878,6 +1966,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalASL : ConditionalA
     {
 #if DEBUG
@@ -1910,6 +1999,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalASQ : ConditionalA
     {
 #if DEBUG
@@ -1953,6 +2043,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1 : ConditionalL
     {
 #if DEBUG
@@ -2005,6 +2096,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1L : ConditionalL1
     {
 #if DEBUG
@@ -2059,6 +2151,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1A : ConditionalL1L
     {
 #if DEBUG
@@ -2104,6 +2197,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1A0 : ConditionalL1A
     {
 #if DEBUG
@@ -2147,6 +2241,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1A0Q : ConditionalL1A0
     {
 #if DEBUG
@@ -2191,6 +2286,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class ConditionalL1A1 : ConditionalL1A
     {
 #if DEBUG
@@ -2238,6 +2334,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalL1A1Q : ConditionalL1A1
     {
         readonly object alternativeValue;
@@ -2270,6 +2367,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1L1 : ConditionalL1L
     {
 #if DEBUG
@@ -2296,6 +2394,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalL1LQ : ConditionalL1L
     {
 #if DEBUG
@@ -2321,6 +2420,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1Q : ConditionalL1
     {
 #if DEBUG
@@ -2366,6 +2466,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1QL : ConditionalL1Q
     {
 #if DEBUG
@@ -2398,6 +2499,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalL1QQ : ConditionalL1Q
     {
 #if DEBUG
@@ -2424,6 +2526,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1SL : ConditionalL1
     {
 #if DEBUG
@@ -2456,6 +2559,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalL1SA : ConditionalL1SL
     {
 #if DEBUG
@@ -2482,6 +2586,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalL1SA0 : ConditionalL1SA
     {
 #if DEBUG
@@ -2570,6 +2675,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalLQQ : ConditionalLQ
     {
         readonly object alternativeValue;
@@ -2592,6 +2698,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalLSQ : ConditionalL
     {
 #if DEBUG
@@ -2637,6 +2744,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalL1SQ : ConditionalL1
     {
 #if DEBUG
@@ -2680,6 +2788,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSL : Conditional
     {
 #if DEBUG
@@ -2746,6 +2855,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSA : ConditionalSL
     {
 #if DEBUG
@@ -2811,6 +2921,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSA0 : ConditionalSA
     {
 #if DEBUG
@@ -2868,6 +2979,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSA0L : ConditionalSA0
     {
 #if DEBUG
@@ -2926,6 +3038,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSA0A : ConditionalSA0L
     {
 #if DEBUG
@@ -2984,6 +3097,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSA0A1 : ConditionalSA0A
     {
 #if DEBUG
@@ -3027,6 +3141,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSA0L1 : ConditionalSA0L
     {
 #if DEBUG
@@ -3083,6 +3198,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSA0Q : ConditionalSA0
     {
 #if DEBUG
@@ -3135,6 +3251,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSA1 : ConditionalSA
     {
 #if DEBUG
@@ -3192,16 +3309,23 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSA1L : ConditionalSA1
     {
 #if DEBUG
         static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 #endif
+        public readonly object alternativeName;
+        public readonly int alternativeDepth;
+        public readonly int alternativeOffset;
 
         protected ConditionalSA1L (SCode predicate, Argument1 consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
         {
+            this.alternativeName = alternative.Name;
+            this.alternativeDepth = alternative.Depth;
+            this.alternativeOffset = alternative.Offset;
         }
 
         public static SCode Make (SCode predicate, Argument1 consequent, LexicalVariable alternative)
@@ -3250,11 +3374,11 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSA1A : ConditionalSA1L
     {
 #if DEBUG
         static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 #endif
 
         protected ConditionalSA1A (SCode predicate, Argument1 consequent, Argument alternative)
@@ -3272,9 +3396,8 @@ namespace Microcode
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            Unimplemented ();
 #if DEBUG
-            Warm ("ConditionalSA1.EvalStep");
+            Warm ("ConditionalSA1A.EvalStep");
             noteCalls (this.predicate);
             predicateTypeHistogram.Note (this.predicateType);
 #endif
@@ -3291,23 +3414,13 @@ namespace Microcode
                 //return false;
 
             }
-
-            if ((ev is bool) && (bool) ev == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
-                answer = environment.Argument1Value;
-                return false;
-            }
+            answer = ((ev is bool) && (bool) ev == false) ? environment.ArgumentValue (this.alternativeOffset) :
+                environment.Argument1Value;
+            return false;
         }
     }
 
+    [Serializable]
     sealed class ConditionalSA1A0 : ConditionalSA1A
     {
 #if DEBUG
@@ -3352,6 +3465,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSA1Q : ConditionalSA1
     {
 #if DEBUG
@@ -3398,6 +3512,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSAQ : ConditionalSA
     {
 #if DEBUG
@@ -3446,6 +3561,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSL1 : ConditionalSL
     {
 #if DEBUG
@@ -3504,6 +3620,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSL1L : ConditionalSL1
     {
 #if DEBUG
@@ -3562,6 +3679,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSL1L1 : ConditionalSL1L
     {
 #if DEBUG
@@ -3622,6 +3740,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     sealed class ConditionalSL1Q : ConditionalSL1
     {
 #if DEBUG
@@ -3674,6 +3793,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSLL : ConditionalSL
     {
 #if DEBUG
@@ -3733,6 +3853,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSLL1 : ConditionalSLL
     {
 #if DEBUG
@@ -3784,6 +3905,7 @@ namespace Microcode
     }
 
 
+    [Serializable]
     sealed class ConditionalSLQ : ConditionalSL
     {
 #if DEBUG
@@ -3896,6 +4018,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSQL : ConditionalSQ
     {
 #if DEBUG
@@ -3956,6 +4079,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSQA : ConditionalSQL
     {
 #if DEBUG
@@ -4006,6 +4130,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSQA0 : ConditionalSQA
     {
 #if DEBUG
@@ -4054,6 +4179,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSQA1 : ConditionalSQA
     {
 #if DEBUG
@@ -4102,6 +4228,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSQL1 : ConditionalSQL
     {
 #if DEBUG
@@ -4226,6 +4353,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSSL : Conditional
     {
 #if DEBUG
@@ -4289,6 +4417,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalSSA : ConditionalSSL
     {
 #if DEBUG
@@ -4344,6 +4473,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSSA0 : ConditionalSSA
     {
 #if DEBUG
@@ -4399,6 +4529,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSSA1 : ConditionalSSA
     {
 #if DEBUG
@@ -4453,6 +4584,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalSSL1 : ConditionalSSL
     {
 #if DEBUG
@@ -4739,6 +4871,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class ConditionalLSA : ConditionalLSL
     {
 #if DEBUG
@@ -4787,6 +4920,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class ConditionalLSA0 : ConditionalLSA
     {
 #if DEBUG
@@ -4892,7 +5026,7 @@ namespace Microcode
 
  
     [Serializable]
-    class Disjunction : SCode, ISystemPair
+    class Disjunction : SCode, ISerializable, ISystemPair
     {
 #if DEBUG
         static Histogram<Type> predicateTypeHistogram = new Histogram<Type> ();
@@ -4949,16 +5083,16 @@ namespace Microcode
         public static SCode Make (SCode predicate, SCode alternative)
         {
             return 
-                (! Configuration.EnableSuperOperators) ? new Disjunction (predicate, alternative) :
+                (! Configuration.EnableDisjunctionOptimization) ? new Disjunction (predicate, alternative) :
                 (predicate is Conditional) ? DistributeDisjunction((Conditional) predicate, alternative) :
                 (predicate is Disjunction) ? RewriteDisjunction ((Disjunction) predicate, alternative):
 
                 (predicate is Sequence2) ?  RewriteDisjunction ((Sequence2) predicate, alternative) :
-               (predicate is Sequence3) ? Unimplemented() :
-               (predicate is Quotation) ? FoldDisjunction ((Quotation) predicate, alternative) :
-               (predicate is Variable &&
-                alternative is Variable &&
-                ((Variable) predicate).Name == ((Variable) alternative).Name) ? Unimplemented():
+                (predicate is Sequence3) ? Unimplemented() :
+                (predicate is Quotation) ? FoldDisjunction ((Quotation) predicate, alternative) :
+                (predicate is Variable &&
+                 alternative is Variable &&
+                 ((Variable) predicate).Name == ((Variable) alternative).Name) ? Unimplemented():
                 (alternative is Quotation) ? DisjunctionSQ.Make (predicate, (Quotation) alternative) :
                 new Disjunction (predicate, alternative);
         }
@@ -5084,6 +5218,33 @@ namespace Microcode
             return this.predicate.Uses (formal)
                 || this.alternative.Uses (formal);
         }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (DisjunctionDeserializer));
+            info.AddValue ("predicate", this.predicate);
+            info.AddValue ("alternative", this.alternative);
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    internal sealed class DisjunctionDeserializer : IObjectReference
+    {
+        SCode predicate;
+        SCode alternative;
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            return Disjunction.Make (this.predicate, this.alternative);
+        }
+        // Muffle compiler
+        SCode Predicate { set { this.predicate = value; } }
+        SCode Alternative { set { this.alternative = value; } }
     }
 
     [Serializable]
@@ -7308,6 +7469,5 @@ namespace Microcode
 //            }
 //        }
 //    }
-
-
 }
+

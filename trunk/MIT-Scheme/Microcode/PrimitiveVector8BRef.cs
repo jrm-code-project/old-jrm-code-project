@@ -6,6 +6,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     class PrimitiveVector8BRef : PrimitiveCombination2
     {
         protected PrimitiveVector8BRef (Primitive2 rator, SCode rand0, SCode rand1)
@@ -64,6 +65,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefL : PrimitiveVector8BRef
     {
         public readonly object rand0Name;
@@ -98,6 +100,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefA : PrimitiveVector8BRefL
     {
         protected PrimitiveVector8BRefA (Primitive2 rator, Argument rand0, SCode rand1)
@@ -125,6 +128,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefA0 : PrimitiveVector8BRefA
     {
         protected PrimitiveVector8BRefA0 (Primitive2 rator, Argument0 rand0, SCode rand1)
@@ -135,21 +139,38 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument0 rand0, SCode rand1)
         {
             return
-                (rand1 is LexicalVariable) ? PrimitiveVector8BRefA0L.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveVector8BRefA0Q.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveVector8BRefA0 (rator, rand0, rand1);
+                (rand1 is LexicalVariable) ? PrimitiveVector8BRefA0L.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveVector8BRefA0Q.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveVector8BRefA0 (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveVector8BRefA0.EvalStep");
             noteCalls (this.rand1);
 #endif
-            throw new NotImplementedException ();
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            // Vector-8b-ref
+            answer = (int) ((char []) environment.Argument0Value) [(int) ev1];
+            return false;
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefA0L : PrimitiveVector8BRefA0
     {
         protected PrimitiveVector8BRefA0L (Primitive2 rator, Argument0 rand0, LexicalVariable rand1)
@@ -175,6 +196,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefA0A : PrimitiveVector8BRefA0L
     {
         protected PrimitiveVector8BRefA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
@@ -200,6 +222,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveVector8BRefA0A1 : PrimitiveVector8BRefA0A
     {
         PrimitiveVector8BRefA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
@@ -224,6 +247,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefA0L1 : PrimitiveVector8BRefA0L
     {
         protected PrimitiveVector8BRefA0L1 (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
@@ -247,6 +271,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefA0Q : PrimitiveVector8BRefA0
     {
         public readonly int rand1Value;
@@ -272,6 +297,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefA1 : PrimitiveVector8BRefA
     {
         protected PrimitiveVector8BRefA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
@@ -297,6 +323,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefA1Q : PrimitiveVector8BRefA1
     {
         public readonly int rand1Value;
@@ -323,6 +350,7 @@ namespace Microcode
     }
 
 
+    [Serializable]
     class PrimitiveVector8BRefL1 : PrimitiveVector8BRefL
     {
         protected PrimitiveVector8BRefL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
@@ -348,6 +376,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefL1L : PrimitiveVector8BRefL1
     {
         public readonly object rand1Name;
@@ -379,6 +408,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefL1A : PrimitiveVector8BRefL1L
     {
         protected PrimitiveVector8BRefL1A (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
@@ -403,6 +433,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefL1A0 : PrimitiveVector8BRefL1A
     {
         protected PrimitiveVector8BRefL1A0 (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
@@ -425,6 +456,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefL1A1 : PrimitiveVector8BRefL1A
     {
         protected PrimitiveVector8BRefL1A1 (Primitive2 rator, LexicalVariable1 rand0, Argument1 rand1)
@@ -447,6 +479,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefL1L1 : PrimitiveVector8BRefL1L
     {
         protected PrimitiveVector8BRefL1L1 (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
@@ -482,6 +515,7 @@ namespace Microcode
     }
 
 
+    [Serializable]
     class PrimitiveVector8BRefLL : PrimitiveVector8BRefL
     {
         public readonly object rand1Name;
@@ -525,6 +559,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefLA : PrimitiveVector8BRefLL
     {
         protected PrimitiveVector8BRefLA (Primitive2 rator, LexicalVariable rand0, Argument rand1)
@@ -549,6 +584,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveVector8BRefLA0 : PrimitiveVector8BRefLA
     {
         PrimitiveVector8BRefLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
@@ -578,6 +614,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefLA1 : PrimitiveVector8BRefLA
     {
         protected PrimitiveVector8BRefLA1 (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
@@ -600,6 +637,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveVector8BRefLL1 : PrimitiveVector8BRefLL
     {
         protected PrimitiveVector8BRefLL1 (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
@@ -639,6 +677,7 @@ namespace Microcode
 
     //class PrimitiveVector8BRefSL : PrimitiveVector8BRef { }
 
+    [Serializable]
     class PrimitiveVector8BRefSQ : PrimitiveVector8BRef
     {
         public readonly int rand1Value;

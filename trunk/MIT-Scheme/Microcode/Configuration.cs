@@ -8,10 +8,43 @@ namespace Microcode
     static class Configuration
     {
         /// <summary>
+        /// If true, allow Access to be optimized.
+        /// </summary>
+        public const bool EnableAccessOptimization = true;
+        public const bool EnableAssignmentOptimization = false;
+        public const bool EnableCombinationOptimization = false;
+        public const bool EnableCombination0Optimization = false;
+        public const bool EnableCombination1Optimization = false;
+        public const bool EnableCombination2Optimization = false;
+        public const bool EnableCommentOptimization = false;
+        public const bool EnableConditionalOptimization = false;
+        public const bool EnableDefinitionOptimization = false;
+        public const bool EnableDelayOptimization = false;
+        public const bool EnableDisjunctionOptimization = false;
+        /// <summary>
+        /// If true, allow analysis of Lambdas.
+        /// </summary>
+        public const bool EnableLambdaOptimization = false;
+        public const bool EnablePrimitiveCombination0Optimization = false;
+        /// <summary>
+        /// If true, allow analysis of PrimitiveCombination1.
+        /// </summary>
+        public const bool EnablePrimitiveCombination1Optimization = false;
+        /// <summary>
+        /// If true, allow analysis of PrimitiveCombination2.
+        /// </summary>
+        public const bool EnablePrimitiveCombination2Optimization = false;
+        public const bool EnablePrimitiveCombination3Optimization = false;
+        public const bool EnableQuotationOptimization = false;
+        public const bool EnableSequence2Optimization = false;
+        public const bool EnableSequence3Optimization = false;
+        public const bool EnableTheEnvironmentOptimization = false;
+        /// <summary>
         /// If true, allow the interpreter to figure out where the variable
         /// lives prior to interpretation.
         /// </summary>
-        public const bool EnableVariableBinding = true;
+        public const bool EnableVariableOptimization = false;
+
         public const bool EnableArgumentBinding = true;
         public const bool EnableGlobalBinding = true;
         public const bool EnableLexicalAddressing = true;
@@ -26,24 +59,29 @@ namespace Microcode
 
         public const bool EnableSuperOperators = false;
 
-        public const bool EnableCombination1Specialization = false;
+        public const bool EnableCombination1Specialization = true;
         public const bool EnableCombination2Specialization = false;
         public const bool EnableCombination3 = false;
         public const bool EnableCombination3Specialization = false;
-        public const bool EnableConditionalSpecialization = false;
-        public const bool EnablePrimitive1Specialization = false;
-        public const bool EnablePrimitive2Specialization = false;
-        public const bool EnablePrimitiveConditional1 = false;
+        public const bool EnableConditionalSpecialization = true;
+        public const bool EnableDisjunctionSpecialization = false;
+        public const bool EnablePrimitive1Specialization = true;
+        public const bool EnablePrimitive2Specialization = true;
+        /// <summary>
+        /// If true, certain primitive predicates are handled directly
+        /// by the conditional.
+        /// </summary>
+        public const bool EnablePrimitiveConditional1 = true;
         public const bool EnablePrimitiveConditional2 = false;
         public const bool EnableSequenceSpecialization = false;
 
-        public const bool EnableInlinePrimitive1 = false;
-        public const bool EnableInlinePrimitive2 = false;
+        public const bool EnableInlinePrimitive1 = true;
+        public const bool EnableInlinePrimitive2 = true;
 
         /// <summary>
         /// Special case combination1.
         /// </summary>
-        public const bool EnableLet1 = false;
+        public const bool EnableLet1 = true;
 
         /// <summary>
         /// If true, allow interpreter to rewrite code to improve performance.

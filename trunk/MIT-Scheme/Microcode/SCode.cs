@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using System.Threading;
 
 namespace Microcode
 {
@@ -51,12 +52,14 @@ namespace Microcode
         static Dictionary<Type,Histogram<Type>> callerTable = new Dictionary<Type, Histogram<Type>> ();
 
         static Histogram<TypePair> callTable = new Histogram<TypePair> ();
-
+        static public Timer topOfStackTimer;
+        static Random random = new Random ();
         public static void TopOfStackProbe (object ignore)
         {
             string loc = location;
-            if (loc != "-")
+            if (loc != null && loc != "-")
                 topOfStack.Note (loc);
+            topOfStackTimer.Change (1, random.Next (1, 5));
         }
 
         [DebuggerStepThrough]
@@ -93,14 +96,20 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
+        static long warm_break = 1000000000;
+
         [DebuggerStepThrough]
         protected void Warm (String location)
         {
             SCode.location = "-";
             evaluations += 1;
+            if (evaluations >= warm_break) {
+                warm_break *= 10;
+                Debugger.Break ();
+            }
             hotSCode.Note (this);
-            Type t = this.GetType ();
-            scodeHistogram.Note (t);
+            //Type t = this.GetType ();
+            scodeHistogram.Note (this.GetType());
             SCode.location = location;
         }
 #endif
@@ -142,6 +151,7 @@ namespace Microcode
                 || obj is Primitive
                 || obj is Ratnum
                 || obj is ReferenceTrap
+                || obj is ReturnAddress
                 || obj is ReturnCode
                 || obj is Symbol
                 ;
@@ -211,17 +221,17 @@ namespace Microcode
 
         public override bool CallsTheEnvironment ()
         {
-            throw new NotImplementedException ();
+            return this.code.CallsTheEnvironment ();
         }
 
         public override bool MutatesAny (Symbol [] formals)
         {
-            throw new NotImplementedException ();
+            return this.code.MutatesAny (formals);
         }
 
         public override bool Uses (Symbol formal)
         {
-            throw new NotImplementedException ();
+            return this.code.Uses (formal);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -330,7 +340,6 @@ namespace Microcode
 #if DEBUG
             Warm ("Definition.EvalStep");
             noteCalls (this.value);
-
 #endif
             object value;    
             Control expr = this.value;
@@ -476,7 +485,7 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class Quotation : SCode, ISystemPair
+    sealed class Quotation : SCode, ISerializable, ISystemPair
     {
         // Space optimization.
         [NonSerialized]
@@ -584,6 +593,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
+            
             Warm ("Quotation.EvalStep");
 #endif
             answer = this.item;
@@ -627,6 +637,29 @@ namespace Microcode
         }
 
         #endregion
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (QuotationDeserializer));
+            info.AddValue ("quotedObject", this.Quoted);
+        }
+        #endregion
+    }
+
+    [Serializable]
+    internal sealed class QuotationDeserializer : IObjectReference
+    {
+        object quotedObject;
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            return Quotation.Make (this.quotedObject);
+        }
+
+        object Quoted { set { this.quotedObject = value; } }
     }
 
     [Serializable]
@@ -688,6 +721,7 @@ namespace Microcode
         static public SCode Make (SCode first, SCode second)
         {
             return
+                (! Configuration.EnableSequence2Optimization) ? new Sequence2 (first, second) :
                 (Configuration.EnableCodeRewriting &&
                  Configuration.EnableSequenceConditionalSwap &&
                  first is Conditional) ? SwapConditional ((Conditional) first, second) :
@@ -1399,6 +1433,7 @@ namespace Microcode
         public static SCode Make (SCode first, SCode second, SCode third)
         {
             return
+                (! Configuration.EnableSequence3Optimization) ? new Sequence3 (first, second, third) :
                 //: (Configuration.EnableTrueUnspecific && third is Quotation && ((Quotation) third).Quoted == Constant.Unspecific) ? Sequence2.Make (first, second)
                 //: 
                 (Configuration.EnableCodeRewriting &&

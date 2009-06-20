@@ -16,27 +16,41 @@ namespace Listener
                 Channel.Initialize (Console.In, Console.Out);
                 Object answer;
                 if (true) {
-                    // Go up to the project directory and back down to Runtime. 
-                    System.IO.Directory.SetCurrentDirectory ("..\\..\\..\\Runtime\\");
+                    String projectRoot = 
+                        System.IO.Directory.GetParent (System.Environment.CurrentDirectory).Parent.Parent.FullName;
+                    if (System.IO.File.Exists (projectRoot + "\\lib\\runtime\\make.bin")) {
+                        Microcode.Interpreter.LibraryPath = projectRoot + "\\lib\\";
+                    }
+                    else if (System.IO.File.Exists (projectRoot + "\\StagingLib\\Runtime\\make.bin")) {
+                        Microcode.Interpreter.LibraryPath = projectRoot + "\\StagingLib\\";
+                    }
+                    else {
+                        Microcode.Interpreter.LibraryPath = projectRoot + "\\BootstrapLib\\";                        
+                    }
+                    System.IO.Directory.SetCurrentDirectory (Microcode.Interpreter.LibraryPath + "runtime\\");
+
+                    //System.IO.Directory.SetCurrentDirectory ("..\\..\\..\\BootstrapRuntime\\");
+
                     // Console.WriteLine("{0}", System.Environment.CurrentDirectory);
 
                     // We don't try to load a band.  It's even slower than loading the fasl files!
                     // Load a band
                     //System.Environment.CurrentDirectory = "C:\\jrm-code-project\\MIT-Scheme\\Runtime\\";
                     //System.Environment.CurrentDirectory = "C:\\mit-scheme\\v7\\src\\runtime\\";
-                    //try {
-                    //    System.IO.FileStream input = System.IO.File.OpenRead ("C:\\jrm-code-project\\MIT-Scheme\\foo.band");
-                    //    System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bfmt = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter ();
-                    //    WorldState ws = (WorldState) bfmt.Deserialize (input);
-                    //    answer = Continuation.Initial (ws);
-                    //}
+                    try {
+                        System.IO.FileStream input = System.IO.File.OpenRead ("C:\\jrm-code-project\\MIT-Scheme\\foo.band");
+                        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bfmt = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter ();
+                        WorldState ws = (WorldState) bfmt.Deserialize (input);
+                        ScreenChannel.firstTime = false;
+                        answer = Continuation.Initial (ws);
+                    }
 
-                    //catch (System.IO.FileNotFoundException) {
+                    catch (System.IO.FileNotFoundException) {
                         // Cold load the Scheme runtime
                         SCode bootstrap = Fasl.Fasload ("make.bin") as SCode;
                         Microcode.Environment initial = Microcode.Environment.Global;
                        answer = Continuation.Initial (bootstrap.Bind(LexicalMap.Make(initial)), initial);
-                   // }
+                    }
                     Console.WriteLine ("Evaluation exited with {0}", answer);
                 }
                 else {

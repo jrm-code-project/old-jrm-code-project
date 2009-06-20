@@ -28,7 +28,7 @@ namespace Microcode
 
             switch ((TC) acode) {
                 case TC.ACCESS:
-                    answer = new Access (car, (Symbol) cdr);
+                    answer = Access.Make (car, (Symbol) cdr);
                     break;
 
                 case TC.ASSIGNMENT:
@@ -41,6 +41,10 @@ namespace Microcode
 
                 case TC.COMMENT:
                     answer = new Comment (car, cdr);
+                    break;
+
+                case TC.COMPLEX:
+                    answer = new Complex (car, cdr);
                     break;
 
                 case TC.DEFINITION:
@@ -77,6 +81,10 @@ namespace Microcode
 
                 case TC.RATNUM:
                     answer = new Ratnum (car, cdr);
+                    break;
+
+                case TC.SCODE_QUOTE:
+                    answer = Quotation.Make (car);
                     break;
 
                 case TC.SEQUENCE_2:

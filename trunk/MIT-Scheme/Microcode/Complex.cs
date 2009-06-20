@@ -6,12 +6,13 @@ using System.Text;
 namespace Microcode
 {
     [Serializable]
-    sealed class Complex
+    sealed class Complex : SchemeObject
     {
         object realPart;
         object imagPart;
 
         public Complex (object realPart, object imagPart)
+            : base (TC.COMPLEX)
         {
             this.realPart = realPart;
             this.imagPart = imagPart;

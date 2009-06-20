@@ -79,6 +79,7 @@ namespace Microcode
             bool bounce;
 #if DEBUG
             Timer tosProbe = new Timer (SCode.TopOfStackProbe, null, 5, 3);
+            SCode.topOfStackTimer = tosProbe;
 #endif
             do {
                 answer = null;

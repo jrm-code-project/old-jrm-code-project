@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
@@ -34,11 +36,11 @@ namespace Microcode
             this.lambdaFormals = formals;
             this.lambdaBody = body;
             // Paranoia:  check for duplicate names
-            if (name != Symbol.Make("dummy-procedure")) {
-                for (int i = 0; i < formals.Length - 1; i++)
-                    for (int j = i + 1; j < formals.Length; j++)
-                        if (formals [i] == formals [j]) Debugger.Break ();
-            }
+            //if (name != Symbol.Make("dummy-procedure")) {
+            //    for (int i = 0; i < formals.Length - 1; i++)
+            //        for (int j = i + 1; j < formals.Length; j++)
+            //            if (formals [i] == formals [j]) Debugger.Break ();
+            //}
         }
 
         public Symbol Name { [DebuggerStepThrough] get { return this.lambdaName; } }
@@ -101,7 +103,7 @@ namespace Microcode
     /// fixed argument lists (no optional, rest, or aux).
     /// </summary>
     [Serializable]
-    abstract class Lambda : LambdaBase, ISystemPair
+    abstract class Lambda : LambdaBase, ISerializable, ISystemPair
     {
         protected Lambda (Symbol name, Symbol [] formals, SCode body)
             : base (TC.LAMBDA, name, formals, body)
@@ -120,6 +122,7 @@ namespace Microcode
             // If someone in the lambdaBody calls `the-environment', then we
             // *must* create a first-class enabled environment.   
             return
+                (! Configuration.EnableLambdaOptimization) ? StandardLambda.Make (name, formals, body) :
                 (body.CallsTheEnvironment () || !Configuration.EnableStaticBinding) ?  StandardLambda.Make (name, formals, body) :
                 (formals.Length == 0 || body.MutatesAny (formals) || !Configuration.EnableSimpleLambda) ? (SCode) new StaticLambda (name, formals, body) :
                 new SimpleLambda (name, formals, body);
@@ -190,6 +193,36 @@ namespace Microcode
             }
         }
         #endregion
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (LambdaDeserializer));
+            info.AddValue ("name", this.Name);
+            info.AddValue ("formals", this.Formals);
+            info.AddValue ("body", this.Body);
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    internal sealed class LambdaDeserializer : IObjectReference
+    {
+        Symbol name;
+        Symbol [] formals;
+        SCode body;
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            return Lambda.Make (this.name, this.formals, this.body);
+        }
+        // Muffle compiler
+        Symbol Name { set { this.name = value; } }
+        Symbol [] Formals { set { this.formals = value; } }
+        SCode Body { set { this.body = value; } }
     }
 
     /// <summary>
@@ -197,7 +230,7 @@ namespace Microcode
     /// variable argument lists (optional, rest, or aux).
     /// </summary>
     [Serializable]
-    abstract class ExtendedLambda : LambdaBase, ISystemHunk3
+    abstract class ExtendedLambda : LambdaBase, ISerializable, ISystemHunk3
     {
         public readonly uint required;
 
@@ -223,6 +256,8 @@ namespace Microcode
                 throw new ArgumentNullException ("ratorName");
 
             return 
+                (! Configuration.EnableLambdaOptimization) ? (ExtendedLambda) StandardExtendedLambda.Make (name, formals, body, required, optional, rest) :
+
                 // If no optional, rest, or aux arguments, just make a regular lambda.
                 (required == formals.Length && optional == 0 && rest == false) ? Lambda.Make (name, formals, body)
                 // If someone in the lambdaBody calls `the-environment', then we
@@ -302,6 +337,44 @@ namespace Microcode
 
         #endregion
 
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (ExtendedLambdaDeserializer));
+            info.AddValue ("name", this.Name);
+            info.AddValue ("formals", this.Formals);
+            info.AddValue ("body", this.Body);
+            info.AddValue ("required", this.required);
+            info.AddValue ("optional", this.optional);
+            info.AddValue ("rest", this.rest);
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    internal sealed class ExtendedLambdaDeserializer : IObjectReference
+    {
+        Symbol name;
+        Symbol [] formals;
+        SCode body;
+        uint required;
+        uint optional;
+        bool rest;
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            return ExtendedLambda.Make (this.name, this.formals, this.body, this.required, this.optional, this.rest);
+        }
+        // Muffle compiler
+        Symbol Name { set { this.name = value; } }
+        Symbol [] Formals { set { this.formals = value; } }
+        SCode Body { set { this.body = value; } }
+        uint Required { set { this.required = value; } }
+        uint Optional { set { this.optional = value; } }
+        bool Rest { set { this.rest = value; } }
     }
 
     /// <summary>

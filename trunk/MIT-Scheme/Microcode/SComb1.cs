@@ -37,29 +37,29 @@ namespace Microcode
 
         static SCode Make (SCode rator, SCode rand)
         {
+            if (rand == null)
+                throw new ArgumentNullException ("rand");
             return 
-                (Configuration.EnableSuperOperators && 
-                 Configuration.EnableLet1 &&
+                (! Configuration.EnableCombination1Optimization) ? new Combination1 (rator, rand) :
+                (Configuration.EnableLet1 &&
                  rator is Lambda) ? Let1.Make ((Lambda) rator, rand)  :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableCombination1Specialization &&
+                (Configuration.EnableCombination1Specialization &&
                 rator is LexicalVariable) ? Combination1L.Make ((LexicalVariable) rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableCombination1Specialization &&
+                (Configuration.EnableCombination1Specialization &&
                 rator is TopLevelVariable) ? Combination1T.Make ((TopLevelVariable) rator, rand) :
                 (rator is Quotation &&
                 ! (((Quotation) rator).Quoted is PrimitiveN)) ? Unimplemented() :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableCombination1Specialization &&
+                (Configuration.EnableCombination1Specialization &&
                   rand is LexicalVariable) ? Combination1SL.Make (rator, (LexicalVariable) rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableCombination1Specialization &&
+                (Configuration.EnableCombination1Specialization &&
                  rand is Quotation) ? Combination1SQ.Make (rator, (Quotation) rand) :
                 new Combination1 (rator, rand);
         }
 
         public static SCode Make (object rator, object arg0)
         {
+            if (rator == null)
+                throw new ArgumentNullException ("rator");
             SCode srator = EnsureSCode (rator);
             SCode srand = EnsureSCode (arg0);
             return Combination1.Make (srator, srand);
@@ -151,7 +151,6 @@ namespace Microcode
             randTypeHistogram.Note (this.randType);
             SCode.location = "Combination1.EvalStep";
 #endif
-
             object evarg;
             Control unev = this.rand;
             Environment env = environment;
@@ -211,18 +210,16 @@ namespace Microcode
     [Serializable]
     internal sealed class Combination1Deserializer : IObjectReference
     {
-        // This object has no fields (although it could).
         SCode procedure;
         SCode operand;
 
-        // GetRealObject is called after this object is deserialized.
         public Object GetRealObject (StreamingContext context)
         {
             return Combination1.Make (this.procedure, this.operand);
         }
-
-        public void SetProcedure (SCode value) { this.procedure = value; }
-        public void SetOperand (SCode value) { this.operand = value; }
+        // Muffle compiler
+        SCode Procedure { set { this.procedure = value; } }
+        SCode Operand { set { this.operand = value; } }
     }
 
     [Serializable]
@@ -307,6 +304,7 @@ namespace Microcode
 
      }
 
+    [Serializable]
     class Combination1L : Combination1
     {
 #if DEBUG
@@ -408,6 +406,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1A : Combination1L
     {
 #if DEBUG
@@ -453,6 +452,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1A0 : Combination1A
     {
         protected Combination1A0 (Argument0 rator, SCode rand)
@@ -490,6 +490,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1A0L : Combination1A0
     {
         public readonly object randName;
@@ -527,6 +528,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1A0A : Combination1A0L
     {
         protected Combination1A0A (Argument0 rator, Argument rand)
@@ -554,6 +556,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1A0A0 : Combination1A0A
     {
 
@@ -578,6 +581,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1A0A1 : Combination1A0A
     {
         Combination1A0A1 (Argument0 rator, Argument1 rand)
@@ -602,6 +606,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1A0L1 : Combination1A0L
     {
 
@@ -631,6 +636,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1A0Q : Combination1A0
     {
         public readonly object randValue;
@@ -658,6 +664,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1A1 : Combination1A
     {
         protected Combination1A1 (Argument1 rator, SCode rand)
@@ -695,6 +702,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1A1L : Combination1A1
     {
         public readonly object randName;
@@ -732,6 +740,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1A1A : Combination1A1L
     {
         protected Combination1A1A (Argument1 rator, Argument rand)
@@ -759,6 +768,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1A1A0 : Combination1A1A
     {
         Combination1A1A0 (Argument1 rator, Argument0 rand)
@@ -781,6 +791,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1A1A1 : Combination1A1A
     {
         Combination1A1A1 (Argument1 rator, Argument1 rand)
@@ -804,6 +815,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1A1L1 : Combination1A1L
     {
         Combination1A1L1 (Argument1 rator, LexicalVariable1 rand)
@@ -832,6 +844,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1A1Q : Combination1A1
     {
         public readonly object randValue;
@@ -859,6 +872,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1AL : Combination1A
     {
         public readonly object randName;
@@ -896,6 +910,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1AA : Combination1AL
     {
         protected Combination1AA (Argument rator, Argument rand)
@@ -923,6 +938,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1AA0 : Combination1AA
     {
 
@@ -948,6 +964,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1AA1 : Combination1AA
     {
 
@@ -973,6 +990,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1AL1 : Combination1AL
     {
 
@@ -1002,6 +1020,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1AQ : Combination1A
     {
         public readonly object randValue;
@@ -1029,6 +1048,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1L1 : Combination1L
     {
 #if DEBUG
@@ -1075,6 +1095,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1L1Frame0 : SubproblemContinuation<Combination1L1>, ISystemVector
     {
         public Combination1L1Frame0 (Combination1L1 combination1, Environment environment)
@@ -1111,6 +1132,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1L1L : Combination1L1
     {
         public readonly object randName;
@@ -1148,6 +1170,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1L1A : Combination1L1L
     {
         protected Combination1L1A (LexicalVariable1 rator, Argument rand)
@@ -1175,6 +1198,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1L1A0 : Combination1L1A
     {
         Combination1L1A0 (LexicalVariable1 rator, Argument0 rand)
@@ -1200,6 +1224,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1L1A1 : Combination1L1A
     {
         Combination1L1A1 (LexicalVariable1 rator, Argument1 rand)
@@ -1225,6 +1250,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1L1L1 : Combination1L1L
     {
         Combination1L1L1 (LexicalVariable1 rator, LexicalVariable1 rand)
@@ -1255,6 +1281,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1L1Q : Combination1L1
     {
         public readonly object randValue;
@@ -1283,6 +1310,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1LL : Combination1L
     {
         public readonly object rand0Name;
@@ -1322,6 +1350,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1LA : Combination1LL
     {
         protected Combination1LA (LexicalVariable rator, Argument rand)
@@ -1350,6 +1379,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1LA0 : Combination1LA
     {
         Combination1LA0 (LexicalVariable rator, Argument rand)
@@ -1376,6 +1406,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1LA1 : Combination1LA
     {
         Combination1LA1 (LexicalVariable rator, Argument1 rand)
@@ -1402,6 +1433,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1LL1 : Combination1LL
     {
         Combination1LL1 (LexicalVariable rator, LexicalVariable1 rand)
@@ -1432,6 +1464,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1LQ : Combination1L
     {
         public readonly object rand0Value;
@@ -1461,6 +1494,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1T : Combination1
     {
 #if DEBUG
@@ -1505,6 +1539,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1TFrame1 : SubproblemContinuation<Combination1T>, ISystemVector
     {
         public Combination1TFrame1 (Combination1T combination1, Environment environment)
@@ -1540,6 +1575,7 @@ namespace Microcode
         #endregion
     }
 
+    [Serializable]
     class Combination1TL : Combination1T
     {
 #if DEBUG
@@ -1588,6 +1624,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1TA : Combination1TL
     {
         protected Combination1TA (TopLevelVariable rator, Argument rand)
@@ -1616,6 +1653,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1TA0 : Combination1TA
     {
         Combination1TA0 (TopLevelVariable rator, Argument0 rand)
@@ -1642,6 +1680,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1TA1 : Combination1TA
     {
         Combination1TA1 (TopLevelVariable rator, Argument1 rand)
@@ -1668,6 +1707,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1TL1 : Combination1TL
     {
         Combination1TL1 (TopLevelVariable rator, LexicalVariable1 rand)
@@ -1698,6 +1738,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1TQ : Combination1T
     {
         public readonly object randValue;
@@ -1726,6 +1767,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1SL : Combination1
     {
 #if DEBUG
@@ -1774,6 +1816,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class Combination1SA : Combination1SL
     {
         protected Combination1SA (SCode rator, Argument rand)
@@ -1812,6 +1855,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1SA0 : Combination1SA
     {
 #if DEBUG
@@ -1855,6 +1899,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1SA1 : Combination1SA
     {
         Combination1SA1 (SCode rator, Argument1 rand)
@@ -1891,6 +1936,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1SL1 : Combination1SL
     {
         Combination1SL1 (SCode rator, LexicalVariable1 rand)
@@ -1970,6 +2016,7 @@ namespace Microcode
 //-------------------------------------
 
 
+    [Serializable]
     class Combination1LPComb1 : Combination1L
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -2165,6 +2212,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1LCarA0 : Combination1LCarA
     {
         Combination1LCarA0 (LexicalVariable rator, PrimitiveCarA0 rand)
@@ -2191,6 +2239,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1LCarA1 : Combination1LCarA
     {
         Combination1LCarA1 (LexicalVariable rator, PrimitiveCarA1 rand)
@@ -2348,6 +2397,7 @@ namespace Microcode
 
 
     // --------
+    [Serializable]
     sealed class Combination1LCdrL1 : Combination1LCdrL
     {
         Combination1LCdrL1 (LexicalVariable rator, PrimitiveCdrL1 rand)
@@ -2377,6 +2427,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1L1CarA0 : Combination1L1
     {
         Combination1L1CarA0 (LexicalVariable1 rator, PrimitiveCarA0 rand)
@@ -2402,6 +2453,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Combination1L1CdrA0 : Combination1L1
     {
         Combination1L1CdrA0 (LexicalVariable1 rator, PrimitiveCdrA0 rand)

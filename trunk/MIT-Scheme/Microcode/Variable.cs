@@ -2,24 +2,39 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 // Variable lookup is the most time critical thing
 // in the interpreter after continuation management.
 namespace Microcode
 {
     [Serializable]
-    sealed class Access : SCode, ISystemPair
+    class Access : SCode, ISystemPair
     {
-        readonly Symbol var;
+        public readonly Symbol var;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode env;
+        public readonly SCode env;
 
-        public Access (object env, Symbol name)
+        protected Access (SCode env, Symbol name)
             : base (TC.ACCESS)
         {
             this.var = name;
             this.env = EnsureSCode (env);
+        }
+
+        static public Access Make (SCode env, Symbol name)
+        {
+            return
+                (! Configuration.EnableAccessOptimization) ? new Access (env, name) :
+                (env is Quotation) ? AccessQ.Make ((Quotation) env, name) :
+                new Access (env, name);
+        }
+
+        static public Access Make (object env, Symbol name)
+        {
+            return Make (EnsureSCode (env), name);
         }
 
         [SchemePrimitive ("ACCESS?", 1, true)]
@@ -99,9 +114,62 @@ namespace Microcode
     }
 
     [Serializable]
-    class Assignment : SCode, ISystemPair
+    sealed class AccessQ : Access, ISystemPair
+    {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public readonly object envQuoted;
+
+        AccessQ (Quotation env, Symbol name)
+            : base (env, name)
+        {
+            this.envQuoted = env.Quoted;
+        }
+
+        static public AccessQ Make (Quotation env, Symbol name)
+        {
+            if ((! (env.Quoted is Boolean)) ||
+                ((bool)env.Quoted) != false
+                ) throw new NotImplementedException ();
+            return
+                new AccessQ (env, name);
+        }
+
+        public override SCode Bind (LexicalMap ctenv)
+        {
+            return this;
+        }
+
+        public override bool CallsTheEnvironment ()
+        {
+            return false;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AccessQ.EvalStep");
+#endif
+            if (Environment.Global.DeepSearch (out answer, this.var)) throw new NotImplementedException ();
+            return false;
+        }
+
+        public override bool MutatesAny (Symbol [] formals)
+        {
+            return false;
+        }
+        public override bool Uses (Symbol formal)
+        {
+            return false;
+        }
+    }
+
+
+
+    [Serializable]
+    class Assignment : SCode, ISerializable, ISystemPair
     {
 #if DEBUG
+        [NonSerialized]
         protected readonly Type valueType; 
         static Histogram<Type> valueTypeHistogram = new Histogram<Type>();
 #endif
@@ -245,7 +313,33 @@ namespace Microcode
             return this.target.Name == formal ||
                 this.value.Uses (formal);
         }
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (AssignmentDeserializer));
+            info.AddValue ("target", this.target);
+            info.AddValue ("value", this.value);
+        }
     }
+
+    [Serializable]
+    internal sealed class AssignmentDeserializer : IObjectReference
+    {
+        Variable target;
+        SCode value;
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            return Assignment.Make (this.target, this.value);
+        }
+
+        // shut up compiler
+        Variable Target { set { this.target = value; } }
+        SCode Value { set { this.value = value; } }
+    }
+
+
 
     [Serializable]
     sealed class AssignmentFrame0 : SubproblemContinuation<Assignment>, ISystemVector
@@ -364,7 +458,7 @@ namespace Microcode
     }
 
     [Serializable]
-    public class Variable : SCode, ISystemHunk3
+    public class Variable : SCode, ISerializable, ISystemHunk3
     {
 #if DEBUG
         [NonSerialized]
@@ -478,7 +572,7 @@ namespace Microcode
 
         public override SCode Bind (LexicalMap btenv)
         {
-            return Configuration.EnableVariableBinding ? btenv.Bind (this.Name) : this;
+            return Configuration.EnableVariableOptimization ? btenv.Bind (this.Name) : this;
         }
 
         public override bool CallsTheEnvironment ()
@@ -494,9 +588,9 @@ namespace Microcode
                 Debugger.Break ();
             }
 #endif
-            if (Configuration.EnableLexicalAddressing)
+            if (Configuration.EnableVariableOptimization && Configuration.EnableLexicalAddressing)
                 throw new NotImplementedException ("Should not happen, variables should all be bound.");
-            else if (environment.DeepSearch (out value, this.varname)) throw new NotImplementedException ();
+            else if (environment.DeepSearch (out value, this.varname)) throw new NotImplementedException ("Variable DeepSeach failed for " + this.varname.ToString());
             else return false;
         }
     
@@ -509,6 +603,29 @@ namespace Microcode
         {
             return formal == this.Name;
         }
+                
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (VariableDeserializer));
+            info.AddValue ("name", this.varname);
+        }
+    }
+
+    [Serializable]
+    internal sealed class VariableDeserializer : IObjectReference
+    {
+        // This object has no fields (although it could).
+        Symbol name;
+
+        // GetRealObject is called after this object is deserialized.
+        public Object GetRealObject (StreamingContext context)
+        {
+                return Variable.Make (this.name);
+        }
+
+        // shut up compiler
+        public void SetName (Symbol value) { this.name = value; }
     }
 
     /// <summary>
@@ -812,7 +929,7 @@ namespace Microcode
     /// it becomes an incremental in the bindingEnvironment.
     /// </summary>
     [Serializable]
-    sealed class DeepVariable : BoundVariable
+    sealed class DeepVariable : BoundVariable, ISerializable
     {
 #if DEBUG
         static Histogram<Symbol> variableNameHistogram = new Histogram<Symbol> ();
@@ -949,11 +1066,12 @@ namespace Microcode
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("TopLevelVariable.EvalStep");
+            Warm ("-");
             nameHistogram.Note (this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
+            SCode.location = "TopLevelVariable.EvalStep";
 #endif
             if (this.cell.GetValue (out value))
                 throw new NotImplementedException ();

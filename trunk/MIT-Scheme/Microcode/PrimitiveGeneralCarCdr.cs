@@ -6,6 +6,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     class PrimitiveGeneralCarCdr : PrimitiveCombination2
     {
         protected PrimitiveGeneralCarCdr (Primitive2 rator, SCode rand0, SCode rand1)
@@ -65,6 +66,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGeneralCarCdrL : PrimitiveGeneralCarCdr
     {
         public readonly object rand0Name;
@@ -120,6 +122,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGeneralCarCdrA : PrimitiveGeneralCarCdrL
     {
         protected PrimitiveGeneralCarCdrA (Primitive2 rator, Argument rand0, SCode rand1)
@@ -166,6 +169,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGeneralCarCdrA0 : PrimitiveGeneralCarCdrA
     {
         protected PrimitiveGeneralCarCdrA0 (Primitive2 rator, Argument0 rand0, SCode rand1)
@@ -176,40 +180,86 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument0 rand0, SCode rand1)
         {
             return
-                (rand1 is LexicalVariable) ? Unimplemented () //PrimitiveGeneralCarCdrA0L.Make (rator, rand0, (LexicalVariable) rand1)
+                (rand1 is LexicalVariable) ? PrimitiveGeneralCarCdrA0L.Make (rator, rand0, (LexicalVariable) rand1)
                 : (rand1 is Quotation) ? PrimitiveGeneralCarCdrA0Q.Make (rator, rand0, (Quotation) rand1)
                 : new PrimitiveGeneralCarCdrA0 (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-#if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
-#endif
-            // Eval argument1
-            object ev1;
-
-            Control unev = this.rand1;
-            Environment env = environment;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // Eval argument0
-            object ev0 = environment.Argument0Value;
-
-            // Compute answer
-            answer = (int) ev0 + (int) ev1;
+            Unimplemented ();
+            answer = null;
             return false;
         }
     }
 
+    [Serializable]
+    class PrimitiveGeneralCarCdrA0L : PrimitiveGeneralCarCdrA0
+    {
+        object rand1Name;
+        int rand1Depth;
+        int rand1Offset;
+
+        protected PrimitiveGeneralCarCdrA0L (Primitive2 rator, Argument0 rand0, LexicalVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Depth = rand1.Depth;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, Argument0 rand0, LexicalVariable rand1) {
+            return
+                (rand1 is Argument) ? PrimitiveGeneralCarCdrA0A.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is LexicalVariable1) ? Unimplemented() :
+                new PrimitiveGeneralCarCdrA0L (rator, rand0, rand1);
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
+            answer = null;
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveGeneralCarCdrA0A : PrimitiveGeneralCarCdrA0L
+    {
+        protected PrimitiveGeneralCarCdrA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, Argument0 rand0, Argument rand1) {
+            return
+                (rand1 is Argument0) ? Unimplemented() :
+                (rand1 is Argument1) ? PrimitiveGeneralCarCdrA0A1.Make (rator, rand0, (Argument1) rand1) :
+                new PrimitiveGeneralCarCdrA0A (rator, rand0, rand1);
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
+            answer = null;
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveGeneralCarCdrA0A1 : PrimitiveGeneralCarCdrA0A
+    {
+        PrimitiveGeneralCarCdrA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, Argument0 rand0, Argument1 rand1) {
+            return
+                new PrimitiveGeneralCarCdrA0A1 (rator, rand0, rand1);
+        }
+    }
+
+
+    [Serializable]
     class PrimitiveGeneralCarCdrA0Q : PrimitiveGeneralCarCdrA0
     {
         public readonly object rand1Value;
@@ -237,6 +287,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGeneralCarCdrA1 : PrimitiveGeneralCarCdrA
     {
         protected PrimitiveGeneralCarCdrA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
@@ -282,6 +333,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGeneralCarCdrA1Q : PrimitiveGeneralCarCdrA1
     {
         public readonly object rand1Value;
@@ -310,6 +362,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGeneralCarCdrAQ : PrimitiveGeneralCarCdrA
     {
         public readonly object rand1Value;
@@ -338,8 +391,7 @@ namespace Microcode
         }
     }
 
-
-
+    [Serializable]
     class PrimitiveGeneralCarCdrL1 : PrimitiveGeneralCarCdrL
     {
         protected PrimitiveGeneralCarCdrL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
@@ -385,6 +437,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGeneralCarCdrL1Q : PrimitiveGeneralCarCdrL1
     {
         public readonly object rand1Value;
@@ -419,6 +472,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGeneralCarCdrLQ : PrimitiveGeneralCarCdrL
     {
         public readonly object rand1Value;

@@ -177,6 +177,15 @@ namespace Microcode
             return false;
         }
 
+        [SchemePrimitive ("FILE-REMOVE", 1, false)]
+        public static bool FileRemove (out object answer, object arg)
+        {
+            String filename = new String ((char []) arg);
+            System.IO.File.Delete (filename);
+            answer = false;
+            return false;
+        }
+
         [SchemePrimitive ("GARBAGE-COLLECT", 1, true)]
         public static bool GarbageCollect (out object answer, object arg)
         {
@@ -275,19 +284,6 @@ namespace Microcode
             false, false, false, false, false ,false, false};
             return false;
         }
-
-        [SchemePrimitive ("MICROCODE-LIBRARY-PATH", 0, true)]
-        public static bool MicrocodeLibraryPath (out object answer)
-        {
-            answer = new object [] { "C:\\Program Files\\MIT-GNU Scheme\\lib\\".ToCharArray () };
-            return false;
-
-        //    //return new object [] {"Program Files".ToCharArray(),
-        //    //    "MIT".ToCharArray(),
-        //    //    "scheme-7.7.1".ToCharArray(),
-        //    //    "lib".ToCharArray()});
-        }
-
 
         [SchemePrimitive ("MICROCODE-SYSTEM-CALL-NAMES", 0, true)]
         public static bool MicrocodeSystemCallNames (out object answer)

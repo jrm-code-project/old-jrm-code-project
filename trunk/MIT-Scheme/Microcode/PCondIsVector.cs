@@ -6,7 +6,6 @@ using System.Text;
 
 namespace Microcode
 {
-
     [Serializable]
     class PCondIsVector : PCond1
     {
@@ -74,6 +73,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorL : PCondIsVector
     {
         public readonly object predicateName;
@@ -131,6 +131,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA : PCondIsVectorL
     {
         protected PCondIsVectorA (PrimitiveIsVectorA predicate, SCode consequent, SCode alternative)
@@ -182,6 +183,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA0 : PCondIsVectorA
     {
         protected PCondIsVectorA0 (PrimitiveIsVectorA0 predicate, SCode consequent, SCode alternative)
@@ -228,6 +230,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA0L : PCondIsVectorA0
     {
         public readonly object consequentName;
@@ -275,6 +278,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA0LL : PCondIsVectorA0L
     {
         protected PCondIsVectorA0LL (PrimitiveIsVectorA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -292,6 +296,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA0LQ : PCondIsVectorA0L
     {
         public readonly object alternativeValue;
@@ -328,6 +333,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA0Q : PCondIsVectorA0
     {
         public readonly object consequentValue;
@@ -370,6 +376,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorA0QL : PCondIsVectorA0Q
     {
         protected PCondIsVectorA0QL (PrimitiveIsVectorA0 predicate, Quotation consequent, LexicalVariable alternative)
@@ -389,6 +396,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorA0QQ : PCondIsVectorA0Q
     {
         protected PCondIsVectorA0QQ (PrimitiveIsVectorA0 predicate, Quotation consequent, Quotation alternative)
@@ -418,6 +426,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorA0SL : PCondIsVectorA0
     {
         public readonly object alternativeName;
@@ -465,6 +474,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorA0SQ : PCondIsVectorA0
     {
         public readonly object alternativeValue;
@@ -504,6 +514,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA1 : PCondIsVectorA
     {
         protected PCondIsVectorA1 (PrimitiveIsVectorA1 predicate, SCode consequent, SCode alternative)
@@ -549,6 +560,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA1L : PCondIsVectorA1
     {
         public readonly object consequentName;
@@ -600,6 +612,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorA1LL : PCondIsVectorA1L
     {
         protected PCondIsVectorA1LL (PrimitiveIsVectorA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -617,6 +630,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA1LQ : PCondIsVectorA1L
     {
         public readonly object alternativeValue;
@@ -653,6 +667,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA1Q : PCondIsVectorA1
     {
         public readonly object consequentValue;
@@ -691,6 +706,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorA1QL : PCondIsVectorA1Q
     {
         protected PCondIsVectorA1QL (PrimitiveIsVectorA1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -709,6 +725,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorA1QQ : PCondIsVectorA1Q
     {
         protected PCondIsVectorA1QQ (PrimitiveIsVectorA1 predicate, Quotation consequent, Quotation alternative)
@@ -738,6 +755,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorA1SL : PCondIsVectorA1
     {
         public readonly object alternativeName;
@@ -785,6 +803,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorA1SQ : PCondIsVectorA1
     {
         public readonly object alternativeValue;
@@ -824,6 +843,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorAL : PCondIsVectorA
     {
         public readonly object consequentName;
@@ -874,6 +894,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorAA : PCondIsVectorAL
     {
         protected PCondIsVectorAA (PrimitiveIsVectorA predicate, Argument consequent, SCode alternative)
@@ -891,6 +912,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorAL1 : PCondIsVectorAL
     {
         protected PCondIsVectorAL1 (PrimitiveIsVectorA predicate, LexicalVariable1 consequent, SCode alternative)
@@ -906,6 +928,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorALL : PCondIsVectorAL
     {
         protected PCondIsVectorALL (PrimitiveIsVectorA predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -921,6 +944,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorALQ : PCondIsVectorAL
     {
         protected PCondIsVectorALQ (PrimitiveIsVectorA predicate, LexicalVariable consequent, Quotation alternative)
@@ -936,6 +960,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorAQ : PCondIsVectorA
     {
         public readonly object consequentValue;
@@ -980,6 +1005,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorAQL : PCondIsVectorAQ
     {
         protected PCondIsVectorAQL (PrimitiveIsVectorA predicate, Quotation consequent, LexicalVariable alternative)
@@ -997,6 +1023,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorAQQ : PCondIsVectorAQ
     {
         protected PCondIsVectorAQQ (PrimitiveIsVectorA predicate, Quotation consequent, Quotation alternative)
@@ -1027,6 +1054,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorASL : PCondIsVectorA
     {
         protected PCondIsVectorASL (PrimitiveIsVectorA predicate, SCode consequent, SCode alternative)
@@ -1044,6 +1072,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorASQ : PCondIsVectorA
     {
         public readonly object alternativeValue;
@@ -1083,6 +1112,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorL1 : PCondIsVectorL
     {
         protected PCondIsVectorL1 (PrimitiveIsVectorL1 predicate, SCode consequent, SCode alternative)
@@ -1133,6 +1163,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorL1L : PCondIsVectorL1
     {
         public readonly object consequentName;
@@ -1186,6 +1217,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorL1LL : PCondIsVectorL1L
     {
         protected PCondIsVectorL1LL (PrimitiveIsVectorL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1203,6 +1235,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorL1LQ : PCondIsVectorL1L
     {
         public readonly object alternativeValue;
@@ -1239,6 +1272,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorL1Q : PCondIsVectorL1
     {
         public readonly object consequentValue;
@@ -1284,6 +1318,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorL1QL : PCondIsVectorL1Q
     {
         protected PCondIsVectorL1QL (PrimitiveIsVectorL1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -1302,6 +1337,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorL1QQ : PCondIsVectorL1Q
     {
         protected PCondIsVectorL1QQ (PrimitiveIsVectorL1 predicate, Quotation consequent, Quotation alternative)
@@ -1331,6 +1367,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorL1SL : PCondIsVectorL1
     {
         protected PCondIsVectorL1SL (PrimitiveIsVectorL1 predicate, SCode consequent, LexicalVariable alternative)
@@ -1349,6 +1386,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsVectorL1SQ : PCondIsVectorL1
     {
         public readonly object alternativeValue;
@@ -1393,6 +1431,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorLL : PCondIsVectorL
     {
         protected PCondIsVectorLL (PrimitiveIsVectorL predicate, LexicalVariable consequent, SCode alternative)
@@ -1414,6 +1453,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorLLL : PCondIsVectorLL
     {
         protected PCondIsVectorLLL (PrimitiveIsVectorL predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1432,6 +1472,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorLLQ : PCondIsVectorLL
     {
         protected PCondIsVectorLLQ (PrimitiveIsVectorL predicate, LexicalVariable consequent, Quotation alternative)
@@ -1450,6 +1491,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorLQ : PCondIsVectorL
     {
         protected PCondIsVectorLQ (PrimitiveIsVectorL predicate, Quotation consequent, SCode alternative)
@@ -1471,6 +1513,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorLQL : PCondIsVectorLQ
     {
         protected PCondIsVectorLQL (PrimitiveIsVectorL predicate, Quotation consequent, LexicalVariable alternative)
@@ -1489,6 +1532,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorLQQ : PCondIsVectorLQ
     {
         protected PCondIsVectorLQQ (PrimitiveIsVectorL predicate, Quotation consequent, Quotation alternative)
@@ -1519,6 +1563,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorLSL : PCondIsVectorL
     {
         protected PCondIsVectorLSL (PrimitiveIsVectorL predicate, SCode consequent, LexicalVariable alternative)
@@ -1537,6 +1582,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorLSQ : PCondIsVectorL
     {
         public readonly object alternativeValue;
@@ -1581,6 +1627,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorSL : PCondIsVector
     {
         public readonly object consequentName;
@@ -1639,6 +1686,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorSLL : PCondIsVectorSL
     {
 
@@ -1659,6 +1707,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorSLQ : PCondIsVectorSL
     {
         public readonly object alternativeValue;
@@ -1707,6 +1756,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorSQ : PCondIsVector
     {
         public readonly object consequentValue;
@@ -1720,9 +1770,9 @@ namespace Microcode
         public static SCode Make (PrimitiveIsVector predicate, Quotation consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsVectorSQL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsVectorSQQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsVectorSQ (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsVectorSQL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                (alternative is Quotation) ? PCondIsVectorSQQ.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsVectorSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1758,6 +1808,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorSQL : PCondIsVectorSQ
     {
         protected PCondIsVectorSQL (PrimitiveIsVector predicate, Quotation consequent, LexicalVariable alternative)
@@ -1777,6 +1828,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorSQQ : PCondIsVectorSQ
     {
         public readonly object alternativeValue;
@@ -1838,6 +1890,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsVectorSSL : PCondIsVector
     {
         public readonly object alternativeName;

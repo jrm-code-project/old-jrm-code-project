@@ -89,89 +89,55 @@ namespace Microcode
             return Sequence3.Make (first, second, PrimitiveCombination1.Make (rator, third));
         }
 
-        static SCode StandardMake (Primitive1 rator, SCode rand)
+        static SCode InlineMake (Primitive1 rator, SCode rand)
         {
             return
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.Add1) ? PrimitiveAdd1.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.Car) ? PrimitiveCar.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.Cdr) ? PrimitiveCdr.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.CharToInteger) ? PrimitiveCharToInteger.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.FixnumAdd1) ? PrimitiveFixnumAdd1.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsBigFixnum) ? PrimitiveIsBigFixnum.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsBigFlonum) ? PrimitiveIsBigFlonum.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsChar) ? PrimitiveIsChar.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsComplex) ? PrimitiveIsComplex.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsFixnum) ? PrimitiveIsFixnum.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsNegative) ? PrimitiveIsNegative.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsNull) ? PrimitiveIsNull.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsPair) ? PrimitiveIsPair.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsRatnum) ? PrimitiveIsRatnum.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsRecord) ? PrimitiveIsRecord.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsSharpT) ? PrimitiveIsSharpT.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsSymbol) ? PrimitiveIsSymbol.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.IsVector) ? PrimitiveIsVector.Make (rator, rand) :
-                (Configuration.EnableSuperOperators && 
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.Not) ? PrimitiveNot.Make (rator, rand) :
-                (Configuration.EnableSuperOperators && 
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.ObjectType) ? PrimitiveObjectType.Make (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableInlinePrimitive1 && rator == Primitive.SystemPairCar) ? PrimitiveSystemPairCar.Make (rator, rand) :
-                (rand is Conditional) ? RewriteConditional (rator, (Conditional) rand) :
-                (rand is Disjunction) ? RewriteDisjunction (rator, (Disjunction) rand) :
-                (rand is Sequence2) ? RewriteSequence2 (rator, ((Sequence2) rand).First, ((Sequence2) rand).Second) :
-                (rand is Sequence3) ? RewriteSequence3 (rator, ((Sequence3) rand).First, ((Sequence3) rand).Second, ((Sequence3) rand).Third) :
+                (rator == Primitive.Add1) ? PrimitiveAdd1.Make (rator, rand) :
+                (rator == Primitive.Car) ? PrimitiveCar.Make (rator, rand) :
+                (rator == Primitive.Caar) ? PrimitiveCaar.Make (rator, rand) :
+                (rator == Primitive.Cdr) ? PrimitiveCdr.Make (rator, rand) :
+                (rator == Primitive.CharToInteger) ? PrimitiveCharToInteger.Make (rator, rand) :
+                (rator == Primitive.FixnumAdd1) ? PrimitiveFixnumAdd1.Make (rator, rand) :
+                (rator == Primitive.IsBigFixnum) ? PrimitiveIsBigFixnum.Make (rator, rand) :
+                (rator == Primitive.IsBigFlonum) ? PrimitiveIsBigFlonum.Make (rator, rand) :
+                (rator == Primitive.IsChar) ? PrimitiveIsChar.Make (rator, rand) :
+                (rator == Primitive.IsComplex) ? PrimitiveIsComplex.Make (rator, rand) :
+                (rator == Primitive.IsFixnum) ? PrimitiveIsFixnum.Make (rator, rand) :
+                (rator == Primitive.IsNegative) ? PrimitiveIsNegative.Make (rator, rand) :
+                (rator == Primitive.IsNull) ? PrimitiveIsNull.Make (rator, rand) :
+                (rator == Primitive.IsPair) ? PrimitiveIsPair.Make (rator, rand) :
+                (rator == Primitive.IsRatnum) ? PrimitiveIsRatnum.Make (rator, rand) :
+                (rator == Primitive.IsRecord) ? PrimitiveIsRecord.Make (rator, rand) :
+                (rator == Primitive.IsSharpT) ? PrimitiveIsSharpT.Make (rator, rand) :
+                (rator == Primitive.IsSymbol) ? PrimitiveIsSymbol.Make (rator, rand) :
+                (rator == Primitive.IsVector) ? PrimitiveIsVector.Make (rator, rand) :
+                (rator == Primitive.Not) ? PrimitiveNot.Make (rator, rand) :
+                (rator == Primitive.ObjectType) ? PrimitiveObjectType.Make (rator, rand) :
+                (rator == Primitive.SystemPairCar) ? PrimitiveSystemPairCar.Make (rator, rand) :
+                (rator == Primitive.VectorLength) ? PrimitiveVectorLength.Make (rator, rand) :
+                //(rand is Conditional) ? RewriteConditional (rator, (Conditional) rand) :
+                //(rand is Disjunction) ? RewriteDisjunction (rator, (Disjunction) rand) :
+                //(rand is Sequence2) ? RewriteSequence2 (rator, ((Sequence2) rand).First, ((Sequence2) rand).Second) :
+                //(rand is Sequence3) ? RewriteSequence3 (rator, ((Sequence3) rand).First, ((Sequence3) rand).Second, ((Sequence3) rand).Third) :
                 //IsLet (rand) ? RewriteLet (rator, rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnablePrimitive1Specialization &&
-                 rand is LexicalVariable) ? PrimitiveCombination1L.Make (rator, (LexicalVariable) rand) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnablePrimitive1Specialization &&
-                 rand is Quotation) ? PrimitiveCombination1Q.Make (rator, (Quotation) rand) :
-                new PrimitiveCombination1 (rator, rand);
+                SpecializedMake (rator, rand);
         }
 
-        static SCode SpecialMake (Primitive1 rator, Quotation rand)
+        static SCode SpecializedMake (Primitive1 rator, SCode rand)
         {
-            //if (rator != Primitive.ClearInterrupts
-            //    && rator != Primitive.ExitWithValue
-            //    && rator != Primitive.FloatingVectorCons
-            //    && rator != Primitive.InitializeCCompiledBlock
-            //    && (rator != Primitive.ObjectDatum || !(rand.Quoted is Boolean) || (bool) rand.Quoted != false)
-            //    && rator != Primitive.SetInterruptEnables
-            //    && rator != Primitive.SetTrapState
-            //    && rator != Primitive.StringAllocate
-            //    && rator != Primitive.SystemVectorSize
-            //    && rator != Primitive.RequestInterrupts
-            //    )
-           // Debugger.Break();
-
-            return 
-                StandardMake (rator, rand);
+            return
+                (!Configuration.EnablePrimitive1Specialization) ? new PrimitiveCombination1 (rator, rand) :
+                (rand is LexicalVariable) ? PrimitiveCombination1L.Make (rator, (LexicalVariable) rand) :
+                (rand is Quotation) ? PrimitiveCombination1Q.Make (rator, (Quotation) rand) :
+                new PrimitiveCombination1 (rator, rand);
         }
 
         public static SCode Make (Primitive1 rator, SCode rand)
         {
             return
-                (rand is Quotation) ? SpecialMake (rator, (Quotation) rand)
-                : StandardMake (rator, rand);
+                (!Configuration.EnablePrimitiveCombination1Optimization) ? new PrimitiveCombination1 (rator, rand) :
+                (!Configuration.EnableInlinePrimitive1) ? SpecializedMake (rator, rand) :
+                InlineMake (rator, rand);
         }
 
         public static SCode Make (Primitive1 rator, object rand)
@@ -705,10 +671,12 @@ namespace Microcode
         public static new SCode Make (Primitive1 rator, SCode rand)
         {
             return
+               (rand is PrimitiveCar) ? PrimitiveCombination1.Make (Primitive.Caar, ((PrimitiveCar) rand).Operand) :
+               // (rand is PrimitiveCdr) ? Unimplemented () :
                 (rand is LexicalVariable) ? PrimitiveCarL.Make (rator, (LexicalVariable) rand) :
-                isFoldableCxr(rand, Primitive.Car) ? RewriteCaar (((PrimitiveCar) rand).Operand) :
-                isFoldableCxr(rand, Primitive.Cdr) ? RewriteCadr (((PrimitiveCdr) rand).Operand) :
-                isFoldableCxr(rand, Primitive.GeneralCarCdr) ? RewriteGeneralCarCdr ((PrimitiveCombination2) rand) :
+                //isFoldableCxr(rand, Primitive.Car) ? RewriteCaar (((PrimitiveCar) rand).Operand) :
+                //isFoldableCxr(rand, Primitive.Cdr) ? RewriteCadr (((PrimitiveCdr) rand).Operand) :
+                //isFoldableCxr(rand, Primitive.GeneralCarCdr) ? RewriteGeneralCarCdr ((PrimitiveCombination2) rand) :
                 (rand is Quotation) ? Unimplemented() :
                 new PrimitiveCar (rator, rand);
         }
@@ -882,6 +850,212 @@ namespace Microcode
             Cons evpair = ev0 as Cons;
             if (evpair == null) throw new NotImplementedException ();
             answer = evpair.Car;
+            return false;
+        }
+    }
+
+    #endregion
+
+    #region Caar
+
+    [Serializable]
+    class PrimitiveCaar : PrimitiveCombination1
+    {
+        protected PrimitiveCaar (Primitive1 procedure, SCode arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static new SCode Make (Primitive1 rator, SCode rand)
+        {
+            return
+                //(rand is PrimitiveCar) ? PrimitiveCaar.Make (rator, ((PrimitiveCar) rand).Operand) :
+                //(rand is PrimitiveCdr) ? Unimplemented () :
+                (rand is LexicalVariable) ? PrimitiveCaarL.Make (rator, (LexicalVariable) rand) :
+                //isFoldableCxr(rand, Primitive.Car) ? RewriteCaar (((PrimitiveCar) rand).Operand) :
+                //isFoldableCxr(rand, Primitive.Cdr) ? RewriteCadr (((PrimitiveCdr) rand).Operand) :
+                //isFoldableCxr(rand, Primitive.GeneralCarCdr) ? RewriteGeneralCarCdr ((PrimitiveCombination2) rand) :
+                (rand is Quotation) ? Unimplemented () :
+                new PrimitiveCaar (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.arg0);
+            SCode.location = "PrimitiveCaar.EvalStep";
+#endif
+            throw new NotImplementedException ();
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+            Cons evpair = ev0 as Cons;
+            if (evpair == null) throw new NotImplementedException ();
+            answer = evpair.Car;
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveCaarL : PrimitiveCaar
+    {
+        public readonly object randName;
+        public readonly int randDepth;
+        public readonly int randOffset;
+
+        protected PrimitiveCaarL (Primitive1 procedure, LexicalVariable arg0)
+            : base (procedure, arg0)
+        {
+            this.randName = arg0.Name;
+            this.randDepth = arg0.Depth;
+            this.randOffset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, LexicalVariable rand)
+        {
+            return
+                (rand is Argument) ? PrimitiveCaarA.Make (rator, (Argument) rand) :
+                (rand is LexicalVariable1) ? PrimitiveCaarL1.Make (rator, (LexicalVariable1) rand) :
+                new PrimitiveCaarL (rator, rand);
+        }
+
+        public object OperandName { get { return this.randName; } }
+        public int OperandDepth { get { return this.randDepth; } }
+        public int OperandOffset { get { return this.randOffset; } }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveCarL.EvalStep");
+#endif
+            throw new NotImplementedException ();
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.randName, this.randDepth, this.randOffset))
+                throw new NotImplementedException ();
+            Cons evpair = ev0 as Cons;
+            if (evpair == null) throw new NotImplementedException ();
+            answer = evpair.Car;
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveCaarA : PrimitiveCaarL
+    {
+        protected PrimitiveCaarA (Primitive1 procedure, Argument arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument rand)
+        {
+            return
+                (rand is Argument0) ? PrimitiveCaarA0.Make (rator, (Argument0) rand) :
+                (rand is Argument1) ? PrimitiveCaarA1.Make (rator, (Argument1) rand) :
+                new PrimitiveCaarA (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveCarA.EvalStep");
+#endif
+            throw new NotImplementedException ();
+            Cons evpair = environment.ArgumentValue (this.randOffset) as Cons;
+            if (evpair == null) throw new NotImplementedException ();
+            answer = evpair.Car;
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveCaarA0 : PrimitiveCaarA
+    {
+        PrimitiveCaarA0 (Primitive1 procedure, Argument0 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument0 rand)
+        {
+            return new PrimitiveCaarA0 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveCaarA0.EvalStep");
+#endif
+            Cons evpair = environment.Argument0Value as Cons;
+            if (evpair == null) throw new NotImplementedException ();
+            Cons temp = evpair.Car as Cons;
+            if (temp == null) throw new NotImplementedException ();
+            answer = temp.Car;
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveCaarA1 : PrimitiveCaarA
+    {
+        PrimitiveCaarA1 (Primitive1 procedure, Argument1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument1 rand)
+        {
+            return new PrimitiveCaarA1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveCaarA1.EvalStep");
+#endif
+            throw new NotImplementedException ();
+            Cons ev0 = environment.Argument1Value as Cons;
+            if (ev0 == null) throw new NotImplementedException ();
+            answer = ev0.Car;
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveCaarL1 : PrimitiveCaarL
+    {
+        PrimitiveCaarL1 (Primitive1 procedure, LexicalVariable1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, LexicalVariable1 rand)
+        {
+            return new PrimitiveCaarL1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveCaarL1.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.randName, this.randOffset))
+                throw new NotImplementedException ();
+            Cons evpair = ev0 as Cons;
+            if (evpair == null) throw new NotImplementedException ();
+            Cons temp = evpair.Car as Cons;
+            if (temp == null) throw new NotImplementedException ();
+            answer = temp.Car;
             return false;
         }
     }
@@ -3448,6 +3622,7 @@ namespace Microcode
         public static new SCode Make (Primitive1 rator, SCode rand)
         {
             return
+                (rand is PrimitiveCar) ? PrimitiveIsPairCar.Make (rator, (PrimitiveCar) rand) :
                 (rand is LexicalVariable) ? PrimitiveIsPairL.Make (rator, (LexicalVariable) rand) :
                 (rand is Quotation) ? Unimplemented () :
                 new PrimitiveIsPair (rator, rand);
@@ -3605,6 +3780,175 @@ namespace Microcode
             if (environment.FastLexicalRef1 (out ev0, this.argName, this.argOffset))
                 throw new NotImplementedException ();
             answer = (ev0 is Cons) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    #endregion
+
+    #region IsPairCar
+
+    [Serializable]
+    class PrimitiveIsPairCar : PrimitiveIsPair
+    {
+        protected PrimitiveIsPairCar (Primitive1 procedure, PrimitiveCar arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, PrimitiveCar rand)
+        {
+            return
+                (rand is PrimitiveCarL) ? PrimitiveIsPairCarL.Make (rator, (PrimitiveCarL) rand) :
+                //(rand is PrimitiveCarQ) ? Unimplemented () :
+                new PrimitiveIsPairCar (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsPairCarL : PrimitiveIsPairCar
+    {
+        protected readonly object argName;
+        protected readonly int argDepth;
+        protected readonly int argOffset;
+
+        protected PrimitiveIsPairCarL (Primitive1 procedure, PrimitiveCarL arg0)
+            : base (procedure, arg0)
+        {
+            this.argName = arg0.OperandName;
+            this.argDepth = arg0.OperandDepth;
+            this.argOffset = arg0.OperandOffset;
+        }
+
+        public static PrimitiveIsPairCarL Make (Primitive1 rator, PrimitiveCarL rand)
+        {
+            return
+                (rand is PrimitiveCarA) ? PrimitiveIsPairCarA.Make (rator, (PrimitiveCarA) rand) :
+                (rand is PrimitiveCarL1) ? PrimitiveIsPairCarL1.Make (rator, (PrimitiveCarL1) rand) :
+                new PrimitiveIsPairCarL (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsPairCarL.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.argName, this.argDepth, this.argOffset))
+                throw new NotImplementedException ();
+            Cons temp = ev0 as Cons;
+            if (temp == null)
+                throw new NotImplementedException ();
+            answer = (temp.Car is Cons) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsPairCarA : PrimitiveIsPairCarL
+    {
+        protected PrimitiveIsPairCarA (Primitive1 procedure, PrimitiveCarA arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static PrimitiveIsPairCarA Make (Primitive1 rator, PrimitiveCarA rand)
+        {
+            return
+                (rand is PrimitiveCarA0) ? PrimitiveIsPairCarA0.Make (rator, (PrimitiveCarA0) rand):
+                (rand is PrimitiveCarA1) ? PrimitiveIsPairCarA1.Make (rator, (PrimitiveCarA1) rand):
+                new PrimitiveIsPairCarA (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsPairCarA.EvalStep");
+#endif
+            Unimplemented ();
+            answer = (environment.ArgumentValue (this.argOffset) is Cons) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveIsPairCarA0 : PrimitiveIsPairCarA
+    {
+        PrimitiveIsPairCarA0 (Primitive1 procedure, PrimitiveCarA0 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static PrimitiveIsPairCarA0 Make (Primitive1 rator, PrimitiveCarA0 rand)
+        {
+            return new PrimitiveIsPairCarA0 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsPairCarA0.EvalStep");
+#endif
+            Cons arg = environment.Argument0Value as Cons;
+            if (arg0 == null) throw new NotImplementedException ("Back out of PrimitiveIsPairCarA0");
+            answer = (arg.Car is Cons) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveIsPairCarA1 : PrimitiveIsPairCarA
+    {
+        PrimitiveIsPairCarA1 (Primitive1 procedure, PrimitiveCarA1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static PrimitiveIsPairCarA1 Make (Primitive1 rator, PrimitiveCarA1 rand)
+        {
+            return new PrimitiveIsPairCarA1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsPairCarA1.EvalStep");
+#endif
+            Unimplemented ();
+            answer = (environment.Argument1Value is Cons) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveIsPairCarL1 : PrimitiveIsPairCarL
+    {
+        PrimitiveIsPairCarL1 (Primitive1 procedure, PrimitiveCarL1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static PrimitiveIsPairCarL1 Make (Primitive1 rator, PrimitiveCarL1 rand)
+        {
+            return new PrimitiveIsPairCarL1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsPairCarL1.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.argName, this.argOffset))
+                throw new NotImplementedException ();
+            Cons temp = ev0 as Cons;
+            if (temp == null) throw new NotImplementedException ();
+            answer = (temp.Car is Cons) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
     }
@@ -3805,7 +4149,8 @@ namespace Microcode
             }
             else if (rand is PrimitiveCombination2) {
                 Primitive op = ((PrimitiveCombination2) rand).Rator;
-                Debugger.Break ();
+                if (op.Name.ToString() != "GENERAL-CAR-CDR")
+                    Debugger.Break (); 
             }
             return false;
         }
@@ -4002,8 +4347,8 @@ namespace Microcode
         {
             return
                 (rand is LexicalVariable) ? PrimitiveNotL.Make (rator, (LexicalVariable) rand) :
-                IsDoubleNegative (rand) ? Unimplemented() :
-                (rand is Quotation) ? Unimplemented () :
+                // IsDoubleNegative (rand) ? Unimplemented() :
+                // (rand is Quotation) ? Unimplemented () :
                 new PrimitiveNot (rator, rand);
         }
 
@@ -4534,4 +4879,181 @@ namespace Microcode
     }
 
     #endregion
+
+    #region VectorLength
+
+    [Serializable]
+    class PrimitiveVectorLength : PrimitiveCombination1
+    {
+        protected PrimitiveVectorLength (Primitive1 procedure, SCode arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static new SCode Make (Primitive1 rator, SCode rand)
+        {
+            return
+                (rand is LexicalVariable) ? PrimitiveVectorLengthL.Make (rator, (LexicalVariable) rand)
+                : (rand is Quotation) ? Unimplemented ()
+                : new PrimitiveVectorLength (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVectorLength.EvalStep");
+            noteCalls (this.arg0);
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+            answer = ((object [])  ev0).Length;
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveVectorLengthL : PrimitiveVectorLength
+    {
+        protected readonly object argName;
+        protected readonly int argDepth;
+        protected readonly int argOffset;
+
+        protected PrimitiveVectorLengthL (Primitive1 procedure, LexicalVariable arg0)
+            : base (procedure, arg0)
+        {
+            this.argName = arg0.Name;
+            this.argDepth = arg0.Depth;
+            this.argOffset = arg0.Offset;
+        }
+
+        public static PrimitiveVectorLengthL Make (Primitive1 rator, LexicalVariable rand)
+        {
+            return
+                (rand is Argument) ? PrimitiveVectorLengthA.Make (rator, (Argument) rand)
+                : new PrimitiveVectorLengthL (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVectorLengthL.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.argName, this.argDepth, this.argOffset))
+                throw new NotImplementedException ();
+            answer = ((object [])  ev0).Length;
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveVectorLengthA : PrimitiveVectorLengthL
+    {
+        protected PrimitiveVectorLengthA (Primitive1 procedure, Argument arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static PrimitiveVectorLengthA Make (Primitive1 rator, Argument rand)
+        {
+            return
+                (rand is Argument0) ? PrimitiveVectorLengthA0.Make (rator, (Argument0) rand)
+                : (rand is Argument1) ? PrimitiveVectorLengthA1.Make (rator, (Argument1) rand)
+                : new PrimitiveVectorLengthA (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVectorLengthA.EvalStep");
+#endif
+            answer = ((object [])  environment.ArgumentValue (this.argOffset)).Length;
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveVectorLengthA0 : PrimitiveVectorLengthA
+    {
+        PrimitiveVectorLengthA0 (Primitive1 procedure, Argument0 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static PrimitiveVectorLengthA0 Make (Primitive1 rator, Argument0 rand)
+        {
+            return new PrimitiveVectorLengthA0 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVectorLengthA0.EvalStep");
+#endif
+            answer = ((object [])  environment.Argument0Value).Length;
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveVectorLengthA1 : PrimitiveVectorLengthA
+    {
+        PrimitiveVectorLengthA1 (Primitive1 procedure, Argument1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static PrimitiveVectorLengthA1 Make (Primitive1 rator, Argument1 rand)
+        {
+            return new PrimitiveVectorLengthA1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVectorLengthA1.EvalStep");
+#endif
+            answer = ((object [])  environment.Argument1Value).Length;
+            return false;
+
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveVectorLengthL1 : PrimitiveVectorLengthL
+    {
+        PrimitiveVectorLengthL1 (Primitive1 procedure, LexicalVariable1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static PrimitiveVectorLengthL1 Make (Primitive1 rator, LexicalVariable1 rand)
+        {
+            return new PrimitiveVectorLengthL1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVectorLengthL1.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.argName, this.argOffset))
+                throw new NotImplementedException ();
+            answer = ((object [])  ev0).Length;
+            return false;
+        }
+    }
+
+    #endregion
+
 }

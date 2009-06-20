@@ -74,6 +74,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharL : PCondIsChar
     {
         public readonly object predicateName;
@@ -131,6 +132,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA : PCondIsCharL
     {
         protected PCondIsCharA (PrimitiveIsCharA predicate, SCode consequent, SCode alternative)
@@ -182,6 +184,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA0 : PCondIsCharA
     {
         protected PCondIsCharA0 (PrimitiveIsCharA0 predicate, SCode consequent, SCode alternative)
@@ -228,6 +231,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA0L : PCondIsCharA0
     {
         public readonly object consequentName;
@@ -275,6 +279,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA0LL : PCondIsCharA0L
     {
         protected PCondIsCharA0LL (PrimitiveIsCharA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -292,6 +297,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA0LQ : PCondIsCharA0L
     {
         public readonly object alternativeValue;
@@ -328,6 +334,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA0Q : PCondIsCharA0
     {
         public readonly object consequentValue;
@@ -370,6 +377,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharA0QL : PCondIsCharA0Q
     {
         protected PCondIsCharA0QL (PrimitiveIsCharA0 predicate, Quotation consequent, LexicalVariable alternative)
@@ -389,6 +397,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharA0QQ : PCondIsCharA0Q
     {
         protected PCondIsCharA0QQ (PrimitiveIsCharA0 predicate, Quotation consequent, Quotation alternative)
@@ -418,6 +427,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharA0SL : PCondIsCharA0
     {
         public readonly object alternativeName;
@@ -463,6 +473,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharA0SQ : PCondIsCharA0
     {
         public readonly object alternativeValue;
@@ -501,6 +512,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA1 : PCondIsCharA
     {
         protected PCondIsCharA1 (PrimitiveIsCharA1 predicate, SCode consequent, SCode alternative)
@@ -548,6 +560,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA1L : PCondIsCharA1
     {
         public readonly object consequentName;
@@ -599,6 +612,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharA1LL : PCondIsCharA1L
     {
         protected PCondIsCharA1LL (PrimitiveIsCharA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -616,6 +630,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA1LQ : PCondIsCharA1L
     {
         public readonly object alternativeValue;
@@ -652,6 +667,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA1Q : PCondIsCharA1
     {
         public readonly object consequentValue;
@@ -690,6 +706,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharA1QL : PCondIsCharA1Q
     {
         protected PCondIsCharA1QL (PrimitiveIsCharA1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -708,6 +725,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharA1QQ : PCondIsCharA1Q
     {
         protected PCondIsCharA1QQ (PrimitiveIsCharA1 predicate, Quotation consequent, Quotation alternative)
@@ -737,6 +755,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharA1SL : PCondIsCharA1
     {
         public readonly object alternativeName;
@@ -784,6 +803,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharA1SQ : PCondIsCharA1
     {
         public readonly object alternativeValue;
@@ -823,6 +843,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharAL : PCondIsCharA
     {
         public readonly object consequentName;
@@ -871,6 +892,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharAA : PCondIsCharAL
     {
         protected PCondIsCharAA (PrimitiveIsCharA predicate, Argument consequent, SCode alternative)
@@ -888,6 +910,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharAL1 : PCondIsCharAL
     {
         protected PCondIsCharAL1 (PrimitiveIsCharA predicate, LexicalVariable1 consequent, SCode alternative)
@@ -903,6 +926,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharALL : PCondIsCharAL
     {
         protected PCondIsCharALL (PrimitiveIsCharA predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -918,6 +942,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharALQ : PCondIsCharAL
     {
         protected PCondIsCharALQ (PrimitiveIsCharA predicate, LexicalVariable consequent, Quotation alternative)
@@ -933,6 +958,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharAQ : PCondIsCharA
     {
         public readonly object consequentValue;
@@ -977,6 +1003,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharAQL : PCondIsCharAQ
     {
         protected PCondIsCharAQL (PrimitiveIsCharA predicate, Quotation consequent, LexicalVariable alternative)
@@ -994,6 +1021,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharAQQ : PCondIsCharAQ
     {
         protected PCondIsCharAQQ (PrimitiveIsCharA predicate, Quotation consequent, Quotation alternative)
@@ -1024,6 +1052,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharASL : PCondIsCharA
     {
         protected PCondIsCharASL (PrimitiveIsCharA predicate, SCode consequent, SCode alternative)
@@ -1041,6 +1070,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharASQ : PCondIsCharA
     {
         public readonly object alternativeValue;
@@ -1080,6 +1110,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharL1 : PCondIsCharL
     {
         protected PCondIsCharL1 (PrimitiveIsCharL1 predicate, SCode consequent, SCode alternative)
@@ -1130,6 +1161,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharL1L : PCondIsCharL1
     {
         public readonly object consequentName;
@@ -1183,6 +1215,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharL1LL : PCondIsCharL1L
     {
         protected PCondIsCharL1LL (PrimitiveIsCharL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1200,6 +1233,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharL1LQ : PCondIsCharL1L
     {
         public readonly object alternativeValue;
@@ -1236,6 +1270,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharL1Q : PCondIsCharL1
     {
         public readonly object consequentValue;
@@ -1277,6 +1312,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharL1QL : PCondIsCharL1Q
     {
         protected PCondIsCharL1QL (PrimitiveIsCharL1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -1295,6 +1331,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharL1QQ : PCondIsCharL1Q
     {
         protected PCondIsCharL1QQ (PrimitiveIsCharL1 predicate, Quotation consequent, Quotation alternative)
@@ -1324,6 +1361,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharL1SL : PCondIsCharL1
     {
         protected PCondIsCharL1SL (PrimitiveIsCharL1 predicate, SCode consequent, LexicalVariable alternative)
@@ -1342,6 +1380,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsCharL1SQ : PCondIsCharL1
     {
         public readonly object alternativeValue;
@@ -1387,6 +1426,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharLL : PCondIsCharL
     {
         protected PCondIsCharLL (PrimitiveIsCharL predicate, LexicalVariable consequent, SCode alternative)
@@ -1408,6 +1448,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharLLL : PCondIsCharLL
     {
         protected PCondIsCharLLL (PrimitiveIsCharL predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1426,6 +1467,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharLLQ : PCondIsCharLL
     {
         protected PCondIsCharLLQ (PrimitiveIsCharL predicate, LexicalVariable consequent, Quotation alternative)
@@ -1444,6 +1486,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharLQ : PCondIsCharL
     {
         protected readonly object consequentValue;
@@ -1487,6 +1530,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharLQL : PCondIsCharLQ
     {
         protected PCondIsCharLQL (PrimitiveIsCharL predicate, Quotation consequent, LexicalVariable alternative)
@@ -1505,6 +1549,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharLQQ : PCondIsCharLQ
     {
         protected PCondIsCharLQQ (PrimitiveIsCharL predicate, Quotation consequent, Quotation alternative)
@@ -1535,6 +1580,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharLSL : PCondIsCharL
     {
         protected PCondIsCharLSL (PrimitiveIsCharL predicate, SCode consequent, LexicalVariable alternative)
@@ -1553,6 +1599,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharLSQ : PCondIsCharL
     {
         public readonly object alternativeValue;
@@ -1597,6 +1644,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharSL : PCondIsChar
     {
         public readonly object consequentName;
@@ -1655,6 +1703,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharSLL : PCondIsCharSL
     {
 
@@ -1675,6 +1724,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharSLQ : PCondIsCharSL
     {
         public readonly object alternativeValue;
@@ -1723,6 +1773,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharSQ : PCondIsChar
     {
         public readonly object consequentValue;
@@ -1736,9 +1787,9 @@ namespace Microcode
         public static SCode Make (PrimitiveIsChar predicate, Quotation consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsCharSQL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsCharSQQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsCharSQ (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsCharSQL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                (alternative is Quotation) ? PCondIsCharSQQ.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsCharSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1775,6 +1826,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharSQL : PCondIsCharSQ
     {
         protected PCondIsCharSQL (PrimitiveIsChar predicate, Quotation consequent, LexicalVariable alternative)
@@ -1794,6 +1846,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharSQQ : PCondIsCharSQ
     {
         public readonly object alternativeValue;
@@ -1855,6 +1908,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharSSL : PCondIsChar
     {
         public readonly object alternativeName;
@@ -1909,6 +1963,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsCharSSQ : PCondIsChar
     {
         public readonly object alternativeValue;

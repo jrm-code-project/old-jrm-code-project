@@ -315,41 +315,49 @@ namespace Microcode
             return false;
         }
 
-        //[SchemePrimitive ("FLONUM-COS", 1)]
-        //public static PartialResult Cos (object arg)
-        //{
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("FLONUM-COS", 1, false)]
+        public static bool Cos (out object answer, object arg)
+        {
+            answer = Math.Cos ((double) arg);
+            return false;
+        }
 
-        //[SchemePrimitive ("FLONUM-TAN", 1)]
-        //public static PartialResult Tan (object arg)
-        //{
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("FLONUM-TAN", 1, false)]
+        public static bool Tan (out object answer, object arg)
+        {
+            answer = Math.Tan ((double) arg);
+            return false;
+        }
 
-        //[SchemePrimitive ("FLONUM-ASIN", 1)]
-        //public static PartialResult Asin (object arg)
-        //{
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("FLONUM-ASIN", 1, false)]
+        public static bool Asin (out object answer, object arg)
+        {
+            answer = Math.Asin ((double) arg);
+            return false;
+        }
 
-        //[SchemePrimitive ("FLONUM-ACOS", 1)]
-        //public static PartialResult Acos (object arg)
-        //{
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("FLONUM-ACOS", 1, false)]
+        public static bool Acos (out object answer, object arg)
+        {
+            answer = Math.Acos ((double) arg);
+            return false;
+        }
 
-        //[SchemePrimitive ("FLONUM-ATAN", 1)]
-        //public static PartialResult Atan (object arg)
-        //{
-        //    throw new NotImplementedException ();
-        //}
+        [SchemePrimitive ("FLONUM-ATAN", 1, false)]
+        public static bool Atan (out object answer, object arg)
+        {
+            answer = Math.Atan ((double) arg);
+            return false;
+        }
 
-        //[SchemePrimitive ("FLONUM-ATAN2", 2)]
-        //public static PartialResult Atan2 (object left, object right)
-        //{
-        //    throw new NotImplementedException ();
-        //}
+
+
+        [SchemePrimitive ("FLONUM-ATAN2", 2, false)]
+        public static bool Atan2 (out object answer, object arg0, object arg1)
+        {
+            answer = Math.Atan2 ((double) arg0, (double) arg1);
+            return false;
+        }
 
         [SchemePrimitive ("FLONUM-SQRT", 1, false)]
         public static bool Sqrt (out object answer, object arg)

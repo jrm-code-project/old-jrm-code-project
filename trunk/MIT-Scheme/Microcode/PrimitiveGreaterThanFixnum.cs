@@ -71,6 +71,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumL : PrimitiveGreaterThanFixnum
     {
         public readonly object rand0Name;
@@ -105,6 +106,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA : PrimitiveGreaterThanFixnumL
     {
         protected PrimitiveGreaterThanFixnumA (Primitive2 rator, Argument rand0, SCode rand1)
@@ -151,6 +153,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA0 : PrimitiveGreaterThanFixnumA
     {
         protected PrimitiveGreaterThanFixnumA0 (Primitive2 rator, Argument0 rand0, SCode rand1)
@@ -168,14 +171,30 @@ namespace Microcode
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-#if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
-#endif
-            throw new NotImplementedException ();
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            // Eval argument0
+            object ev0 = environment.Argument0Value;
+
+            // Greater-than-fixnum?
+            answer = (int) ev0 > (int) ev1 ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA0L : PrimitiveGreaterThanFixnumA0
     {
         public readonly object rand1Name;
@@ -217,6 +236,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA0A : PrimitiveGreaterThanFixnumA0L
     {
         protected PrimitiveGreaterThanFixnumA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
@@ -243,6 +263,7 @@ namespace Microcode
 
     // class PrimitiveGreaterThanFixnumA0A0 : PrimitiveGreaterThanFixnumA0A
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA0A1 : PrimitiveGreaterThanFixnumA0A
     {
         protected PrimitiveGreaterThanFixnumA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
@@ -273,6 +294,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA0L1 : PrimitiveGreaterThanFixnumA0L
     {
         protected PrimitiveGreaterThanFixnumA0L1 (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
@@ -305,6 +327,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA0Q : PrimitiveGreaterThanFixnumA0
     {
         public readonly int rand1Value;
@@ -332,6 +355,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA1 : PrimitiveGreaterThanFixnumA
     {
         protected PrimitiveGreaterThanFixnumA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
@@ -357,6 +381,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA1L : PrimitiveGreaterThanFixnumA1
     {
         public readonly object rand1Name;
@@ -388,6 +413,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA1A : PrimitiveGreaterThanFixnumA1L
     {
         protected PrimitiveGreaterThanFixnumA1A (Primitive2 rator, Argument1 rand0, Argument rand1)
@@ -413,6 +439,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA1A0 : PrimitiveGreaterThanFixnumA1A
     {
         protected PrimitiveGreaterThanFixnumA1A0 (Primitive2 rator, Argument1 rand0, Argument0 rand1)
@@ -443,6 +470,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA1A1 : PrimitiveGreaterThanFixnumA1A
     {
         protected PrimitiveGreaterThanFixnumA1A1 (Primitive2 rator, Argument1 rand0, Argument1 rand1)
@@ -465,6 +493,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA1L1 : PrimitiveGreaterThanFixnumA1L
     {
         protected PrimitiveGreaterThanFixnumA1L1 (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
@@ -497,6 +526,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumA1Q : PrimitiveGreaterThanFixnumA1
     {
         public readonly int rand1Value;
@@ -530,6 +560,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumAL : PrimitiveGreaterThanFixnumA
     {
         public readonly object rand1Name;
@@ -561,6 +592,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumAA : PrimitiveGreaterThanFixnumAL
     {
         protected PrimitiveGreaterThanFixnumAA (Primitive2 rator, Argument rand0, Argument rand1)
@@ -593,6 +625,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumAA0 : PrimitiveGreaterThanFixnumAA
     {
         protected PrimitiveGreaterThanFixnumAA0 (Primitive2 rator, Argument rand0, Argument0 rand1)
@@ -614,6 +647,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumAA1 : PrimitiveGreaterThanFixnumAA
     {
         protected PrimitiveGreaterThanFixnumAA1 (Primitive2 rator, Argument rand0, Argument1 rand1)
@@ -635,6 +669,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumAL1 : PrimitiveGreaterThanFixnumAL
     {
         protected PrimitiveGreaterThanFixnumAL1 (Primitive2 rator, Argument rand0, LexicalVariable1 rand1)
@@ -653,6 +688,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumAQ : PrimitiveGreaterThanFixnumA
     {
         public readonly int rand1Value;
@@ -686,6 +722,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumL1 : PrimitiveGreaterThanFixnumL
     {
         protected PrimitiveGreaterThanFixnumL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
@@ -704,13 +741,38 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveGreaterThanFixnumL1.EvalStep");
             noteCalls (this.rand1);
 #endif
-            throw new NotImplementedException ();
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+                        SCode.location = "PrimitiveGreaterThanFixnum.EvalStep.1";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            // Eval argument0
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+            
+            // Greater-than-fixnum?
+            answer = (int) ev0 > (int) ev1 ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumL1L : PrimitiveGreaterThanFixnumL1
     {
         public readonly object rand1Name;
@@ -742,6 +804,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumL1A : PrimitiveGreaterThanFixnumL1L
     {
         protected PrimitiveGreaterThanFixnumL1A (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
@@ -766,6 +829,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumL1A0 : PrimitiveGreaterThanFixnumL1A
     {
         protected PrimitiveGreaterThanFixnumL1A0 (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
@@ -798,6 +862,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumL1A1 : PrimitiveGreaterThanFixnumL1A
     {
         protected PrimitiveGreaterThanFixnumL1A1 (Primitive2 rator, LexicalVariable1 rand0, Argument1 rand1)
@@ -817,6 +882,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumL1L1 : PrimitiveGreaterThanFixnumL1L
     {
         protected PrimitiveGreaterThanFixnumL1L1 (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
@@ -836,6 +902,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumL1Q : PrimitiveGreaterThanFixnumL1
     {
         public readonly int rand1Value;
@@ -861,6 +928,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumLL : PrimitiveGreaterThanFixnumL
     {
         public readonly object rand1Name;
@@ -892,6 +960,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumLA : PrimitiveGreaterThanFixnumLL
     {
         protected PrimitiveGreaterThanFixnumLA (Primitive2 rator, LexicalVariable rand0, Argument rand1)
@@ -916,6 +985,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumLA0 : PrimitiveGreaterThanFixnumLA
     {
         protected PrimitiveGreaterThanFixnumLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
@@ -938,6 +1008,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumLA1 : PrimitiveGreaterThanFixnumLA
     {
         protected PrimitiveGreaterThanFixnumLA1 (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
@@ -960,6 +1031,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumLL1 : PrimitiveGreaterThanFixnumLL
     {
         protected PrimitiveGreaterThanFixnumLL1 (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
@@ -982,6 +1054,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumLQ : PrimitiveGreaterThanFixnumL
     {
         public readonly int rand1Value;
@@ -1006,6 +1079,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumQ : PrimitiveGreaterThanFixnum 
     {
         public readonly int rand0Value;
@@ -1034,6 +1108,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumQL : PrimitiveGreaterThanFixnumQ
     {
         public readonly object rand1Name;
@@ -1065,6 +1140,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumQA : PrimitiveGreaterThanFixnumQL
     {
         protected PrimitiveGreaterThanFixnumQA (Primitive2 rator, Quotation rand0, Argument rand1)
@@ -1089,6 +1165,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumQA0 : PrimitiveGreaterThanFixnumQA
     {
         protected PrimitiveGreaterThanFixnumQA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
@@ -1119,6 +1196,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumQA1 : PrimitiveGreaterThanFixnumQA
     {
         protected PrimitiveGreaterThanFixnumQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
@@ -1149,6 +1227,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumQL1 : PrimitiveGreaterThanFixnumQL
     {
         protected PrimitiveGreaterThanFixnumQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
@@ -1171,6 +1250,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumSL : PrimitiveGreaterThanFixnum
     {
         public readonly object rand1Name;
@@ -1203,6 +1283,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumSA : PrimitiveGreaterThanFixnumSL
     {
         protected PrimitiveGreaterThanFixnumSA (Primitive2 rator, SCode rand0, Argument rand1)
@@ -1228,6 +1309,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumSA0 : PrimitiveGreaterThanFixnumSA
     {
         protected PrimitiveGreaterThanFixnumSA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
@@ -1252,6 +1334,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveGreaterThanFixnumSL1 : PrimitiveGreaterThanFixnumSL
     {
         protected PrimitiveGreaterThanFixnumSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)

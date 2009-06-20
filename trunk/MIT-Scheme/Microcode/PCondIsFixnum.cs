@@ -74,6 +74,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumL : PCondIsFixnum
     {
         public readonly object predicateName;
@@ -131,6 +132,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA : PCondIsFixnumL
     {
         protected PCondIsFixnumA (PrimitiveIsFixnumA predicate, SCode consequent, SCode alternative)
@@ -182,6 +184,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA0 : PCondIsFixnumA
     {
         protected PCondIsFixnumA0 (PrimitiveIsFixnumA0 predicate, SCode consequent, SCode alternative)
@@ -228,6 +231,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA0L : PCondIsFixnumA0
     {
         public readonly object consequentName;
@@ -274,6 +278,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA0A : PCondIsFixnumA0L
     {
 
@@ -315,6 +320,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA0A0 : PCondIsFixnumA0A
     {
 
@@ -355,6 +361,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PCondIsFixnumA0LL : PCondIsFixnumA0L
     {
         protected PCondIsFixnumA0LL (PrimitiveIsFixnumA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -372,6 +379,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA0LQ : PCondIsFixnumA0L
     {
         public readonly object alternativeValue;
@@ -408,6 +416,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA0Q : PCondIsFixnumA0
     {
         public readonly object consequentValue;
@@ -450,6 +459,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumA0QL : PCondIsFixnumA0Q
     {
         protected PCondIsFixnumA0QL (PrimitiveIsFixnumA0 predicate, Quotation consequent, LexicalVariable alternative)
@@ -469,6 +479,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumA0QQ : PCondIsFixnumA0Q
     {
         protected PCondIsFixnumA0QQ (PrimitiveIsFixnumA0 predicate, Quotation consequent, Quotation alternative)
@@ -498,6 +509,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumA0SL : PCondIsFixnumA0
     {
         public readonly object alternativeName;
@@ -548,6 +560,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumA0SA : PCondIsFixnumA0SL
     {
 
@@ -593,6 +606,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     sealed class PCondIsFixnumA0SA0 : PCondIsFixnumA0SA
     {
 
@@ -629,6 +643,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA0SQ : PCondIsFixnumA0
     {
         public readonly object alternativeValue;
@@ -667,6 +682,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA1 : PCondIsFixnumA
     {
         protected PCondIsFixnumA1 (PrimitiveIsFixnumA1 predicate, SCode consequent, SCode alternative)
@@ -710,6 +726,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA1L : PCondIsFixnumA1
     {
         public readonly object consequentName;
@@ -761,6 +778,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumA1LL : PCondIsFixnumA1L
     {
         protected PCondIsFixnumA1LL (PrimitiveIsFixnumA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -778,6 +796,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA1LQ : PCondIsFixnumA1L
     {
         public readonly object alternativeValue;
@@ -814,6 +833,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA1Q : PCondIsFixnumA1
     {
         public readonly object consequentValue;
@@ -852,6 +872,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumA1QL : PCondIsFixnumA1Q
     {
         protected PCondIsFixnumA1QL (PrimitiveIsFixnumA1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -870,6 +891,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumA1QQ : PCondIsFixnumA1Q
     {
         protected PCondIsFixnumA1QQ (PrimitiveIsFixnumA1 predicate, Quotation consequent, Quotation alternative)
@@ -899,6 +921,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumA1SL : PCondIsFixnumA1
     {
         public readonly object alternativeName;
@@ -946,6 +969,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumA1SQ : PCondIsFixnumA1
     {
         public readonly object alternativeValue;
@@ -985,6 +1009,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumAL : PCondIsFixnumA
     {
         public readonly object consequentName;
@@ -1033,6 +1058,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumAA : PCondIsFixnumAL
     {
         protected PCondIsFixnumAA (PrimitiveIsFixnumA predicate, Argument consequent, SCode alternative)
@@ -1050,6 +1076,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumAL1 : PCondIsFixnumAL
     {
         protected PCondIsFixnumAL1 (PrimitiveIsFixnumA predicate, LexicalVariable1 consequent, SCode alternative)
@@ -1065,6 +1092,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumALL : PCondIsFixnumAL
     {
         protected PCondIsFixnumALL (PrimitiveIsFixnumA predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1080,6 +1108,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumALQ : PCondIsFixnumAL
     {
         protected PCondIsFixnumALQ (PrimitiveIsFixnumA predicate, LexicalVariable consequent, Quotation alternative)
@@ -1095,6 +1124,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumAQ : PCondIsFixnumA
     {
         public readonly object consequentValue;
@@ -1139,6 +1169,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumAQL : PCondIsFixnumAQ
     {
         protected PCondIsFixnumAQL (PrimitiveIsFixnumA predicate, Quotation consequent, LexicalVariable alternative)
@@ -1156,6 +1187,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumAQQ : PCondIsFixnumAQ
     {
         protected PCondIsFixnumAQQ (PrimitiveIsFixnumA predicate, Quotation consequent, Quotation alternative)
@@ -1186,6 +1218,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumASL : PCondIsFixnumA
     {
         protected PCondIsFixnumASL (PrimitiveIsFixnumA predicate, SCode consequent, SCode alternative)
@@ -1203,6 +1236,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumASQ : PCondIsFixnumA
     {
         public readonly object alternativeValue;
@@ -1242,6 +1276,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumL1 : PCondIsFixnumL
     {
         protected PCondIsFixnumL1 (PrimitiveIsFixnumL1 predicate, SCode consequent, SCode alternative)
@@ -1292,6 +1327,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumL1L : PCondIsFixnumL1
     {
         public readonly object consequentName;
@@ -1345,6 +1381,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumL1LL : PCondIsFixnumL1L
     {
         protected PCondIsFixnumL1LL (PrimitiveIsFixnumL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1362,6 +1399,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumL1LQ : PCondIsFixnumL1L
     {
         public readonly object alternativeValue;
@@ -1398,6 +1436,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumL1Q : PCondIsFixnumL1
     {
         public readonly object consequentValue;
@@ -1439,6 +1478,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumL1QL : PCondIsFixnumL1Q
     {
         protected PCondIsFixnumL1QL (PrimitiveIsFixnumL1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -1457,6 +1497,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumL1QQ : PCondIsFixnumL1Q
     {
         protected PCondIsFixnumL1QQ (PrimitiveIsFixnumL1 predicate, Quotation consequent, Quotation alternative)
@@ -1486,6 +1527,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumL1SL : PCondIsFixnumL1
     {
         protected PCondIsFixnumL1SL (PrimitiveIsFixnumL1 predicate, SCode consequent, LexicalVariable alternative)
@@ -1504,6 +1546,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCondIsFixnumL1SQ : PCondIsFixnumL1
     {
         public readonly object alternativeValue;
@@ -1549,6 +1592,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumLL : PCondIsFixnumL
     {
         protected PCondIsFixnumLL (PrimitiveIsFixnumL predicate, LexicalVariable consequent, SCode alternative)
@@ -1570,6 +1614,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumLLL : PCondIsFixnumLL
     {
         protected PCondIsFixnumLLL (PrimitiveIsFixnumL predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1588,6 +1633,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumLLQ : PCondIsFixnumLL
     {
         protected PCondIsFixnumLLQ (PrimitiveIsFixnumL predicate, LexicalVariable consequent, Quotation alternative)
@@ -1606,6 +1652,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumLQ : PCondIsFixnumL
     {
         protected readonly object consequentValue;
@@ -1649,6 +1696,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumLQL : PCondIsFixnumLQ
     {
         protected PCondIsFixnumLQL (PrimitiveIsFixnumL predicate, Quotation consequent, LexicalVariable alternative)
@@ -1667,6 +1715,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumLQQ : PCondIsFixnumLQ
     {
         protected PCondIsFixnumLQQ (PrimitiveIsFixnumL predicate, Quotation consequent, Quotation alternative)
@@ -1697,6 +1746,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumLSL : PCondIsFixnumL
     {
         protected PCondIsFixnumLSL (PrimitiveIsFixnumL predicate, SCode consequent, LexicalVariable alternative)
@@ -1715,6 +1765,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumLSQ : PCondIsFixnumL
     {
         public readonly object alternativeValue;
@@ -1759,6 +1810,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumSL : PCondIsFixnum
     {
         public readonly object consequentName;
@@ -1817,6 +1869,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumSLL : PCondIsFixnumSL
     {
 
@@ -1837,6 +1890,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumSLQ : PCondIsFixnumSL
     {
         public readonly object alternativeValue;
@@ -1885,6 +1939,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumSQ : PCondIsFixnum
     {
         public readonly object consequentValue;
@@ -1898,9 +1953,9 @@ namespace Microcode
         public static SCode Make (PrimitiveIsFixnum predicate, Quotation consequent, SCode alternative)
         {
             return
-                (alternative is LexicalVariable) ? PCondIsFixnumSQL.Make (predicate, consequent, (LexicalVariable) alternative)
-                : (alternative is Quotation) ? PCondIsFixnumSQQ.Make (predicate, consequent, (Quotation) alternative)
-                : new PCondIsFixnumSQ (predicate, consequent, alternative);
+                (alternative is LexicalVariable) ? PCondIsFixnumSQL.Make (predicate, consequent, (LexicalVariable) alternative) :
+                (alternative is Quotation) ? PCondIsFixnumSQQ.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsFixnumSQ (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1922,7 +1977,11 @@ namespace Microcode
             }
 
 
-            if (! (ev0 is Int32)) {
+            if (ev0 is Int32) {
+                answer = this.consequentValue;
+                return false;
+            }
+            else {
 #if DEBUG
                 noteCalls (this.alternative);
 #endif
@@ -1930,13 +1989,10 @@ namespace Microcode
                 answer = null;
                 return true;
             }
-            else {
-                answer = this.consequentValue;
-                return false;
-            }
         }
     }
 
+    [Serializable]
     class PCondIsFixnumSQL : PCondIsFixnumSQ
     {
         protected PCondIsFixnumSQL (PrimitiveIsFixnum predicate, Quotation consequent, LexicalVariable alternative)
@@ -1956,6 +2012,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumSQQ : PCondIsFixnumSQ
     {
         public readonly object alternativeValue;
@@ -2017,6 +2074,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumSSL : PCondIsFixnum
     {
         public readonly object alternativeName;
@@ -2071,6 +2129,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsFixnumSSQ : PCondIsFixnum
     {
         public readonly object alternativeValue;

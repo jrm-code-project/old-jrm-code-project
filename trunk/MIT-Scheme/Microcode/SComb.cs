@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
@@ -48,6 +49,8 @@ namespace Microcode
         public static SCode Make (object [] components)
         {
             object oper = components [0];
+            if (!Configuration.EnableCombinationOptimization)
+                return new Combination (components);
 
             if (Configuration.EnableSuperOperators) {
                 switch (components.Length) {
@@ -250,25 +253,30 @@ namespace Microcode
             object [] evaluated = this.evaluated;
             object rator = null;
             int counter = this.counter;
-            evaluated [--counter] = value;
+            if (counter == 0) {
+                rator = value;
+            }
+            else {
+                evaluated [--counter] = value;
 
-            while (counter > -1) {
-                Control expr = this.expression.Components [counter];
-                Environment env = environment;
-                object ev = null;
-                while (expr.EvalStep (out ev, ref expr, ref env)) { };
-                if (ev == Interpreter.UnwindStack) {
-                    ((UnwinderState) env).AddFrame (new CombinationFrame (this.expression, environment, evaluated, counter));
-                    environment = env;
-                    answer = Interpreter.UnwindStack;
-                    return false;
+                while (counter > -1) {
+                    Control expr = this.expression.Components [counter];
+                    Environment env = environment;
+                    object ev = null;
+                    while (expr.EvalStep (out ev, ref expr, ref env)) { };
+                    if (ev == Interpreter.UnwindStack) {
+                        ((UnwinderState) env).AddFrame (new CombinationFrame (this.expression, environment, evaluated, counter));
+                        environment = env;
+                        answer = Interpreter.UnwindStack;
+                        return false;
+                    }
+                    if (counter == 0) {
+                        rator = ev;
+                        break;
+                    }
+                    else
+                        evaluated [--counter] = ev;
                 }
-                if (counter == 0) {
-                    rator = ev;
-                    break;
-                }
-                else
-                    evaluated [--counter] = ev;
             }
 
             return Interpreter.Apply (out answer, ref expression, ref environment, rator, evaluated);
@@ -326,6 +334,7 @@ namespace Microcode
         public static SCode Make (object rator)
         {
             return 
+                (! Configuration.EnableCombination0Optimization) ? new Combination0 (rator) :
                 //(rator is LexicalVariable) ? Combination0L.Make ((LexicalVariable)rator)
                 //// Combination of no arguments simply applied, just insert the lambdaBody.
                 //// This confuses the pretty printer, though.
@@ -980,7 +989,7 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination0 : SCode
+    sealed class PrimitiveCombination0 : SCode, ISerializable
     {
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -990,12 +999,17 @@ namespace Microcode
         [NonSerialized]
         PrimitiveMethod0 method;
 
-        public PrimitiveCombination0 (Primitive0 procedure)
+        PrimitiveCombination0 (Primitive0 procedure)
             : base (TC.PCOMB0)
         {
             if (procedure == null) throw new ArgumentNullException ("procedure");
             this.procedure = procedure;
             this.method = procedure.Method;
+        }
+
+        public static SCode Make (Primitive0 procedure)
+        {
+            return new PrimitiveCombination0 (procedure);
         }
 
         [OnDeserialized ()]
@@ -1052,22 +1066,47 @@ namespace Microcode
         {
             return false;
         }
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (PrimitiveCombination0Deserializer));
+            info.AddValue ("procedure", this.procedure);
+        }
     }
-    
+
     [Serializable]
-    class PrimitiveCombination3 : SCode, ISystemVector
+    internal sealed class PrimitiveCombination0Deserializer : IObjectReference
+    {
+        Primitive0 procedure;
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            return PrimitiveCombination0.Make (this.procedure);
+        }
+
+        Primitive0 Procedure { set { this.procedure = value; } }
+    }
+
+    [Serializable]
+    class PrimitiveCombination3 : SCode, ISerializable, ISystemVector
     {
 #if DEBUG
-        [NonSerialized]
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
         static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
         static Histogram<string> histogram = new Histogram<String> ();
+        [NonSerialized]
         protected string histogramKey;
 
+        [NonSerialized]
         protected Type rand0Type;
+
+        [NonSerialized]
         protected Type rand1Type;
+
+        [NonSerialized]
         protected Type rand2Type;
 #endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -1302,6 +1341,35 @@ namespace Microcode
         }
 
         #endregion
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (PrimitiveCombination3Deserializer));
+            info.AddValue ("procedure", this.procedure);
+            info.AddValue ("rand0", this.arg0);
+            info.AddValue ("rand1", this.arg1);
+            info.AddValue ("rand2", this.arg2);
+        }
+    }
+
+    [Serializable]
+    internal sealed class PrimitiveCombination3Deserializer : IObjectReference
+    {
+        Primitive3 procedure;
+        SCode rand0;
+        SCode rand1;
+        SCode rand2;
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            return PrimitiveCombination3.Make (this.procedure, this.rand0, this.rand1, this.rand2);
+        }
+
+        Primitive3 Procedure { set { this.procedure = value; } }
+        SCode Rand0 { set { this.rand0 = value; } }
+        SCode Rand1 { set { this.rand1 = value; } }
+        SCode Rand2 { set { this.rand2 = value; } }
     }
 
     sealed class PrimitiveCombination3Frame0 : SubproblemContinuation<PrimitiveCombination3>, ISystemVector
@@ -1368,8 +1436,6 @@ namespace Microcode
             else return false;
         }
     }
-
-
 
     class PrimitiveCombination3SQ : PrimitiveCombination3
     {

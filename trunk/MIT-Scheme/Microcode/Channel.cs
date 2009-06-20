@@ -188,7 +188,7 @@ namespace Microcode
         }
     }
 
-    class ScreenChannel : Channel
+    public class ScreenChannel : Channel
     {
         TextReader input;
         TextWriter output;
@@ -220,7 +220,7 @@ namespace Microcode
             set { blocking = value; }
         }
 
-        static bool firstTime = true;
+        static public bool firstTime = true;
         static readonly string cannedString = "(doit)\n";
         static object promptTime = 0;
         public override int Read (char [] buffer, int start, int limit)
@@ -237,7 +237,7 @@ namespace Microcode
 
             if (blocking == true) {
                 int filled = this.input.Read (buffer, start, limit - start);
-                return (filled);
+                return filled;
             }
             else {
                 return 0;

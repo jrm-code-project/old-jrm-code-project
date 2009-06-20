@@ -6,11 +6,12 @@ using System.Text;
 namespace Microcode
 {
     [Serializable]
-    sealed class ReturnAddress
+    sealed class ReturnAddress : SchemeObject
     {
         ReturnCode code;
 
         public ReturnAddress (ReturnCode code)
+            : base (TC.FIXNUM)
         {
             this.code = code;
         }

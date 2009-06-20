@@ -7,7 +7,7 @@ using System.Text;
 namespace Microcode
 {
     [Serializable]
-    sealed class Ratnum : ISystemPair
+    sealed class Ratnum : SchemeObject, ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object numerator;
@@ -16,6 +16,7 @@ namespace Microcode
         readonly object denominator;
 
         public Ratnum (object numerator, object denominator)
+            : base (TC.RATNUM)
         {
             this.numerator = numerator;
             this.denominator = denominator;

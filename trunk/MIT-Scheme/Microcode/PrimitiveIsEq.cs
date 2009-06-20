@@ -18,6 +18,7 @@ namespace Microcode
             return
                 (rand0 is LexicalVariable) ? PrimitiveIsEqL.Make (rator, (LexicalVariable) rand0, rand1) :
                 (rand0 is PrimitiveCar) ? PrimitiveIsEqCar.Make (rator, (PrimitiveCar) rand0, rand1) :
+                (rand0 is PrimitiveCaar) ? PrimitiveIsEqCaar.Make (rator, (PrimitiveCaar) rand0, rand1) :
                 (rand0 is PrimitiveRecordRef) ? PrimitiveIsEqRecordRef.Make (rator, (PrimitiveRecordRef) rand0, rand1) :
                 (rand0 is Quotation) ? PrimitiveIsEqQ.Make (rator, (Quotation) rand0, rand1) :
                 (rand1 is LexicalVariable) ? PrimitiveIsEqSL.Make (rator, rand0, (LexicalVariable) rand1) :
@@ -66,6 +67,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqL : PrimitiveIsEq
     {
         public readonly object rand0Name;
@@ -83,11 +85,11 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, LexicalVariable rand0, SCode rand1)
         {
             return
-                (rand0 is Argument) ? PrimitiveIsEqA.Make (rator, (Argument) rand0, rand1)
-                : (rand0 is LexicalVariable1) ? PrimitiveIsEqL1.Make (rator, (LexicalVariable1) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitiveIsEqLL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveIsEqLQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveIsEqL (rator, rand0, rand1);
+                (rand0 is Argument) ? PrimitiveIsEqA.Make (rator, (Argument) rand0, rand1) :
+                (rand0 is LexicalVariable1) ? PrimitiveIsEqL1.Make (rator, (LexicalVariable1) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveIsEqLL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqLQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsEqL (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -126,6 +128,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsEqA : PrimitiveIsEqL
     {
         protected PrimitiveIsEqA (Primitive2 rator, Argument rand0, SCode rand1)
@@ -170,6 +173,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA0 : PrimitiveIsEqA
     {
         protected PrimitiveIsEqA0 (Primitive2 rator, Argument0 rand0, SCode rand1)
@@ -216,6 +220,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA0Car : PrimitiveIsEqA0
     {
         protected PrimitiveIsEqA0Car (Primitive2 rator, Argument0 rand0, PrimitiveCar rand1)
@@ -236,6 +241,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA0CarL : PrimitiveIsEqA0Car
     {
         public readonly object rand1Name;
@@ -263,6 +269,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA0CarA : PrimitiveIsEqA0CarL
     {
         protected PrimitiveIsEqA0CarA (Primitive2 rator, Argument0 rand0, PrimitiveCarA rand1)
@@ -282,6 +289,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA0L : PrimitiveIsEqA0
     {
         public readonly object rand1Name;
@@ -299,9 +307,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument0 rand0, LexicalVariable rand1)
         {
             return
-                (rand1 is Argument) ? PrimitiveIsEqA0A.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveIsEqA0L1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveIsEqA0L (rator, rand0, rand1);
+                (rand1 is Argument) ? PrimitiveIsEqA0A.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is LexicalVariable1) ? PrimitiveIsEqA0L1.Make (rator, rand0, (LexicalVariable1) rand1) :
+                new PrimitiveIsEqA0L (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -320,6 +328,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA0A : PrimitiveIsEqA0L
     {
         protected PrimitiveIsEqA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
@@ -330,20 +339,23 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument0 rand0, Argument rand1)
         {
             return
-                (rand1 is Argument0) ? PrimitiveIsEqA0A0.Make (rator, rand0, (Argument0) rand1)
-                : (rand1 is Argument1) ? PrimitiveIsEqA0A1.Make (rator, rand0, (Argument1) rand1)
-                : new PrimitiveIsEqA0A (rator, rand0, rand1);
+                (rand1 is Argument0) ? PrimitiveIsEqA0A0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? PrimitiveIsEqA0A1.Make (rator, rand0, (Argument1) rand1) :
+                new PrimitiveIsEqA0A (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqA0A.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            if (ObjectModel.Eq (out answer, environment.Argument0Value, environment.ArgumentValue (this.rand1Offset)))
+                throw new NotImplementedException ();
+            return false;
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA0A0 : PrimitiveIsEqA0A
     {
         protected PrimitiveIsEqA0A0 (Primitive2 rator, Argument0 rand0, Argument0 rand1)
@@ -364,6 +376,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PrimitiveIsEqA0A1 : PrimitiveIsEqA0A
     {
         protected PrimitiveIsEqA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
@@ -388,6 +401,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA0L1 : PrimitiveIsEqA0L
     {
         protected PrimitiveIsEqA0L1 (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
@@ -417,6 +431,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA0Q : PrimitiveIsEqA0
     {
         public readonly object rand1Value;
@@ -444,6 +459,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA1 : PrimitiveIsEqA
     {
 #if DEBUG
@@ -457,9 +473,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument1 rand0, SCode rand1)
         {
             return
-                (rand1 is LexicalVariable) ? PrimitiveIsEqA1L.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? PrimitiveIsEqA1Q.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveIsEqA1 (rator, rand0, rand1);
+                (rand1 is LexicalVariable) ? PrimitiveIsEqA1L.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqA1Q.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsEqA1 (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -492,6 +508,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA1L : PrimitiveIsEqA1
     {
         public readonly object rand1Name;
@@ -517,20 +534,20 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
-
+            Warm ("PrimitiveIsEqA1L.EvalStep");
 #endif
             // Eval argument1
             object ev1;
             if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
                 throw new NotImplementedException ();
 
-            if (ObjectModel.Eq (out answer, ( environment.Argument1Value), (ev1)))
+            if (ObjectModel.Eq (out answer, environment.Argument1Value, ev1))
                 throw new NotImplementedException();
             return false;
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA1A : PrimitiveIsEqA1L
     {
         protected PrimitiveIsEqA1A (Primitive2 rator, Argument1 rand0, Argument rand1)
@@ -541,26 +558,23 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument1 rand0, Argument rand1)
         {
             return
-                (rand1 is Argument0) ? PrimitiveIsEqA1A0.Make (rator, rand0, (Argument0) rand1)
-                : (rand1 is Argument1) ? Unimplemented ()
-                : new PrimitiveIsEqA1A (rator, rand0, rand1);
+                (rand1 is Argument0) ? PrimitiveIsEqA1A0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Unimplemented () :
+                new PrimitiveIsEqA1A (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqA1A.EvalStep");
 #endif
-
-            if (ObjectModel.Eq (out answer, ( environment.Argument1Value), (environment.ArgumentValue(this.rand1Offset))))
+            if (ObjectModel.Eq (out answer, environment.Argument1Value, environment.ArgumentValue(this.rand1Offset)))
                 throw new NotImplementedException();
             return false;
         }
-
     }
 
-
-
+    [Serializable]
     class PrimitiveIsEqA1A0 : PrimitiveIsEqA1A
     {
         protected PrimitiveIsEqA1A0 (Primitive2 rator, Argument1 rand0, Argument0 rand1)
@@ -585,6 +599,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA1A1 : PrimitiveIsEqA1A
     {
         protected PrimitiveIsEqA1A1 (Primitive2 rator, Argument1 rand0, Argument1 rand1)
@@ -607,6 +622,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA1L1 : PrimitiveIsEqA1L
     {
         protected PrimitiveIsEqA1L1 (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
@@ -623,7 +639,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqA1L1.EvalStep");
 #endif
             // Eval argument1
             object ev1;
@@ -634,12 +650,13 @@ namespace Microcode
             object ev0 =  environment.Argument1Value;
 
             // Greater-than-fixnum?
-            if (ObjectModel.Eq (out answer, ( ev0), (ev1)))
+            if (ObjectModel.Eq (out answer, ev0, ev1))
                 throw new NotImplementedException();
-            return false; throw new NotImplementedException ();
+            return false;
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqA1Q : PrimitiveIsEqA1
     {
         public readonly object rand1Value;
@@ -659,14 +676,15 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqA1Q.EvalStep");
 #endif
-            if (ObjectModel.Eq (out answer, ( environment.Argument1Value), (this.rand1Value)))
+            if (ObjectModel.Eq (out answer, environment.Argument1Value, this.rand1Value))
                 throw new NotImplementedException();
             return false;
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqAL : PrimitiveIsEqA
     {
         public readonly object rand1Name;
@@ -692,12 +710,18 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqAL.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            object rand1Value;
+            if (environment.FastLexicalRef (out rand1Value, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                throw new NotImplementedException ();
+            if (ObjectModel.Eq (out answer, environment.ArgumentValue (this.rand0Offset), rand1Value))
+                throw new NotImplementedException();
+            return false;
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqAA : PrimitiveIsEqAL
     {
         protected PrimitiveIsEqAA (Primitive2 rator, Argument rand0, Argument rand1)
@@ -724,6 +748,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqAA0 : PrimitiveIsEqAA
     {
         protected PrimitiveIsEqAA0 (Primitive2 rator, Argument rand0, Argument0 rand1)
@@ -745,6 +770,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqAA1 : PrimitiveIsEqAA
     {
         protected PrimitiveIsEqAA1 (Primitive2 rator, Argument rand0, Argument1 rand1)
@@ -766,6 +792,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqAL1 : PrimitiveIsEqAL
     {
         protected PrimitiveIsEqAL1 (Primitive2 rator, Argument rand0, LexicalVariable1 rand1)
@@ -784,6 +811,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqAQ : PrimitiveIsEqA
     {
         public readonly object rand1Value;
@@ -811,6 +839,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqL1 : PrimitiveIsEqL
     {
         protected PrimitiveIsEqL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
@@ -858,6 +887,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqL1L : PrimitiveIsEqL1
     {
         public readonly object rand1Name;
@@ -875,14 +905,15 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable rand1)
         {
             return
-                 (rand1 is Argument) ? PrimitiveIsEqL1A.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveIsEqL1L1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveIsEqL1L (rator, rand0, rand1);
+                (rand1 is Argument) ? PrimitiveIsEqL1A.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is LexicalVariable1) ? PrimitiveIsEqL1L1.Make (rator, rand0, (LexicalVariable1) rand1) :
+                new PrimitiveIsEqL1L (rator, rand0, rand1);
         }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqL1L.EvalStep");
 #endif
             // Eval argument1
             object ev1;
@@ -894,14 +925,13 @@ namespace Microcode
             if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
-
-            if (ObjectModel.Eq (out answer, ( ev0), (ev1)))
+            if (ObjectModel.Eq (out answer, ev0, ev1))
                 throw new NotImplementedException();
             return false;
         }
-
     }
 
+    [Serializable]
     class PrimitiveIsEqL1A : PrimitiveIsEqL1L
     {
         protected PrimitiveIsEqL1A (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
@@ -926,6 +956,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqL1A0 : PrimitiveIsEqL1A
     {
         protected PrimitiveIsEqL1A0 (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
@@ -942,19 +973,20 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqL1A0.EvalStep");
 #endif
             // Eval argument0
             object ev0;
             if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
-            if (ObjectModel.Eq (out answer, ( ev0), (environment.Argument0Value)))
+            if (ObjectModel.Eq (out answer, ev0, environment.Argument0Value))
                 throw new NotImplementedException();
             return false;
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqL1A1 : PrimitiveIsEqL1A
     {
         protected PrimitiveIsEqL1A1 (Primitive2 rator, LexicalVariable1 rand0, Argument1 rand1)
@@ -986,6 +1018,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsEqL1L1 : PrimitiveIsEqL1L
     {
         protected PrimitiveIsEqL1L1 (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
@@ -1023,6 +1056,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqL1Q : PrimitiveIsEqL1
     {
         public readonly object rand1Value;
@@ -1053,6 +1087,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqLL : PrimitiveIsEqL
     {
         public readonly object rand1Name;
@@ -1096,6 +1131,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqLA : PrimitiveIsEqLL
     {
         protected PrimitiveIsEqLA (Primitive2 rator, LexicalVariable rand0, Argument rand1)
@@ -1125,6 +1161,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqLA0 : PrimitiveIsEqLA
     {
         protected PrimitiveIsEqLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
@@ -1152,6 +1189,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqLA1 : PrimitiveIsEqLA
     {
         protected PrimitiveIsEqLA1 (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
@@ -1182,6 +1220,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsEqLL1 : PrimitiveIsEqLL
     {
         protected PrimitiveIsEqLL1 (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
@@ -1220,6 +1259,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsEqLQ : PrimitiveIsEqL
     {
         public readonly object rand1Value;
@@ -1238,12 +1278,12 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqLQ.EvalStep");
 #endif
             object ev0;
             if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
                 throw new NotImplementedException ();
-            if (ObjectModel.Eq (out answer, ( ev0), (this.rand1Value)))
+            if (ObjectModel.Eq (out answer, ev0, this.rand1Value))
                 throw new NotImplementedException();
             return false;
         }
@@ -1276,6 +1316,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarL : PrimitiveIsEqCar
     {
         public readonly object rand0Name;
@@ -1307,6 +1348,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA : PrimitiveIsEqCarL
     {
         protected PrimitiveIsEqCarA (Primitive2 rator, PrimitiveCarA rand0, SCode rand1)
@@ -1344,6 +1386,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA0 : PrimitiveIsEqCarA
     {
         protected PrimitiveIsEqCarA0 (Primitive2 rator, PrimitiveCarA0 rand0, SCode rand1)
@@ -1382,6 +1425,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA0Car : PrimitiveIsEqCarA0
     {
         protected PrimitiveIsEqCarA0Car (Primitive2 rator, PrimitiveCarA0 rand0, PrimitiveCar rand1)
@@ -1404,6 +1448,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA0CarL : PrimitiveIsEqCarA0Car
     {
         protected PrimitiveIsEqCarA0CarL (Primitive2 rator, PrimitiveCarA0 rand0, PrimitiveCarL rand1)
@@ -1426,6 +1471,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA0CarA : PrimitiveIsEqCarA0CarL
     {
         protected PrimitiveIsEqCarA0CarA (Primitive2 rator, PrimitiveCarA0 rand0, PrimitiveCarA rand1)
@@ -1448,6 +1494,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA0CarA1 : PrimitiveIsEqCarA0CarA
     {
         protected PrimitiveIsEqCarA0CarA1 (Primitive2 rator, PrimitiveCarA0 rand0, PrimitiveCarA1 rand1)
@@ -1467,11 +1514,12 @@ namespace Microcode
 #if DEBUG
             Warm("PrimitiveIsEqCarA0CarA1.EvalStep");
 #endif
-            answer = (((Cons) environment.Argument0Value).Car == ((Cons) environment.Argument1Value).Car) ? Constant.sharpT : Constant.sharpF;
+            ObjectModel.Eq (out answer, ((Cons) environment.Argument0Value).Car, ((Cons) environment.Argument1Value).Car);
             return false;
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA0L : PrimitiveIsEqCarA0
     {
         public readonly object rand1Name;
@@ -1511,6 +1559,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA0L1 : PrimitiveIsEqCarA0L
     {
 
@@ -1543,6 +1592,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA0Q : PrimitiveIsEqCarA0
     {
         public readonly object rand1Value;
@@ -1572,6 +1622,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA1 : PrimitiveIsEqCarA
     {
         protected PrimitiveIsEqCarA1 (Primitive2 rator, PrimitiveCarA1 rand0, SCode rand1)
@@ -1583,9 +1634,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, PrimitiveCarA1 rand0, SCode rand1)
         {
             return
-                 (rand1 is LexicalVariable) ? PrimitiveIsEqCarA1L.Make (rator, rand0, (LexicalVariable) rand1)
-                 : (rand1 is Quotation) ? PrimitiveIsEqCarA1Q.Make (rator, rand0, (Quotation) rand1)
-                 : new PrimitiveIsEqCarA1 (rator, rand0, rand1);
+                (rand1 is LexicalVariable) ? PrimitiveIsEqCarA1L.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqCarA1Q.Make (rator, rand0, (Quotation) rand1) :
+                 new PrimitiveIsEqCarA1 (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1594,6 +1645,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA1L : PrimitiveIsEqCarA1
     {
         public readonly object rand1Name;
@@ -1633,6 +1685,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarA1Q : PrimitiveIsEqCarA1
     {
         public readonly object rand1Value;
@@ -1652,7 +1705,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqCarA1Q.EvalStep");
 #endif
             Cons temp = environment.Argument1Value as Cons;
             if (temp == null) throw new NotImplementedException ();
@@ -1662,6 +1715,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarL1 : PrimitiveIsEqCarL
     {
 
@@ -1675,7 +1729,7 @@ namespace Microcode
         {
             return
                 (rand1 is LexicalVariable) ? PrimitiveIsEqCarL1L.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? Unimplemented() :
+                (rand1 is Quotation) ? PrimitiveIsEqCarL1Q.Make (rator, rand0, (Quotation) rand1) :
                 new PrimitiveIsEqCarL1 (rator, rand0, rand1);
         }
 
@@ -1685,6 +1739,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarL1L : PrimitiveIsEqCarL1
     {
 
@@ -1708,8 +1763,44 @@ namespace Microcode
         }
     }
 
+    [Serializable]
+    class PrimitiveIsEqCarL1Q : PrimitiveIsEqCarL1
+    {
+        public readonly object rand1Value;
+
+        protected PrimitiveIsEqCarL1Q (Primitive2 rator, PrimitiveCarL1 rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
 
 
+        public static SCode Make (Primitive2 rator, PrimitiveCarL1 rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveIsEqCarL1Q (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsEqCarL1Q.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+            Cons cev0 = ev0 as Cons;
+            if (cev0 == null)
+                throw new NotImplementedException ();
+            if (ObjectModel.Eq (out answer, cev0.Car, this.rand1Value))
+                throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+
+
+    [Serializable]
     class PrimitiveIsEqCarLL : PrimitiveIsEqCarL
     {
         public readonly object rand1Name;
@@ -1751,6 +1842,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarLQ : PrimitiveIsEqCarL
     {
         public readonly object rand1Value;
@@ -1774,6 +1866,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarSL : PrimitiveIsEqCar
     {
         public readonly object rand1Name;
@@ -1825,6 +1918,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqCarSQ : PrimitiveIsEqCar
     {
         public readonly object rand1Value;
@@ -1846,6 +1940,668 @@ namespace Microcode
         }
     }
 
+    [Serializable]
+    class PrimitiveIsEqCaar : PrimitiveIsEq
+    {
+        public readonly SCode rand0Arg;
+
+        protected PrimitiveIsEqCaar (Primitive2 rator, PrimitiveCaar rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Arg = rand0.Operand;
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, SCode rand1)
+        {
+            return
+                (rand0 is PrimitiveCaarL) ? PrimitiveIsEqCaarL.Make (rator, (PrimitiveCaarL) rand0, rand1) :
+                //: (rand0 is PrimitiveCaarQ) ? Unimplemented () // PrimitiveIsEqCaarQ.Make (rator, (Quotation) rand0, rand1)
+                (rand1 is LexicalVariable) ? PrimitiveIsEqCaarSL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqCaarSQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsEqCaar (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarL : PrimitiveIsEqCaar
+    {
+        public readonly object rand0Name;
+        public readonly int rand0Depth;
+        public readonly int rand0Offset;
+
+        protected PrimitiveIsEqCaarL (Primitive2 rator, PrimitiveCaarL rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Name = rand0.OperandName;
+            this.rand0Depth = rand0.OperandDepth;
+            this.rand0Offset = rand0.OperandOffset;
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, SCode rand1)
+        {
+            return
+                (rand0 is PrimitiveCaarA) ? PrimitiveIsEqCaarA.Make (rator, (PrimitiveCaarA) rand0, rand1):
+                (rand0 is PrimitiveCaarL1) ? PrimitiveIsEqCaarL1.Make (rator, (PrimitiveCaarL1) rand0, rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveIsEqCaarLL.Make (rator, rand0, (LexicalVariable) rand1):
+                (rand1 is Quotation) ? PrimitiveIsEqCaarLQ.Make (rator, rand0, (Quotation) rand1):
+                new PrimitiveIsEqCaarL (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA : PrimitiveIsEqCaarL
+    {
+        protected PrimitiveIsEqCaarA (Primitive2 rator, PrimitiveCaarA rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA rand0, SCode rand1)
+        {
+            return
+                (rand0 is PrimitiveCaarA0) ? PrimitiveIsEqCaarA0.Make (rator, (PrimitiveCaarA0) rand0, rand1) :
+                (rand0 is PrimitiveCaarA1) ? PrimitiveIsEqCaarA1.Make (rator, (PrimitiveCaarA1) rand0, rand1) :
+                (rand1 is LexicalVariable) ? Unimplemented () :
+                (rand1 is Quotation) ? Unimplemented () :
+                new PrimitiveIsEqCaarA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.rand1);
+            SCode.location = "PrimitiveIsEqCaarA.EvalStep";
+#endif
+            object ev1;
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsEqCaarA.EvalStep";
+#endif
+	    throw new NotImplementedException();
+            // if (ObjectModel.Eq (out answer, ((Cons) environment.ArgumentValue (this.rand0Offset)).Caar, ev1))
+            //     throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA0 : PrimitiveIsEqCaarA
+    {
+        protected PrimitiveIsEqCaarA0 (Primitive2 rator, PrimitiveCaarA0 rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, SCode rand1)
+        {
+            return
+                (rand1 is PrimitiveCaar) ? PrimitiveIsEqCaarA0Caar.Make (rator, rand0, (PrimitiveCaar) rand1) :
+                (rand1 is LexicalVariable) ? PrimitiveIsEqCaarA0L.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqCaarA0Q.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsEqCaarA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm("-");
+            noteCalls (this.rand1);
+            SCode.location = "PrimitiveIsEqCaarA0.EvalStep";
+#endif
+            object ev1;
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+#if DEBUG
+                        SCode.location = "PrimitiveIsEqCaarA0.EvalStep.1";
+#endif
+	    throw new NotImplementedException();
+            // ObjectModel.Eq (out answer, ((Cons) environment.Argument0Value).Caar, ev1);
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA0Caar : PrimitiveIsEqCaarA0
+    {
+        protected PrimitiveIsEqCaarA0Caar (Primitive2 rator, PrimitiveCaarA0 rand0, PrimitiveCaar rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, PrimitiveCaar rand1)
+        {
+            return
+                (rand1 is PrimitiveCaarL) ? PrimitiveIsEqCaarA0CaarL.Make (rator, rand0, (PrimitiveCaarL) rand1) :
+                new PrimitiveIsEqCaarA0Caar (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA0CaarL : PrimitiveIsEqCaarA0Caar
+    {
+        protected PrimitiveIsEqCaarA0CaarL (Primitive2 rator, PrimitiveCaarA0 rand0, PrimitiveCaarL rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, PrimitiveCaarL rand1)
+        {
+            return
+                (rand1 is PrimitiveCaarA) ? PrimitiveIsEqCaarA0CaarA.Make (rator, rand0, (PrimitiveCaarA) rand1) :
+                new PrimitiveIsEqCaarA0CaarL (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA0CaarA : PrimitiveIsEqCaarA0CaarL
+    {
+        protected PrimitiveIsEqCaarA0CaarA (Primitive2 rator, PrimitiveCaarA0 rand0, PrimitiveCaarA rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, PrimitiveCaarA rand1)
+        {
+            return
+                (rand1 is PrimitiveCaarA1) ? PrimitiveIsEqCaarA0CaarA1.Make (rator, rand0, (PrimitiveCaarA1) rand1) :
+                new PrimitiveIsEqCaarA0CaarA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA0CaarA1 : PrimitiveIsEqCaarA0CaarA
+    {
+        protected PrimitiveIsEqCaarA0CaarA1 (Primitive2 rator, PrimitiveCaarA0 rand0, PrimitiveCaarA1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, PrimitiveCaarA1 rand1)
+        {
+            return
+                new PrimitiveIsEqCaarA0CaarA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm("PrimitiveIsEqCaarA0CaarA1.EvalStep");
+#endif
+	    throw new NotImplementedException();
+            // answer = (((Cons) environment.Argument0Value).Caar == ((Cons) environment.Argument1Value).Caar) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA0L : PrimitiveIsEqCaarA0
+    {
+        public readonly object rand1Name;
+        public readonly int rand1Depth;
+        public readonly int rand1Offset;
+
+        protected PrimitiveIsEqCaarA0L (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Depth = rand1.Depth;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable rand1)
+        {
+            return
+                (rand1 is Argument) ? Unimplemented () :
+                (rand1 is LexicalVariable1) ? PrimitiveIsEqCaarA0L1.Make (rator, rand0, (LexicalVariable1) rand1) :
+                new PrimitiveIsEqCaarA0L (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsEqCaarA0L.EvalStep");
+#endif
+            Object ev1;
+            if (environment.FastLexicalRef(out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                throw new NotImplementedException();
+            Cons temp = environment.Argument0Value as Cons;
+            if (temp == null) throw new NotImplementedException ();
+            Cons temp1 = temp.Car as Cons;
+            if (temp1 == null) throw new NotImplementedException ();
+            ObjectModel.Eq (out answer, temp1.Car, ev1);
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA0L1 : PrimitiveIsEqCaarA0L
+    {
+
+
+        protected PrimitiveIsEqCaarA0L1 (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable1 rand1)
+        {
+            return
+                 new PrimitiveIsEqCaarA0L1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsEqCaarA0L1.EvalStep");
+#endif
+            Object ev1;
+            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+            Cons temp = environment.Argument0Value as Cons;
+            if (temp == null) throw new NotImplementedException ();
+
+	    throw new NotImplementedException();
+            // ObjectModel.Eq (out answer, temp.Caar, ev1);
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA0Q : PrimitiveIsEqCaarA0
+    {
+        public readonly object rand1Value;
+
+        protected PrimitiveIsEqCaarA0Q (Primitive2 rator, PrimitiveCaarA0 rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, Quotation rand1)
+        {
+            return new PrimitiveIsEqCaarA0Q (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm("PrimitiveIsEqCaarA0Q.EvalStep");
+#endif
+            Cons temp = environment.Argument0Value as Cons;
+            if (temp == null) throw new NotImplementedException ();
+
+	    throw new NotImplementedException();
+            // ObjectModel.Eq (out answer, temp.Caar, this.rand1Value);
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA1 : PrimitiveIsEqCaarA
+    {
+        protected PrimitiveIsEqCaarA1 (Primitive2 rator, PrimitiveCaarA1 rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA1 rand0, SCode rand1)
+        {
+            return
+                (rand1 is LexicalVariable) ? PrimitiveIsEqCaarA1L.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqCaarA1Q.Make (rator, rand0, (Quotation) rand1) :
+                 new PrimitiveIsEqCaarA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA1L : PrimitiveIsEqCaarA1
+    {
+        public readonly object rand1Name;
+        public readonly int rand1Depth;
+        public readonly int rand1Offset;
+
+        protected PrimitiveIsEqCaarA1L (Primitive2 rator, PrimitiveCaarA1 rand0, LexicalVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Depth = rand1.Depth;
+            this.rand1Offset = rand1.Offset;
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA1 rand0, LexicalVariable rand1)
+        {
+            return
+                (rand1 is Argument) ? Unimplemented ()
+                : (rand1 is LexicalVariable1) ? Unimplemented ()
+                : new PrimitiveIsEqCaarA1L (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ();
+#endif
+            Object ev1;
+            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                throw new NotImplementedException ();
+            Cons temp = environment.Argument1Value as Cons;
+            if (temp == null) throw new NotImplementedException ();
+
+	    throw new NotImplementedException();
+            // ObjectModel.Eq (out answer, temp.Caar, ev1);
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarA1Q : PrimitiveIsEqCaarA1
+    {
+        public readonly object rand1Value;
+
+        protected PrimitiveIsEqCaarA1Q (Primitive2 rator, PrimitiveCaarA1 rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarA1 rand0, Quotation rand1)
+        {
+            return new PrimitiveIsEqCaarA1Q (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsEqCaarA1Q.EvalStep");
+#endif
+            Cons temp = environment.Argument1Value as Cons;
+            if (temp == null) throw new NotImplementedException ();
+
+	    throw new NotImplementedException();
+            // ObjectModel.Eq (out answer, temp.Caar, this.rand1Value);
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarL1 : PrimitiveIsEqCaarL
+    {
+
+        protected PrimitiveIsEqCaarL1 (Primitive2 rator, PrimitiveCaarL1 rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarL1 rand0, SCode rand1)
+        {
+            return
+                (rand1 is LexicalVariable) ? PrimitiveIsEqCaarL1L.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqCaarL1Q.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsEqCaarL1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarL1L : PrimitiveIsEqCaarL1
+    {
+
+        protected PrimitiveIsEqCaarL1L (Primitive2 rator, PrimitiveCaarL1 rand0, LexicalVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarL1 rand0, LexicalVariable rand1)
+        {
+            return
+                (rand1 is Argument) ? Unimplemented() :
+                (rand1 is LexicalVariable1) ? Unimplemented () :
+                new PrimitiveIsEqCaarL1L (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarL1Q : PrimitiveIsEqCaarL1
+    {
+        public readonly object rand1Value;
+
+        protected PrimitiveIsEqCaarL1Q (Primitive2 rator, PrimitiveCaarL1 rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarL1 rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveIsEqCaarL1Q (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsEqCaarL1Q.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+            Cons cev0 = ev0 as Cons;
+            if (cev0 == null)
+                throw new NotImplementedException ();
+	    throw new NotImplementedException();
+            // if (ObjectModel.Eq (out answer, cev0.Caar, this.rand1Value))
+            //    throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+
+
+    [Serializable]
+    class PrimitiveIsEqCaarLL : PrimitiveIsEqCaarL
+    {
+        public readonly object rand1Name;
+        public readonly int rand1Depth;
+        public readonly int rand1Offset;
+
+        protected PrimitiveIsEqCaarLL (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Depth = rand1.Depth;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable rand1)
+        {
+            return
+                (rand1 is Argument) ? Unimplemented () :
+                (rand1 is LexicalVariable1) ? Unimplemented () ://PrimitiveIsEqCaarLL.Make (rator, rand0, (LexicalVariable) rand1)
+                new PrimitiveIsEqCaarLL (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm("PrimitiveIsEqCaarLL.EvalStep");
+#endif
+            object ev1;
+            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                throw new NotImplementedException ();
+
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+                throw new NotImplementedException ();
+
+	    throw new NotImplementedException();
+            // if (ObjectModel.Eq (out answer, ((Cons)ev0).Caar, ev1))
+            //    throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarLQ : PrimitiveIsEqCaarL
+    {
+        public readonly object rand1Value;
+
+        protected PrimitiveIsEqCaarLQ (Primitive2 rator, PrimitiveCaarL rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+
+        }
+
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, Quotation rand1)
+        {
+            return new PrimitiveIsEqCaarLQ (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarSL : PrimitiveIsEqCaar
+    {
+        public readonly object rand1Name;
+        public readonly int rand1Depth;
+        public readonly int rand1Offset;
+
+        protected PrimitiveIsEqCaarSL (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Depth = rand1.Depth;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable rand1)
+        {
+            return 
+                (rand1 is Argument) ? Unimplemented()
+                : (rand1 is LexicalVariable1) ? Unimplemented()
+                : new PrimitiveIsEqCaarSL (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm("-");
+            noteCalls (this.rand0);
+            SCode.location = "PrimitiveIsEqCaarSL.EvalStep";
+#endif
+            object ev1;
+            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                    throw new NotImplementedException();
+
+            object ev0;
+            Control unev = this.rand0Arg;
+            Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+                        SCode.location = "PrimitiveIsEqCaarSL.EvalStep.1";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException();
+            }
+
+            Cons ev0c = (Cons) ev0;
+	    throw new NotImplementedException();
+            // if (ObjectModel.Eq (out answer, ev0c.Caar, ev1))
+            //    throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqCaarSQ : PrimitiveIsEqCaar
+    {
+        public readonly object rand1Value;
+
+        protected PrimitiveIsEqCaarSQ (Primitive2 rator, PrimitiveCaar rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, Quotation rand1)
+        {
+            return new PrimitiveIsEqCaarSQ (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
     class PrimitiveIsEqQ : PrimitiveIsEq
     {
         public readonly object rand0Value;
@@ -1869,7 +2625,6 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("PrimitiveIsEqQ.EvalStep");
-
             noteCalls (this.rand1);
 #endif
             // Eval argument1
@@ -1892,6 +2647,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqQL : PrimitiveIsEqQ
     {
         public readonly object rand1Name;
@@ -1909,20 +2665,26 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Quotation rand0, LexicalVariable rand1)
         {
             return
-                (rand1 is Argument) ? PrimitiveIsEqQA.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveIsEqQL1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveIsEqQL (rator, rand0, rand1);
+                (rand1 is Argument) ? PrimitiveIsEqQA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is LexicalVariable1) ? PrimitiveIsEqQL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+                new PrimitiveIsEqQL (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqQL.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            object ev1;
+            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                throw new NotImplementedException ();
+            if (ObjectModel.Eq (out answer, this.rand0Value, ev1))
+                throw new NotImplementedException ();
+            return false;
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqQA : PrimitiveIsEqQL
     {
         protected PrimitiveIsEqQA (Primitive2 rator, Quotation rand0, Argument rand1)
@@ -1949,6 +2711,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqQA0 : PrimitiveIsEqQA
     {
         protected PrimitiveIsEqQA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
@@ -1973,6 +2736,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqQA1 : PrimitiveIsEqQA
     {
         protected PrimitiveIsEqQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
@@ -1989,14 +2753,15 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqQA1.EvalStep");
 #endif
-            if (ObjectModel.Eq (out answer, this.rand0Value , (environment.Argument1Value)))
+            if (ObjectModel.Eq (out answer, this.rand0Value, environment.Argument1Value))
                 throw new NotImplementedException();
             return false;
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqQL1 : PrimitiveIsEqQL
     {
         protected PrimitiveIsEqQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
@@ -2013,7 +2778,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqQL1.EvalStep");
 #endif
             // Eval argument1
             object ev1;
@@ -2021,13 +2786,13 @@ namespace Microcode
                 throw new NotImplementedException ();
 
 
-            if (ObjectModel.Eq (out answer, this.rand0Value, (ev1)))
+            if (ObjectModel.Eq (out answer, this.rand0Value, ev1))
                 throw new NotImplementedException();
             return false;
         }
-
     }
 
+    [Serializable]
     class PrimitiveIsEqQQ : PrimitiveIsEqQ
     {
         public readonly object rand1Value;
@@ -2056,6 +2821,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqSL : PrimitiveIsEq
     {
         public readonly object rand1Name;
@@ -2113,6 +2879,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqSA : PrimitiveIsEqSL
     {
         protected PrimitiveIsEqSA (Primitive2 rator, SCode rand0, Argument rand1)
@@ -2157,6 +2924,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsEqSA0 : PrimitiveIsEqSA
     {
         protected PrimitiveIsEqSA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
@@ -2173,10 +2941,9 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveIsEqSA0.EvalStep");
             noteCalls (this.rand0);
 #endif
-
             // Eval argument0
             object ev0;
 
@@ -2191,13 +2958,13 @@ namespace Microcode
                 //return false;
             }
 
-            if (ObjectModel.Eq (out answer, ( ev0), (environment.Argument0Value)))
+            if (ObjectModel.Eq (out answer, ev0, environment.Argument0Value))
                 throw new NotImplementedException();
             return false;
         }
-
     }
 
+    [Serializable]
     class PrimitiveIsEqSA1 : PrimitiveIsEqSA
     {
         protected PrimitiveIsEqSA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
@@ -2240,6 +3007,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsEqSL1 : PrimitiveIsEqSL
     {
         protected PrimitiveIsEqSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
@@ -2291,6 +3059,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsEqSQ : PrimitiveIsEq
     {
         public readonly object rand1Value;
@@ -2405,6 +3174,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqRecordRefL : PrimitiveIsEqRecordRef
     {
         public readonly object rand0rand0Name;
@@ -2436,6 +3206,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqRecordRefA : PrimitiveIsEqRecordRefL
     {
         protected PrimitiveIsEqRecordRefA (Primitive2 rator, PrimitiveRecordRefA rand0, SCode rand1)
@@ -2459,6 +3230,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqRecordRefL1 : PrimitiveIsEqRecordRefL
     {
         protected PrimitiveIsEqRecordRefL1 (Primitive2 rator, PrimitiveRecordRefL1 rand0, SCode rand1)
@@ -2517,6 +3289,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PrimitiveIsEqRecordRefA0 : PrimitiveIsEqRecordRefA
     {
         protected PrimitiveIsEqRecordRefA0 (Primitive2 rator, PrimitiveRecordRefA0 rand0, SCode rand1)
@@ -2540,6 +3313,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqRecordRefA0Q : PrimitiveIsEqRecordRefA0
     {
         public readonly int rand0Index;
@@ -2584,6 +3358,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsEqRecordRefA0QQ : PrimitiveIsEqRecordRefA0Q
     {
         public readonly object rand1Value;

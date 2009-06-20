@@ -15,11 +15,26 @@
     (let ((start-time (runtime)))
       (let ((answer (thunk)))
 	(for-each write-string 
-		  (list "; " phase " took " 
-				     (number->string
-				      (10log10 (- (runtime) start-time)))))
+		  (list "; " phase " took "
+			(number->string (- (runtime) start-time))
+			" ("
+			(number->string
+			 (10log10 (- (runtime) start-time)))
+			")."))
 	(newline)
 	answer)))
+
+  (display "c:\\jrm-code-project\\mit-scheme\\runtime\\site.scm")
+
+;  (time-phase
+;   "Load cref"
+;   (lambda () (load-option 'cref)))
+
+;  (time-phase
+;   "Load sf"
+;   (lambda () (load-option 'sf)))
+
+;  (identify-world)
 
 ;  (time-phase 
 ;   "Load rbtree"
@@ -44,6 +59,20 @@
 ;     (with-working-directory-pathname
 ;	 "C:\\jrm-code-project\\mit-scheme\\sf\\"
 ;       (lambda () (load "make")))))
+
+;  (time-phase 
+;   "sf runtime"
+;   (lambda ()
+;     (with-working-directory-pathname
+;	 "C:\\jrm-code-project\\mit-scheme\\runtime\\"
+;       (lambda () (load "runtime.sf")))))
+
+;  (time-phase
+;   "sf cref1"
+;   (lambda ()
+;     (with-working-directory-pathname
+;      "C:\\jrm-code-project\\MIT-scheme\\Cref1\\"
+;      (lambda () (load "cref.sf")))))
 
 ;  (time-phase
 ;   "sf sf"

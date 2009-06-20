@@ -33,6 +33,7 @@ USA.
   (sf-conditionally "graphics")
   (sf-conditionally "infstr")
   (sf-conditionally "os2winp")
+  (sf-conditionally "symbol")
   (sf-directory "."))
 
 ;; Guarantee that the package modeller is loaded.  load-option ensures
