@@ -30,7 +30,7 @@ USA.
 
 (declare (usual-integrations))
 
-(define (symbol? object)
+(define-integrable (symbol? object)
   (or (interned-symbol? object)
       (uninterned-symbol? object)))
 

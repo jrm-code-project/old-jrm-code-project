@@ -34,6 +34,13 @@ namespace Microcode
             return false;
         }
 
+        // Not sure what this is to do, yet, but SF wants it.
+        [SchemePrimitive ("STRING->SYNTAX-ENTRY", 1, false)]
+        public static bool StringToSyntaxEntry (out object result, object arg)
+        {
+            throw new NotImplementedException ();
+        }
+
         [SchemePrimitive ("STRING-ALLOCATE", 1, false)]
         public static bool StringAllocate (out object answer, object arg)
         {
@@ -180,6 +187,30 @@ namespace Microcode
             }
             answer = false;
             return false;
+        }
+
+        [SchemePrimitive ("RE-CHAR-SET-ADJOIN!", 2, false)]
+        public static bool ReCharSetAdjoin (out object answer, object arg0, object arg1)
+        {
+            throw new NotImplementedException ();
+        }
+
+        [SchemePrimitive ("RE-MATCH-SUBSTRING", 7, false)]
+        public static bool ReMatchSubstring (out object answer, object [] arglist)
+        {
+            throw new NotImplementedException ("RE-MATCH-SUBSTRING");
+        }
+
+        [SchemePrimitive ("RE-SEARCH-SUBSTRING-FORWARD", 7, false)]
+        public static bool ReSearchSubstringForward (out object answer, object [] arglist)
+        {
+            throw new NotImplementedException ("RE-SEARCH-SUBSTRING-FORWARD");
+        }
+
+        [SchemePrimitive ("RE-SEARCH-SUBSTRING-BACKWARD", 7, false)]
+        public static bool ReSearchSubstringBackward (out object answer, object [] arglist)
+        {
+            throw new NotImplementedException ("RE-SEARCH-SUBSTRING-BACKWARD");
         }
     }
 }

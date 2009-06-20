@@ -132,6 +132,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCondIsRecordA : PCondIsRecordL
     {
         protected PCondIsRecordA (PrimitiveIsRecordA predicate, SCode consequent, SCode alternative)
@@ -183,7 +184,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA0 : PCondIsRecordA
+    [Serializable] class PCondIsRecordA0 : PCondIsRecordA
     {
         protected PCondIsRecordA0 (PrimitiveIsRecordA0 predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
@@ -229,7 +230,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA0L : PCondIsRecordA0
+    [Serializable] class PCondIsRecordA0L : PCondIsRecordA0
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
@@ -276,7 +277,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA0LL : PCondIsRecordA0L
+    [Serializable] class PCondIsRecordA0LL : PCondIsRecordA0L
     {
         protected PCondIsRecordA0LL (PrimitiveIsRecordA0 predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -293,7 +294,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA0LQ : PCondIsRecordA0L
+    [Serializable] class PCondIsRecordA0LQ : PCondIsRecordA0L
     {
         public readonly object alternativeValue;
 
@@ -329,7 +330,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA0Q : PCondIsRecordA0
+    [Serializable] class PCondIsRecordA0Q : PCondIsRecordA0
     {
         public readonly object consequentValue;
 
@@ -371,7 +372,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordA0QL : PCondIsRecordA0Q
+    [Serializable] class PCondIsRecordA0QL : PCondIsRecordA0Q
     {
         protected PCondIsRecordA0QL (PrimitiveIsRecordA0 predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -390,7 +391,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordA0QQ : PCondIsRecordA0Q
+    [Serializable] class PCondIsRecordA0QQ : PCondIsRecordA0Q
     {
         protected PCondIsRecordA0QQ (PrimitiveIsRecordA0 predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
@@ -419,7 +420,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordA0SL : PCondIsRecordA0
+    [Serializable] class PCondIsRecordA0SL : PCondIsRecordA0
     {
         public readonly object alternativeName;
         public readonly int alternativeDepth;
@@ -466,7 +467,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordA0SQ : PCondIsRecordA0
+    [Serializable] class PCondIsRecordA0SQ : PCondIsRecordA0
     {
         public readonly object alternativeValue;
 
@@ -505,7 +506,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA1 : PCondIsRecordA
+    [Serializable] class PCondIsRecordA1 : PCondIsRecordA
     {
         protected PCondIsRecordA1 (PrimitiveIsRecordA1 predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
@@ -552,7 +553,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA1L : PCondIsRecordA1
+    [Serializable] class PCondIsRecordA1L : PCondIsRecordA1
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
@@ -603,7 +604,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordA1LL : PCondIsRecordA1L
+    [Serializable] class PCondIsRecordA1LL : PCondIsRecordA1L
     {
         protected PCondIsRecordA1LL (PrimitiveIsRecordA1 predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -620,7 +621,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA1LQ : PCondIsRecordA1L
+    [Serializable] class PCondIsRecordA1LQ : PCondIsRecordA1L
     {
         public readonly object alternativeValue;
 
@@ -656,7 +657,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA1Q : PCondIsRecordA1
+    [Serializable] class PCondIsRecordA1Q : PCondIsRecordA1
     {
         public readonly object consequentValue;
         protected PCondIsRecordA1Q (PrimitiveIsRecordA1 predicate, Quotation consequent, SCode alternative)
@@ -695,7 +696,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordA1QL : PCondIsRecordA1Q
+    [Serializable] class PCondIsRecordA1QL : PCondIsRecordA1Q
     {
         protected PCondIsRecordA1QL (PrimitiveIsRecordA1 predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -713,7 +714,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordA1QQ : PCondIsRecordA1Q
+    [Serializable] class PCondIsRecordA1QQ : PCondIsRecordA1Q
     {
         protected PCondIsRecordA1QQ (PrimitiveIsRecordA1 predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
@@ -742,7 +743,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordA1SL : PCondIsRecordA1
+    [Serializable] class PCondIsRecordA1SL : PCondIsRecordA1
     {
         public readonly object alternativeName;
         public readonly int alternativeDepth;
@@ -789,7 +790,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordA1SQ : PCondIsRecordA1
+    [Serializable] class PCondIsRecordA1SQ : PCondIsRecordA1
     {
         public readonly object alternativeValue;
 
@@ -828,7 +829,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordAL : PCondIsRecordA
+    [Serializable] class PCondIsRecordAL : PCondIsRecordA
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
@@ -876,7 +877,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordAA : PCondIsRecordAL
+    [Serializable] class PCondIsRecordAA : PCondIsRecordAL
     {
         protected PCondIsRecordAA (PrimitiveIsRecordA predicate, Argument consequent, SCode alternative)
             : base (predicate, consequent, alternative)
@@ -893,7 +894,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordAL1 : PCondIsRecordAL
+    [Serializable] class PCondIsRecordAL1 : PCondIsRecordAL
     {
         protected PCondIsRecordAL1 (PrimitiveIsRecordA predicate, LexicalVariable1 consequent, SCode alternative)
             : base (predicate, consequent, alternative)
@@ -908,7 +909,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordALL : PCondIsRecordAL
+    [Serializable] class PCondIsRecordALL : PCondIsRecordAL
     {
         protected PCondIsRecordALL (PrimitiveIsRecordA predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -923,7 +924,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordALQ : PCondIsRecordAL
+    [Serializable] class PCondIsRecordALQ : PCondIsRecordAL
     {
         protected PCondIsRecordALQ (PrimitiveIsRecordA predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
@@ -938,7 +939,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordAQ : PCondIsRecordA
+    [Serializable] class PCondIsRecordAQ : PCondIsRecordA
     {
         public readonly object consequentValue;
 
@@ -982,7 +983,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordAQL : PCondIsRecordAQ
+    [Serializable] class PCondIsRecordAQL : PCondIsRecordAQ
     {
         protected PCondIsRecordAQL (PrimitiveIsRecordA predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -999,7 +1000,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordAQQ : PCondIsRecordAQ
+    [Serializable] class PCondIsRecordAQQ : PCondIsRecordAQ
     {
         protected PCondIsRecordAQQ (PrimitiveIsRecordA predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
@@ -1029,7 +1030,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordASL : PCondIsRecordA
+    [Serializable] class PCondIsRecordASL : PCondIsRecordA
     {
         protected PCondIsRecordASL (PrimitiveIsRecordA predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
@@ -1046,7 +1047,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordASQ : PCondIsRecordA
+    [Serializable] class PCondIsRecordASQ : PCondIsRecordA
     {
         public readonly object alternativeValue;
 
@@ -1131,7 +1132,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordL1L : PCondIsRecordL1
+    [Serializable] class PCondIsRecordL1L : PCondIsRecordL1
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
@@ -1184,7 +1185,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordL1LL : PCondIsRecordL1L
+    [Serializable] class PCondIsRecordL1LL : PCondIsRecordL1L
     {
         protected PCondIsRecordL1LL (PrimitiveIsRecordL1 predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -1201,7 +1202,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordL1LQ : PCondIsRecordL1L
+    [Serializable] class PCondIsRecordL1LQ : PCondIsRecordL1L
     {
         public readonly object alternativeValue;
 
@@ -1237,7 +1238,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordL1Q : PCondIsRecordL1
+    [Serializable] class PCondIsRecordL1Q : PCondIsRecordL1
     {
         public readonly object consequentValue;
 
@@ -1282,7 +1283,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordL1QL : PCondIsRecordL1Q
+    [Serializable] class PCondIsRecordL1QL : PCondIsRecordL1Q
     {
         protected PCondIsRecordL1QL (PrimitiveIsRecordL1 predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -1300,7 +1301,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordL1QQ : PCondIsRecordL1Q
+    [Serializable] class PCondIsRecordL1QQ : PCondIsRecordL1Q
     {
         protected PCondIsRecordL1QQ (PrimitiveIsRecordL1 predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
@@ -1329,7 +1330,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordL1SL : PCondIsRecordL1
+    [Serializable] class PCondIsRecordL1SL : PCondIsRecordL1
     {
         protected PCondIsRecordL1SL (PrimitiveIsRecordL1 predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -1347,7 +1348,7 @@ namespace Microcode
 
     }
 
-    class PCondIsRecordL1SQ : PCondIsRecordL1
+    [Serializable] class PCondIsRecordL1SQ : PCondIsRecordL1
     {
         public readonly object alternativeValue;
 
@@ -1392,7 +1393,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordLL : PCondIsRecordL
+    [Serializable] class PCondIsRecordLL : PCondIsRecordL
     {
         protected PCondIsRecordLL (PrimitiveIsRecordL predicate, LexicalVariable consequent, SCode alternative)
             : base (predicate, consequent, alternative)
@@ -1413,7 +1414,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordLLL : PCondIsRecordLL
+    [Serializable] class PCondIsRecordLLL : PCondIsRecordLL
     {
         protected PCondIsRecordLLL (PrimitiveIsRecordL predicate, LexicalVariable consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -1431,7 +1432,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordLLQ : PCondIsRecordLL
+    [Serializable] class PCondIsRecordLLQ : PCondIsRecordLL
     {
         protected PCondIsRecordLLQ (PrimitiveIsRecordL predicate, LexicalVariable consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
@@ -1449,7 +1450,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordLQ : PCondIsRecordL
+    [Serializable] class PCondIsRecordLQ : PCondIsRecordL
     {
         protected PCondIsRecordLQ (PrimitiveIsRecordL predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
@@ -1470,7 +1471,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordLQL : PCondIsRecordLQ
+    [Serializable] class PCondIsRecordLQL : PCondIsRecordLQ
     {
         protected PCondIsRecordLQL (PrimitiveIsRecordL predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -1488,7 +1489,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordLQQ : PCondIsRecordLQ
+    [Serializable] class PCondIsRecordLQQ : PCondIsRecordLQ
     {
         protected PCondIsRecordLQQ (PrimitiveIsRecordL predicate, Quotation consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
@@ -1518,7 +1519,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordLSL : PCondIsRecordL
+    [Serializable] class PCondIsRecordLSL : PCondIsRecordL
     {
         protected PCondIsRecordLSL (PrimitiveIsRecordL predicate, SCode consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -1536,7 +1537,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordLSQ : PCondIsRecordL
+    [Serializable] class PCondIsRecordLSQ : PCondIsRecordL
     {
         public readonly object alternativeValue;
 
@@ -1580,7 +1581,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordSL : PCondIsRecord
+    [Serializable] class PCondIsRecordSL : PCondIsRecord
     {
         public readonly object consequentName;
         public readonly int consequentDepth;
@@ -1638,7 +1639,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordSLL : PCondIsRecordSL
+    [Serializable] class PCondIsRecordSLL : PCondIsRecordSL
     {
 
         protected PCondIsRecordSLL (PrimitiveIsRecord predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1658,7 +1659,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordSLQ : PCondIsRecordSL
+    [Serializable] class PCondIsRecordSLQ : PCondIsRecordSL
     {
         public readonly object alternativeValue;
 
@@ -1706,7 +1707,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordSQ : PCondIsRecord
+    [Serializable] class PCondIsRecordSQ : PCondIsRecord
     {
         public readonly object consequentValue;
 
@@ -1758,7 +1759,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordSQL : PCondIsRecordSQ
+    [Serializable] class PCondIsRecordSQL : PCondIsRecordSQ
     {
         protected PCondIsRecordSQL (PrimitiveIsRecord predicate, Quotation consequent, LexicalVariable alternative)
             : base (predicate, consequent, alternative)
@@ -1777,7 +1778,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordSQQ : PCondIsRecordSQ
+    [Serializable] class PCondIsRecordSQQ : PCondIsRecordSQ
     {
         public readonly object alternativeValue;
 
@@ -1838,7 +1839,7 @@ namespace Microcode
         }
     }
 
-    class PCondIsRecordSSL : PCondIsRecord
+    [Serializable] class PCondIsRecordSSL : PCondIsRecord
     {
         public readonly object alternativeName;
         public readonly int alternativeDepth;

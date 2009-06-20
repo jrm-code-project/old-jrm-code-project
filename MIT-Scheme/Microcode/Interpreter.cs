@@ -133,6 +133,14 @@ namespace Microcode
 
     public sealed class Interpreter
     {
+        public static string LibraryPath;
+
+        [SchemePrimitive ("MICROCODE-LIBRARY-PATH", 0, true)]
+        public static bool MicrocodeLibraryPath (out object answer)
+        {
+            answer = new object [] {LibraryPath.ToCharArray ()};
+            return false;
+        }
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         History history;
@@ -275,6 +283,24 @@ namespace Microcode
             if (athunk == null) throw new NotImplementedException ("Thunk is not applicable.");
             answer = new TailCallInterpreter (new StackMarker (athunk, mark1, mark2), null);
             return true;
+        }
+
+        [SchemePrimitive ("PRIMITIVE-EVAL-STEP", 3, false)]
+        public static bool PrimitiveEvalStep (out object answer, object arg0, object arg1, object arg2)
+        {
+            throw new NotImplementedException ();
+        }
+
+        [SchemePrimitive ("PRIMITIVE-APPLY-STEP", 3, false)]
+        public static bool PrimitiveApplyStep (out object answer, object arg0, object arg1, object arg2)
+        {
+            throw new NotImplementedException ();
+        }
+
+        [SchemePrimitive ("PRIMITIVE-RETURN-STEP", 2, false)]
+        public static bool PrimitiveReturnStep (out object answer, object arg0, object arg1)
+        {
+            throw new NotImplementedException ();
         }
 
         internal static bool Apply (out object answer, ref Control expression, ref Environment environment, object evop, object [] evargs)

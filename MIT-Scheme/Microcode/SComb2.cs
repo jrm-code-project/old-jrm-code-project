@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
     [Serializable]
-    class Combination2 : SCode, ISystemHunk3
+    class Combination2 : SCode, ISerializable, ISystemHunk3
     {
 #if DEBUG
         static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
@@ -51,6 +52,7 @@ namespace Microcode
         public static SCode Make (SCode rator, SCode rand0, SCode rand1)
         {            
             return
+                (! Configuration.EnableCombination2Optimization) ? new Combination2(rator, rand0, rand1):
                 //(Configuration.EnableSuperOperators && rator is Lambda) ? Let2.Make ((Lambda) rator, rand0, rand1)
                 (Configuration.EnableSuperOperators &&
                  Configuration.EnableCombination2Specialization &&
@@ -251,6 +253,31 @@ namespace Microcode
                     || this.rand0.Uses (formal)
                     || this.rand1.Uses (formal);
         }
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (Combination2Deserializer));
+            info.AddValue ("rator", this.rator);
+            info.AddValue ("rand0", this.rand0);
+            info.AddValue ("rand1", this.rand1);
+        }
+    }
+
+    [Serializable]
+    internal sealed class Combination2Deserializer : IObjectReference
+    {
+        SCode rator;
+        SCode rand0;
+        SCode rand1;
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            return Combination2.Make (this.rator, this.rand0, this.rand1);
+        }
+        SCode Rator { set { this.rator = value; } }
+        SCode Rand0 { set { this.rand0 = value; } }
+        SCode Rand1 { set { this.rand1 = value; } }
     }
 
     [Serializable]

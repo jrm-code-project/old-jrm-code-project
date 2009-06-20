@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
@@ -65,11 +66,13 @@ namespace Microcode
             return this.name.ToCharArray ();
         }
 
+        [DebuggerStepThrough]
         public override string ToString ()
         {
             return this.name;
         }
 
+        [DebuggerStepThrough]
         public override int GetHashCode ()
         {
             return this.hashCode;

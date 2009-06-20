@@ -132,6 +132,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1L : PCond1
     {
         public readonly object predicateName;
@@ -199,6 +200,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A : PCond1L
     {
         protected PCond1A (PrimitiveCombination1A predicate, SCode consequent, SCode alternative)
@@ -261,6 +263,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0 : PCond1A
     {
         protected PCond1A0 (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
@@ -318,6 +321,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0L : PCond1A0
     {
         public readonly object consequentName;
@@ -378,6 +382,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0A : PCond1A0L
     {
 
@@ -433,6 +438,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0A0 : PCond1A0A
     {
         protected PCond1A0A0 (PrimitiveCombination1A0 predicate, Argument0 consequent, SCode alternative)
@@ -482,6 +488,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1A0A0Q : PCond1A0A0
     {
         public readonly object alternativeValue;
@@ -523,6 +530,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0A1 : PCond1A0A
     {
         protected PCond1A0A1 (PrimitiveCombination1A0 predicate, Argument1 consequent, SCode alternative)
@@ -568,6 +576,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1A0A1Q : PCond1A0A1
     {
         public readonly object alternativeValue;
@@ -610,6 +619,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0L1 : PCond1A0L
     {
         protected PCond1A0L1 (PrimitiveCombination1A0 predicate, LexicalVariable1 consequent, SCode alternative)
@@ -658,6 +668,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PCond1A0LL : PCond1A0L
     {
         protected PCond1A0LL (PrimitiveCombination1A0 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -675,6 +686,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0LQ : PCond1A0L
     {
         public readonly object alternativeValue;
@@ -724,6 +736,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0Q : PCond1A0
     {
         public readonly object consequentValue;
@@ -776,6 +789,7 @@ namespace Microcode
         }
     }
  
+    [Serializable]
     class PCond1A0QL : PCond1A0Q
     {
         public readonly object alternativeName;
@@ -827,6 +841,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0QA : PCond1A0QL
     {
 
@@ -873,6 +888,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1A0QA0 : PCond1A0QA
     {
         PCond1A0QA0 (PrimitiveCombination1A0 predicate, Quotation consequent, Argument0 alternative)
@@ -911,6 +927,7 @@ namespace Microcode
         }
     }
  
+    [Serializable]
     sealed class PCond1A0QQ : PCond1A0Q
     {
         public readonly object alternativeValue;
@@ -949,6 +966,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1A0SL : PCond1A0
     {
         public readonly object alternativeName;
@@ -1009,6 +1027,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1A0SA : PCond1A0SL
     {
 
@@ -1065,6 +1084,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     sealed class PCond1A0SA0 : PCond1A0SA
     {
 
@@ -1112,6 +1132,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1A0SA1 : PCond1A0SA
     {
 
@@ -1161,6 +1182,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     sealed class PCond1A0SL1 : PCond1A0SL
     {
         PCond1A0SL1 (PrimitiveCombination1A0 predicate, SCode consequent, LexicalVariable1 alternative)
@@ -1208,6 +1230,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A0SQ : PCond1A0
     {
         public readonly object alternativeValue;
@@ -1259,6 +1282,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A1 : PCond1A
     {
         protected PCond1A1 (PrimitiveCombination1A1 predicate, SCode consequent, SCode alternative)
@@ -1315,6 +1339,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A1L : PCond1A1
     {
         public readonly object consequentName;
@@ -1377,6 +1402,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A1A : PCond1A1L
     {
         protected PCond1A1A (PrimitiveCombination1A1 predicate, Argument consequent, SCode alternative)
@@ -1435,6 +1461,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1A1A0 : PCond1A1A
     {
         protected PCond1A1A0 (PrimitiveCombination1A1 predicate, Argument0 consequent, SCode alternative)
@@ -1484,6 +1511,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A1A1 : PCond1A1A
     {
         protected PCond1A1A1 (PrimitiveCombination1A1 predicate, Argument1 consequent, SCode alternative)
@@ -1532,6 +1560,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A1L1 : PCond1A1L
     {
         protected PCond1A1L1 (PrimitiveCombination1A1 predicate, LexicalVariable1 consequent, SCode alternative)
@@ -1590,6 +1619,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PCond1A1LL : PCond1A1L
     {
         protected PCond1A1LL (PrimitiveCombination1A1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -1607,6 +1637,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A1LQ : PCond1A1L
     {
         public readonly object alternativeValue;
@@ -1656,6 +1687,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A1Q : PCond1A1
     {
         public readonly object consequentValue;
@@ -1706,6 +1738,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1A1QL : PCond1A1Q
     {
         protected PCond1A1QL (PrimitiveCombination1A1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -1724,6 +1757,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1A1QQ : PCond1A1Q
     {
         protected PCond1A1QQ (PrimitiveCombination1A1 predicate, Quotation consequent, Quotation alternative)
@@ -1753,6 +1787,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1A1SL : PCond1A1
     {
         public readonly object alternativeName;
@@ -1815,6 +1850,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1A1SA : PCond1A1SL
     {
 
@@ -1873,6 +1909,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     sealed class PCond1A1SA0 : PCond1A1SA
     {
         PCond1A1SA0 (PrimitiveCombination1A1 predicate, SCode consequent, Argument0 alternative)
@@ -1920,6 +1957,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1A1SA1 : PCond1A1SA
     {
         PCond1A1SA1 (PrimitiveCombination1A1 predicate, SCode consequent, Argument1 alternative)
@@ -1967,6 +2005,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1A1SQ : PCond1A1
     {
         public readonly object alternativeValue;
@@ -2018,6 +2057,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1AL : PCond1A
     {
         public readonly object consequentName;
@@ -2080,6 +2120,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1AA : PCond1AL
     {
         protected PCond1AA (PrimitiveCombination1A predicate, Argument consequent, SCode alternative)
@@ -2129,6 +2170,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1AA0 : PCond1AA
     {
         protected PCond1AA0 (PrimitiveCombination1A predicate, Argument0 consequent, SCode alternative)
@@ -2176,6 +2218,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1AA1 : PCond1AA
     {
         protected PCond1AA1 (PrimitiveCombination1A predicate, Argument1 consequent, SCode alternative)
@@ -2198,6 +2241,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PCond1AL1 : PCond1AL
     {
         protected PCond1AL1 (PrimitiveCombination1A predicate, LexicalVariable1 consequent, SCode alternative)
@@ -2213,6 +2257,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1ALL : PCond1AL
     {
         protected PCond1ALL (PrimitiveCombination1A predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -2228,6 +2273,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1ALQ : PCond1AL
     {
         protected PCond1ALQ (PrimitiveCombination1A predicate, LexicalVariable consequent, Quotation alternative)
@@ -2243,6 +2289,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1AQ : PCond1A
     {
         public readonly object consequentValue;
@@ -2296,6 +2343,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1AQL : PCond1AQ
     {
         protected PCond1AQL (PrimitiveCombination1A predicate, Quotation consequent, LexicalVariable alternative)
@@ -2313,6 +2361,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1AQQ : PCond1AQ
     {
         protected PCond1AQQ (PrimitiveCombination1A predicate, Quotation consequent, Quotation alternative)
@@ -2342,6 +2391,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1ASL : PCond1A
     {
         protected PCond1ASL (PrimitiveCombination1A predicate, SCode consequent, SCode alternative)
@@ -2359,6 +2409,7 @@ namespace Microcode
         }
     }
  
+    [Serializable]
     class PCond1ASQ : PCond1A
     {
         public readonly object alternativeValue;
@@ -2410,6 +2461,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1L1 : PCond1L
     {
         protected PCond1L1 (PrimitiveCombination1L1 predicate, SCode consequent, SCode alternative)
@@ -2471,6 +2523,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1L1L : PCond1L1
     {
         public readonly object consequentName;
@@ -2538,6 +2591,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1L1A : PCond1L1L
     {
         protected PCond1L1A (PrimitiveCombination1L1 predicate, Argument consequent, SCode alternative)
@@ -2598,6 +2652,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1L1A0 : PCond1L1A
     {
         protected PCond1L1A0 (PrimitiveCombination1L1 predicate, Argument0 consequent, SCode alternative)
@@ -2651,6 +2706,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PCond1L1A1 : PCond1L1A
     {
         protected PCond1L1A1 (PrimitiveCombination1L1 predicate, Argument1 consequent, SCode alternative)
@@ -2711,6 +2767,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PCond1L1L1 : PCond1L1L
     {
        
@@ -2769,6 +2826,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PCond1L1LL : PCond1L1L
     {
         protected PCond1L1LL (PrimitiveCombination1L1 predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -2786,6 +2844,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1L1LQ : PCond1L1L
     {
         public readonly object alternativeValue;
@@ -2835,6 +2894,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1L1Q : PCond1L1
     {
         public readonly object consequentValue;
@@ -2891,6 +2951,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1L1QL : PCond1L1Q
     {
         protected PCond1L1QL (PrimitiveCombination1L1 predicate, Quotation consequent, LexicalVariable alternative)
@@ -2909,6 +2970,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1L1QQ : PCond1L1Q
     {
         protected PCond1L1QQ (PrimitiveCombination1L1 predicate, Quotation consequent, Quotation alternative)
@@ -2938,6 +3000,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PCond1L1SL : PCond1L1
     {
         public readonly object alternativeName;
@@ -2997,6 +3060,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     sealed class PCond1L1SQ : PCond1L1
     {
         public readonly object alternativeValue;
@@ -3049,6 +3113,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LL : PCond1L
     {
         public readonly object consequentName;
@@ -3112,6 +3177,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LA : PCond1LL
     {
         protected PCond1LA (PrimitiveCombination1L predicate, Argument consequent, SCode alternative)
@@ -3169,6 +3235,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LA0 : PCond1LA
     {
         protected PCond1LA0 (PrimitiveCombination1L predicate, Argument0 consequent, SCode alternative)
@@ -3226,6 +3293,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PCond1LLL : PCond1LL
     {
         protected PCond1LLL (PrimitiveCombination1L predicate, LexicalVariable consequent, LexicalVariable alternative)
@@ -3247,6 +3315,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LLQ : PCond1LL
     {
         protected PCond1LLQ (PrimitiveCombination1L predicate, LexicalVariable consequent, Quotation alternative)
@@ -3265,6 +3334,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LQ : PCond1L
     {
         public readonly object consequentValue;
@@ -3320,6 +3390,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LQL : PCond1LQ
     {
         protected PCond1LQL (PrimitiveCombination1L predicate, Quotation consequent, LexicalVariable alternative)
@@ -3341,6 +3412,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LQQ : PCond1LQ
     {
         protected PCond1LQQ (PrimitiveCombination1L predicate, Quotation consequent, Quotation alternative)
@@ -3371,6 +3443,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LSL : PCond1L
     {
         public readonly object alternativeName;
@@ -3432,6 +3505,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LSA : PCond1LSL
     {
         protected PCond1LSA (PrimitiveCombination1L predicate, SCode consequent, Argument alternative)
@@ -3487,6 +3561,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LSA0 : PCond1LSA
     {
         protected PCond1LSA0 (PrimitiveCombination1L predicate, SCode consequent, Argument0 alternative)
@@ -3537,6 +3612,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1LSA1 : PCond1LSA
     {
         protected PCond1LSA1 (PrimitiveCombination1L predicate, SCode consequent, Argument1 alternative)
@@ -3592,6 +3668,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PCond1LSQ : PCond1L
     {
         public readonly object alternativeValue;
@@ -3648,6 +3725,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SL : PCond1
     {
         public readonly object consequentName;
@@ -3722,6 +3800,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SA : PCond1SL
     {
         protected PCond1SA (PrimitiveCombination1 predicate, Argument consequent, SCode alternative)
@@ -3787,6 +3866,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SA0 : PCond1SA
     {
         protected PCond1SA0 (PrimitiveCombination1 predicate, Argument0 consequent, SCode alternative)
@@ -3850,6 +3930,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SA0Q : PCond1SA0
     {
         public readonly object alternativeValue;
@@ -3904,6 +3985,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SA1 : PCond1SA
     {
         protected PCond1SA1 (PrimitiveCombination1 predicate, Argument1 consequent, SCode alternative)
@@ -3967,6 +4049,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SAQ : PCond1SA
     {
         public readonly object alternativeValue;
@@ -4023,6 +4106,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SL1 : PCond1SL
     {
         protected PCond1SL1 (PrimitiveCombination1 predicate, LexicalVariable1 consequent, SCode alternative)
@@ -4087,6 +4171,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SLL : PCond1SL
     {
         public readonly object alternativeName;
@@ -4115,6 +4200,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SLL1 : PCond1SLL
     {
 
@@ -4137,6 +4223,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     sealed class PCond1SLQ : PCond1SL
     {
         public readonly object alternativeValue;
@@ -4268,6 +4355,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SQL : PCond1SQ
     {
         public readonly object alternativeName;
@@ -4296,6 +4384,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SQA : PCond1SQL
     {
         protected PCond1SQA (PrimitiveCombination1 predicate, Quotation consequent, Argument alternative)
@@ -4317,6 +4406,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SQA0 : PCond1SQA
     {
         PCond1SQA0 (PrimitiveCombination1 predicate, Quotation consequent, Argument0 alternative)
@@ -4370,6 +4460,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SQA1 : PCond1SQA
     {
         PCond1SQA1 (PrimitiveCombination1 predicate, Quotation consequent, Argument1 alternative)
@@ -4389,6 +4480,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SQL1 : PCond1SQL
     {
         PCond1SQL1 (PrimitiveCombination1 predicate, Quotation consequent, LexicalVariable1 alternative)
@@ -4408,6 +4500,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SQQ : PCond1SQ
     {
         public readonly object alternativeValue;
@@ -4483,6 +4576,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SSL : PCond1
     {
         public readonly object alternativeName;
@@ -4553,6 +4647,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PCond1SSA : PCond1SSL
     {
         protected PCond1SSA (PrimitiveCombination1 predicate, SCode consequent, Argument alternative)
@@ -4614,6 +4709,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SSA0 : PCond1SSA
     {
         PCond1SSA0 (PrimitiveCombination1 predicate, SCode consequent, Argument0 alternative)
@@ -4674,6 +4770,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SSA1 : PCond1SSA
     {
         PCond1SSA1 (PrimitiveCombination1 predicate, SCode consequent, Argument1 alternative)
@@ -4733,6 +4830,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PCond1SSL1 : PCond1SSL
     {
         PCond1SSL1 (PrimitiveCombination1 predicate, SCode consequent, LexicalVariable1 alternative)

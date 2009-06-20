@@ -144,6 +144,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsL : PrimitiveCons
     {
         public readonly object rand0Name;
@@ -199,6 +200,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveConsA : PrimitiveConsL
     {
         protected PrimitiveConsA (Primitive2 rator, Argument rand0, SCode rand1)
@@ -242,6 +244,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA0 : PrimitiveConsA
     {
         protected PrimitiveConsA0 (Primitive2 rator, Argument0 rand0, SCode rand1)
@@ -282,6 +285,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA0L : PrimitiveConsA0
     {
         public readonly object rand1Name;
@@ -319,6 +323,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA0A : PrimitiveConsA0L
     {
         protected PrimitiveConsA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
@@ -343,6 +348,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA0A0 : PrimitiveConsA0A
     {
         protected PrimitiveConsA0A0 (Primitive2 rator, Argument0 rand0, Argument0 rand1)
@@ -367,6 +373,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA0A1 : PrimitiveConsA0A
     {
         protected PrimitiveConsA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
@@ -390,6 +397,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA0L1 : PrimitiveConsA0L
     {
         protected PrimitiveConsA0L1 (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
@@ -418,6 +426,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA0Q : PrimitiveConsA0
     {
         public readonly object rand1Value;
@@ -444,6 +453,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA1 : PrimitiveConsA
     {
         protected PrimitiveConsA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
@@ -484,6 +494,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA1L : PrimitiveConsA1
     {
         public readonly object rand1Name;
@@ -523,6 +534,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA1A : PrimitiveConsA1L
     {
         protected PrimitiveConsA1A (Primitive2 rator, Argument1 rand0, Argument rand1)
@@ -549,6 +561,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveConsA1A0 : PrimitiveConsA1A
     {
         protected PrimitiveConsA1A0 (Primitive2 rator, Argument1 rand0, Argument0 rand1)
@@ -572,6 +585,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA1A1 : PrimitiveConsA1A
     {
         protected PrimitiveConsA1A1 (Primitive2 rator, Argument1 rand0, Argument1 rand1)
@@ -594,6 +608,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveConsA1L1 : PrimitiveConsA1L
     {
         PrimitiveConsA1L1 (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
@@ -622,6 +637,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsA1Q : PrimitiveConsA1
     {
         public readonly object rand1Value;
@@ -648,6 +664,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsAL : PrimitiveConsA
     {
         public readonly object rand1Name;
@@ -679,6 +696,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsAA : PrimitiveConsAL
     {
         protected PrimitiveConsAA (Primitive2 rator, Argument rand0, Argument rand1)
@@ -704,6 +722,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsAA0 : PrimitiveConsAA
     {
         protected PrimitiveConsAA0 (Primitive2 rator, Argument rand0, Argument0 rand1)
@@ -725,6 +744,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsAA1 : PrimitiveConsAA
     {
         protected PrimitiveConsAA1 (Primitive2 rator, Argument rand0, Argument1 rand1)
@@ -746,6 +766,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsAL1 : PrimitiveConsAL
     {
         protected PrimitiveConsAL1 (Primitive2 rator, Argument rand0, LexicalVariable1 rand1)
@@ -764,6 +785,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsAQ : PrimitiveConsA
     {
         public readonly object rand1Value;
@@ -790,6 +812,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsL1 : PrimitiveConsL
     {
         protected PrimitiveConsL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
@@ -835,6 +858,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsL1L : PrimitiveConsL1
     {
         public readonly object rand1Name;
@@ -878,6 +902,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveConsL1A : PrimitiveConsL1L
     {
         protected PrimitiveConsL1A (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
@@ -902,6 +927,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsL1A0 : PrimitiveConsL1A
     {
         protected PrimitiveConsL1A0 (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
@@ -930,6 +956,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsL1A1 : PrimitiveConsL1A
     {
         protected PrimitiveConsL1A1 (Primitive2 rator, LexicalVariable1 rand0, Argument1 rand1)
@@ -960,6 +987,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveConsL1L1 : PrimitiveConsL1L
     {
         protected PrimitiveConsL1L1 (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
@@ -993,6 +1021,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsL1Q : PrimitiveConsL1
     {
         public readonly object rand1Value;
@@ -1022,6 +1051,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsLL : PrimitiveConsL
     {
         public readonly object rand1Name;
@@ -1064,6 +1094,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsLA : PrimitiveConsLL
     {
         protected PrimitiveConsLA (Primitive2 rator, LexicalVariable rand0, Argument rand1)
@@ -1088,6 +1119,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsLA0 : PrimitiveConsLA
     {
         protected PrimitiveConsLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
@@ -1114,6 +1146,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsLA1 : PrimitiveConsLA
     {
         protected PrimitiveConsLA1 (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
@@ -1143,6 +1176,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveConsLL1 : PrimitiveConsLL
     {
         protected PrimitiveConsLL1 (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
@@ -1180,6 +1214,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveConsLQ : PrimitiveConsL
     {
         public readonly object rand1Value;
@@ -1251,6 +1286,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsQL : PrimitiveConsQ
     {
         public readonly object rand1Name;
@@ -1282,6 +1318,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsQA : PrimitiveConsQL
     {
         protected PrimitiveConsQA (Primitive2 rator, Quotation rand0, Argument rand1)
@@ -1307,6 +1344,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsQA0 : PrimitiveConsQA
     {
         protected PrimitiveConsQA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
@@ -1330,6 +1368,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveConsQA1 : PrimitiveConsQA
     {
         PrimitiveConsQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
@@ -1353,6 +1392,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsQL1 : PrimitiveConsQL
     {
         protected PrimitiveConsQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
@@ -1411,6 +1451,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsSL : PrimitiveCons
     {
         public readonly object rand1Name;
@@ -1464,6 +1505,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsSA : PrimitiveConsSL
     {
         protected PrimitiveConsSA (Primitive2 rator, SCode rand0, Argument rand1)
@@ -1503,6 +1545,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveConsSAFrame0 : SubproblemContinuation<PrimitiveConsSA>, ISystemVector
     {
         public PrimitiveConsSAFrame0 (PrimitiveConsSA expr, Environment env)
@@ -1535,6 +1578,7 @@ namespace Microcode
         #endregion
     }
 
+    [Serializable]
     class PrimitiveConsSA0 : PrimitiveConsSA
     {
         protected PrimitiveConsSA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
@@ -1579,6 +1623,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveConsSA1 : PrimitiveConsSA
     {
         protected PrimitiveConsSA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
@@ -1619,6 +1664,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveConsSL1 : PrimitiveConsSL
     {
         protected PrimitiveConsSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
@@ -1706,6 +1752,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveConsSQFrame0 : SubproblemContinuation<PrimitiveConsSQ>, ISystemVector
     {
         public PrimitiveConsSQFrame0 (PrimitiveConsSQ expression, Environment env)
@@ -1808,6 +1855,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsCarL : PrimitiveConsCar
     {
 #if DEBUG
@@ -1868,6 +1916,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsCarA : PrimitiveConsCarL
     {
 #if DEBUG
@@ -1916,6 +1965,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsCarA0 : PrimitiveConsCarA
     {
 #if DEBUG
@@ -1961,6 +2011,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveConsCarA0Q : PrimitiveConsCarA0
     {
         public readonly object rand1Value;
@@ -1987,6 +2038,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsCarA1 : PrimitiveConsCarA
     {
 #if DEBUG
@@ -2031,6 +2083,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveConsCarA1Q : PrimitiveConsCarA1
     {
         public readonly object rand1Value;
@@ -2057,6 +2110,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveConsCarL1 : PrimitiveConsCarL
     {
 #if DEBUG

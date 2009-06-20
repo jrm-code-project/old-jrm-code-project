@@ -363,8 +363,18 @@ namespace Microcode
                     answer = ExtendedLambda.Make ((Hunk3) arg1);
                     break;
 
+                case TC.PCOMB0:
+                    answer = PrimitiveCombination0.Make ((Primitive0) arg1);
+                    break;
+
                 case TC.PCOMB2:
                     answer = PrimitiveCombination2.Make ((Hunk3) arg1);
+                    break;
+
+                case TC.PRIMITIVE:
+                    if (!(arg1 is PrimitiveCombination0))
+                        throw new NotImplementedException ("Object-set-type on primitive");
+                    answer = ((PrimitiveCombination0) arg1).Operator;
                     break;
 
                 case TC.RECORD:
@@ -616,12 +626,20 @@ namespace Microcode
                     banswer = arg1 is ReturnCode;
                     break;
 
+                case TC.SCODE_QUOTE:
+                    banswer = arg1 is Quotation;
+                    break;
+
                 case TC.SEQUENCE_2:
                     banswer = arg1 is Sequence2;
                     break;
 
                 case TC.SEQUENCE_3:
                     banswer = arg1 is Sequence3;
+                    break;
+
+                case TC.THE_ENVIRONMENT:
+                    banswer = arg1 is TheEnvironment;
                     break;
 
                 case TC.UNINTERNED_SYMBOL:

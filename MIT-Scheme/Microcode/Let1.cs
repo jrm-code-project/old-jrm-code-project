@@ -47,9 +47,9 @@ namespace Microcode
             SCode body = rator.Body;
 
             return
-                (body is Variable) ? ((((Variable) body).Name == formals [0]) ? RewriteAsIdentity (arg0) : RewriteAsSequence(arg0, body)) :
+                //(body is Variable) ? ((((Variable) body).Name == formals [0]) ? RewriteAsIdentity (arg0) : RewriteAsSequence(arg0, body)) :
                 (rator is SimpleLambda) ? SimpleLet1.Make ((SimpleLambda) rator, arg0) :
-                //(arg0 is LexicalVariable) ? Let1L.Make (rator, (LexicalVariable) arg0) :
+                (arg0 is LexicalVariable) ? Let1L.Make (rator, (LexicalVariable) arg0) :
                 (arg0 is Quotation) ? Let1Q.Make (rator, (Quotation) arg0) :
                 new Let1 (rator, arg0);
         }
@@ -238,7 +238,10 @@ namespace Microcode
 
         public static SCode Make (Lambda rator, LexicalVariable arg0)
         {
-            return new Let1L (rator, arg0);
+            return 
+                (arg0 is LexicalVariable1) ? Unimplemented() :
+                (arg0 is Argument) ? Let1A.Make (rator, (Argument) arg0) :
+                new Let1L (rator, arg0);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -270,6 +273,150 @@ namespace Microcode
             return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg);
         }
 
+    }
+
+    [Serializable]
+    class Let1A : Let1L
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected Let1A (Lambda rator, Argument rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (Lambda rator, Argument arg0)
+        {
+            return
+                (arg0 is Argument0) ? Let1A0.Make (rator, (Argument0) arg0) :
+                (arg0 is Argument1) ? Let1A1.Make (rator, (Argument1) arg0) :
+                new Let1A (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.rator);
+            noteCalls (this.rand);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Let1L.EvalStep";
+#endif
+
+            object evarg;
+            if (environment.FastLexicalRef (out evarg, this.argumentName, this.argumentDepth, this.argumentOffset))
+                throw new NotImplementedException ();
+
+            object evop;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg);
+        }
+
+    }
+
+    [Serializable]
+    class Let1A0 : Let1A
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected Let1A0 (Lambda rator, Argument0 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (Lambda rator, Argument0 arg0)
+        {
+            return
+                new Let1A0 (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+            Unimplemented ();
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.rator);
+            noteCalls (this.rand);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Let1L.EvalStep";
+#endif
+
+            object evarg;
+            if (environment.FastLexicalRef (out evarg, this.argumentName, this.argumentDepth, this.argumentOffset))
+                throw new NotImplementedException ();
+
+            object evop;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg);
+        }
+
+    }
+
+    [Serializable]
+    class Let1A1 : Let1A
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected Let1A1 (Lambda rator, Argument1 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (Lambda rator, Argument1 arg0)
+        {
+            return
+                new Let1A1 (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Let1A1.EvalStep";
+#endif
+            object evop;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value);
+        }
     }
 
     [Serializable]
@@ -338,9 +485,9 @@ namespace Microcode
         {
             return
                 (arg0 is LexicalVariable) ? SimpleLet1L.Make (rator, (LexicalVariable) arg0) :
-                (arg0 is PrimitiveCar) ? SimpleLet1Car.Make (rator, (PrimitiveCar) arg0) :
-                (arg0 is PrimitiveCdr) ? SimpleLet1Cdr.Make (rator, (PrimitiveCdr) arg0) :
-                (arg0 is StaticLambda) ? SimpleLet1StaticLambda.Make (rator, (StaticLambda) arg0) :
+                //(arg0 is PrimitiveCar) ? SimpleLet1Car.Make (rator, (PrimitiveCar) arg0) :
+                //(arg0 is PrimitiveCdr) ? SimpleLet1Cdr.Make (rator, (PrimitiveCdr) arg0) :
+                //(arg0 is StaticLambda) ? SimpleLet1StaticLambda.Make (rator, (StaticLambda) arg0) :
                 (arg0 is Quotation) ? SimpleLet1Q.Make (rator, (Quotation) arg0) :
                 new SimpleLet1 (rator, arg0);
         }
@@ -355,7 +502,6 @@ namespace Microcode
             randTypeHistogram.Note (this.randType);
             SCode.location = "SimpleLet1.EvalStep";
 #endif
-
             object evarg;
             Control unev = this.rand;
             Environment env = environment;
@@ -423,6 +569,7 @@ namespace Microcode
         #endregion
     }
 
+    [Serializable]
     class SimpleLet1L : SimpleLet1
     {
 #if DEBUG
@@ -471,6 +618,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class SimpleLet1A : SimpleLet1L
     {
 #if DEBUG
@@ -508,6 +656,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class SimpleLet1A0 : SimpleLet1A
     {
 #if DEBUG
@@ -541,6 +690,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class SimpleLet1A1 : SimpleLet1A
     {
 #if DEBUG
@@ -575,6 +725,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class SimpleLet1L1 : SimpleLet1L
     {
 #if DEBUG
@@ -633,7 +784,36 @@ namespace Microcode
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
-            throw new NotImplementedException ();
+            Unimplemented ();
+#if DEBUG
+            Warm ("-");
+            noteCalls (this.body);
+            bodyTypeHistogram.Note (this.bodyType);
+            SCode.location = "SimpleLet1Car.EvalStep";
+#endif
+
+            object evarg;
+            Control unev = this.rand;
+            Environment env = environment;
+            while (unev.EvalStep (out evarg, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "SimpleLet1Car.EvalStep.1";
+#endif
+            if (evarg == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new SimpleLet1Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+            Cons temp = evarg as Cons;
+            if (temp == null) throw new NotImplementedException ();
+
+            SimpleClosure cl = new SimpleClosure ((SimpleLambda) this.rator, environment);
+
+            expression = this.body;
+            environment = new SmallEnvironment1 (cl, temp.Car);
+            answer = null;
+            return true;
         }
     }
 
@@ -764,6 +944,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class SimpleLet1CarA0Cond : SimpleLet1CarA0
     {
 #if DEBUG
@@ -856,6 +1037,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class SimpleLet1CarA0PairA0 : SimpleLet1CarA0Cond
     {
 #if DEBUG
@@ -913,6 +1095,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class SimpleLet1CarA0PairA0Cond : SimpleLet1CarA0PairA0
     {
 #if DEBUG
@@ -1009,6 +1192,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class SLet1CA0PA0CondComb1LCdrL : SimpleLet1CarA0PairA0Cond
     {
 #if DEBUG
@@ -1119,6 +1303,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class SComb1Fragment3 : SLet1CA0PA0CondComb1LCdrL
     {
 #if DEBUG
@@ -1225,6 +1410,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class SimpleLet1CarA0Z2 : SimpleLet1CarA0
     {
         public readonly SCode first;
@@ -1671,6 +1857,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class Letrec1 : Let1
     {
 #if DEBUG

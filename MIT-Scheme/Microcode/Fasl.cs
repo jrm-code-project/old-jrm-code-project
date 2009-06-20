@@ -432,7 +432,7 @@ namespace Microcode
             switch (encoded.TypeCode)
             {
                 case TC.ACCESS:
-                    return new Access (ReadObject (encoded.Datum),
+                    return  Access.Make (ReadObject (encoded.Datum),
                        (Symbol) ReadObject (encoded.Datum + 4));
 
                 case TC.ASSIGNMENT:
@@ -517,7 +517,7 @@ namespace Microcode
                     return sharpF;
 
                  case TC.PCOMB0:
-                    return new PrimitiveCombination0 ((Primitive0) primSection[encoded.Datum]);
+                    return PrimitiveCombination0.Make ((Primitive0) primSection[encoded.Datum]);
 
                 case TC.PCOMB1:
                     return PrimitiveCombination1.Make ((Primitive1) ReadObject (encoded.Datum),
@@ -673,14 +673,13 @@ namespace Microcode
             }
         }
 
-
         public static object Fasload (string pathName)
         {
             try {
-                return OldFasload (pathName);
-            }
-            catch (BadFaslFileException) {
                 return NewFasload (pathName);
+            }
+            catch (SerializationException) {
+                return OldFasload (pathName);
             }
         }
 

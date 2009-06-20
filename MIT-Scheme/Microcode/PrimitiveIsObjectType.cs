@@ -71,6 +71,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeL : PrimitiveIsObjectType
     {
         public readonly object rand0Name;
@@ -127,6 +128,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA : PrimitiveIsObjectTypeL
     {
         protected PrimitiveIsObjectTypeA (Primitive2 rator, Argument rand0, SCode rand1)
@@ -171,6 +173,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA0 : PrimitiveIsObjectTypeA
     {
         protected PrimitiveIsObjectTypeA0 (Primitive2 rator, Argument0 rand0, SCode rand1)
@@ -213,6 +216,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA0L : PrimitiveIsObjectTypeA0
     {
         public readonly object rand1Name;
@@ -251,6 +255,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA0A : PrimitiveIsObjectTypeA0L
     {
         protected PrimitiveIsObjectTypeA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
@@ -275,6 +280,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA0A0 : PrimitiveIsObjectTypeA0A
     {
         protected PrimitiveIsObjectTypeA0A0 (Primitive2 rator, Argument0 rand0, Argument0 rand1)
@@ -295,6 +301,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PrimitiveIsObjectTypeA0A1 : PrimitiveIsObjectTypeA0A
     {
         protected PrimitiveIsObjectTypeA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
@@ -319,6 +326,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA0L1 : PrimitiveIsObjectTypeA0L
     {
         protected PrimitiveIsObjectTypeA0L1 (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
@@ -348,6 +356,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA0Q : PrimitiveIsObjectTypeA0
     {
         public readonly object rand1Value;
@@ -375,6 +384,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA1 : PrimitiveIsObjectTypeA
     {
         protected PrimitiveIsObjectTypeA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
@@ -416,6 +426,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA1L : PrimitiveIsObjectTypeA1
     {
         public readonly object rand1Name;
@@ -455,6 +466,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA1A : PrimitiveIsObjectTypeA1L
     {
         protected PrimitiveIsObjectTypeA1A (Primitive2 rator, Argument1 rand0, Argument rand1)
@@ -485,6 +497,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PrimitiveIsObjectTypeA1A0 : PrimitiveIsObjectTypeA1A
     {
         protected PrimitiveIsObjectTypeA1A0 (Primitive2 rator, Argument1 rand0, Argument0 rand1)
@@ -509,6 +522,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA1A1 : PrimitiveIsObjectTypeA1A
     {
         protected PrimitiveIsObjectTypeA1A1 (Primitive2 rator, Argument1 rand0, Argument1 rand1)
@@ -531,6 +545,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA1L1 : PrimitiveIsObjectTypeA1L
     {
         protected PrimitiveIsObjectTypeA1L1 (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
@@ -564,6 +579,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeA1Q : PrimitiveIsObjectTypeA1
     {
         public readonly object rand1Value;
@@ -591,6 +607,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeAL : PrimitiveIsObjectTypeA
     {
         public readonly object rand1Name;
@@ -622,6 +639,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeAA : PrimitiveIsObjectTypeAL
     {
         protected PrimitiveIsObjectTypeAA (Primitive2 rator, Argument rand0, Argument rand1)
@@ -648,6 +666,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeAA0 : PrimitiveIsObjectTypeAA
     {
         protected PrimitiveIsObjectTypeAA0 (Primitive2 rator, Argument rand0, Argument0 rand1)
@@ -669,6 +688,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeAA1 : PrimitiveIsObjectTypeAA
     {
         protected PrimitiveIsObjectTypeAA1 (Primitive2 rator, Argument rand0, Argument1 rand1)
@@ -690,6 +710,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeAL1 : PrimitiveIsObjectTypeAL
     {
         protected PrimitiveIsObjectTypeAL1 (Primitive2 rator, Argument rand0, LexicalVariable1 rand1)
@@ -708,6 +729,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeAQ : PrimitiveIsObjectTypeA
     {
         public readonly object rand1Value;
@@ -735,6 +757,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeL1 : PrimitiveIsObjectTypeL
     {
         protected PrimitiveIsObjectTypeL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
@@ -781,6 +804,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeL1L : PrimitiveIsObjectTypeL1
     {
         public readonly object rand1Name;
@@ -825,6 +849,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeL1A : PrimitiveIsObjectTypeL1L
     {
         protected PrimitiveIsObjectTypeL1A (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
@@ -849,6 +874,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeL1A0 : PrimitiveIsObjectTypeL1A
     {
         protected PrimitiveIsObjectTypeL1A0 (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
@@ -878,6 +904,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeL1A1 : PrimitiveIsObjectTypeL1A
     {
         protected PrimitiveIsObjectTypeL1A1 (Primitive2 rator, LexicalVariable1 rand0, Argument1 rand1)
@@ -909,6 +936,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeL1L1 : PrimitiveIsObjectTypeL1L
     {
         protected PrimitiveIsObjectTypeL1L1 (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
@@ -943,6 +971,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeL1Q : PrimitiveIsObjectTypeL1
     {
         public readonly object rand1Value;
@@ -973,6 +1002,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeLL : PrimitiveIsObjectTypeL
     {
         public readonly object rand1Name;
@@ -1016,6 +1046,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeLA : PrimitiveIsObjectTypeLL
     {
         protected PrimitiveIsObjectTypeLA (Primitive2 rator, LexicalVariable rand0, Argument rand1)
@@ -1045,6 +1076,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeLA0 : PrimitiveIsObjectTypeLA
     {
         protected PrimitiveIsObjectTypeLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
@@ -1072,6 +1104,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeLA1 : PrimitiveIsObjectTypeLA
     {
         protected PrimitiveIsObjectTypeLA1 (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
@@ -1102,6 +1135,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeLL1 : PrimitiveIsObjectTypeLL
     {
         protected PrimitiveIsObjectTypeLL1 (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
@@ -1140,6 +1174,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeLQ : PrimitiveIsObjectTypeL
     {
         public readonly object rand1Value;
@@ -1272,6 +1307,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeQL : PrimitiveIsObjectTypeQ
     {
         public readonly object rand1Name;
@@ -1303,6 +1339,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeQA : PrimitiveIsObjectTypeQL
     {
         protected PrimitiveIsObjectTypeQA (Primitive2 rator, Quotation rand0, Argument rand1)
@@ -1329,6 +1366,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveIsObjectTypeQA0 : PrimitiveIsObjectTypeQA
     {
         PrimitiveIsObjectTypeQA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
@@ -1353,6 +1391,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveIsObjectTypeQA1 : PrimitiveIsObjectTypeQA
     {
         PrimitiveIsObjectTypeQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
@@ -1377,6 +1416,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveIsObjectTypeQL1 : PrimitiveIsObjectTypeQL
     {
         PrimitiveIsObjectTypeQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
@@ -1406,6 +1446,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveIsObjectTypeQQ : PrimitiveIsObjectTypeQ
     {
         public readonly object rand1Value;
@@ -1433,6 +1474,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeSL : PrimitiveIsObjectType
     {
         public readonly object rand1Name;
@@ -1486,6 +1528,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsObjectTypeSA : PrimitiveIsObjectTypeSL
     {
         protected PrimitiveIsObjectTypeSA (Primitive2 rator, SCode rand0, Argument rand1)
@@ -1530,6 +1573,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     sealed class PrimitiveIsObjectTypeSA0 : PrimitiveIsObjectTypeSA
     {
         PrimitiveIsObjectTypeSA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
@@ -1572,6 +1616,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveIsObjectTypeSA1 : PrimitiveIsObjectTypeSA
     {
         PrimitiveIsObjectTypeSA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
@@ -1612,6 +1657,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveIsObjectTypeSL1 : PrimitiveIsObjectTypeSL
     {
         PrimitiveIsObjectTypeSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
@@ -1659,6 +1705,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveIsObjectTypeSQ : PrimitiveIsObjectType
     {
         public readonly object rand1Value;

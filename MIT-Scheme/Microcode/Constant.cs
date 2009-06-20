@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
     [Serializable]
-    public sealed class Constant : SchemeObject
+    public sealed class Constant : SchemeObject, ISerializable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public static object sharpT = true;
@@ -158,5 +160,40 @@ namespace Microcode
                 return theUnspecificObject;
             }
         }
-   }
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (ConstantDeserializer));
+            info.AddValue ("name", this.name);
+        }
+    }
+
+    [Serializable]
+    internal sealed class ConstantDeserializer : IObjectReference
+    {
+        String name;
+
+        Object BadConstant ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            return
+                this.name == "default" ? Constant.DefaultObject :
+                this.name == "eof" ? Constant.EofObject :
+                this.name == "theAuxMarker" ? Constant.LambdaAuxTag :
+                this.name == "theKeyMarker" ? Constant.LambdaKeyTag :
+                this.name == "theOptionalMarker" ? Constant.LambdaOptionalTag :
+                this.name == "theRestMarker" ? Constant.LambdaRestTag :
+                this.name == "Unassigned" ? Constant.ExternalUnassigned :
+                this.name == "Unspecific" ? Constant.Unspecific :
+                BadConstant ();
+        }
+
+        // shut up compiler
+        public void SetName (String name) { this.name = name; }
+    }
 }

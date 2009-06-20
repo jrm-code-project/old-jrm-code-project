@@ -63,6 +63,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualL : PrimitiveIsFixnumEqual
     {
         public readonly object rand0Name;
@@ -119,6 +120,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA : PrimitiveIsFixnumEqualL
     {
         protected PrimitiveIsFixnumEqualA (Primitive2 rator, Argument rand0, SCode rand1)
@@ -165,6 +167,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA0 : PrimitiveIsFixnumEqualA
     {
         protected PrimitiveIsFixnumEqualA0 (Primitive2 rator, Argument0 rand0, SCode rand1)
@@ -206,6 +209,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA0L : PrimitiveIsFixnumEqualA0
     {
         public readonly object rand1Name;
@@ -244,6 +248,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA0A : PrimitiveIsFixnumEqualA0L
     {
         protected PrimitiveIsFixnumEqualA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
@@ -270,6 +275,7 @@ namespace Microcode
 
     // class PrimitiveIsFixnumEqualA0A0 : PrimitiveIsFixnumEqualA0A
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA0A1 : PrimitiveIsFixnumEqualA0A
     {
         protected PrimitiveIsFixnumEqualA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
@@ -300,6 +306,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA0L1 : PrimitiveIsFixnumEqualA0L
     {
         protected PrimitiveIsFixnumEqualA0L1 (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
@@ -332,6 +339,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA0Q : PrimitiveIsFixnumEqualA0
     {
         public readonly int rand1Value;
@@ -358,6 +366,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA1 : PrimitiveIsFixnumEqualA
     {
         protected PrimitiveIsFixnumEqualA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
@@ -399,6 +408,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA1L : PrimitiveIsFixnumEqualA1
     {
         public readonly object rand1Name;
@@ -437,6 +447,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA1A : PrimitiveIsFixnumEqualA1L
     {
         protected PrimitiveIsFixnumEqualA1A (Primitive2 rator, Argument1 rand0, Argument rand1)
@@ -469,6 +480,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA1A0 : PrimitiveIsFixnumEqualA1A
     {
         protected PrimitiveIsFixnumEqualA1A0 (Primitive2 rator, Argument1 rand0, Argument0 rand1)
@@ -499,6 +511,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA1A1 : PrimitiveIsFixnumEqualA1A
     {
         protected PrimitiveIsFixnumEqualA1A1 (Primitive2 rator, Argument1 rand0, Argument1 rand1)
@@ -521,6 +534,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA1L1 : PrimitiveIsFixnumEqualA1L
     {
         protected PrimitiveIsFixnumEqualA1L1 (Primitive2 rator, Argument1 rand0, LexicalVariable1 rand1)
@@ -553,6 +567,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualA1Q : PrimitiveIsFixnumEqualA1
     {
         public readonly int rand1Value;
@@ -586,6 +601,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualAL : PrimitiveIsFixnumEqualA
     {
         public readonly object rand1Name;
@@ -622,6 +638,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualAA : PrimitiveIsFixnumEqualAL
     {
         protected PrimitiveIsFixnumEqualAA (Primitive2 rator, Argument rand0, Argument rand1)
@@ -654,6 +671,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualAA0 : PrimitiveIsFixnumEqualAA
     {
         protected PrimitiveIsFixnumEqualAA0 (Primitive2 rator, Argument rand0, Argument0 rand1)
@@ -675,6 +693,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualAA1 : PrimitiveIsFixnumEqualAA
     {
         protected PrimitiveIsFixnumEqualAA1 (Primitive2 rator, Argument rand0, Argument1 rand1)
@@ -696,6 +715,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualAL1 : PrimitiveIsFixnumEqualAL
     {
         protected PrimitiveIsFixnumEqualAL1 (Primitive2 rator, Argument rand0, LexicalVariable1 rand1)
@@ -714,6 +734,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualAQ : PrimitiveIsFixnumEqualA
     {
         public readonly int rand1Value;
@@ -747,6 +768,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualL1 : PrimitiveIsFixnumEqualL
     {
         protected PrimitiveIsFixnumEqualL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
@@ -793,6 +815,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualL1L : PrimitiveIsFixnumEqualL1
     {
         public readonly object rand1Name;
@@ -824,6 +847,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualL1A : PrimitiveIsFixnumEqualL1L
     {
         protected PrimitiveIsFixnumEqualL1A (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
@@ -848,6 +872,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualL1A0 : PrimitiveIsFixnumEqualL1A
     {
         protected PrimitiveIsFixnumEqualL1A0 (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
@@ -880,6 +905,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualL1A1 : PrimitiveIsFixnumEqualL1A
     {
         protected PrimitiveIsFixnumEqualL1A1 (Primitive2 rator, LexicalVariable1 rand0, Argument1 rand1)
@@ -899,6 +925,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualL1L1 : PrimitiveIsFixnumEqualL1L
     {
         protected PrimitiveIsFixnumEqualL1L1 (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
@@ -933,6 +960,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualL1Q : PrimitiveIsFixnumEqualL1
     {
         public readonly int rand1Value;
@@ -958,6 +986,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualLL : PrimitiveIsFixnumEqualL
     {
         public readonly object rand1Name;
@@ -1000,6 +1029,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualLA : PrimitiveIsFixnumEqualLL
     {
         protected PrimitiveIsFixnumEqualLA (Primitive2 rator, LexicalVariable rand0, Argument rand1)
@@ -1024,6 +1054,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualLA0 : PrimitiveIsFixnumEqualLA
     {
         protected PrimitiveIsFixnumEqualLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
@@ -1052,6 +1083,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualLA1 : PrimitiveIsFixnumEqualLA
     {
         protected PrimitiveIsFixnumEqualLA1 (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
@@ -1074,6 +1106,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualLL1 : PrimitiveIsFixnumEqualLL
     {
         protected PrimitiveIsFixnumEqualLL1 (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
@@ -1096,6 +1129,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualLQ : PrimitiveIsFixnumEqualL
     {
         public readonly int rand1Value;
@@ -1120,6 +1154,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualQ : PrimitiveIsFixnumEqual
     {
         public readonly int rand0Value;
@@ -1165,6 +1200,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualQL : PrimitiveIsFixnumEqualQ
     {
         public readonly object rand1Name;
@@ -1206,6 +1242,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualQA : PrimitiveIsFixnumEqualQL
     {
         protected PrimitiveIsFixnumEqualQA (Primitive2 rator, Quotation rand0, Argument rand1)
@@ -1230,6 +1267,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualQA0 : PrimitiveIsFixnumEqualQA
     {
         protected PrimitiveIsFixnumEqualQA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
@@ -1260,6 +1298,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualQA1 : PrimitiveIsFixnumEqualQA
     {
         protected PrimitiveIsFixnumEqualQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
@@ -1290,6 +1329,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualQL1 : PrimitiveIsFixnumEqualQL
     {
         protected PrimitiveIsFixnumEqualQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
@@ -1312,6 +1352,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualSL : PrimitiveIsFixnumEqual
     {
         public readonly object rand1Name;
@@ -1363,6 +1404,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualSA : PrimitiveIsFixnumEqualSL
     {
         protected PrimitiveIsFixnumEqualSA (Primitive2 rator, SCode rand0, Argument rand1)
@@ -1388,6 +1430,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualSA0 : PrimitiveIsFixnumEqualSA
     {
         protected PrimitiveIsFixnumEqualSA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
@@ -1412,6 +1455,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsFixnumEqualSL1 : PrimitiveIsFixnumEqualSL
     {
         protected PrimitiveIsFixnumEqualSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)

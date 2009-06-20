@@ -65,6 +65,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumL : PrimitivePlusFixnum
     {
         public readonly object rand0Name;
@@ -124,6 +125,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumA : PrimitivePlusFixnumL
     {
         protected PrimitivePlusFixnumA (Primitive2 rator, Argument rand0, SCode rand1)
@@ -174,6 +176,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumA0 : PrimitivePlusFixnumA
     {
         protected PrimitivePlusFixnumA0 (Primitive2 rator, Argument0 rand0, SCode rand1)
@@ -218,6 +221,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumA0L : PrimitivePlusFixnumA0
     {
         public readonly object rand1Name;
@@ -259,6 +263,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumA0A : PrimitivePlusFixnumA0L
     {
         protected PrimitivePlusFixnumA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
@@ -269,9 +274,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument0 rand0, Argument rand1)
         {
             return
-                (rand1 is Argument0) ? PrimitivePlusFixnumA0A0.Make (rator, rand0, (Argument0) rand1)
-                : (rand1 is Argument1) ? PrimitivePlusFixnumA0A1.Make (rator, rand0, (Argument1) rand1)
-                : new PrimitivePlusFixnumA0A (rator, rand0, rand1);
+                (rand1 is Argument0) ? PrimitivePlusFixnumA0A0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? PrimitivePlusFixnumA0A1.Make (rator, rand0, (Argument1) rand1) :
+                new PrimitivePlusFixnumA0A (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -283,6 +288,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitivePlusFixnumA0A0 : PrimitivePlusFixnumA0A
     {
         PrimitivePlusFixnumA0A0 (Primitive2 rator, Argument0 rand0, Argument0 rand1)
@@ -309,7 +315,7 @@ namespace Microcode
         }
     }
 
-
+    [Serializable]
     class PrimitivePlusFixnumA0A1 : PrimitivePlusFixnumA0A
     {
         protected PrimitivePlusFixnumA0A1 (Primitive2 rator, Argument0 rand0, Argument1 rand1)
@@ -326,19 +332,14 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitivePlusFixnumA0A1.EvalStep");
 #endif
-            // Eval argument1
-            object ev1 = environment.Argument1Value;
-
-            // Eval argument0
-            object ev0 = environment.Argument0Value;
-
-            // Compute result
-            throw new NotImplementedException();
+            answer = (int) environment.Argument0Value + (int) environment.Argument1Value;
+            return false;
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumA0L1 : PrimitivePlusFixnumA0L
     {
         protected PrimitivePlusFixnumA0L1 (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
@@ -370,6 +371,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumA0Q : PrimitivePlusFixnumA0
     {
         public readonly int rand1Value;
@@ -396,6 +398,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumA1 : PrimitivePlusFixnumA
     {
         protected PrimitivePlusFixnumA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
@@ -440,6 +443,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumA1L : PrimitivePlusFixnumA1
     {
         public readonly object rand1Name;
@@ -475,6 +479,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumA1A : PrimitivePlusFixnumA1L
     {
         protected PrimitivePlusFixnumA1A (Primitive2 rator, Argument1 rand0, Argument rand1)
@@ -500,6 +505,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitivePlusFixnumA1A0 : PrimitivePlusFixnumA1A
     {
         PrimitivePlusFixnumA1A0 (Primitive2 rator, Argument1 rand0, Argument0 rand1)
@@ -552,6 +558,7 @@ namespace Microcode
 //        }
 //    }
 
+    [Serializable]
     class PrimitivePlusFixnumA1Q : PrimitivePlusFixnumA1
     {
         public readonly int rand1Value;
@@ -578,6 +585,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumAL : PrimitivePlusFixnumA
     {
         public readonly object rand1Name;
@@ -609,6 +617,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumAA : PrimitivePlusFixnumAL
     {
         protected PrimitivePlusFixnumAA (Primitive2 rator, Argument rand0, Argument rand1)
@@ -641,6 +650,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumAA1 : PrimitivePlusFixnumAA
     {
         protected PrimitivePlusFixnumAA1 (Primitive2 rator, Argument rand0, Argument1 rand1)
@@ -663,6 +673,7 @@ namespace Microcode
     }
 
 
+    [Serializable]
     class PrimitivePlusFixnumAQ : PrimitivePlusFixnumA
     {
         public readonly int rand1Value;
@@ -696,6 +707,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumL1 : PrimitivePlusFixnumL
     {
         protected PrimitivePlusFixnumL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
@@ -743,6 +755,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumL1L : PrimitivePlusFixnumL1
     {
         public readonly object rand1Name;
@@ -774,6 +787,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumL1A : PrimitivePlusFixnumL1L
     {
         protected PrimitivePlusFixnumL1A (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
@@ -798,6 +812,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumL1A0 : PrimitivePlusFixnumL1A
     {
         protected PrimitivePlusFixnumL1A0 (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
@@ -830,6 +845,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumL1L1 : PrimitivePlusFixnumL1L
     {
         protected PrimitivePlusFixnumL1L1 (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
@@ -865,6 +881,7 @@ namespace Microcode
     }
 
 
+    [Serializable]
     class PrimitivePlusFixnumL1Q : PrimitivePlusFixnumL1
     {
         public readonly int rand1Value;
@@ -898,6 +915,7 @@ namespace Microcode
     }
 
 
+    [Serializable]
     class PrimitivePlusFixnumLL : PrimitivePlusFixnumL
     {
         public readonly object rand1Name;
@@ -929,6 +947,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumLA : PrimitivePlusFixnumLL
     {
         protected PrimitivePlusFixnumLA (Primitive2 rator, LexicalVariable rand0, Argument rand1)
@@ -953,6 +972,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumLA0 : PrimitivePlusFixnumLA
     {
         protected PrimitivePlusFixnumLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
@@ -982,6 +1002,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumLA1 : PrimitivePlusFixnumLA
     {
         protected PrimitivePlusFixnumLA1 (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
@@ -1004,6 +1025,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumLL1 : PrimitivePlusFixnumLL
     {
         protected PrimitivePlusFixnumLL1 (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
@@ -1028,6 +1050,7 @@ namespace Microcode
 
 
 
+    [Serializable]
     class PrimitivePlusFixnumLQ : PrimitivePlusFixnumL
     {
         public readonly int rand1Value;
@@ -1063,6 +1086,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumQ : PrimitivePlusFixnum 
     {
         public readonly int rand0Value;
@@ -1110,6 +1134,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumQL : PrimitivePlusFixnumQ
     {
         public readonly object rand1Name;
@@ -1141,6 +1166,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumQA : PrimitivePlusFixnumQL
     {
         protected PrimitivePlusFixnumQA (Primitive2 rator, Quotation rand0, Argument rand1)
@@ -1165,6 +1191,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumQA0 : PrimitivePlusFixnumQA
     {
         protected PrimitivePlusFixnumQA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
@@ -1194,6 +1221,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumQA1 : PrimitivePlusFixnumQA
     {
         protected PrimitivePlusFixnumQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
@@ -1223,6 +1251,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumQL1 : PrimitivePlusFixnumQL
     {
         protected PrimitivePlusFixnumQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
@@ -1254,7 +1283,7 @@ namespace Microcode
         }
     }
 
-
+    [Serializable]
     class PrimitivePlusFixnumSL : PrimitivePlusFixnum
     {
         public readonly object rand1Name;
@@ -1272,21 +1301,44 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, SCode rand0, LexicalVariable rand1)
         {
             return
-                (rand1 is Argument) ? PrimitivePlusFixnumSA.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitivePlusFixnumSL1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitivePlusFixnumSL (rator, rand0, rand1);
+                (rand1 is Argument) ? PrimitivePlusFixnumSA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is LexicalVariable1) ? PrimitivePlusFixnumSL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+                new PrimitivePlusFixnumSL (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
             noteCalls (this.rand0);
+            SCode.location = "PrimitivePlusFixnumSL.EvalStep";
 #endif
-            throw new NotImplementedException ();
+                        // Eval argument1
+            object ev1;
+            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                throw new NotImplementedException ();
+
+            // Eval argument0
+            object ev0;
+
+            Control unev = this.rand0;
+            Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            // Compute answer
+            answer = (int) ev0 + (int) ev1;
+            return false;
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumSA : PrimitivePlusFixnumSL
     {
         protected PrimitivePlusFixnumSA (Primitive2 rator, SCode rand0, Argument rand1)
@@ -1312,6 +1364,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumSA0 : PrimitivePlusFixnumSA
     {
         protected PrimitivePlusFixnumSA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
@@ -1355,6 +1408,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitivePlusFixnumSA1 : PrimitivePlusFixnumSA
     {
         protected PrimitivePlusFixnumSA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
@@ -1399,6 +1453,7 @@ namespace Microcode
     }
 
 
+    [Serializable]
     class PrimitivePlusFixnumSL1 : PrimitivePlusFixnumSL
     {
         protected PrimitivePlusFixnumSL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
@@ -1423,8 +1478,7 @@ namespace Microcode
         }
     }
 
-
-
+    [Serializable]
     class PrimitivePlusFixnumSQ : PrimitivePlusFixnum
     {
         public readonly int rand1Value;

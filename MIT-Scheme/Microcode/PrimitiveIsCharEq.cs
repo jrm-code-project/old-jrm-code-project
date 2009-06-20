@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     /// <summary>
     /// True iff both args are chars and they are = to each other.
     /// False otherwise.  Does not throw an error.
@@ -53,8 +54,10 @@ namespace Microcode
         {
             return
                 (rand0 is Argument) ? PrimitiveIsCharEqA.Make (rator, (Argument) rand0, rand1)
-                : (rand0 is LexicalVariable1) ? PrimitiveIsCharEqL1.Make (rator, (LexicalVariable1) rand0, rand1)
-                : Unimplemented ();
+                : (rand0 is LexicalVariable1) ? PrimitiveIsCharEqL1.Make (rator, (LexicalVariable1) rand0, rand1) :
+                (rand1 is LexicalVariable) ? Unimplemented () :
+                (rand1 is Quotation) ? PrimitiveIsCharEqLQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsCharEqL (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -244,8 +247,36 @@ namespace Microcode
         }
     }
 
+    class PrimitiveIsCharEqLQ : PrimitiveIsCharEqL
+    {
+        public readonly char rand1Value;
 
+        protected PrimitiveIsCharEqLQ (Primitive2 rator, LexicalVariable rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = (char) rand1.Quoted;
+        }
 
+        public static SCode Make (Primitive2 rator, LexicalVariable rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveIsCharEqLQ (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsCharEqLQ.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+                throw new NotImplementedException ();
+            answer = (((char) ev0) == this.rand1Value) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    [Serializable]
     class PrimitiveIsCharEqQ : PrimitiveIsCharEq
     {
         public readonly char rand0Value;
@@ -259,9 +290,9 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
         {
             return
-                (rand1 is LexicalVariable) ? PrimitiveIsCharEqQL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? Unimplemented ()
-                : new PrimitiveIsCharEqQ (rator, rand0, rand1);
+                (rand1 is LexicalVariable) ? PrimitiveIsCharEqQL.Make (rator, rand0, (LexicalVariable) rand1) :
+                (rand1 is Quotation) ? Unimplemented () : 
+                new PrimitiveIsCharEqQ (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -306,9 +337,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PrimitiveIsCharEqQ.EvalStep");
+            Warm ("PrimitiveIsCharEqQL.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            object ev1;
+            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+                throw new NotImplementedException ();
+            answer = (ev1 is char && this.rand0Value == (char) ev1) ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
     }
 
@@ -417,6 +452,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     class PrimitiveIsCharEqSQ : PrimitiveIsCharEq
     {
         public readonly char rand1Value;

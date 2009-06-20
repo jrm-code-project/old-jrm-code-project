@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
+    [Serializable]
     /// <summary>
     /// True iff both args are integers and they are = to each other.
     /// False otherwise.  Does not throw an error.
@@ -37,17 +38,26 @@ namespace Microcode
 
     class PrimitiveIsIntEqL : PrimitiveIsIntEq
     {
+        public readonly object rand0Name;
+        public readonly int rand0Depth;
+        public readonly int rand0Offset;
+
         protected PrimitiveIsIntEqL (Primitive2 rator, LexicalVariable rand0, SCode rand1)
             : base (rator, rand0, rand1)
         {
+            this.rand0Name = rand0.Name;
+            this.rand0Depth = rand0.Depth;
+            this.rand0Offset = rand0.Offset;
         }
 
         public static SCode Make (Primitive2 rator, LexicalVariable rand0, SCode rand1)
         {
             return
-                (rand0 is Argument) ? PrimitiveIsIntEqA.Make (rator, (Argument) rand0, rand1)
-                : (rand0 is LexicalVariable1) ? PrimitiveIsIntEqL1.Make (rator, (LexicalVariable1) rand0, rand1)
-                : Unimplemented ();
+                (rand0 is Argument) ? PrimitiveIsIntEqA.Make (rator, (Argument) rand0, rand1) :
+                (rand0 is LexicalVariable1) ? PrimitiveIsIntEqL1.Make (rator, (LexicalVariable1) rand0, rand1) :
+                (rand1 is LexicalVariable) ? Unimplemented () :
+                (rand1 is Quotation) ? PrimitiveIsIntEqLQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsIntEqL (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -158,9 +168,11 @@ namespace Microcode
 
     class PrimitiveIsIntEqA1Q : PrimitiveIsIntEqA1
     {
+        int rand1Value;
         protected PrimitiveIsIntEqA1Q (Primitive2 rator, Argument1 rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
+            this.rand1Value = (int) rand1.Quoted;
         }
 
         public static SCode Make (Primitive2 rator, Argument1 rand0, Quotation rand1)
@@ -172,12 +184,14 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PrimitiveIsIntEqA0Q.EvalStep");
+            Warm ("PrimitiveIsIntEqA1Q.EvalStep");
 #endif
-            throw new NotImplementedException ();
+            answer = (((int) environment.Argument1Value) == this.rand1Value) ?
+                Constant.sharpT :
+                Constant.sharpF;
+            return false;
         }
     }
-
 
     class PrimitiveIsIntEqL1 : PrimitiveIsIntEqL
     {
@@ -224,8 +238,36 @@ namespace Microcode
         }
     }
 
+    class PrimitiveIsIntEqLQ : PrimitiveIsIntEqL
+    {
+        int rand1Value;
 
- 
+        protected PrimitiveIsIntEqLQ (Primitive2 rator, LexicalVariable rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = (int) rand1.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, LexicalVariable rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveIsIntEqLQ (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsIntEqLQ.EvalStep");
+#endif
+            object ev0;
+            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+                throw new NotImplementedException ();
+            answer = ((int) ev0 == this.rand1Value) ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    [Serializable]
     class PrimitiveIsIntEqQ : PrimitiveIsIntEq
     {
         public readonly int rand0Value;
@@ -248,8 +290,24 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("PrimitiveIsIntEqQ.EvalStep");
+                        noteCalls (this.rand1);
 #endif
-            throw new NotImplementedException ();
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            answer = (this.rand0Value == (int) ev1) ? Constant.sharpT : Constant.sharpF;
+            return false;
         }
     }
 
@@ -271,7 +329,7 @@ namespace Microcode
         {
             return
                 (rand1 is Argument) ? PrimitiveIsIntEqQA.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? Unimplemented()
+                : (rand1 is LexicalVariable1) ? PrimitiveIsIntEqQL1.Make (rator, rand0, (LexicalVariable1) rand1)
                 : new PrimitiveIsIntEqQL (rator, rand0, rand1);
         }
 
@@ -335,7 +393,32 @@ namespace Microcode
         }
     }
 
+        class PrimitiveIsIntEqQL1 : PrimitiveIsIntEqQL
+        {
 
+            protected PrimitiveIsIntEqQL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
+                : base (rator, rand0, rand1)
+            {
+            }
+
+            public static SCode Make (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
+            {
+                return
+                     new PrimitiveIsIntEqQL1 (rator, rand0, rand1);
+            }
+
+            public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+            {
+#if DEBUG
+                Warm ("PrimitiveIsIntEqQL1.EvalStep");
+#endif
+                object ev1;
+                if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+                    throw new NotImplementedException ();
+                answer = (this.rand0Value == (int) ev1) ? Constant.sharpT : Constant.sharpF;
+                return false;
+            }
+        }
 
     class PrimitiveIsIntEqSL : PrimitiveIsIntEq
     {
@@ -358,6 +441,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class PrimitiveIsIntEqSQ : PrimitiveIsIntEq
     {
         public readonly int rand1Value;

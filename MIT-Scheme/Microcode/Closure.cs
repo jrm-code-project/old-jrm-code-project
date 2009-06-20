@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
     // Recapitulate the lambda hierarchy
 
+    [Serializable]
     abstract class ClosureBase : SchemeObject, IApplicable, ISystemPair
     {
 #if DEBUG
@@ -14,7 +15,7 @@ namespace Microcode
         protected long callCount;
 #endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        Environment environment;
+        protected Environment environment;
 
         protected ClosureBase (TC typeCode, Environment environment)
             : base (typeCode)
@@ -28,7 +29,6 @@ namespace Microcode
         {
             return this.Lambda.LexicalOffset (name);
         }
-
 
         public Symbol Name
         {
@@ -134,7 +134,6 @@ namespace Microcode
         {
             return "#<EXTENDED-PROCEDURE " + this.Name + ">";
         }
-
     }
 
 
@@ -258,6 +257,7 @@ namespace Microcode
         #endregion
     }
 
+    [Serializable]
     sealed class StaticExtendedClosure : ExtendedClosure
     {
                 [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -379,6 +379,7 @@ namespace Microcode
 
     }
 
+    [Serializable]
     abstract class Closure : ClosureBase
     {
         protected Closure (Environment environment)
@@ -397,7 +398,6 @@ namespace Microcode
         {
             return "#<PROCEDURE " + this.Name + ">";
         }
-
     }
 
     [Serializable]
@@ -474,7 +474,6 @@ namespace Microcode
         }
 
         #endregion
-
     }
 
     [Serializable]
@@ -566,7 +565,7 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class SimpleClosure : StaticClosureBase<SimpleLambda>
+    sealed class SimpleClosure : StaticClosureBase<SimpleLambda>, ISerializable
     {
         SCode body;
         internal SimpleClosure (SimpleLambda lambda, Environment environment)
@@ -601,7 +600,7 @@ namespace Microcode
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment)
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException ("SimpleClosure called with no arguments.");
         }
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
@@ -611,7 +610,7 @@ namespace Microcode
             SCode.location = "SimpleClosure.Call.1";
 #endif
             if (this.argumentCount != 1)
-                throw new NotImplementedException ();
+                throw new NotImplementedException ("Wrong number of arguments.  Got 1, wanted " + this.argumentCount);
             expression = this.body;
 #if DEBUG
             SCode.location = "new SmallEnvironment1";
@@ -673,15 +672,43 @@ namespace Microcode
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException ("SimpleClosure called with 5 arguments");
         }
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException ("SimpleClosure called with 6 arguments");
         }
 
         #endregion
 
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (SimpleClosureDeserializer));
+            info.AddValue ("lambda", this.lambda);
+            info.AddValue ("environment", this.environment);
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    internal sealed class SimpleClosureDeserializer : IObjectReference
+    {
+        SimpleLambda lambda;
+        Environment environment;
+
+        public Object GetRealObject (StreamingContext context)
+        {
+            SCode bound = this.lambda.Bind (LexicalMap.Make (this.environment));
+            return new SimpleClosure ((SimpleLambda) bound, environment);
+        }
+        // Muffle compiler
+        SimpleLambda Lambda { set { this.lambda = value; } }
+        Environment Environment { set { this.environment = value; } }
     }
 }
