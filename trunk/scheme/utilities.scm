@@ -414,3 +414,16 @@
 		guess
 		fx))))
   (iter guess1 guess0 (f guess0)))
+
+(define (percent-string ratio)
+  (string-append
+   (string-pad-left (number->string (ratio->percent ratio)) 5)
+   "%"))
+
+(define (report-count name count total)
+  (display name)
+  (display " ")
+  (display (string-pad-left (number->string count) 6))
+  (display " (")
+  (display (percent-string (/ count total)))
+  (display ")"))
