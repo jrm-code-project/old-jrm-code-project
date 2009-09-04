@@ -17,11 +17,21 @@ Start up MIT Scheme and make sure the SF program is loaded (it is preloaded in t
 
 (load "runtime.sf")
 
+(cd "..\\sf\\")
+
+(load "sf.sf")
+
 (cd "..\\microcode\\")
 
 (sf "utabmd.scm")
 }}}
-This will create the initial set of binaries.  These binaries are in the native MIT Scheme format, but don't worry, the C# code knows how to read them.  Copy all the generated files to the <solution&>\\BootstrapLib\\Runtime\\ directory. (You will find the generated files in the mit-scheme\\src\\runtime directory, except for utabmd.bin, which will be in the mit-scheme\\src\\microcode directory.)  
+This will create the initial set of binaries.  These binaries are in the native MIT Scheme format, but don't worry, the C# code knows how to read them.  
+
+Move the .bin, .crf, .fre, .pkd, from the runtime directory to the <solution>\\BootstrapLib\\Runtime\\ directory.
+
+Move the .bin, .crf, .fre, .pkd, from the sf directory to the <solution>\\BootstrapLib\\Sf\\ directory.
+
+Move utabmd.bin from the microcode directory to the <solution>\\BootstrapLib\\Runtime\\ directory.
 
 Using MIT Scheme again, 
 {{{
@@ -29,5 +39,7 @@ Using MIT Scheme again,
 
 (sf "site.scm")
 }}}
+
+Once you do this, you ought to be able to start Scheme and get to the prompt.
 
 _Incomplete_ _instructions_ More in a bit.
