@@ -21,7 +21,7 @@ Start up MIT Scheme and make sure the SF program is loaded (it is preloaded in t
 
 (sf "utabmd.scm")
 }}}
-This will create the initial set of binaries.  These binaries are in the native MIT Scheme format, but don't worry, the C# code knows how to read them.  Copy all the generated files to the &lt;solution&gt;\\BootstrapLib\\Runtime\\ directory. (You will find the generated files in the mit-scheme\\src\\runtime directory, except for utabmd.bin, which will be in the mit-scheme\\src\\microcode directory.)  
+This will create the initial set of binaries.  These binaries are in the native MIT Scheme format, but don't worry, the C# code knows how to read them.  Copy all the generated files to the <solution&>\\BootstrapLib\\Runtime\\ directory. (You will find the generated files in the mit-scheme\\src\\runtime directory, except for utabmd.bin, which will be in the mit-scheme\\src\\microcode directory.)  
 
 Using MIT Scheme again, 
 {{{
