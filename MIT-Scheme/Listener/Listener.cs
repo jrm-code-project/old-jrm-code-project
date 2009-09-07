@@ -25,13 +25,11 @@ namespace Listener
                         Microcode.Interpreter.LibraryPath = projectRoot + "\\StagingLib\\";
                     }
                     else {
-                        Microcode.Interpreter.LibraryPath = projectRoot + "\\BootstrapLib\\";                        
+                        Microcode.Interpreter.LibraryPath = projectRoot + "\\BootstrapLib\\";
+                        Fasl.EnableOldFasload = true;
                     }
                     System.IO.Directory.SetCurrentDirectory (Microcode.Interpreter.LibraryPath + "runtime\\");
-
-                    //System.IO.Directory.SetCurrentDirectory ("..\\..\\..\\BootstrapRuntime\\");
-
-                    // Console.WriteLine("{0}", System.Environment.CurrentDirectory);
+                    Console.WriteLine("{0}", System.Environment.CurrentDirectory);
 
                     // We don't try to load a band.  It's even slower than loading the fasl files!
                     // Load a band
@@ -49,7 +47,7 @@ namespace Listener
                         // Cold load the Scheme runtime
                         SCode bootstrap = Fasl.Fasload ("make.bin") as SCode;
                         Microcode.Environment initial = Microcode.Environment.Global;
-                       answer = Continuation.Initial (bootstrap.Bind(LexicalMap.Make(initial)), initial);
+                        answer = Continuation.Initial (bootstrap, initial);
                     }
                     Console.WriteLine ("Evaluation exited with {0}", answer);
                 }
@@ -58,12 +56,11 @@ namespace Listener
                     System.Environment.CurrentDirectory = "C:\\jrm-code-project\\TakTest\\";
                     SCode tak = Fasl.Fasload ("tak.bin") as SCode;
                     Microcode.Environment initial = Microcode.Environment.Global;
-                    SCode tak1 = tak.Bind (LexicalMap.Make (initial));
 
                     //for (int i = 0; i < 20; i++) {
                     //    ControlState ctl = new ControlState (tak, initial);
                     //    ctl.expression = tak;
-                    //    ctl.environment = initial;
+                    //    ctl.closureEnvironment = initial;
                     //    Stopwatch takWatch = Stopwatch.StartNew ();
                     //    object result = null;
                     //    while (ctl.expression.Eval (ref result, ref ctl)) { };
@@ -75,7 +72,7 @@ namespace Listener
                     //Console.WriteLine ("e");
 
                     for (int i = 0; i < 20; i++) {
-                        Control expr = tak1;
+                        Control expr = tak;
                         Microcode.Environment env = initial;
                         answer = null;
                         Stopwatch takWatch = Stopwatch.StartNew ();
