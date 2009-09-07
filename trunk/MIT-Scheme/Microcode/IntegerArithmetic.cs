@@ -381,13 +381,13 @@ namespace Microcode
         {
             if (left is int) {
                 if (right is int) {
-                    long remainder = 0;
-                    long quotient = Math.DivRem ((long) (int) (left), (long) (int) (right), out remainder);
+                    long remainder;
+                    Math.DivRem ((long) (int) (left), (long) (int) (right), out remainder);
                     answer = Narrow (remainder);
                 }
                 else if (right is long) {
-                    long remainder = 0;
-                    long quotient = Math.DivRem ((long) (int) (left), (long) (right), out remainder);
+                    long remainder;
+                    Math.DivRem ((long) (int) (left), (long) (right), out remainder);
                     answer = Narrow (remainder);
                 }
                 else {
@@ -396,13 +396,13 @@ namespace Microcode
             }
             else if (left is long) {
                 if (right is int) {
-                    long remainder = 0;
-                    long quotient = Math.DivRem ((long) (left), (long) (int) (right), out remainder);
+                    long remainder;
+                    Math.DivRem ((long) (left), (long) (int) (right), out remainder);
                     answer = Narrow (remainder);
                 }
                 else if (right is long) {
-                    long remainder = 0;
-                    long quotient = Math.DivRem ((long) (left), (long) (right), out remainder);
+                    long remainder;
+                    Math.DivRem ((long) (left), (long) (right), out remainder);
                     answer = Narrow (remainder);
                 }
                 else

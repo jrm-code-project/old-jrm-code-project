@@ -100,11 +100,11 @@ namespace Microcode
         public static bool SubvectorMoveRight (out object answer, object [] arglist)
         {
             object [] ptr1 = (object []) (arglist [0]);
-            int len1 = ptr1.Length;
+            //int len1 = ptr1.Length;
             int end1 = (int) (arglist [2]);
             int start1 = (int) (arglist [1]);
             object [] ptr2 = (object []) (arglist [3]);
-            int len2 = ptr2.Length;
+            //int len2 = ptr2.Length;
             int start2 = (int) (arglist [4]);
             int length = end1 - start1;
             int end2 = start2 + length;
@@ -122,14 +122,14 @@ namespace Microcode
         public static bool SubvectorMoveLeft (out object answer, object [] arglist)
         {
             object [] ptr1 = (object []) (arglist [0]);
-            int len1 = ptr1.Length;
+            //int len1 = ptr1.Length;
             int end1 = (int) (arglist [2]);
             int start1 = (int) (arglist [1]);
             object [] ptr2 = (object []) (arglist [3]);
-            int len2 = ptr2.Length;
+            //int len2 = ptr2.Length;
             int start2 = (int) (arglist [4]);
             int length = end1 - start1;
-            int end2 = start2 + length;
+            //int end2 = start2 + length;
 
             int scan1 = start1;
             int scan2 = start2;

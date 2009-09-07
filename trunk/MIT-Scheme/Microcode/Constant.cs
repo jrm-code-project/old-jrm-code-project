@@ -9,23 +9,26 @@ namespace Microcode
     public sealed class Constant : SchemeObject, ISerializable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.CONSTANT; } }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public static object sharpT = true;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public static Constant theDefaultObject;
+        public static Constant theDefaultObject = new Constant ("default");
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public static Constant theEofObject;
+        public static Constant theEofObject = new Constant ("eof");
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public static Constant theAuxMarker;
+        public static Constant theAuxMarker = new Constant ("theAuxMarker");
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public static Constant theKeyMarker;
+        public static Constant theKeyMarker = new Constant ("theKeyMarker");
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public static Constant theOptionalMarker;
+        public static Constant theOptionalMarker = new Constant ("theOptionalMarker");
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public static Constant theRestMarker;
+        public static Constant theRestMarker = new Constant ("theRestMarker");
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public static Constant theExternalUnassignedObject;
+        public static Constant theExternalUnassignedObject = new Constant ("Unassigned");
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        public static Constant theUnspecificObject;
+        public static Constant theUnspecificObject = new Constant ("Unspecific");
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public static object sharpF = false;
 
@@ -33,7 +36,6 @@ namespace Microcode
         string name;
 
         private Constant (string name)
-            : base (TC.CONSTANT)
         {
             this.name = name;
         }
@@ -77,8 +79,6 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (theDefaultObject == null)
-                    theDefaultObject = new Constant ("default");
                 return theDefaultObject;
             }
         }
@@ -88,8 +88,6 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (theEofObject == null)
-                    theEofObject = new Constant("eof");
                 return theEofObject;
             }
         }
@@ -99,8 +97,6 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (theAuxMarker == null)
-                    theAuxMarker = new Constant ("theAuxMarker");
                 return theAuxMarker;
             }
         }
@@ -110,8 +106,6 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (theKeyMarker == null)
-                    theKeyMarker = new Constant ("theKeyMarker");
                 return theKeyMarker;
             }
         }
@@ -122,8 +116,6 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (theOptionalMarker == null)
-                    theOptionalMarker = new Constant ("theOptionalMarker");
                 return theOptionalMarker;
             }
         }
@@ -133,8 +125,6 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (theRestMarker == null)
-                    theRestMarker = new Constant ("theRestMarker");
                 return theRestMarker;
             }
         }
@@ -144,8 +134,6 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (theExternalUnassignedObject == null)
-                    theExternalUnassignedObject = new Constant ("Unassigned");
                 return theExternalUnassignedObject;
             }
         }
@@ -155,8 +143,6 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (theUnspecificObject == null)
-                    theUnspecificObject = new Constant ("Unspecific");
                 return theUnspecificObject;
             }
         }
@@ -179,6 +165,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         public Object GetRealObject (StreamingContext context)
         {
             return

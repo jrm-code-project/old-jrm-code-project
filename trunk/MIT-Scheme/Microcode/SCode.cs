@@ -48,7 +48,7 @@ namespace Microcode
 
         static Histogram<SCode> hotSCode = new Histogram<SCode>();
         static Histogram<String> topOfStack = new Histogram<String> ();
-        internal static String location = null;
+        internal static String location;
         static Dictionary<Type,Histogram<Type>> callerTable = new Dictionary<Type, Histogram<Type>> ();
 
         static Histogram<TypePair> callTable = new Histogram<TypePair> ();
@@ -63,7 +63,7 @@ namespace Microcode
         }
 
         [DebuggerStepThrough]
-        protected void noteCalls (SCode callee)
+        protected void NoteCalls (SCode callee)
         {
             string oldLocation = SCode.location;
             SCode.location = "-";
@@ -91,11 +91,6 @@ namespace Microcode
             SCode.location = oldLocation;
         }
 
-        protected void Warm ()
-        {
-            throw new NotImplementedException ();
-        }
-
         static long warm_break = 1000000000;
 
         [DebuggerStepThrough]
@@ -114,23 +109,31 @@ namespace Microcode
         }
 #endif
 
-        protected SCode (TC typeCode) : base (typeCode) { 
+        [DebuggerStepThrough]
+        protected SCode () : base () { 
         }
 
         // Utility for make.
         public static SCode Unimplemented () { throw new NotImplementedException (); }
 
 	// Abstract functions that define the SCode API
-        public abstract SCode Bind (LexicalMap ctenv);
         public abstract bool CallsTheEnvironment ();
+        public abstract IList<Symbol> FreeVariables ();
         public abstract bool MutatesAny (Symbol [] formals);
-        public abstract bool Uses (Symbol formal);
 
+        /// <summary>
+        /// Returns the residual program after partially evaluating the SCode.
+        /// </summary>
+        /// <param name="closureEnvironment"></param>
+        /// <returns></returns>
+        public abstract PartialResult PartialEval (Environment environment);
+
+        protected static IList<Symbol> noFreeVariables = new List<Symbol> (0);
 #if DEBUG
         // for hash consing
         public virtual string Key ()
         {
-            return this.GetType ().Name.ToString () + "-" + this.SerialNumber;
+            return this.GetType ().Name.ToString ();
         }
 #endif
 
@@ -187,21 +190,30 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class Comment : SCode, ISystemPair
+    class Comment : SCode, ISystemPair
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.COMMENT; } }
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object text;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode code;
 
-        public Comment (object code, object text)
-            :base (TC.COMMENT)
+        protected Comment (SCode code, object text)
+            :base ()
         {
             if (code == null) throw new ArgumentNullException ("code");
             // comment text can be null
-            this.code = EnsureSCode(code);
+            this.code = code;
             this.text = text;
+        }
+
+        public static SCode Make (object code, object text)
+        {
+            if (code == null) throw new ArgumentNullException ("code");
+            return new Comment(EnsureSCode (code), text);
         }
 
         [SchemePrimitive ("COMMENT?", 1, true)]
@@ -209,14 +221,6 @@ namespace Microcode
         {
             answer = arg is Comment;
             return false;
-        }
-
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            SCode optimizedCode = this.code.Bind (ctenv);
-            return optimizedCode == this.code
-                ? this
-                : new Comment (optimizedCode, this.text);
         }
 
         public override bool CallsTheEnvironment ()
@@ -229,16 +233,11 @@ namespace Microcode
             return this.code.MutatesAny (formals);
         }
 
-        public override bool Uses (Symbol formal)
-        {
-            return this.code.Uses (formal);
-        }
-
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("Comment.EvalStep");
-            noteCalls (this.code);
+            NoteCalls (this.code);
 #endif
             expression = this.code;
             answer = null; // happy compiler
@@ -274,32 +273,41 @@ namespace Microcode
 
         #endregion
 
+        public override IList<Symbol> FreeVariables ()
+        {
+            return this.code.FreeVariables ();
+        }
+
+        public override PartialResult PartialEval (Environment environment)
+        {
+            PartialResult result = this.code.PartialEval (environment);
+            return new PartialResult (result.Residual == this.code ? this : Comment.Make (result.Residual, this.text));
+        }
     }
 
      [Serializable]
     sealed class Definition : SCode, ISystemPair
     {
+         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+         public override TC TypeCode { get { return TC.DEFINITION; } }
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly Symbol name;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode value;
 
-        public Definition (Symbol name, SCode value)
-            : base (TC.DEFINITION)
+        Definition (Symbol name, SCode value)
+            : base ()
         {
-            if (name == null) throw new ArgumentNullException ("ratorName");
-            if (value == null) throw new ArgumentNullException ("value");
             this.name = name;
             this.value = value;
         }
 
-        public Definition (Symbol name, object value)
-            :base (TC.DEFINITION)
+         public static SCode Make (Symbol name, object value)
         {
-            if (name == null) throw new ArgumentNullException ("ratorName");
-            this.name = name;
-            this.value = EnsureSCode (value);
+            if (name == null) throw new ArgumentNullException ("name");
+            return new Definition (name, EnsureSCode (value));
         }
 
         public Symbol Name
@@ -327,19 +335,11 @@ namespace Microcode
             return false;
         }
 
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            SCode boundValue = this.value.Bind (ctenv);
-            return boundValue == this.value
-                ? this
-                : new Definition (this.name, boundValue);
-        }
-
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("Definition.EvalStep");
-            noteCalls (this.value);
+            NoteCalls (this.value);
 #endif
             object value;    
             Control expr = this.value;
@@ -355,11 +355,6 @@ namespace Microcode
         }
 
         public override bool MutatesAny (Symbol [] formals)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool Uses (Symbol formal)
         {
             throw new NotImplementedException ();
         }
@@ -399,24 +394,42 @@ namespace Microcode
 
         #endregion
 
+        public override IList<Symbol> FreeVariables ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override PartialResult PartialEval (Environment environment)
+        {
+            PartialResult pvalue = this.value.PartialEval (environment);
+            return new PartialResult (pvalue.Residual == this.value ? this : Definition.Make (this.name, pvalue.Residual));
+        }
     }
 
     [Serializable]
     sealed class Delay : SCode, ISystemPair
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.DELAY; } }
+
         [System.Diagnostics.DebuggerBrowsable (System.Diagnostics.DebuggerBrowsableState.Never)]
         readonly SCode body;
 
-        public Delay (object body)
-            : base (TC.DELAY)
+        Delay (SCode body)
+            : base ()
         {
-            this.body = EnsureSCode(body);
+            this.body = body;
         }
 
         public Delay (object body, object other)
-            : base (TC.DELAY)
+            : base ()
         {
             this.body = EnsureSCode (body);
+        }
+
+        static public Delay Make (object body)
+        {
+            return new Delay (EnsureSCode (body));
         }
 
         [SchemePrimitive ("DELAY?", 1, true)]
@@ -424,11 +437,6 @@ namespace Microcode
         {
             answer = arg is Delay;
             return false;
-        }
-
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            return new Delay (this.body.Bind (ctenv));
         }
 
         public override bool CallsTheEnvironment ()
@@ -448,11 +456,6 @@ namespace Microcode
         public override bool MutatesAny (Symbol [] formals)
         {
             return this.body.MutatesAny (formals);
-        }
-
-        public override bool Uses (Symbol formal)
-        {
-            return this.body.Uses (formal);
         }
 
         #region ISystemPair Members
@@ -482,11 +485,33 @@ namespace Microcode
         }
 
         #endregion
+
+        //public override SCode BindVariables (LexicalMap lexicalMap)
+        //{
+        //    SCode boundBody = this.body.BindVariables (lexicalMap);
+        //    return (boundBody == this.body) ?
+        //        this :
+        //        Delay.Make (boundBody);
+        //}
+
+        public override IList<Symbol> FreeVariables ()
+        {
+            return this.body.FreeVariables ();
+        }
+
+        public override PartialResult PartialEval (Environment environment)
+        {
+            PartialResult partialBody = this.body.PartialEval (environment);
+            return new PartialResult (partialBody.Residual == this.body ? this : Delay.Make (partialBody.Residual));
+        }
     }
 
     [Serializable]
     sealed class Quotation : SCode, ISerializable, ISystemPair
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.SCODE_QUOTE; } }
+
         // Space optimization.
         [NonSerialized]
         static Dictionary<object, Quotation> table = new Dictionary<object, Quotation> (8000);
@@ -507,7 +532,7 @@ namespace Microcode
         readonly object item;
 
         Quotation (object item)
-            : base (TC.SCODE_QUOTE)
+            : base ()
         {
             this.item = item;
         }
@@ -580,11 +605,6 @@ namespace Microcode
             }
         }
 
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            return this;
-        }
-
         public override bool CallsTheEnvironment ()
         {
             return false;
@@ -601,11 +621,6 @@ namespace Microcode
         }
 
         public override bool MutatesAny (Symbol [] formals)
-        {
-            return false;
-        }
-
-        public override bool Uses (Symbol formal)
         {
             return false;
         }
@@ -647,6 +662,16 @@ namespace Microcode
             info.AddValue ("quotedObject", this.Quoted);
         }
         #endregion
+
+        public override IList<Symbol> FreeVariables ()
+        {
+            return noFreeVariables;
+        }
+
+        public override PartialResult PartialEval (Environment environment)
+        {
+            return new PartialResult (this);
+        }
     }
 
     [Serializable]
@@ -654,6 +679,7 @@ namespace Microcode
     {
         object quotedObject;
 
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         public Object GetRealObject (StreamingContext context)
         {
             return Quotation.Make (this.quotedObject);
@@ -665,6 +691,9 @@ namespace Microcode
     [Serializable]
     class Sequence2 : SCode, ISerializable, ISystemPair
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.SEQUENCE_2; } }
+
 #if DEBUG
         static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
         static public Histogram<Type> secondTypeHistogram = new Histogram<Type> ();
@@ -680,7 +709,7 @@ namespace Microcode
         protected readonly SCode second;
 
         protected Sequence2 (SCode first, SCode second)
-            : base (TC.SEQUENCE_2)
+            : base ()
         {
             this.first = first;
             this.second = second;
@@ -720,30 +749,30 @@ namespace Microcode
 
         static public SCode Make (SCode first, SCode second)
         {
-            return
-                (! Configuration.EnableSequence2Optimization) ? new Sequence2 (first, second) :
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableSequenceConditionalSwap &&
-                 first is Conditional) ? SwapConditional ((Conditional) first, second) :
-                (Configuration.EnableSuperOperators && 
-                 first is LexicalVariable) ? Sequence2L.Make ((LexicalVariable) first, second) :
-                (Configuration.EnableSuperOperators && 
-                 Configuration.EnableSequenceSpecialization &&
-                 first is Quotation) ? Sequence2Q.Make ((Quotation) first, second) :
-               (Configuration.EnableCodeRewriting &&
-                first is Sequence2) ? Flatten ((Sequence2) first, second) :
-               (Configuration.EnableCodeRewriting &&
-                first is Sequence3) ? Flatten ((Sequence3) first, second) :
-                (Configuration.EnableSuperOperators &&
-                Configuration.EnableSequenceSpecialization &&
-                second is LexicalVariable) ? Sequence2SL.Make (first, (LexicalVariable) second) :
-                (Configuration.EnableSuperOperators &&
-                 Configuration.EnableSequenceSpecialization &&
-                second is Quotation) ? Sequence2SQ.Make (first, (Quotation) second) :
-                (Configuration.EnableCodeRewriting &&
-                second is Sequence2) ? Flatten (first, (Sequence2) second) :
+            return new Sequence2 (first, second);
+               // (! Configuration.EnableSequence2Optimization) ? new Sequence2 (first, second) :
+               // (Configuration.EnableCodeRewriting &&
+               //  Configuration.EnableSequenceConditionalSwap &&
+               //  first is Conditional) ? SwapConditional ((Conditional) first, second) :
+               // (Configuration.EnableSuperOperators && 
+               //  first is LexicalVariable) ? Sequence2L.Make ((LexicalVariable) first, second) :
+               // (Configuration.EnableSuperOperators && 
+               //  Configuration.EnableSequenceSpecialization &&
+               //  first is Quotation) ? Sequence2Q.Make ((Quotation) first, second) :
+               //(Configuration.EnableCodeRewriting &&
+               // first is Sequence2) ? Flatten ((Sequence2) first, second) :
+               //(Configuration.EnableCodeRewriting &&
+               // first is Sequence3) ? Flatten ((Sequence3) first, second) :
+               // (Configuration.EnableSuperOperators &&
+               // Configuration.EnableSequenceSpecialization &&
+               // second is LexicalVariable) ? Sequence2SL.Make (first, (LexicalVariable) second) :
+               // (Configuration.EnableSuperOperators &&
+               //  Configuration.EnableSequenceSpecialization &&
+               // second is Quotation) ? Sequence2SQ.Make (first, (Quotation) second) :
+               // (Configuration.EnableCodeRewriting &&
+               // second is Sequence2) ? Flatten (first, (Sequence2) second) :
 
-                new Sequence2 (first, second);
+               // new Sequence2 (first, second);
         }
 
         static public SCode Make (object first, object second)
@@ -776,15 +805,6 @@ namespace Microcode
             return false;
         }
 
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            SCode optFirst = this.first.Bind (ctenv);
-            SCode optSecond = this.second.Bind (ctenv);
-            return
-                (optFirst == this.first && optSecond == this.second) ? this
-                : Sequence2.Make (optFirst, optSecond);
-        }
-
         public override bool CallsTheEnvironment ()
         {
             return this.first.CallsTheEnvironment ()
@@ -795,9 +815,9 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            noteCalls (this.first);
+            NoteCalls (this.first);
             firstTypeHistogram.Note (this.firstType);
-            noteCalls (this.second);
+            NoteCalls (this.second);
             secondTypeHistogram.Note (this.secondType);
             SCode.location = "Sequence2.EvalStep";
 #endif
@@ -824,12 +844,6 @@ namespace Microcode
         {
             return this.first.MutatesAny (formals)
                 || this.second.MutatesAny (formals);
-        }
-
-        public override bool Uses (Symbol formal)
-        {
-            return this.first.Uses (formal) ||
-                   this.second.Uses (formal);
         }
 
         #region ISerializable Members
@@ -874,6 +888,29 @@ namespace Microcode
 
         #endregion
 
+
+        //public override SCode BindVariables (LexicalMap lexicalMap)
+        //{
+        //    SCode boundFirst = this.first.BindVariables (lexicalMap);
+        //    SCode boundSecond = this.second.BindVariables (lexicalMap);
+        //    return (boundFirst == this.first &&
+        //        boundSecond == this.second) ?
+        //        this :
+        //        Sequence2.Make (boundFirst, boundSecond);
+        //}
+
+        public override IList<Symbol> FreeVariables ()
+        {
+            return new List<Symbol> (this.first.FreeVariables ().Union (this.second.FreeVariables ()));
+        }
+
+        public override PartialResult PartialEval (Environment environment)
+        {
+            PartialResult r0 = this.first.PartialEval (environment);
+            PartialResult r1 = this.second.PartialEval (environment);
+            return new PartialResult (r0.Residual == this.first &&
+                r1.Residual == this.second ? this : Sequence2.Make (r0.Residual, r1.Residual));
+        }
     }
 
     [Serializable]
@@ -883,6 +920,7 @@ namespace Microcode
         SCode second;
 
         // GetRealObject is called after this object is deserialized.
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         public Object GetRealObject (StreamingContext context)
         {
             return Sequence2.Make (this.first, this.second);
@@ -892,361 +930,359 @@ namespace Microcode
         public void SetSecond (SCode value) { this.second = value; }
     }
 
-    /// <summary>
-    /// This one is odd, but it signals that the variable is intended
-    /// to be ignored.
-    /// </summary>
-    [Serializable]
-    class Sequence2L : Sequence2
-    {
-        protected Sequence2L (LexicalVariable first, SCode second)
-            : base (first, second)
-        {
-        }
+//    /// <summary>
+//    /// This one is odd, but it signals that the variable is intended
+//    /// to be ignored.
+//    /// </summary>
+//    [Serializable]
+//    class Sequence2L : Sequence2
+//    {
+//        protected Sequence2L (LexicalVariable first, SCode second)
+//            : base (first, second)
+//        {
+//        }
 
-        static SCode Simplify (SCode second)
-        {
-            //Debug.Write ("\n; Sequence2L.Simplify");
-            return second;
-        }
+//        static SCode Simplify (SCode second)
+//        {
+//            //Debug.Write ("\n; Sequence2L.Simplify");
+//            return second;
+//        }
 
-        static public SCode Make (LexicalVariable first, SCode second)
-        {
-            return
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableSequenceSimplification) ? Simplify(second) :
-                new Sequence2L (first, second);
-        }
+//        static public SCode Make (LexicalVariable first, SCode second)
+//        {
+//            return
+//                (Configuration.EnableCodeRewriting &&
+//                 Configuration.EnableSequenceSimplification) ? Simplify(second) :
+//                new Sequence2L (first, second);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.second);
-            SCode.location = "Sequence2L.EvalStep";
-#endif
-            expression = this.second;
-            answer = null;
-            return true;
-        }
-    }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            NoteCalls (this.second);
+//            SCode.location = "Sequence2L.EvalStep";
+//#endif
+//            expression = this.second;
+//            answer = null;
+//            return true;
+//        }
+//    }
 
-    /// <summary>
-    /// This one is weird, but we sometimes see declarations.
-    /// </summary>
-    [Serializable]
-    class Sequence2Q : Sequence2
-    {
-        protected Sequence2Q (Quotation first, SCode second)
-            : base (first, second)
-        {
-        }
+//    /// <summary>
+//    /// This one is weird, but we sometimes see declarations.
+//    /// </summary>
+//    [Serializable]
+//    class Sequence2Q : Sequence2
+//    {
+//        protected Sequence2Q (Quotation first, SCode second)
+//            : base (first, second)
+//        {
+//        }
 
-        static SCode Simplify (SCode second)
-        {
-            //Debug.Write ("\n; Sequence2Q.Simplify");
-            return second;
-        }
+//        static SCode Simplify (SCode second)
+//        {
+//            //Debug.Write ("\n; Sequence2Q.Simplify");
+//            return second;
+//        }
 
-        static public SCode Make (Quotation first, SCode second)
-        {
-            return 
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableSequenceSimplification &&
-                 !(first.Quoted is object [])) ? Simplify(second) :
-                new Sequence2Q (first, second);
-        }
+//        static public SCode Make (Quotation first, SCode second)
+//        {
+//            return 
+//                (Configuration.EnableCodeRewriting &&
+//                 Configuration.EnableSequenceSimplification &&
+//                 !(first.Quoted is object [])) ? Simplify(second) :
+//                new Sequence2Q (first, second);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.second);
-            SCode.location = "Sequence2Q.EvalStep";
-#endif
-            expression = this.second;
-            answer = null;
-            return true;
-        }
-    }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            NoteCalls (this.second);
+//            SCode.location = "Sequence2Q.EvalStep";
+//#endif
+//            expression = this.second;
+//            answer = null;
+//            return true;
+//        }
+//    }
 
-    class Sequence2SL : Sequence2
-    {
-        public readonly object secondName;
-        public readonly int secondDepth;
-        public readonly int secondOffset;
+//    class Sequence2SL : Sequence2
+//    {
+//        public readonly object secondName;
+//        public readonly LexicalAddress secondAddress;
 
-        protected Sequence2SL (SCode first, LexicalVariable second)
-            : base (first, second)
-        {
-            this.secondName = second.Name;
-            this.secondDepth = second.Depth;
-            this.secondOffset = second.Offset;
-        }
+//        protected Sequence2SL (SCode first, LexicalVariable second)
+//            : base (first, second)
+//        {
+//            this.secondName = second.Name;
+//            this.secondAddress = second.Address;
+//        }
 
-        static public SCode Make (SCode first, LexicalVariable second)
-        {
-            return 
-                (second is Argument) ? Sequence2SA.Make (first, (Argument) second) :
-                (second is LexicalVariable1) ? Sequence2SL1.Make (first, (LexicalVariable1) second) :
-                new Sequence2SL (first, second);
-        }
+//        static public SCode Make (SCode first, LexicalVariable second)
+//        {
+//            return 
+//                (second is Argument) ? Sequence2SA.Make (first, (Argument) second) :
+//                (second is LexicalVariable1) ? Sequence2SL1.Make (first, (LexicalVariable1) second) :
+//                new Sequence2SL (first, second);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.first);
-            SCode.location = "Sequence2SL.EvalStep";
-#endif
-            Control first = this.first;
-            Environment env = environment;
-            while (first.EvalStep (out answer, ref first, ref env)) { };
-#if DEBUG
-                        SCode.location = "Sequence2SL.EvalStep.1";
-#endif
-            if (answer == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
-                //environment = env;
-                //answer = Interpreter.UnwindStack;
-                //return false;
-            }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            NoteCalls (this.first);
+//            SCode.location = "Sequence2SL.EvalStep";
+//#endif
+//            Control first = this.first;
+//            Environment env = closureEnvironment;
+//            while (first.EvalStep (out answer, ref first, ref env)) { };
+//#if DEBUG
+//                        SCode.location = "Sequence2SL.EvalStep.1";
+//#endif
+//            if (answer == Interpreter.Unwind) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
+//                //closureEnvironment = env;
+//                //answer = Interpreter.Unwind;
+//                //return false;
+//            }
 
-            if (environment.FastLexicalRef (out answer, this.secondName, this.secondDepth, this.secondOffset))
-                throw new NotImplementedException ();
-            return false;
-        }
-    }
+//            if (closureEnvironment.FastLexicalRef (out answer, this.secondName, this.secondAddress))
+//                throw new NotImplementedException ();
+//            return false;
+//        }
+//    }
 
-    class Sequence2SA : Sequence2SL
-    {
-        protected Sequence2SA (SCode first, Argument second)
-            : base (first, second)
-        {
-        }
+//    class Sequence2SA : Sequence2SL
+//    {
+//        protected Sequence2SA (SCode first, Argument second)
+//            : base (first, second)
+//        {
+//        }
 
-        static public SCode Make (SCode first, Argument second)
-        {
-            return
-                (second is Argument0) ? Sequence2SA0.Make (first, (Argument0) second) :
-                (second is Argument1) ? Sequence2SA1.Make (first, (Argument1) second) :
-                new Sequence2SA (first, second);
-        }
+//        static public SCode Make (SCode first, Argument second)
+//        {
+//            return
+//                (second is Argument0) ? Sequence2SA0.Make (first, (Argument0) second) :
+//                (second is Argument1) ? Sequence2SA1.Make (first, (Argument1) second) :
+//                new Sequence2SA (first, second);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("Sequenc2SA.EvalStep");
-            noteCalls (this.first);
-#endif
-            Control first = this.first;
-            Environment env = environment;
-            while (first.EvalStep (out answer, ref first, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
-                //environment = env;
-                //answer = Interpreter.UnwindStack;
-                //return false;
-            }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("Sequenc2SA.EvalStep");
+//            NoteCalls (this.first);
+//#endif
+//            Control first = this.first;
+//            Environment env = closureEnvironment;
+//            while (first.EvalStep (out answer, ref first, ref env)) { };
+//            if (answer == Interpreter.Unwind) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
+//                //closureEnvironment = env;
+//                //answer = Interpreter.Unwind;
+//                //return false;
+//            }
 
-            answer = environment.ArgumentValue (this.secondOffset);
-            return false;
-        }
-    }
+//            answer = closureEnvironment.ArgumentValue (this.secondOffset);
+//            return false;
+//        }
+//    }
 
-    sealed class Sequence2SA0 : Sequence2SA
-    {
-        Sequence2SA0 (SCode first, Argument0 second)
-            : base (first, second)
-        {
-        }
+//    sealed class Sequence2SA0 : Sequence2SA
+//    {
+//        Sequence2SA0 (SCode first, Argument0 second)
+//            : base (first, second)
+//        {
+//        }
 
-        static public SCode Make (SCode first, Argument0 second)
-        {
-            return new Sequence2SA0 (first, second);
-        }
+//        static public SCode Make (SCode first, Argument0 second)
+//        {
+//            return new Sequence2SA0 (first, second);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("Sequence2SA0.EvalStep");
-            noteCalls (this.first);
-#endif
-            Control first = this.first;
-            Environment env = environment;
-            while (first.EvalStep (out answer, ref first, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Sequence2SA0Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("Sequence2SA0.EvalStep");
+//            NoteCalls (this.first);
+//#endif
+//            Control first = this.first;
+//            Environment env = closureEnvironment;
+//            while (first.EvalStep (out answer, ref first, ref env)) { };
+//            if (answer == Interpreter.Unwind) {
+//                ((UnwinderState) env).AddFrame (new Sequence2SA0Frame0 (this, closureEnvironment));
+//                closureEnvironment = env;
+//                answer = Interpreter.Unwind;
+//                return false;
+//            }
 
-            answer = environment.Argument0Value;
-            return false;
-        }
-    }
+//            answer = closureEnvironment.Argument0Value;
+//            return false;
+//        }
+//    }
 
-    sealed class Sequence2SA0Frame0 : SubproblemContinuation<Sequence2SA0>, ISystemVector
-    {
-        public Sequence2SA0Frame0 (Sequence2SA0 expression, Environment environment)
-            : base (expression, environment)
-        {
-        }
+//    sealed class Sequence2SA0Frame0 : SubproblemContinuation<Sequence2SA0>, ISystemVector
+//    {
+//        public Sequence2SA0Frame0 (Sequence2SA0 expression, Environment closureEnvironment)
+//            : base (expression, closureEnvironment)
+//        {
+//        }
 
-        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
-        {
-            answer = this.environment.Argument0Value;
-            return false;
-        }
+//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object value)
+//        {
+//            answer = this.closureEnvironment.Argument0Value;
+//            return false;
+//        }
 
-        #region ISystemVector Members
+//        #region ISystemVector Members
 
-        public int SystemVectorSize
-        {
-            get { return 3; }
-        }
+//        public int SystemVectorSize
+//        {
+//            get { return 3; }
+//        }
 
-        public object SystemVectorRef (int index)
-        {
-            switch (index) {
-                case 0: return ReturnCode.SEQ_2_DO_2;
-                default:
-                    throw new NotImplementedException ();
-            }
-        }
+//        public object SystemVectorRef (int index)
+//        {
+//            switch (index) {
+//                case 0: return ReturnCode.SEQ_2_DO_2;
+//                default:
+//                    throw new NotImplementedException ();
+//            }
+//        }
 
-        public object SystemVectorSet (int index, object newValue)
-        {
-            throw new NotImplementedException ();
-        }
+//        public object SystemVectorSet (int index, object newValue)
+//        {
+//            throw new NotImplementedException ();
+//        }
 
-        #endregion
-    }
+//        #endregion
+//    }
 
-    sealed class Sequence2SA1 : Sequence2SA
-    {
-        Sequence2SA1 (SCode first, Argument1 second)
-            : base (first, second)
-        {
-        }
+//    sealed class Sequence2SA1 : Sequence2SA
+//    {
+//        Sequence2SA1 (SCode first, Argument1 second)
+//            : base (first, second)
+//        {
+//        }
 
-        static public SCode Make (SCode first, Argument1 second)
-        {
-            return new Sequence2SA1 (first, second);
-        }
+//        static public SCode Make (SCode first, Argument1 second)
+//        {
+//            return new Sequence2SA1 (first, second);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("Sequence2SA1.EvalStep");
-            noteCalls (this.first);
-#endif
-            Control first = this.first;
-            Environment env = environment;
-            while (first.EvalStep (out answer, ref first, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
-                //environment = env;
-                //answer = Interpreter.UnwindStack;
-                //return false;
-            }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("Sequence2SA1.EvalStep");
+//            NoteCalls (this.first);
+//#endif
+//            Control first = this.first;
+//            Environment env = closureEnvironment;
+//            while (first.EvalStep (out answer, ref first, ref env)) { };
+//            if (answer == Interpreter.Unwind) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
+//                //closureEnvironment = env;
+//                //answer = Interpreter.Unwind;
+//                //return false;
+//            }
 
-            answer = environment.Argument1Value;
-            return false;
-        }
-    }
+//            answer = closureEnvironment.Argument1Value;
+//            return false;
+//        }
+//    }
 
-    sealed class Sequence2SL1 : Sequence2SL
-    {
-        Sequence2SL1 (SCode first, LexicalVariable1 second)
-            : base (first, second)
-        {
-        }
+//    sealed class Sequence2SL1 : Sequence2SL
+//    {
+//        Sequence2SL1 (SCode first, LexicalVariable1 second)
+//            : base (first, second)
+//        {
+//        }
 
-        static public SCode Make (SCode first, LexicalVariable1 second)
-        {
-            return new Sequence2SL1 (first, second);
-        }
+//        static public SCode Make (SCode first, LexicalVariable1 second)
+//        {
+//            return new Sequence2SL1 (first, second);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("Sequence2SL1.EvalStep");
-            noteCalls (this.first);
-#endif
-            Control first = this.first;
-            Environment env = environment;
-            while (first.EvalStep (out answer, ref first, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
-                //environment = env;
-                //answer = Interpreter.UnwindStack;
-                //return false;
-            }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("Sequence2SL1.EvalStep");
+//            NoteCalls (this.first);
+//#endif
+//            Control first = this.first;
+//            Environment env = closureEnvironment;
+//            while (first.EvalStep (out answer, ref first, ref env)) { };
+//            if (answer == Interpreter.Unwind) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
+//                //closureEnvironment = env;
+//                //answer = Interpreter.Unwind;
+//                //return false;
+//            }
 
-            if (environment.FastLexicalRef1 (out answer, this.secondName, this.secondOffset))
-                throw new NotImplementedException ();
-            return false;
-        }
-    }
+//            if (closureEnvironment.FastLexicalRef1 (out answer, this.secondName, this.secondOffset))
+//                throw new NotImplementedException ();
+//            return false;
+//        }
+//    }
 
-    [Serializable]
-    sealed class Sequence2SQ : Sequence2
-    {
-#if DEBUG
-        static public new Histogram<Type> firstTypeHistogram = new Histogram<Type>();
-        static public Histogram<object> quotedHistogram = new Histogram<object> ();
-#endif
-        public object quoted;
+//    [Serializable]
+//    sealed class Sequence2SQ : Sequence2
+//    {
+//#if DEBUG
+//        static public new Histogram<Type> firstTypeHistogram = new Histogram<Type>();
+//        static public Histogram<object> quotedHistogram = new Histogram<object> ();
+//#endif
+//        public object quoted;
 
-        Sequence2SQ (SCode first, Quotation second)
-            : base (first, second)
-        {
-            this.quoted = second.Quoted;
-        }
+//        Sequence2SQ (SCode first, Quotation second)
+//            : base (first, second)
+//        {
+//            this.quoted = second.Quoted;
+//        }
 
-        static public SCode Make (SCode first, Quotation second)
-        {
-            return 
-                //(Configuration.EnableTrueUnspecific && second.Quoted == Constant.Unspecific)? first
-                //: (first is Conditional) ? Conditional.Make (((Conditional)first).Predicate,
-                //                                             Sequence2.Make (((Conditional)first).Consequent, second),
-                //                                             Sequence2.Make (((Conditional) first).Alternative, second))
-                new Sequence2SQ (first, second);
-        }
+//        static public SCode Make (SCode first, Quotation second)
+//        {
+//            return 
+//                //(Configuration.EnableTrueUnspecific && second.Quoted == Constant.Unspecific)? first
+//                //: (first is Conditional) ? Conditional.Make (((Conditional)first).Predicate,
+//                //                                             Sequence2.Make (((Conditional)first).Consequent, second),
+//                //                                             Sequence2.Make (((Conditional) first).Alternative, second))
+//                new Sequence2SQ (first, second);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.first);
-            firstTypeHistogram.Note (this.firstType);
-            if (this.quoted != null)
-                quotedHistogram.Note (this.quoted);
-            SCode.location = "Sequence2SQ.EvalStep";
-#endif
-            Control first = this.first;
-            Environment env = environment;
-            while (first.EvalStep (out answer, ref first, ref env)) { };
-#if DEBUG
-            SCode.location = "Sequence2SQ.EvalStep.1";
-#endif
-            if (answer == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Sequence2SQFrame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            NoteCalls (this.first);
+//            firstTypeHistogram.Note (this.firstType);
+//            if (this.quoted != null)
+//                quotedHistogram.Note (this.quoted);
+//            SCode.location = "Sequence2SQ.EvalStep";
+//#endif
+//            Control first = this.first;
+//            Environment env = closureEnvironment;
+//            while (first.EvalStep (out answer, ref first, ref env)) { };
+//#if DEBUG
+//            SCode.location = "Sequence2SQ.EvalStep.1";
+//#endif
+//            if (answer == Interpreter.Unwind) {
+//                ((UnwinderState) env).AddFrame (new Sequence2SQFrame0 (this, closureEnvironment));
+//                closureEnvironment = env;
+//                answer = Interpreter.Unwind;
+//                return false;
+//            }
 
-            answer = this.quoted;
-            return false;
-        }
-    }
+//            answer = this.quoted;
+//            return false;
+//        }
+//    }
 
     [Serializable]
     sealed class Sequence2Frame0 : SubproblemContinuation<Sequence2>, ISystemVector
@@ -1287,47 +1323,50 @@ namespace Microcode
         #endregion
     }
 
+    //[Serializable]
+    //sealed class Sequence2SQFrame0 : SubproblemContinuation<Sequence2SQ>, ISystemVector
+    //{
+    //    public Sequence2SQFrame0 (Sequence2SQ expression, Environment closureEnvironment)
+    //        : base (expression, closureEnvironment)
+    //    {
+    //    }
+
+    //    public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object value)
+    //    {
+    //        answer = this.expression.quoted;
+    //        return false;
+    //    }
+
+    //    #region ISystemVector Members
+
+    //    public int SystemVectorSize
+    //    {
+    //        get { return 3; }
+    //    }
+
+    //    public object SystemVectorRef (int index)
+    //    {
+    //        switch (index) {
+    //            case 0: return ReturnCode.SEQ_2_DO_2;
+    //            default:
+    //                throw new NotImplementedException ();
+    //        }
+    //    }
+
+    //    public object SystemVectorSet (int index, object newValue)
+    //    {
+    //        throw new NotImplementedException ();
+    //    }
+
+    //    #endregion
+    //}
+
     [Serializable]
-    sealed class Sequence2SQFrame0 : SubproblemContinuation<Sequence2SQ>, ISystemVector
+    sealed class Sequence3 : SCode, ISerializable, ISystemHunk3
     {
-        public Sequence2SQFrame0 (Sequence2SQ expression, Environment environment)
-            : base (expression, environment)
-        {
-        }
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.SEQUENCE_3; } }
 
-        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
-        {
-            answer = this.expression.quoted;
-            return false;
-        }
-
-        #region ISystemVector Members
-
-        public int SystemVectorSize
-        {
-            get { return 3; }
-        }
-
-        public object SystemVectorRef (int index)
-        {
-            switch (index) {
-                case 0: return ReturnCode.SEQ_2_DO_2;
-                default:
-                    throw new NotImplementedException ();
-            }
-        }
-
-        public object SystemVectorSet (int index, object newValue)
-        {
-            throw new NotImplementedException ();
-        }
-
-        #endregion
-    }
-
-    [Serializable]
-    sealed class Sequence3 : SCode, ISystemHunk3
-    {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode first;
 
@@ -1338,7 +1377,7 @@ namespace Microcode
         readonly SCode third;
 
         Sequence3 (SCode first, SCode second, SCode third)
-            : base (TC.SEQUENCE_3)
+            : base ()
         {
             this.first = first;
             this.second = second;
@@ -1346,7 +1385,7 @@ namespace Microcode
         }
 
         public Sequence3 (Hunk3 init)
-            : base (TC.SEQUENCE_3)
+            : base ()
         {
             this.first = EnsureSCode (init.Cxr0);
             this.second = EnsureSCode (init.Cxr1);
@@ -1432,40 +1471,40 @@ namespace Microcode
 
         public static SCode Make (SCode first, SCode second, SCode third)
         {
-            return
-                (! Configuration.EnableSequence3Optimization) ? new Sequence3 (first, second, third) :
-                //: (Configuration.EnableTrueUnspecific && third is Quotation && ((Quotation) third).Quoted == Constant.Unspecific) ? Sequence2.Make (first, second)
-                //: 
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableSequenceConditionalSwap &&
-                 first is Conditional) ? SwapConditional ((Conditional) first, second, third) :
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableSequenceConditionalSwap &&
-                 second is Conditional) ? SwapConditional (first, (Conditional) second, third) :
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableSequenceSimplification &&
-                 (first is Variable ||
-                 first is Quotation)) ? Simplify (second, third) :
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableSequenceSimplification &&
-                 (second is Variable ||
-                 second is Quotation)) ? Simplify (first, third) :
-                 (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableFlattenSequence &&
-                 third is Sequence2) ? Flatten (first, second, (Sequence2) third) :
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableFlattenSequence &&
-                 second is Sequence2) ? Flatten (first, (Sequence2) second, third) :
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableFlattenSequence &&
-                 second is Sequence3) ? Flatten (first, (Sequence3) second, third) :
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableFlattenSequence &&
-                 first is Sequence2) ? Flatten ((Sequence2) first, second, third) :
-                (Configuration.EnableCodeRewriting &&
-                 Configuration.EnableFlattenSequence &&
-                 first is Sequence3) ? Flatten ((Sequence3) first, second, third) :
-                new Sequence3 (first, second, third);
+            return new Sequence3 (first, second, third);
+                //(! Configuration.EnableSequence3Optimization) ? new Sequence3 (first, second, third) :
+                ////: (Configuration.EnableTrueUnspecific && third is Quotation && ((Quotation) third).Quoted == Constant.Unspecific) ? Sequence2.Make (first, second)
+                ////: 
+                //(Configuration.EnableCodeRewriting &&
+                // Configuration.EnableSequenceConditionalSwap &&
+                // first is Conditional) ? SwapConditional ((Conditional) first, second, third) :
+                //(Configuration.EnableCodeRewriting &&
+                // Configuration.EnableSequenceConditionalSwap &&
+                // second is Conditional) ? SwapConditional (first, (Conditional) second, third) :
+                //(Configuration.EnableCodeRewriting &&
+                // Configuration.EnableSequenceSimplification &&
+                // (first is Variable ||
+                // first is Quotation)) ? Simplify (second, third) :
+                //(Configuration.EnableCodeRewriting &&
+                // Configuration.EnableSequenceSimplification &&
+                // (second is Variable ||
+                // second is Quotation)) ? Simplify (first, third) :
+                // (Configuration.EnableCodeRewriting &&
+                // Configuration.EnableFlattenSequence &&
+                // third is Sequence2) ? Flatten (first, second, (Sequence2) third) :
+                //(Configuration.EnableCodeRewriting &&
+                // Configuration.EnableFlattenSequence &&
+                // second is Sequence2) ? Flatten (first, (Sequence2) second, third) :
+                //(Configuration.EnableCodeRewriting &&
+                // Configuration.EnableFlattenSequence &&
+                // second is Sequence3) ? Flatten (first, (Sequence3) second, third) :
+                //(Configuration.EnableCodeRewriting &&
+                // Configuration.EnableFlattenSequence &&
+                // first is Sequence2) ? Flatten ((Sequence2) first, second, third) :
+                //(Configuration.EnableCodeRewriting &&
+                // Configuration.EnableFlattenSequence &&
+                // first is Sequence3) ? Flatten ((Sequence3) first, second, third) :
+                //new Sequence3 (first, second, third);
         }
 
         public static SCode Make (object first, object second, object third)
@@ -1506,25 +1545,14 @@ namespace Microcode
             answer = arg is Sequence3;
             return false;
         }
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            SCode optFirst = this.first.Bind (ctenv);
-            SCode optSecond = this.second.Bind (ctenv);
-            SCode optThird = this.third.Bind (ctenv);
-            return optFirst == this.first
-                && optSecond == this.second
-                && optThird == this.third
-                ? this
-                : Sequence3.Make (optFirst, optSecond, optThird);
-        }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("Sequence3.EvalStep");
-            noteCalls (this.first);
-            noteCalls (this.second);
-            noteCalls (this.third);
+            NoteCalls (this.first);
+            NoteCalls (this.second);
+            NoteCalls (this.third);
 #endif
 
             object ev;
@@ -1567,13 +1595,6 @@ namespace Microcode
             return this.first.CallsTheEnvironment ()
                 || this.second.CallsTheEnvironment ()
                 || this.third.CallsTheEnvironment ();
-        }
-
-        public override bool Uses (Symbol formal)
-        {
-            return this.first.Uses (formal) ||
-                this.second.Uses (formal) ||
-                this.third.Uses (formal);
         }
 
         #region ISystemHunk3 Members
@@ -1619,7 +1640,91 @@ namespace Microcode
 
         #endregion
 
+
+        //public override SCode BindVariables (LexicalMap lexicalMap)
+        //{
+        //    SCode boundFirst = this.first.BindVariables (lexicalMap);
+        //    SCode boundSecond = this.second.BindVariables (lexicalMap);
+        //    SCode boundThird = this.third.BindVariables (lexicalMap);
+        //    return (boundFirst == this.first &&
+        //        boundSecond == this.second &&
+        //        boundThird == this.third) ?
+        //        this :
+        //        Sequence3.Make (boundFirst, boundSecond, boundThird);
+        //}
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (Sequence3Deserializer));
+            info.AddValue ("first", this.first);
+            info.AddValue ("second", this.second);
+            info.AddValue ("third", this.third);
+        }
+
+        #endregion
+
+
+        public override IList<Symbol> FreeVariables ()
+        {
+            return new List<Symbol> (this.first.FreeVariables ().Union (new List<Symbol> (this.second.FreeVariables ().Union (this.third.FreeVariables ()))));
+        }
+
+        public override PartialResult PartialEval (Environment environment)
+        {
+            PartialResult r0 = this.first.PartialEval (environment);
+            PartialResult r1 = this.second.PartialEval (environment);
+            PartialResult r2 = this.third.PartialEval (environment);
+            return new PartialResult (r0.Residual == this.first &&
+                r1.Residual == this.second &&
+                r2.Residual == this.third ? this : Sequence3.Make (r0.Residual, r1.Residual, r2.Residual));
+        }
     }
+
+    [Serializable]
+    sealed class Sequence3Deserializer : ISerializable, IObjectReference
+    {
+        [NonSerialized]
+        SCode first;
+
+        [NonSerialized]
+        SCode second;
+
+        [NonSerialized]
+        SCode third;
+
+        [NonSerialized]
+        SCode realObject;
+
+        Sequence3Deserializer (SerializationInfo info, StreamingContext context)
+        {
+            this.first = (SCode) info.GetValue("first", typeof(SCode));
+            this.second = (SCode) info.GetValue("second", typeof(SCode));
+            this.third =  (SCode) info.GetValue("third", typeof(SCode));
+        }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            throw new NotImplementedException ();
+        }
+        #endregion
+
+        #region IObjectReference Members
+
+        public object GetRealObject (StreamingContext context)
+        {
+            if (this.realObject == null)
+                this.realObject = Sequence3.Make (this.first, this.second, this.third);
+            return this.realObject;
+        }
+        #endregion
+    }
+
 
     [Serializable]
     sealed class Sequence3Frame0 : SubproblemContinuation<Sequence3>, ISystemVector
@@ -1713,23 +1818,19 @@ namespace Microcode
     [Serializable]
     sealed class TheEnvironment : SCode
     {
-        static TheEnvironment singleton;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.THE_ENVIRONMENT; } }
+
+        static TheEnvironment singleton = new TheEnvironment ();
 
         TheEnvironment ()
-            : base (TC.THE_ENVIRONMENT)
+            : base ()
         {
         }
 
         public static SCode Make ()
         {
-            if (singleton == null)
-                singleton = new TheEnvironment();
             return singleton;
-        }
-
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            return this;
         }
 
         public override bool CallsTheEnvironment ()
@@ -1751,9 +1852,14 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override bool Uses (Symbol formal)
+        public override IList<Symbol> FreeVariables ()
         {
             throw new NotImplementedException ();
+        }
+
+        public override PartialResult PartialEval (Environment environment)
+        {
+            return new PartialResult (this);
         }
     }
 }

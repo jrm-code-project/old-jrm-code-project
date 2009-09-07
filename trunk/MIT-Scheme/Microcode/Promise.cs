@@ -1,18 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 
 namespace Microcode
 {
     [Serializable]
     class Promise : SchemeObject, ISystemPair
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.DELAYED; } }
+
         object bodyOrValue;
         object environmentOrTrue;
 
         public Promise (SCode body, object environment)
-            : base (TC.DELAYED)
         {
             this.bodyOrValue = body;
             this.environmentOrTrue = environment;

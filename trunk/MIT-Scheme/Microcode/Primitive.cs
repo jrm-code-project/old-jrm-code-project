@@ -18,6 +18,9 @@ namespace Microcode
     [Serializable]
     public abstract class Primitive : SchemeObject, ISerializable //SCode
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.PRIMITIVE; } }
+
 #if DEBUG
         [NonSerialized]
         internal static Histogram<Primitive> hotPrimitives = new Histogram<Primitive> ();
@@ -34,10 +37,8 @@ namespace Microcode
 
         internal static Primitive1 Add1;
         internal static Primitive1 Car;
-        internal static Primitive1 Caar;
         internal static Primitive1 Cdr;
         internal static Primitive1 CharToInteger;
-        internal static Primitive1 ClearInterrupts;
         internal static Primitive1 ExitWithValue;
         internal static Primitive1 FixnumAdd1;
         internal static Primitive1 FixnumIsNegative;
@@ -71,7 +72,6 @@ namespace Microcode
         internal static Primitive1 PositiveFixnum;
         internal static Primitive1 RequestInterrupts;
         internal static Primitive1 SetInterruptEnables;
-        internal static Primitive1 SetTrapState;
         internal static Primitive1 StringAllocate;
         internal static Primitive1 SystemPairCar;
         internal static Primitive1 SystemVectorSize;
@@ -93,7 +93,6 @@ namespace Microcode
         internal static Primitive2 FloatingVectorRef;
         internal static Primitive2 FlonumAdd;
         internal static Primitive2 FlonumDivide;
-        internal static Primitive2 FlonumExpt;
         internal static Primitive2 FlonumIsEqual;
         internal static Primitive2 FlonumIsGreaterThan;
         internal static Primitive2 FlonumIsLessThan;
@@ -107,7 +106,6 @@ namespace Microcode
         internal static Primitive2 GenericIsLessThan;
         internal static Primitive2 GenericMultiply;
         internal static Primitive2 GenericSubtract;
-        internal static Primitive2 GetServiceByName;
         internal static Primitive2 GreaterThanFixnum;
         internal static Primitive2 IntIsEq;
         internal static Primitive2 IntegerAdd;
@@ -138,12 +136,10 @@ namespace Microcode
         internal static Primitive2 PrimitiveObjectRef;
         internal static Primitive2 PrimitiveObjectSetType;
         internal static Primitive2 Quotient;
-        internal static Primitive2 RealTimerSet;
         internal static Primitive2 RecordRef;
         internal static Primitive2 Remainder;
         internal static Primitive2 SetCar;
         internal static Primitive2 SetCdr;
-        internal static Primitive2 ShutdownSocket;
         internal static Primitive2 StringRef;
         internal static Primitive2 SystemListToVector;
         internal static Primitive2 SystemPairSetCar;
@@ -151,7 +147,6 @@ namespace Microcode
         internal static Primitive2 Vector8BRef;
         internal static Primitive2 VectorCons;
         internal static Primitive2 VectorRef;
-        internal static Primitive2 Win32ExpandEnvironmentStrings;
         internal static Primitive2 WithInterruptMask;
 
         public static void Initialize ()
@@ -162,10 +157,8 @@ namespace Microcode
 
             Add1 = (Primitive1) Find ("1+", 1);
             Car = (Primitive1) Find ("CAR", 1);
-            Caar = (Primitive1) Find ("CAAR", 1);
             Cdr = (Primitive1) Find ("CDR", 1);
             CharToInteger = (Primitive1) Find ("CHAR->INTEGER", 1);
-            ClearInterrupts = (Primitive1) Find ("CLEAR-INTERRUPTS!", 1);
             ExitWithValue = (Primitive1) Find ("EXIT-WITH-VALUE", 1);
             FixnumAdd1 = (Primitive1) Find ("ONE-PLUS-FIXNUM", 1);
             FixnumIsNegative = (Primitive1) Find ("NEGATIVE-FIXNUM?", 1);
@@ -198,7 +191,6 @@ namespace Microcode
             PositiveFixnum = (Primitive1) Find ("POSITIVE-FIXNUM?", 1);
             RequestInterrupts = (Primitive1) Find ("REQUEST-INTERRUPTS!", 1);
             SetInterruptEnables = (Primitive1) Find ("SET-INTERRUPT-ENABLES!", 1);
-            SetTrapState = (Primitive1) Find ("SET-TRAP-STATE!", 1);
             StringAllocate = (Primitive1) Find ("STRING-ALLOCATE", 1);
             SystemPairCar = (Primitive1) Find ("SYSTEM-PAIR-CAR", 1);
             SystemVectorSize = (Primitive1) Find ("SYSTEM-VECTOR-SIZE", 1);
@@ -220,7 +212,6 @@ namespace Microcode
             FloatingVectorRef = (Primitive2) Find ("FLOATING-VECTOR-REF", 2);
             FlonumAdd = (Primitive2) Find ("FLONUM-ADD", 2);
             FlonumDivide = (Primitive2) Find ("FLONUM-DIVIDE", 2);
-            FlonumExpt = (Primitive2) Find ("FLONUM-EXPT", 2);
             FlonumIsEqual = (Primitive2) Find ("FLONUM-EQUAL?", 2);
             FlonumIsGreaterThan = (Primitive2) Find ("FLONUM-GREATER?", 2);
             FlonumIsLessThan = (Primitive2) Find ("FLONUM-LESS?", 2);
@@ -234,7 +225,6 @@ namespace Microcode
             GenericIsLessThan = (Primitive2) Find ("&<", 2);
             GenericMultiply = (Primitive2) Find ("&*", 2);
             GenericSubtract = (Primitive2) Find ("&-", 2);
-            GetServiceByName = (Primitive2) Find ("GET-SERVICE-BY-NAME", 2);
             GreaterThanFixnum = (Primitive2) Find ("GREATER-THAN-FIXNUM?", 2);
             IntIsEq = (Primitive2) Find ("INT-EQ?", 2);
             IntegerAdd = (Primitive2) Find ("INTEGER-ADD", 2);
@@ -267,12 +257,10 @@ namespace Microcode
             PrimitiveObjectRef = (Primitive2) Find ("PRIMITIVE-OBJECT-REF", 2);
             PrimitiveObjectSetType = (Primitive2) Find ("PRIMITIVE-OBJECT-SET-TYPE", 2);
             Quotient = (Primitive2) Find ("QUOTIENT", 2);
-            RealTimerSet = (Primitive2) Find ("REAL-TIMER-SET", 2);
             RecordRef = (Primitive2) Find ("%RECORD-REF", 2);
             Remainder = (Primitive2) Find ("REMAINDER", 2);
             SetCar = (Primitive2) Find ("SET-CAR!", 2);
             SetCdr = (Primitive2) Find ("SET-CDR!", 2);
-            ShutdownSocket = (Primitive2) Find ("SHUTDOWN-SOCKET", 2);
             StringRef = (Primitive2) Find ("STRING-REF", 2);
             SystemListToVector = (Primitive2) Find ("SYSTEM-LIST-TO-VECTOR", 2);
             SystemPairSetCar = (Primitive2) Find ("SYSTEM-PAIR-SET-CAR!", 2);
@@ -280,12 +268,11 @@ namespace Microcode
             Vector8BRef = (Primitive2) Find ("VECTOR-8B-REF", 2);
             VectorCons = (Primitive2) Find ("VECTOR-CONS", 2);
             VectorRef = (Primitive2) Find ("VECTOR-REF", 2);
-            Win32ExpandEnvironmentStrings = (Primitive2) Find ("WIN32-EXPAND-ENVIRONMENT-STRINGS", 2);
             WithInterruptMask = (Primitive2) Find ("WITH-INTERRUPT-MASK", 2);
         }
 
         internal Primitive (Symbol name, int arity)
-            : base (TC.PRIMITIVE)
+            : base ()
         {
             this.name = name;
             this.arity = arity;
@@ -459,7 +446,7 @@ namespace Microcode
         }
 
         [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        public virtual void GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (PrimitiveDeserializer));
             info.AddValue ("name", this.name.ToString());
@@ -470,6 +457,7 @@ namespace Microcode
     [Serializable]
     sealed class Primitive0 : Primitive, IApplicable
     {
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly PrimitiveMethod0 method;
 
@@ -934,6 +922,7 @@ namespace Microcode
         int arity;
 
         // GetRealObject is called after this object is deserialized.
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         public Object GetRealObject (StreamingContext context)
         {
             return Primitive.Find (this.name, this.arity);

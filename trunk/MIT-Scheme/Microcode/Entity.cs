@@ -7,6 +7,9 @@ namespace Microcode
     [Serializable]
     sealed class Entity : SchemeObject, IApplicable, ISystemPair
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.ENTITY; } }
+
 #if DEBUG
         [NonSerialized]
         static long applicationCount = 0;
@@ -18,7 +21,6 @@ namespace Microcode
         object second;
 
         public Entity (object first, object second)
-            : base (TC.ENTITY)
         {
             this.first = first;
             this.second = second;

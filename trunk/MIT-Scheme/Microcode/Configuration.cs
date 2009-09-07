@@ -10,7 +10,7 @@ namespace Microcode
         /// <summary>
         /// If true, allow Access to be optimized.
         /// </summary>
-        public const bool EnableAccessOptimization = true;
+        public const bool EnableAccessOptimization = false;
         public const bool EnableAssignmentOptimization = false;
         public const bool EnableCombinationOptimization = false;
         public const bool EnableCombination0Optimization = false;
@@ -23,13 +23,14 @@ namespace Microcode
         public const bool EnableDisjunctionOptimization = false;
         /// <summary>
         /// If true, allow analysis of Lambdas.
+        /// No effect, currently.
         /// </summary>
         public const bool EnableLambdaOptimization = false;
         public const bool EnablePrimitiveCombination0Optimization = false;
         /// <summary>
         /// If true, allow analysis of PrimitiveCombination1.
         /// </summary>
-        public const bool EnablePrimitiveCombination1Optimization = false;
+        public const bool EnablePrimitiveCombination1Optimization = true;
         /// <summary>
         /// If true, allow analysis of PrimitiveCombination2.
         /// </summary>
@@ -47,7 +48,7 @@ namespace Microcode
 
         public const bool EnableArgumentBinding = true;
         public const bool EnableGlobalBinding = true;
-        public const bool EnableLexicalAddressing = true;
+        public const bool EnableLexicalAddressing = false;
         public const bool EnableLexical1 = true;
         public const bool EnableSimpleLambda = true;
         public const bool EnableStaticBinding = true;
@@ -59,29 +60,29 @@ namespace Microcode
 
         public const bool EnableSuperOperators = false;
 
-        public const bool EnableCombination1Specialization = true;
+        public const bool EnableCombination1Specialization = false;
         public const bool EnableCombination2Specialization = false;
         public const bool EnableCombination3 = false;
         public const bool EnableCombination3Specialization = false;
-        public const bool EnableConditionalSpecialization = true;
+        public const bool EnableConditionalSpecialization = false;
         public const bool EnableDisjunctionSpecialization = false;
-        public const bool EnablePrimitive1Specialization = true;
-        public const bool EnablePrimitive2Specialization = true;
+        public const bool EnablePrimitive1Specialization = false;
+        public const bool EnablePrimitive2Specialization = false;
         /// <summary>
         /// If true, certain primitive predicates are handled directly
         /// by the conditional.
         /// </summary>
-        public const bool EnablePrimitiveConditional1 = true;
+        public const bool EnablePrimitiveConditional1 = false;
         public const bool EnablePrimitiveConditional2 = false;
         public const bool EnableSequenceSpecialization = false;
 
-        public const bool EnableInlinePrimitive1 = true;
-        public const bool EnableInlinePrimitive2 = true;
+        public const bool EnableInlinePrimitive1 = false;
+        public const bool EnableInlinePrimitive2 = false;
 
         /// <summary>
         /// Special case combination1.
         /// </summary>
-        public const bool EnableLet1 = true;
+        public const bool EnableLet1 = false;
 
         /// <summary>
         /// If true, allow interpreter to rewrite code to improve performance.

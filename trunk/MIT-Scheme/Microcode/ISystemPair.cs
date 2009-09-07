@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microcode
 {
@@ -24,7 +25,7 @@ namespace Microcode
         [SchemePrimitive ("SYSTEM-PAIR-CONS", 3, false)]
         public static bool SystemPairCons (out object answer, object acode, object car, object cdr)
         {
-            TC typeCode = (TC) (int) acode; // for debugging porpoises
+            //TC typeCode = (TC) (int) acode; // for debugging porpoises
 
             switch ((TC) acode) {
                 case TC.ACCESS:
@@ -40,7 +41,7 @@ namespace Microcode
                     break;
 
                 case TC.COMMENT:
-                    answer = new Comment (car, cdr);
+                    answer = Comment.Make (car, cdr);
                     break;
 
                 case TC.COMPLEX:
@@ -48,7 +49,7 @@ namespace Microcode
                     break;
 
                 case TC.DEFINITION:
-                    answer = new Definition ((Symbol)car, cdr);
+                    answer = Definition.Make ((Symbol)car, cdr);
                     break;
 
                 case TC.DELAY:
@@ -68,7 +69,8 @@ namespace Microcode
                     object [] names = (object []) cdr;
                     object [] formals = new object [names.Length - 1];
                     Array.Copy (names, 1, formals, 0, formals.Length);
-                    answer = Lambda.Make (names[0], formals, car);
+                    SCode body = SCode.EnsureSCode (car);
+                    answer = UnanalyzedLambda.Make (names[0], formals, car);
                     break;
 
                 case TC.PCOMB1:
@@ -76,7 +78,18 @@ namespace Microcode
                     break;
 
                 case TC.PROCEDURE:
-                    answer = ((Lambda) car).Close ((cdr is bool && (bool) cdr == false) ? Environment.Global : (Environment) cdr);
+                    // Lambda had better be a `StandardLambda' because we are
+                    // constructing an closureEnvironment that needs to be first-class.
+                    Environment env = Environment.ToEnvironment (cdr);
+                    UnanalyzedLambda ulam = (UnanalyzedLambda) car;
+                    PartialResult plam = ulam.PartialEval (env);
+                    answer = ((Lambda) (plam.Residual)).Close (env);
+                    //StandardLambda slam = StandardLambda.Make (ulam.Name,
+                    //ulam.Formals,
+                    //ulam.FreeVariables (),
+                    //ulam.Body.BindVariables (LexicalMap.Make (env).Extend (ulam))
+                    //);
+                    //answer = slam.Close (env);
                     break;
 
                 case TC.RATNUM:

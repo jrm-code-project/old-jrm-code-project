@@ -1,454 +1,374 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace Microcode
 {
- /// <summary>
- /// Simulates the effect of looking up a variable.  We can often find shortcuts
- /// to the full deep search and thus speed up the interpreter.
- /// </summary>
- /// 
-    public abstract class LexicalMap
+    public struct LexicalAddress
     {
-        internal LexicalMap Extend (LambdaBase lambda)
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly short depth;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly short offset;
+
+        public LexicalAddress (short depth, short offset)
         {
-            return new LambdaLexicalMap (lambda, this);
+            this.depth = depth;
+            this.offset = offset;
         }
-        internal abstract LexicalMap AddSubstitution (Symbol name, BoundVariable value);
-        public  static LexicalMap Make (Environment environment)
-        {
-            return (environment is GlobalEnvironment)
-                ? (LexicalMap) new GlobalLexicalMap (environment)
-                : (LexicalMap) new TopLevelLexicalMap (environment);
-        }
-        internal abstract BoundVariable Bind (Symbol name);
-        //internal abstract BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int randDepth);
-        //internal abstract BoundVariable SimulateLookup (object lambdaName);
-        //internal abstract BoundVariable SimulateStaticLookup (object lambdaName, int randDepth);
+
+        public short Depth { [DebuggerStepThrough] get { return this.depth; } }
+        public short Offset { [DebuggerStepThrough] get { return this.offset; } }
     }
 
-    /// <summary>
-    /// A lexical map derived from a real live environment.  We can simply
-    /// ask where the variable is.
-    /// </summary>
-    sealed class GlobalLexicalMap : LexicalMap
+    public class LexicalBinding
     {
-        readonly Environment bindingEnvironment;
-        Dictionary<Symbol,BoundVariable> bindingCache = new Dictionary<Symbol, BoundVariable> ();
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly LambdaBase binder;
 
-        internal GlobalLexicalMap (Environment bindingEnvironment)
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly LexicalAddress address;
+
+        public LexicalBinding (LambdaBase binder, LexicalAddress address)
         {
-            this.bindingEnvironment = bindingEnvironment;
+            this.binder = binder;
+            this.address = address;
         }
 
+        public LambdaBase Binder { [DebuggerStepThrough] get { return this.binder; } }
+        public LexicalAddress Address { [DebuggerStepThrough] get { return this.address; } }
 
-        //internal override BoundVariable SimulateLookup (object lambdaName)
-        //{
-        //    return bindingEnvironment.SimulateLookup (lambdaName);
-        //}
-
-        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int randDepth)
-        //{
-        //    return bindingEnvironment.SimulateStaticLookup (lambdaName, randDepth);
-        //}
-
-        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int randDepth)
-        //{
-        //    return bindingEnvironment.SimulateDangerousLookup (lambdaName, safeDepth, randDepth);
-        //}
-
-        internal override BoundVariable Bind (Symbol name)
+        public LexicalBinding IncreaseLexicalDepth ()
         {
-            BoundVariable answer;
-            if (bindingCache.TryGetValue (name, out answer))
-                return answer;
+            return new LexicalBinding (this.binder, new LexicalAddress ((short)(this.address.Depth + 1), this.address.Offset));
+        }
+    }
 
-            if (Configuration.EnableGlobalBinding) {
-                answer = new GlobalVariable (name, this.bindingEnvironment);
-                bindingCache.Add (name, answer);
-                return answer;
-            }
-            else {
-                answer = new FreeVariable (name);
-                bindingCache.Add (name, answer);
-                return answer;
-            }
-                
+    public abstract class LexicalMap
+    {
+        Dictionary<Symbol,SCode> cache;
+        protected LexicalMap () {
+            cache = new Dictionary<Symbol,SCode>();
         }
 
-        internal override LexicalMap AddSubstitution (Symbol name, BoundVariable value)
+        protected static LexicalMap NotImplemented () {
+            throw new NotImplementedException("LexicalMap");
+        }
+
+        public static LexicalMap Make (Environment env) {
+            return
+                (env is GlobalEnvironment) ? GlobalLexicalMap.Make((GlobalEnvironment) env) :
+                (env is StandardEnvironment) ? StandardLexicalMap.Make ((StandardEnvironment) env) :
+                NotImplemented();
+        }
+
+        public LexicalMap Extend (LambdaBase lambda)
+        {
+            return
+                lambda.CallsTheEnvironment () ? FirstClassLexicalMap.Make (this, lambda) :
+                StaticLexicalMap.Make (this, lambda);
+        }
+
+        internal abstract SCode LookupVariableUncached (Symbol variable,
+                                                Func<int, int, SCode> ifLexicalVariable,
+                                                Func<int, int, SCode> ifShadowableLexicalVariable,
+                                                Func<StandardEnvironment, SCode> ifAuxVariable,
+                                                Func<StandardEnvironment, SCode> ifShadowableAuxVariable,
+                                                Func<StandardEnvironment, SCode> ifFreeVariable,
+                                                Func<StandardEnvironment, SCode> ifShadowableFreeVariable,
+                                                Func<GlobalEnvironment, ValueCell, SCode> ifGlobalVariable,
+                                                Func<GlobalEnvironment, ValueCell, SCode> ifShadowableGlobalVariable);
+
+        internal SCode LookupVariable (Symbol variable,
+                                                Func<int, int, SCode> ifLexicalVariable,
+                                                Func<int, int, SCode> ifShadowableLexicalVariable,
+                                                Func<StandardEnvironment, SCode> ifAuxVariable,
+                                                Func<StandardEnvironment, SCode> ifShadowableAuxVariable,
+                                                Func<StandardEnvironment, SCode> ifFreeVariable,
+                                                Func<StandardEnvironment, SCode> ifShadowableFreeVariable,
+                                                Func<GlobalEnvironment, ValueCell, SCode> ifGlobalVariable,
+                                                Func<GlobalEnvironment, ValueCell, SCode> ifShadowableGlobalVariable)
+        {
+            SCode answer;
+            if (this.cache.TryGetValue (variable, out answer))
+                return answer;
+            answer = LookupVariableUncached (variable,
+                ifLexicalVariable,
+                ifShadowableLexicalVariable,
+                ifAuxVariable,
+                ifShadowableAuxVariable,
+                ifFreeVariable,
+                ifShadowableFreeVariable,
+                ifGlobalVariable,
+                ifShadowableGlobalVariable);
+            cache.Add (variable, answer);
+            return answer;
+        }
+    }
+
+    public abstract class ExtendedLexicalMap : LexicalMap
+    {
+        protected readonly LexicalMap parent;
+
+        protected ExtendedLexicalMap (LexicalMap parent)
+            : base ()
+        {
+            this.parent = parent;
+        }
+    }
+
+    public class FirstClassLexicalMap : ExtendedLexicalMap
+    {
+        LambdaBase lambda;
+        FirstClassLexicalMap (LexicalMap parent, LambdaBase lambda)
+            : base (parent)
+        {
+            this.lambda = lambda;
+        }
+
+        public static LexicalMap Make (LexicalMap parent, LambdaBase lambda)
+        {
+            return new FirstClassLexicalMap (parent, lambda);
+        }
+
+        //public override SCode LookupVariableUncached (Symbol variable, 
+        //                                      Func<int, Argument> ifArgument,
+        //                                      Func<SCode, SCode> ifLexical1,
+        //                                      Func<SCode, SCode> ifShadowableLexical1,
+        //                                      Func<SCode, SCode> ifLexicalVariable,
+        //                                      Func<SCode, SCode> ifShadowableLexicalVariable,
+        //                                      Func<SCode, SCode> ifGlobalVariable,
+        //                                      Func<SCode, SCode> ifShadowableGlobalVariable)
+        //    SCode answer;
+        //    if (this.cache.TryGetValue (variable, out answer))
+        //        return answer;
+        //    int offset = this.lambda.LexicalOffset (variable);
+        //    answer = 
+        //        (offset == -1) ? this.parent.LookupVariableUncached (variable,
+        //             delegate (Argument arg) { return ifShadowableLexical1 (arg); },
+        //             delegate (LexicalVariable1 lv1) { return ifShadowableLexicalVariable (lv1); },
+        //             delegate (LexicalVariable lv) { return ifShadowableLexicalVariable (lv); },
+        //             delegate (GlobalVariable gv) { return ifShadowableGlobalVariable (gv); }
+        //             ) :
+        //             ifArgument(offset);
+        //    this.cache.Add (variable, answer);
+        //    return answer;
+        //}
+
+        SCode UnderConstruction (SCode thing)
         {
             throw new NotImplementedException ();
         }
+        internal override SCode LookupVariableUncached (Symbol variable,  
+                                                    Func<int, int, SCode> ifLexicalVariable, 
+                                                    Func<int, int, SCode> ifShadowableLexicalVariable,
+                                                    Func<StandardEnvironment, SCode> ifAuxVariable,
+                                                    Func<StandardEnvironment, SCode> ifShadowableAuxVariable,
+                                                    Func<StandardEnvironment, SCode> ifFreeVariable,
+                                                    Func<StandardEnvironment, SCode> ifShadowableFreeVariable,
+                                                    Func<GlobalEnvironment, ValueCell, SCode> ifGlobalVariable, 
+                                                    Func<GlobalEnvironment, ValueCell, SCode> ifShadowableGlobalVariable)
+        {
+            int offset = this.lambda.LexicalOffset (variable);
+            return
+                (offset == -1) ? this.parent.LookupVariableUncached (variable,
+                     delegate (int depth, int o) { return ifShadowableLexicalVariable (depth + 1, o); },
+                     delegate (int depth, int o) { return ifShadowableLexicalVariable (depth + 1, o); },
+                     ifShadowableAuxVariable,
+                     ifShadowableAuxVariable,
+                     ifShadowableFreeVariable,
+                     ifShadowableFreeVariable,
+                     ifShadowableGlobalVariable,
+                     ifShadowableGlobalVariable
+                     ) :
+                     ifLexicalVariable (0, offset);
+        }
     }
 
-
-    /// <summary>
-    /// A lexical map derived from a real live environment.  We can simply
-    /// ask where the variable is.
-    /// </summary>
-    sealed class TopLevelLexicalMap : LexicalMap
+    public class StaticLexicalMap : ExtendedLexicalMap
     {
-        readonly Environment bindingEnvironment;
-        Dictionary<object,BoundVariable> bindingCache = new Dictionary<object, BoundVariable> ();
-
-           internal TopLevelLexicalMap (Environment bindingEnvironment)
-            {
-                this.bindingEnvironment = bindingEnvironment;
-            }
-
-
-           //internal override BoundVariable SimulateLookup (object lambdaName)
-           //{
-           //    return bindingEnvironment.SimulateLookup (lambdaName);
-           //}
-
-           //internal override BoundVariable SimulateStaticLookup (object lambdaName, int randDepth)
-           //{
-           //    return bindingEnvironment.SimulateStaticLookup (lambdaName, randDepth);
-           //}
-
-           //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int randDepth)
-           //{
-           //    return bindingEnvironment.SimulateDangerousLookup (lambdaName, safeDepth, randDepth);
-           //}
-
-           internal override BoundVariable Bind (Symbol name)
-           {
-               BoundVariable answer;
-               if (bindingCache.TryGetValue (name, out answer))
-                   return answer;
-
-               int offset = this.bindingEnvironment.closure.FormalOffset (name);
-               if (offset != -1) {
-                   answer = new TopLevelVariable (name, this.bindingEnvironment.GetValueCell (name));
-                   bindingCache.Add (name, answer);
-                   return answer;
-               }
-               answer = new DeepVariable (name, this.bindingEnvironment);
-               bindingCache.Add (name, answer);
-               return answer;
-
-           }
-
-           internal override LexicalMap AddSubstitution (Symbol name, BoundVariable value)
-           {
-               throw new NotImplementedException ();
-           }
-    }
-
-    /// <summary>
-    /// A lexical map formed by simulating lambda application.
-    /// We know where the variable is modulo the incrementals, etc.
-    /// </summary>
-    sealed class LambdaLexicalMap : LexicalMap
-    {
-        readonly LambdaBase lambda;
-        readonly LexicalMap parent;
-        Dictionary<Symbol,BoundVariable> bindingCache = new Dictionary<Symbol, BoundVariable> ();
-        internal LambdaLexicalMap (LambdaBase lambda, LexicalMap parent)
+        LambdaBase lambda;
+        StaticLexicalMap (LexicalMap parent, LambdaBase lambda)
+            : base (parent)
         {
             this.lambda = lambda;
-            this.parent = parent;
+        }
+        public static LexicalMap Make (LexicalMap parent, LambdaBase lambda)
+        {
+            return new StaticLexicalMap (parent, lambda);
         }
 
-
-        //internal override BoundVariable SimulateLookup (object lambdaName)
-        //{
-        //    return this.lambda.SimulateLookup (lambdaName, this.parent);
-        //}
-
-        //internal override BoundVariable SimulateStaticLookup (object lambdaName, int randDepth)
-        //{
-        //    return this.lambda.SimulateStaticLookup (lambdaName, this.parent, randDepth);
-        //}
-
-        //internal override BoundVariable SimulateDangerousLookup (object lambdaName, int safeDepth, int randDepth)
-        //{
-        //    return this.lambda.SimulateDangerousLookup (lambdaName, this.parent, safeDepth, randDepth);
-        //}
-
-        internal override BoundVariable Bind (Symbol name)
+        SCode UnderConstruction (SCode thing)
         {
-            BoundVariable answer;
-            if (bindingCache.TryGetValue (name, out answer))
-                return answer;
-
-            if (Configuration.EnableArgumentBinding) {
-                int offset = this.lambda.LexicalOffset (name);
-                if (offset != -1) {
-                    answer = Argument.Make (name, this.lambda, offset);
-                    bindingCache.Add (name, answer);
-                    return answer;
-                }
-            }
-            if (Configuration.EnableLexicalAddressing) {
-                int offset = this.lambda.LexicalOffset (name);
-                if (offset != -1) {
-                    answer = LexicalVariable.Make (name, this.lambda, 0, offset);
-                    bindingCache.Add (name, answer);
-                    return answer;
-                }
-                else {
-                    BoundVariable outer = parent.Bind (name);
-                    answer = this.lambda.IncreaseLexicalDepth (outer);
-                    bindingCache.Add (name, answer);
-                    return answer;
-                }
-            }
-            answer = new FreeVariable (name);
-            bindingCache.Add (name, answer);
-            return answer;
+            throw new NotImplementedException ();
         }
 
-        internal override LexicalMap AddSubstitution (Symbol name, BoundVariable value)
+        internal override SCode LookupVariableUncached (Symbol variable,  
+            Func<int, int, SCode> ifLexicalVariable, 
+            Func<int, int, SCode> ifShadowableLexicalVariable,
+                        Func<StandardEnvironment, SCode> ifAuxVariable,
+            Func<StandardEnvironment, SCode> ifShadowableAuxVariable,
+            Func<StandardEnvironment, SCode> ifFreeVariable,
+            Func<StandardEnvironment, SCode> ifShadowableFreeVariable,
+            Func<GlobalEnvironment, ValueCell, SCode> ifGlobalVariable, 
+            Func<GlobalEnvironment, ValueCell, SCode> ifShadowableGlobalVariable)
         {
-            return new SubstitutionLexicalMap (name, value, this);
+            int offset = this.lambda.LexicalOffset (variable);
+            return
+                (offset == -1) ? this.parent.LookupVariableUncached (variable,
+                     delegate (int depth, int o) { return ifLexicalVariable (depth + 1, o); },
+                     delegate (int depth, int o) { return ifShadowableLexicalVariable (depth+1, o); },
+                     ifAuxVariable,
+                     ifShadowableAuxVariable,
+                     ifFreeVariable,
+                     ifShadowableFreeVariable,
+                     ifGlobalVariable,
+                     ifShadowableGlobalVariable
+                     ) :
+                     ifLexicalVariable (0, offset);
         }
     }
 
-    class SubstitutionLexicalMap : LexicalMap
+    class GlobalLexicalMap : LexicalMap
     {
-        protected readonly Symbol name;
-        protected readonly BoundVariable value;
-        protected readonly LexicalMap parent;
-
-        public SubstitutionLexicalMap (Symbol name, BoundVariable value, LexicalMap parent)
-        {
-            this.name = name;
-            this.value = value;
-            this.parent = parent;
+        GlobalEnvironment environment;
+        GlobalLexicalMap (GlobalEnvironment env) 
+            : base () {
+            this.environment = env;
+        }
+        public static LexicalMap Make (GlobalEnvironment env) {
+            return new GlobalLexicalMap (env);
         }
 
-        internal override LexicalMap AddSubstitution (Symbol name, BoundVariable value)
+        internal override SCode LookupVariableUncached (Symbol variable,  
+            Func<int, int, SCode> ifLexicalVariable, 
+            Func<int, int, SCode> ifShadowableLexicalVariable,
+            Func<StandardEnvironment, SCode> ifAuxVariable,
+            Func<StandardEnvironment, SCode> ifShadowableAuxVariable,
+            Func<StandardEnvironment, SCode> ifFreeVariable,
+            Func<StandardEnvironment, SCode> ifShadowableFreeVariable,
+            Func<GlobalEnvironment, ValueCell, SCode> ifGlobalVariable, 
+            Func<GlobalEnvironment, ValueCell, SCode> ifShadowableGlobalVariable)
         {
-            return new SubstitutionLexicalMap (name, value, this);
-        }
-
-        internal override BoundVariable Bind (Symbol name)
-        {
-            if (name == this.name)
-                return this.value;
-            return parent.Bind (name);
+            throw new NotImplementedException ();
+            //return this.environment.LocateVariable<SCode> (variable,
+            //    delegate () { return ifGlobalVariable (this.environment, null); },
+            //    delegate (ValueCell cell) { return ifGlobalVariable (this.environment, cell); },
+            //    delegate (LexicalEnvironment env, int depth, int o) { throw new NotImplementedException (); },
+            //    delegate (StandardEnvironment env, int depth) { throw new NotImplementedException (); });
         }
     }
-    //public abstract class LexicalMap
+
+    class StandardLexicalMap : LexicalMap
+    {
+        StandardEnvironment environment;
+        StandardLexicalMap (StandardEnvironment env)
+            : base ()
+        {
+            this.environment = env;
+        }
+        internal static LexicalMap Make (StandardEnvironment env)
+        {
+            return new StandardLexicalMap (env);
+        }
+
+        internal override SCode LookupVariableUncached (Symbol variable,
+            Func<int, int, SCode> ifLexicalVariable,
+            Func<int, int, SCode> ifShadowableLexicalVariable,
+            Func<StandardEnvironment, SCode> ifAuxVariable,
+            Func<StandardEnvironment, SCode> ifShadowableAuxVariable,
+            Func<StandardEnvironment, SCode> ifFreeVariable,
+            Func<StandardEnvironment, SCode> ifShadowableFreeVariable,
+            Func<GlobalEnvironment, ValueCell, SCode> ifGlobalVariable,
+            Func<GlobalEnvironment, ValueCell, SCode> ifShadowableGlobalVariable)
+        {
+            throw new NotImplementedException ();
+        //    this.environment.LocateVariable<SCode> (variable,
+        //        delegate () { throw new NotImplementedException (); },
+        //        delegate (ValueCell cell) { throw new NotImplementedException (); },
+        //        delegate (LexicalEnvironment env, int depth, int o) {
+        //            if (depth == 0) {
+        //                return ifLexicalVariable (depth, o);
+        //            }
+        //            else {
+        //                return ifShadowableLexicalVariable (depth, o);
+        //            }
+        //        },
+        //        delegate (StandardEnvironment env, int depth) {
+        //            if (depth == 0) {
+        //                return ifAuxVariable (env);
+        //            }
+        //            else {
+        //                return ifShadowableAuxVariable (env);
+        //            }
+        //        });
+
+        //    int offset = this.environment.SearchFormals (variable);
+        //    if (offset == -1) {
+        //        ValueCell cell = this.environment.SearchIncrementals(variable);
+        //        if (cell == null)
+        //            return ifFreeVariable (this.environment);
+        //        return ifAuxVariable (this.environment);
+        //    }
+        //    return ifLexicalVariable (0, offset);
+        }
+    }
+
+    //public class TopLevelLexicalMap 
     //{
-    //    protected LexicalMap ()
-    //    {
-    //    }
+    //    LambdaBase lambda;
+    //    Environment closureEnvironment;
 
-    //    internal abstract Variable BindLexical (object ratorName, int randDepth);
-
-    //    internal abstract Variable BindVariable (object ratorName);
-
-    //    internal abstract Variable BindShadow (object ratorName, int randDepth, int shadowingFrame);
-
-    //    //internal LexicalMap Extend (SimpleLambda lambda)
-    //    //{
-    //    //    return new SimpleLambdaBindingEnvironment (lambda, this);
-    //    //}
-
-    //    internal LexicalMap Extend (StandardLambda lambda)
-    //    {
-    //        return new StandardLambdaBindingEnvironment (lambda, this);
-    //    }
-
-    //    //internal LexicalMap Extend (StaticLambda lambda)
-    //    //{
-    //    //    return new StaticLambdaBindingEnvironment (lambda, this);
-    //    //}
-
-    //    internal LexicalMap Extend (ExtendedLambda lambda)
-    //    {
-    //        return new ExtendedLambdaBindingEnvironment (lambda, this);
-    //    }
-    //}
-
-    //sealed public class RootBindingEnvironment : LexicalMap
-    //{
-    //    readonly Environment bindingEnvironment;
-
-    //    public RootBindingEnvironment (Environment bindingEnvironment)
-    //    {
-    //        this.bindingEnvironment = bindingEnvironment;
-    //    }
-
-    //    internal override Variable BindVariable (object ratorName)
-    //    {
-    //        ClosureBase closure = this.bindingEnvironment.Closure;
-
-    //        if (closure == null)
-    //            // We know it can only be in the global environment.
-    //            return GlobalVariable.Make (ratorName, this.bindingEnvironment);
-    //        else {
-    //            int randOffset = this.bindingEnvironment.Closure.FormalOffset (ratorName);
-    //            // If it isn't bound in the binding time environment, then we
-    //            // call it `Free' and search the incrementals and then the environment.
-    //            return (randOffset != -1)
-    //                ? Argument.Make (ratorName, randOffset)
-    //                : FreeVariable.Make (ratorName, bindingEnvironment);
-    //        }
-    //    }
-
-    //    internal override Variable BindShadow (object ratorName, int randDepth, int shadowingFrame)
-    //    {
-    //        ClosureBase closure = this.bindingEnvironment.Closure;
-    //        if (closure == null) {
-    //            // Same as free.  We have no clue where the variable is.
-    //            // Hope it shows up before we need it, though.
-    //            return DangerousFreeVariable.Make (ratorName, shadowingFrame, randDepth);
-    //        }
-    //        else {
-    //            int randOffset = closure.FormalOffset (ratorName);
-    //            return (randOffset == -1)
-    //                ? DangerousFreeVariable.Make (ratorName, shadowingFrame, randDepth)
-    //                : DangerousLexicalVariable.Make (ratorName, shadowingFrame, randDepth, randOffset);
-    //        }
-    //    }
-
-    //    internal override Variable BindLexical (object ratorName, int randDepth)
-    //    {
-    //        ClosureBase closure = this.bindingEnvironment.Closure;
-    //        if (closure == null) {
-    //            // Root environment and cannot be shadowed.
-    //            return GlobalVariable.Make (ratorName, this.bindingEnvironment);
-    //        }
-    //        else {
-    //            int randOffset = closure.FormalOffset (ratorName);
-    //            return (randOffset == -1)
-    //                ? FreeVariable.Make (ratorName, this.bindingEnvironment)
-    //                : TopLevelVariable.Make (ratorName, this.bindingEnvironment.GetValueCell (ratorName));
-    //        }
-    //    }
-    //}
-
-    //abstract class LambdaBindingEnvironment : LexicalMap
-    //{
-    //    protected readonly Lambda lambda;
-    //    protected readonly LexicalMap parent;
-
-    //    public LambdaBindingEnvironment (Lambda lambda, LexicalMap parent)
+    //    public LexicalMap (LambdaBase lambda, Environment closureEnvironment)
     //    {
     //        this.lambda = lambda;
-    //        this.parent = parent;
+    //        this.closureEnvironment = closureEnvironment;
     //    }
-    //}
 
-    //abstract class SafeLambdaBindingEnvironment : LambdaBindingEnvironment
-    //{
-    //    protected SafeLambdaBindingEnvironment (Lambda lambda, LexicalMap parent)
-    //        : base (lambda, parent)
-    //    { }
-
-    //    internal override Variable BindVariable (object ratorName)
+    //    public LexicalMap (LambdaBase lambdaBase)
     //    {
-    //        int randOffset = this.lambda.LexicalOffset (ratorName);
-    //        return (randOffset == -1)
-    //            ? parent.BindLexical (ratorName, 1)  // Search deeper.
-    //            : Argument.Make (ratorName, randOffset);
+    //        table = new Dictionary<Symbol, LexicalBinding> ();
+    //        if (Configuration.EnableArgumentBinding)
+    //            for (short offset = 0; offset < lambdaBase.Formals.Length; offset++) {
+    //                table.Add (lambdaBase.Formals [offset],
+    //                    new LexicalBinding (lambdaBase,
+    //                        new LexicalAddress (0, offset)));
+    //            }
+    //        if (lambdaBase is StaticLambdaBase) {
+    //            depth = 1;
+    //        }
     //    }
 
-    //    internal override Variable BindShadow (object ratorName, int randDepth, int shadowingFrame)
+    //    public LexicalMap (LambdaBase lambdaBase, LexicalMap parent)
     //    {
-    //        int randOffset = this.lambda.LexicalOffset (ratorName);
-    //        return (randOffset == -1)
-    //            ? parent.BindShadow (ratorName, randDepth + 1, shadowingFrame)
-    //            : DangerousLexicalVariable.Make (ratorName, shadowingFrame, randDepth, randOffset);
+    //        table = new Dictionary<Symbol, LexicalBinding> ();
+    //        //for (int offset = 0; offset < lambdaBase.Formals.Length; offset++) {
+    //        //    if (Configuration.EnableArgumentBinding)
+    //        //        table.Add (lambdaBase.Formals [offset], Argument.Make (lambdaBase.Formals [offset], lambdaBase, offset));
+    //        //    else
+    //        //        table.Add (lambdaBase.Formals [offset], Variable.Make (lambdaBase.Formals [offset]));
+    //        //}
+    //        foreach (KeyValuePair<Symbol, LexicalBinding> kvp in parent.table.AsEnumerable ()) {
+    //            if (!table.ContainsKey (kvp.Key)) {
+    //                table.Add (kvp.Key, kvp.Value.IncreaseLexicalDepth ());
+    //            }
+    //        }
+    //        if (lambdaBase is StaticLambdaBase)
+    //            depth = parent.StaticDepth + 1;
     //    }
 
-    //    internal override Variable BindLexical (object ratorName, int randDepth)
+    //    public override SCode LookupVariableUncached (Symbol variable, Func<int,SCode> ifArgument)
     //    {
-    //        int randOffset = this.lambda.LexicalOffset (ratorName);
-    //        return (randOffset == -1)
-    //          ? parent.BindLexical (ratorName, randDepth + 1)  // Search deeper.
-    //          : LexicalVariable.Make (ratorName, randDepth, randOffset);
-    //    }
-    //}
-
-    ////sealed class SimpleLambdaBindingEnvironment : SafeLambdaBindingEnvironment
-    ////{
-    ////    public SimpleLambdaBindingEnvironment (SimpleLambda lambda, LexicalMap parent)
-    ////        : base (lambda, parent)
-    ////    {
-    ////    }
-    ////}
-
-    ////sealed class StaticLambdaBindingEnvironment : SafeLambdaBindingEnvironment
-    ////{
-    ////    public StaticLambdaBindingEnvironment (StaticLambda lambda, LexicalMap parent)
-    ////        : base (lambda, parent)
-    ////    {
-    ////    }
-    ////}
-
-    //sealed class StandardLambdaBindingEnvironment : LambdaBindingEnvironment
-    //{
-    //    public StandardLambdaBindingEnvironment (StandardLambda lambda, LexicalMap parent)
-    //        : base (lambda, parent)
-    //    {
+    //        int offset = this.lambda.LexicalOffset (variable);
+    //        if (offset != -1) {
+    //            return ifArgument (offset);
+    //        }
+    //        throw new NotImplementedException ("Working on it.");
     //    }
 
-    //    internal override Variable BindLexical (object ratorName, int randDepth)
-    //    {
-    //        int randOffset = this.lambda.LexicalOffset (ratorName);
-    //        return (randOffset == -1)
-    //            ? parent.BindShadow (ratorName, randDepth + 1, randDepth) // ***
-    //            : LexicalVariable.Make (ratorName, randDepth, randOffset);
-    //    }
-
-    //    internal override Variable BindShadow (object ratorName, int randDepth, int shadowingFrame)
-    //    {
-    //        int randOffset = this.lambda.LexicalOffset (ratorName);
-    //        return (randOffset == -1)
-    //            ? parent.BindShadow (ratorName, randDepth + 1, shadowingFrame)
-    //            : DangerousLexicalVariable.Make (ratorName, shadowingFrame, randDepth, randOffset);
-    //    }
-
-    //    internal override Variable BindVariable (object ratorName)
-    //    {
-    //        int randOffset = this.lambda.LexicalOffset (ratorName);
-    //        return (randOffset == -1)
-    //            ? parent.BindShadow (ratorName, 1, 0)
-    //            : Argument.Make (ratorName, randOffset);
-    //    }
-    //}
-
-    //sealed class ExtendedLambdaBindingEnvironment : LexicalMap
-    //{
-    //    readonly ExtendedLambda lambda;
-    //    readonly LexicalMap parent;
-
-    //    public ExtendedLambdaBindingEnvironment (ExtendedLambda lambda, LexicalMap parent)
-    //    {
-    //        this.lambda = lambda;
-    //        this.parent = parent;
-    //    }
- 
-    //    internal override Variable BindLexical (object ratorName, int randDepth)
-    //    {
-    //        int randOffset = this.lambda.LexicalOffset (ratorName);
-    //        return (randOffset == -1)
-    //            ? parent.BindShadow (ratorName, randDepth + 1, randDepth)
-    //            : LexicalVariable.Make (ratorName, randDepth, randOffset);
-    //    }
-
-    //    internal override Variable BindShadow (object ratorName, int randDepth, int shadowingFrame)
-    //    {
-    //        int randOffset = this.lambda.LexicalOffset (ratorName);
-    //        return (randOffset == -1)
-    //            ? parent.BindShadow (ratorName, randDepth + 1, shadowingFrame)
-    //            : DangerousLexicalVariable.Make (ratorName, shadowingFrame, randDepth, randOffset);
-    //    }
-
-    //    internal override Variable BindVariable (object ratorName)
-    //    {
-    //        int randOffset = this.lambda.LexicalOffset (ratorName);
-    //        return (randOffset == -1)
-    //            ? parent.BindShadow (ratorName, 1, 0)
-    //            : Argument.Make (ratorName, randOffset); 
-    //    }
+    //    public int StaticDepth { get { return this.depth; } }
     //}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -8,6 +9,9 @@ namespace Microcode
     [Serializable]
     public class ControlPoint : SchemeObject, ISystemVector
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.CONTROL_POINT; } }
+
         // 0 reusable?
         // 1 unused-length
         // 2   <restore-interrupt-mask return-address>
@@ -45,7 +49,6 @@ namespace Microcode
         }
 
         public ControlPoint (ContinuationFrameList newFrames, ContinuationFrameList oldFrames)
-            : base (TC.CONTROL_POINT)
         {
             // The new frames don't know what the continuation is below them.
             // We take them one by one and push them onto the old_frames
@@ -107,7 +110,7 @@ namespace Microcode
 
         #endregion
 
-        //public override bool EvalStep (out object answer, ref SCode expression, ref Environment environment)
+        //public override bool EvalStep (out object answer, ref SCode expression, ref Environment closureEnvironment)
         //{
         //    throw new NotImplementedException ();
         //}

@@ -221,14 +221,14 @@ namespace Microcode
         }
 
         static public bool firstTime = true;
-        static readonly string cannedString = "(doit)\n";
+        const string cannedString = "(finish-cold-load)\n";
         static object promptTime = 0;
-        public override int Read (char [] buffer, int start, int limit)
+        public override int Read (char [] buffer, int start, int end)
         {
             if (firstTime) {
                 Misc.SystemClock (out promptTime);
                 Console.WriteLine ("Cold load time: {0}", promptTime);
-                Console.WriteLine (";; Hack:  pretending the user typed (doit)");
+                Console.WriteLine (";; Hack:  invoking finish-cold-load.");
                 for (int i = 0; i < cannedString.Length; i++)
                     buffer [start + i] = cannedString [i];
                 firstTime = false;
@@ -236,7 +236,7 @@ namespace Microcode
             }
 
             if (blocking == true) {
-                int filled = this.input.Read (buffer, start, limit - start);
+                int filled = this.input.Read (buffer, start, end - start);
                 return filled;
             }
             else {

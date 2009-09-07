@@ -1,18 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 
 namespace Microcode
 {
     [Serializable]
     sealed class Complex : SchemeObject
     {
-        object realPart;
-        object imagPart;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.COMPLEX; } }
+
+        public readonly object realPart;
+        public readonly object imagPart;
 
         public Complex (object realPart, object imagPart)
-            : base (TC.COMPLEX)
         {
             this.realPart = realPart;
             this.imagPart = imagPart;

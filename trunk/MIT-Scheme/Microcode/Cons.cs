@@ -7,13 +7,15 @@ namespace Microcode
     sealed class Cons: SchemeObject, ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.LIST; } }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object car;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object cdr;
 
         public Cons (object car, object cdr)
-            : base (TC.LIST)
         {
             this.car = car;
             this.cdr = cdr;

@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -78,13 +81,12 @@ namespace Microcode
 
         public byte ReadByte (uint offset)
         {
-            EncodedObject encoded = this [offset];
-            return encoded.GetByte ((byte) (offset % 4));
+            return this [offset].GetByte ((byte) (offset % 4));
         }
 
         public object ReadBignum (FaslFile file, uint offset)
         {
-            EncodedObject header = this [offset];
+            //EncodedObject header = this [offset];
             EncodedObject h1 = this [offset + 4];
             if (h1.Datum == 1)
             {
@@ -104,7 +106,7 @@ namespace Microcode
 
         public double ReadFlonum (FaslFile file, uint offset)
         {
-            EncodedObject header = this [offset];
+            //EncodedObject header = this [offset];
             byte b0 = ReadByte (offset + 4);
             byte b1 = ReadByte (offset + 5);
             byte b2 = ReadByte (offset + 6);
@@ -149,7 +151,7 @@ namespace Microcode
 
         public char [] ReadString (uint offset)
         {
-            EncodedObject header = this [offset];
+            // EncodedObject header = this [offset];
             uint length = this [offset + 4].Datum;
             char [] result = new char [length];
             for (uint i = 0; i < length; i++)
@@ -184,8 +186,15 @@ namespace Microcode
         }
     }
 
-    class BadFaslFileException : Exception
+    [Serializable]
+    public class BadFaslFileException : Exception
     {
+        public BadFaslFileException ()
+             { }
+        public BadFaslFileException (String message)
+            : base (message) { }
+        public BadFaslFileException (String message, Exception innerException)
+            : base (message, innerException) { }
     }
 
     class FaslHeader
@@ -412,7 +421,10 @@ namespace Microcode
             uint optional = (argcount.Datum & 0x00FF);
             uint required = (argcount.Datum & 0xFF00) >> 8;
             bool rest = ((argcount.Datum & 0x10000) == 0x10000);
-            return ExtendedLambda.Make (name, formals, SCode.EnsureSCode(ReadObject (location)), required, optional, rest);
+            SCode body = SCode.EnsureSCode (ReadObject (location));
+            return ExtendedLambda.Make (name, formals,
+                new List<Symbol>(body.FreeVariables().Except(formals)),
+                body, required, optional, rest);
         }
 
         static int gensymCounter;
@@ -463,8 +475,8 @@ namespace Microcode
                                               ReadObject (encoded.Datum + 8));
 
                 case TC.COMMENT:
-                    return new Comment (ReadObject (encoded.Datum),
-                                        ReadObject (encoded.Datum + 4));
+                    return Comment.Make (ReadObject (encoded.Datum),
+                                         ReadObject (encoded.Datum + 4));
 
                 case TC.COMPLEX:
                     return new Complex (ReadObject (encoded.Datum),
@@ -479,11 +491,11 @@ namespace Microcode
                     return Constant.Decode (encoded.Datum);
  
                 case TC.DEFINITION:
-                    return new Definition ((Symbol) ReadObject (encoded.Datum),
+                    return Definition.Make ((Symbol) ReadObject (encoded.Datum),
                                            ReadObject (encoded.Datum + 4));
 
                 case TC.DELAY:
-                    return new Delay (ReadObject (encoded.Datum));
+                    return Delay.Make (ReadObject (encoded.Datum));
 
                 case TC.DISJUNCTION:
                     return Disjunction.Make (ReadObject (encoded.Datum),
@@ -504,7 +516,8 @@ namespace Microcode
                     Symbol name;
                     Symbol [] formals;
                     ReadFormals (encoded.Datum + 4, out name, out formals);
-                    return Lambda.Make (name, formals, ReadObject (encoded.Datum));
+                    SCode body = SCode.EnsureSCode( ReadObject (encoded.Datum));
+                    return UnanalyzedLambda.Make (name, formals, new List<Symbol>(body.FreeVariables().Except(formals)), body);
 
                 case TC.LIST:
                     object second = ReadObject (encoded.Datum + 4);
@@ -603,7 +616,7 @@ namespace Microcode
                         return first;
                     else
                     {
-                        Symbol result = Symbol.MakeUninterned ("#:" + new String ((char []) first) + "-" + (gensymCounter++).ToString());
+                        Symbol result = Symbol.MakeUninterned ("#:" + new String ((char []) first) + "-" + (gensymCounter++).ToString(CultureInfo.InvariantCulture));
                         this.sharingTable.Add (encoded.Datum, result);
                         return result;
                     }
@@ -655,6 +668,8 @@ namespace Microcode
 
         static object NewFasload (string pathName)
         {
+            //if (pathName == "c:\\jrm-code-project\\mit-scheme\\cref\\anfile.bin")
+            //    Debugger.Break ();
             FileStream faslStream = null;
 
             try {
@@ -673,20 +688,26 @@ namespace Microcode
             }
         }
 
+        public static bool EnableOldFasload;
+
         public static object Fasload (string pathName)
         {
-            try {
-                return NewFasload (pathName);
+            if (EnableOldFasload) {
+                try {
+                    return NewFasload (pathName);
+                }
+                catch (SerializationException) {
+                    return OldFasload (pathName);
+                }
             }
-            catch (SerializationException) {
-                return OldFasload (pathName);
+            else {
+                return NewFasload (pathName);
             }
         }
 
         [SchemePrimitive ("BINARY-FASLOAD", 1, false)]
         public static bool BinaryFasload (out object answer, object arg)
         {
-            string filename = new String ((char []) arg);
             answer = Fasload (new String ((char []) arg));
             return false;
         }

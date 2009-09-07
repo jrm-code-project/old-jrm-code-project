@@ -19,7 +19,7 @@ namespace Microcode
             this.val = ReferenceTrap.Unassigned;
         }
 
-        bool ValidValue (object value)
+        static bool ValidValue (object value)
         {
             if (value == Interpreter.UnwindStack)
                 throw new NotImplementedException ();

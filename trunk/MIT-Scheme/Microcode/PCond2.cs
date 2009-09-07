@@ -48,17 +48,17 @@ namespace Microcode
         public static SCode Make (PrimitiveCombination2 predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsCharEq) ? PCondIsCharEq.Make ((PrimitiveIsCharEq) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsIntEq) ? PCondIsIntEq.Make ((PrimitiveIsIntEq) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEq) ? PCondIsEq.Make ((PrimitiveIsEq) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsFixnumEqual) ? PCondIsFixnumEqual.Make ((PrimitiveIsFixnumEqual) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsObjectEq) ? PCondIsObjectEq.Make ((PrimitiveIsObjectEq) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsObjectType) ? PCondIsObjectType.Make ((PrimitiveIsObjectType) predicate, consequent, alternative) :
-                (predicate is PrimitiveLessThanFixnum) ? PCondLessThanFixnum.Make ((PrimitiveLessThanFixnum) predicate, consequent, alternative) :
-                (predicate is PrimitiveCombination2L) ? PCond2L.Make ((PrimitiveCombination2L) predicate, consequent, alternative) :
-                (predicate is PrimitiveCombination2Q) ? PCond2Q.Make ((PrimitiveCombination2Q) predicate, consequent, alternative) :
-                (predicate is PrimitiveCombination2SL) ? PCond2SL.Make ((PrimitiveCombination2SL) predicate, consequent, alternative) :
-                (predicate is PrimitiveCombination2SQ) ? PCond2SQ.Make ((PrimitiveCombination2SQ) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsCharEq) ? PCondIsCharEq.Make ((PrimitiveIsCharEq) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsIntEq) ? PCondIsIntEq.Make ((PrimitiveIsIntEq) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsEq) ? PCondIsEq.Make ((PrimitiveIsEq) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsFixnumEqual) ? PCondIsFixnumEqual.Make ((PrimitiveIsFixnumEqual) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsObjectEq) ? PCondIsObjectEq.Make ((PrimitiveIsObjectEq) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsObjectType) ? PCondIsObjectType.Make ((PrimitiveIsObjectType) predicate, consequent, alternative) :
+                //(predicate is PrimitiveLessThanFixnum) ? PCondLessThanFixnum.Make ((PrimitiveLessThanFixnum) predicate, consequent, alternative) :
+                //(predicate is PrimitiveCombination2L) ? PCond2L.Make ((PrimitiveCombination2L) predicate, consequent, alternative) :
+                //(predicate is PrimitiveCombination2Q) ? PCond2Q.Make ((PrimitiveCombination2Q) predicate, consequent, alternative) :
+                //(predicate is PrimitiveCombination2SL) ? PCond2SL.Make ((PrimitiveCombination2SL) predicate, consequent, alternative) :
+                //(predicate is PrimitiveCombination2SQ) ? PCond2SQ.Make ((PrimitiveCombination2SQ) predicate, consequent, alternative) :
                 (consequent is LexicalVariable) ? PCond2SSL.Make (predicate, (LexicalVariable) consequent, alternative) :
                 (consequent is Quotation) ? PCond2SSQ.Make (predicate, (Quotation) consequent, alternative) :
                 (alternative is LexicalVariable) ? PCond2SSSL.Make (predicate, consequent, (LexicalVariable) alternative) :

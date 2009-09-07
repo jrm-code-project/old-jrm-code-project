@@ -8,11 +8,14 @@ namespace Microcode
     [Serializable]
     public abstract class ContinuationFrame : Control
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.CONTROL_POINT; } }
+
         public ContinuationFrameList continuation;
 
         [DebuggerStepThrough]
         protected ContinuationFrame ()
-            : base (TC.CONTROL_POINT)
+            : base ()
         {
         }
     }
@@ -23,7 +26,7 @@ namespace Microcode
         protected T expression;
         protected Environment environment;
 
-        public SubproblemContinuation (T expression, Environment environment)
+        protected SubproblemContinuation (T expression, Environment environment)
         {
             this.expression = expression;
             this.environment = environment;
@@ -51,29 +54,23 @@ namespace Microcode
 
     public class Continuation : SchemeObject
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.CONTROL_POINT; } }
 
         public Continuation (ContinuationFrameList new_frames, ContinuationFrameList old_frames)
-            : base (TC.CONTROL_POINT)
         {
         }
 
         static public object Initial (WorldState stateToRestore)
         {
-            Constant.theDefaultObject = stateToRestore.defaultObject;
-            Constant.theEofObject = stateToRestore.eofObject;
-            Constant.theAuxMarker = stateToRestore.aux;
-            Constant.theKeyMarker = stateToRestore.key;
-            Constant.theOptionalMarker = stateToRestore.optional;
-            Constant.theRestMarker = stateToRestore.rest;
-            Constant.theExternalUnassignedObject = stateToRestore.externalUnassigned;
-            Constant.theUnspecificObject = stateToRestore.unspecific;
-            Environment.Global = stateToRestore.ge;
-            Environment environment = new RewindState (stateToRestore.cp, new RestoreBandFrame ());
-            Control expression = ((RewindState) environment).PopFrame ();
-            return Initial (expression, environment);
+            throw new NotImplementedException ();
+            //Environment.Global = stateToRestore.ge;
+            //Environment closureEnvironment = new RewindState (stateToRestore.cp, new RestoreBandFrame ());
+            //Control expression = ((RewindState) closureEnvironment).PopFrame ();
+            //return Initial (expression, closureEnvironment);
         }
 
-        static public object Initial (Control expression, Environment environment)
+        static public object Initial (SCode expression, Environment environment)
         {
             object answer;
             bool bounce;
@@ -81,13 +78,14 @@ namespace Microcode
             Timer tosProbe = new Timer (SCode.TopOfStackProbe, null, 5, 3);
             SCode.topOfStackTimer = tosProbe;
 #endif
+            Control residual = expression.PartialEval (environment).Residual;
             do {
                 answer = null;
                 bounce = false;
-                while (expression.EvalStep (out answer, ref expression, ref environment)) { };
+                while (residual.EvalStep (out answer, ref residual, ref environment)) { };
                 if (answer == Interpreter.UnwindStack) {
                     // What are we doing here?  Someone unwound the stack!
-                    // There are two possibilities to consider:
+                    // There are three possibilities to consider:
                     //  1) A cwcc has just performed a destructive read of the stack.
                     //     In this case, we convert the newly captured frame list
                     //     into a control point and reload it.
@@ -95,17 +93,22 @@ namespace Microcode
                     //  2) A within-continuation has blown away the stack in order
                     //     to install a different control point.  In this case we
                     //     reload the control point that was stored in the UnwinderState.
+                    //
+                    //  3) The stack was unwound in order to exit the interpreter.
+                    //     In this case, we return from the initial continuation.
+                    if (((UnwinderState) environment).IsExit)
+                        return ((UnwinderState) environment).ExitValue;
                     ControlPoint stateToRestore = ((UnwinderState) environment).ToControlPoint ();
 
                     // the receiver gets control when the stack is put back.
                     Control receiver = ((UnwinderState) environment).Receiver;
 
-                    // the rewind state goes in the environment
+                    // the rewind state goes in the closureEnvironment
                     environment = new RewindState (stateToRestore, receiver);
 
                     // Start reloading by returning control to the lowest
                     // frame.
-                    expression = ((RewindState) environment).PopFrame ();
+                    residual = ((RewindState) environment).PopFrame ();
                     bounce = true;
                 }
             } while (bounce);
