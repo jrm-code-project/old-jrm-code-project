@@ -137,7 +137,9 @@ namespace Microcode
         [SchemePrimitive ("FILE-EXISTS?", 1, false)]
         public static bool IsFileExists (out object answer, object arg)
         {
-            answer = System.IO.File.Exists (new String ((char []) arg));
+            string filename = new String ((char []) arg);
+            answer = System.IO.File.Exists (filename) ||
+                     System.IO.Directory.Exists (filename);
             return false;
         }
 
