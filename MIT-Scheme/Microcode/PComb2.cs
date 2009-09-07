@@ -10,6 +10,9 @@ namespace Microcode
     [Serializable]
     class PrimitiveCombination2 : SCode, ISerializable, ISystemHunk3
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.PCOMB2; } }
+
 #if DEBUG
         [NonSerialized]
         static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
@@ -35,7 +38,7 @@ namespace Microcode
         protected readonly SCode rand1;
 
         protected PrimitiveCombination2 (Primitive2 rator, SCode rand0, SCode rand1)
-            : base (TC.PCOMB2)
+            : base ()
         {
             this.rator = rator;
             this.method = rator.Method;
@@ -63,7 +66,7 @@ namespace Microcode
             }
         }
 
-        public SCode Rand0
+        public SCode Operand0
         {
             [DebuggerStepThrough]
             get
@@ -72,7 +75,7 @@ namespace Microcode
             }
         }
 
-        public SCode Rand1
+        public SCode Operand1
         {
             [DebuggerStepThrough]
             get
@@ -107,20 +110,20 @@ namespace Microcode
         static SCode InlineMake (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rator == Primitive.Cons) ? PrimitiveCons.Make (rator, rand0, rand1) :
-                (rator == Primitive.IsEq) ? PrimitiveIsEq.Make (rator, rand0, rand1) :
-                (rator == Primitive.ObjectIsEq) ? PrimitiveIsObjectEq.Make (rator, rand0, rand1) :
-                (rator == Primitive.CharIsEq) ? PrimitiveIsCharEq.Make (rator, rand0, rand1) :
-                (rator == Primitive.IntIsEq) ? PrimitiveIsIntEq.Make (rator, rand0, rand1) :
-                (rator == Primitive.IsFixnumEqual) ? PrimitiveIsFixnumEqual.Make (rator, rand0, rand1) :
-                (rator == Primitive.GeneralCarCdr) ? PrimitiveGeneralCarCdr.Make (rator, rand0, rand1) :
-                (rator == Primitive.GreaterThanFixnum) ? PrimitiveGreaterThanFixnum.Make (rator, rand0, rand1) :
-                (rator == Primitive.LessThanFixnum) ? PrimitiveLessThanFixnum.Make (rator, rand0, rand1) :
-                (rator == Primitive.PlusFixnum) ? PrimitivePlusFixnum.Make (rator, rand0, rand1) :
-                (rator == Primitive.IsObjectType) ? PrimitiveIsObjectType.Make (rator, rand0, rand1) :
-                (rator == Primitive.RecordRef) ? PrimitiveRecordRef.Make (rator, rand0, rand1) :
-                (rator == Primitive.Vector8BRef) ? PrimitiveVector8BRef.Make (rator, rand0, rand1) :
-                (rator == Primitive.VectorRef) ? PrimitiveVectorRef.Make (rator, rand0, rand1) :
+                //(rator == Primitive.Cons) ? PrimitiveCons.Make (rator, rand0, rand1) :
+                //(rator == Primitive.IsEq) ? PrimitiveIsEq.Make (rator, rand0, rand1) :
+                //(rator == Primitive.ObjectIsEq) ? PrimitiveIsObjectEq.Make (rator, rand0, rand1) :
+                //(rator == Primitive.CharIsEq) ? PrimitiveIsCharEq.Make (rator, rand0, rand1) :
+                //(rator == Primitive.IntIsEq) ? PrimitiveIsIntEq.Make (rator, rand0, rand1) :
+                //(rator == Primitive.IsFixnumEqual) ? PrimitiveIsFixnumEqual.Make (rator, rand0, rand1) :
+                //(rator == Primitive.GeneralCarCdr) ? PrimitiveGeneralCarCdr.Make (rator, rand0, rand1) :
+                //(rator == Primitive.GreaterThanFixnum) ? PrimitiveGreaterThanFixnum.Make (rator, rand0, rand1) :
+                //(rator == Primitive.LessThanFixnum) ? PrimitiveLessThanFixnum.Make (rator, rand0, rand1) :
+                //(rator == Primitive.PlusFixnum) ? PrimitivePlusFixnum.Make (rator, rand0, rand1) :
+                //(rator == Primitive.IsObjectType) ? PrimitiveIsObjectType.Make (rator, rand0, rand1) :
+                //(rator == Primitive.RecordRef) ? PrimitiveRecordRef.Make (rator, rand0, rand1) :
+                //(rator == Primitive.Vector8BRef) ? PrimitiveVector8BRef.Make (rator, rand0, rand1) :
+                //(rator == Primitive.VectorRef) ? PrimitiveVectorRef.Make (rator, rand0, rand1) :
                  SpecializedMake (rator, rand0, rand1);
         }
 
@@ -128,12 +131,12 @@ namespace Microcode
         {
             return
                 (!Configuration.EnablePrimitive2Specialization) ? new PrimitiveCombination2 (rator, rand0, rand1) :
-                (rand0 is PrimitiveCar) ? PrimitiveCombination2Car.Make (rator, (PrimitiveCar) rand0, rand1) :
-                (rand0 is PrimitiveCaar) ? PrimitiveCombination2Caar.Make (rator, (PrimitiveCaar) rand0, rand1) :
+                //(rand0 is PrimitiveCar) ? PrimitiveCombination2Car.Make (rator, (PrimitiveCar) rand0, rand1) :
+                //(rand0 is PrimitiveCaar) ? PrimitiveCombination2Caar.Make (rator, (PrimitiveCaar) rand0, rand1) :
                 (rand0 is LexicalVariable) ? PrimitiveCombination2L.Make (rator, (LexicalVariable) rand0, rand1) :
-                (rand0 is Quotation) ? PrimitiveCombination2Q.Make (rator, (Quotation) rand0, rand1) :
-                (rand1 is LexicalVariable) ? PrimitiveCombination2SL.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? PrimitiveCombination2SQ.Make (rator, rand0, (Quotation) rand1) :
+                //(rand0 is Quotation) ? PrimitiveCombination2Q.Make (rator, (Quotation) rand0, rand1) :
+                //(rand1 is LexicalVariable) ? PrimitiveCombination2SL.Make (rator, rand0, (LexicalVariable) rand1) :
+                //(rand1 is Quotation) ? PrimitiveCombination2SQ.Make (rator, rand0, (Quotation) rand1) :
                 new PrimitiveCombination2 (rator, rand0, rand1);
         }
 
@@ -463,13 +466,14 @@ namespace Microcode
             if (rator == null)
                 throw new ArgumentNullException ("rator");
             else
-                return
-                    (!Configuration.EnablePrimitiveCombination2Optimization) ? new PrimitiveCombination2 (rator, rand0, rand1) :
-                    //(Configuration.EnableCodeRewriting && rand0 is Quotation) ? SpecialMake (rator, (Quotation) rand0, rand1) :
-                    //(Configuration.EnableCodeRewriting && rand1 is Quotation) ? SpecialMake (rator, rand0, (Quotation) rand1) :
-                    (!Configuration.EnablePrimitive2Specialization) ? new PrimitiveCombination2 (rator, rand0, rand1) :
-                    (Configuration.EnableInlinePrimitive2) ? InlineMake (rator, rand0, rand1) :
-                    SpecializedMake (rator, rand0, rand1);
+                return new PrimitiveCombination2 (rator, rand0, rand1);
+
+                    //(!Configuration.EnablePrimitiveCombination2Optimization) ? new PrimitiveCombination2 (rator, rand0, rand1) :
+                    ////(Configuration.EnableCodeRewriting && rand0 is Quotation) ? SpecialMake (rator, (Quotation) rand0, rand1) :
+                    ////(Configuration.EnableCodeRewriting && rand1 is Quotation) ? SpecialMake (rator, rand0, (Quotation) rand1) :
+                    //(!Configuration.EnablePrimitive2Specialization) ? new PrimitiveCombination2 (rator, rand0, rand1) :
+                    //(Configuration.EnableInlinePrimitive2) ? InlineMake (rator, rand0, rand1) :
+                    //SpecializedMake (rator, rand0, rand1);
         }
 
         public static SCode Make (object rator, object rand0, object rand1)
@@ -489,15 +493,6 @@ namespace Microcode
             return false;
         }
 
-        public override SCode Bind (LexicalMap ctenv)
-        {
-            SCode optRand0 = this.rand0.Bind (ctenv);
-            SCode optRand1 = this.rand1.Bind (ctenv);
-            return (optRand0 == this.rand0 && optRand1 == this.rand1) 
-                ? this
-                : PrimitiveCombination2.Make (this.rator, optRand0, optRand1);
-        }
-
         public override bool CallsTheEnvironment ()
         {
             return this.rand0.CallsTheEnvironment ()
@@ -508,8 +503,8 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            noteCalls (this.rand0);
-            noteCalls (this.rand1);
+            NoteCalls (this.rand0);
+            NoteCalls (this.rand1);
             histogram.Note (this.histogramKey);
             ratorHistogram.Note (this.rator);
             rand0TypeHistogram.Note (this.rand0Type);
@@ -570,11 +565,6 @@ namespace Microcode
                 || this.rand1.MutatesAny (formals);
         }
 
-        public override bool Uses (Symbol formal)
-        {
-            return this.rand0.Uses (formal) || this.rand1.Uses (formal);
-        }
-
         #region ISystemHunk3 Members
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public object SystemHunk3Cxr0
@@ -623,6 +613,29 @@ namespace Microcode
             info.AddValue ("rand0", this.rand0);
             info.AddValue ("rand1", this.rand1);
         }
+
+        //public override SCode BindVariables (LexicalMap lexicalMap)
+        //{
+        //    SCode boundRand0 = this.rand0.BindVariables (lexicalMap);
+        //    SCode boundRand1 = this.rand1.BindVariables (lexicalMap);
+        //    return (boundRand0 == this.rand0 &&
+        //            boundRand1 == this.rand1) ?
+        //            this :
+        //            PrimitiveCombination2.Make (this.rator, boundRand0, boundRand1);
+        //}
+
+        public override IList<Symbol> FreeVariables ()
+        {
+            return new List<Symbol> (this.rand0.FreeVariables ().Union (this.rand1.FreeVariables ()));
+        }
+
+        public override PartialResult PartialEval (Environment environment)
+        {
+            PartialResult r0 = this.rand0.PartialEval (environment);
+            PartialResult r1 = this.rand1.PartialEval (environment);
+            return new PartialResult (r0.Residual == this.rand0 &&
+                r1.Residual == this.rand1 ? this : new PrimitiveCombination2 (this.rator, r0.Residual, r1.Residual));
+        }
     }
 
     [Serializable]
@@ -634,6 +647,7 @@ namespace Microcode
         SCode rand1;
 
         // GetRealObject is called after this object is deserialized.
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         public Object GetRealObject (StreamingContext context)
         {
             return PrimitiveCombination2.Make (this.rator, this.rand0, this.rand1);
@@ -674,7 +688,7 @@ namespace Microcode
 
         public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev1)
         {
-            Control unev = this.expression.Rand0;
+            Control unev = this.expression.Operand0;
             Environment env = this.environment;
             object ev0;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
@@ -758,2701 +772,2701 @@ namespace Microcode
  
     }
 
-    [Serializable]
-    class PrimitiveCombination2Car : PrimitiveCombination2
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly SCode rand0rand0;
-
-        protected PrimitiveCombination2Car (Primitive2 rator, PrimitiveCar rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand0rand0 = rand0.Operand;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, SCode rand1)
-        {
-            return
-                (rand0 is PrimitiveCarL) ? PrimitiveCombination2CarL.Make (rator, (PrimitiveCarL) rand0, rand1) :
-                (rand1 is LexicalVariable) ? PrimitiveCombination2CarSL.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? PrimitiveCombination2CarSQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2Car (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2Car.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            unev = this.rand0rand0;
-            env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarL : PrimitiveCombination2Car
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object rand0Name;
-        public readonly int rand0Depth;
-        public readonly int rand0Offset;
-
-        protected PrimitiveCombination2CarL (Primitive2 rator, PrimitiveCarL rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand0Name = rand0.OperandName;
-            this.rand0Depth = rand0.OperandDepth;
-            this.rand0Offset = rand0.OperandOffset;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, SCode rand1)
-        {
-            return
-                (rand0 is PrimitiveCarA) ? PrimitiveCombination2CarA.Make (rator, (PrimitiveCarA) rand0, rand1) :
-                (rand0 is PrimitiveCarL1) ? PrimitiveCombination2CarL1.Make (rator, (PrimitiveCarL1) rand0, rand1) :
-                (rand1 is LexicalVariable) ? PrimitiveCombination2CarLL.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? PrimitiveCombination2CarLQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CarL (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CarL.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarA : PrimitiveCombination2CarL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination2CarA (Primitive2 rator, PrimitiveCarA rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarA rand0, SCode rand1)
-        {
-            return
-                (rand0 is PrimitiveCarA0) ? PrimitiveCombination2CarA0.Make (rator, (PrimitiveCarA0) rand0, rand1) :
-                (rand0 is PrimitiveCarA1) ? PrimitiveCombination2CarA1.Make (rator, (PrimitiveCarA1) rand0, rand1) :
-                //(rand1 is LexicalVariable) ? PrimitiveCombination2CarLL.Make (rator, rand0, (LexicalVariable) rand1) :
-                //(rand1 is Quotation) ? PrimitiveCombination2CarLQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CarA (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CarA.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) environment.ArgumentValue (this.rand0Offset)).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarA0 : PrimitiveCombination2CarA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination2CarA0 (Primitive2 rator, PrimitiveCarA0 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, SCode rand1)
-        {
-            return
-                (rand1 is LexicalVariable) ? PrimitiveCombination2CarA0L.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? PrimitiveCombination2CarA0Q.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CarA0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CarA0.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) environment.Argument0Value).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarA0L : PrimitiveCombination2CarA0
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PrimitiveCombination2CarA0L (Primitive2 rator, PrimitiveCarA0 rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, LexicalVariable rand1)
-        {
-            return
-                (rand1 is Argument) ? PrimitiveCombination2CarA0A.Make (rator, rand0, (Argument) rand1) :
-                (rand1 is LexicalVariable1) ? PrimitiveCombination2CarA0L1.Make (rator, rand0, (LexicalVariable1) rand1) :
-                new PrimitiveCombination2CarA0L (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarA0L.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) environment.Argument0Value).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarA0A : PrimitiveCombination2CarA0L
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        protected PrimitiveCombination2CarA0A (Primitive2 rator, PrimitiveCarA0 rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, Argument rand1)
-        {
-            return
-                (rand1 is Argument0) ? Unimplemented () :
-                (rand1 is Argument1) ? PrimitiveCombination2CarA0A1.Make (rator, rand0, (Argument1) rand1) :
-                new PrimitiveCombination2CarA0A (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) environment.Argument0Value).Car, environment.ArgumentValue (this.rand1Offset))) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarA0A1 : PrimitiveCombination2CarA0A
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CarA0A1 (Primitive2 rator, PrimitiveCarA0 rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, Argument1 rand1)
-        {
-            return
-                new PrimitiveCombination2CarA0A1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) environment.Argument0Value).Car, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarA0L1 : PrimitiveCombination2CarA0L
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CarA0L1 (Primitive2 rator, PrimitiveCarA0 rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, LexicalVariable1 rand1)
-        {
-            return
-                new PrimitiveCombination2CarA0L1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarA0L1.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) environment.Argument0Value).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarA0Q : PrimitiveCombination2CarA0
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Value;
-
-        PrimitiveCombination2CarA0Q (Primitive2 rator, PrimitiveCarA0 rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Value = rand1.Quoted;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, Quotation rand1)
-        {
-            return
-                new PrimitiveCombination2CarA0Q (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) environment.Argument0Value).Car, this.rand1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarA1 : PrimitiveCombination2CarA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination2CarA1 (Primitive2 rator, PrimitiveCarA1 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarA1 rand0, SCode rand1)
-        {
-            return
-                //(rand1 is LexicalVariable) ? PrimitiveCombination2CarLL.Make (rator, rand0, (LexicalVariable) rand1) :
-                //(rand1 is Quotation) ? PrimitiveCombination2CarLQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CarA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CarA1.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) environment.Argument1Value).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarL1 : PrimitiveCombination2CarL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination2CarL1 (Primitive2 rator, PrimitiveCarL1 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarL1 rand0, SCode rand1)
-        {
-            return
-                //(rand1 is LexicalVariable) ? PrimitiveCombination2CarLL.Make (rator, rand0, (LexicalVariable) rand1) :
-                //(rand1 is Quotation) ? PrimitiveCombination2CarLQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CarL1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CarL1.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarLL : PrimitiveCombination2CarL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PrimitiveCombination2CarLL (Primitive2 rator, PrimitiveCarL rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, LexicalVariable rand1)
-        {
-            return
-                (rand1 is Argument) ? PrimitiveCombination2CarLA.Make (rator, rand0, (Argument) rand1) :
-                (rand1 is LexicalVariable1) ? PrimitiveCombination2CarLL1.Make (rator, rand0, (LexicalVariable1) rand1) :
-                new PrimitiveCombination2CarLL (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarLL.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarLA : PrimitiveCombination2CarLL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        protected PrimitiveCombination2CarLA (Primitive2 rator, PrimitiveCarL rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, Argument rand1)
-        {
-            return
-                (rand1 is Argument0) ? PrimitiveCombination2CarLA0.Make (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? PrimitiveCombination2CarLA1.Make (rator, rand0, (Argument1) rand1) :
-                new PrimitiveCombination2CarLA (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarLA.EvalStep";
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, environment.ArgumentValue (this.rand1Offset))) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarLA0 : PrimitiveCombination2CarLA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CarLA0 (Primitive2 rator, PrimitiveCarL rand0, Argument0 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, Argument0 rand1)
-        {
-            return
-                new PrimitiveCombination2CarLA0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarLA0.EvalStep";
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarLA1 : PrimitiveCombination2CarLA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CarLA1 (Primitive2 rator, PrimitiveCarL rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, Argument1 rand1)
-        {
-            return
-                new PrimitiveCombination2CarLA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarLA1.EvalStep";
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarLL1 : PrimitiveCombination2CarLL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-
-        PrimitiveCombination2CarLL1 (Primitive2 rator, PrimitiveCarL rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, LexicalVariable1 rand1)
-        {
-            return
-                new PrimitiveCombination2CarLL1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarLL1.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarLQ : PrimitiveCombination2CarL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Value;
-
-        PrimitiveCombination2CarLQ (Primitive2 rator, PrimitiveCarL rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Value = rand1.Quoted;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, Quotation rand1)
-        {
-            return
-                new PrimitiveCombination2CarLQ (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarLQ.EvalStep";
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, this.rand1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarSL : PrimitiveCombination2Car
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PrimitiveCombination2CarSL (Primitive2 rator, PrimitiveCar rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, LexicalVariable rand1)
-        {
-            return
-                (rand1 is Argument) ? PrimitiveCombination2CarSA.Make (rator, rand0, (Argument) rand1) :
-                (rand1 is LexicalVariable1) ? PrimitiveCombination2CarSL1.Make (rator, rand0, (LexicalVariable1) rand1) :
-                new PrimitiveCombination2CarSL (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarSL.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CarSA : PrimitiveCombination2CarSL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        protected PrimitiveCombination2CarSA (Primitive2 rator, PrimitiveCar rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, Argument rand1)
-        {
-            return
-                (rand1 is Argument0) ? PrimitiveCombination2CarSA0.Make (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? PrimitiveCombination2CarSA1.Make (rator, rand0, (Argument1) rand1) :
-                new PrimitiveCombination2CarSA (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarSA.EvalStep";
-#endif
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, environment.ArgumentValue (this.rand1Offset))) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarSA0 : PrimitiveCombination2CarSA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CarSA0 (Primitive2 rator, PrimitiveCar rand0, Argument0 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, Argument0 rand1)
-        {
-            return
-                new PrimitiveCombination2CarSA0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarSA0.EvalStep";
-#endif
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarSA1 : PrimitiveCombination2CarSA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CarSA1 (Primitive2 rator, PrimitiveCar rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, Argument1 rand1)
-        {
-            return
-                new PrimitiveCombination2CarSA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarSA1.EvalStep";
-#endif
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarSL1 : PrimitiveCombination2CarSL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-
-        PrimitiveCombination2CarSL1 (Primitive2 rator, PrimitiveCar rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, LexicalVariable1 rand1)
-        {
-            return
-                new PrimitiveCombination2CarSL1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarSL1.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CarSQ : PrimitiveCombination2Car
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Value;
-
-        PrimitiveCombination2CarSQ (Primitive2 rator, PrimitiveCar rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Value = rand1.Quoted;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, Quotation rand1)
-        {
-            return
-                new PrimitiveCombination2CarSQ (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CarSQ.EvalStep";
-#endif
-
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            if (this.method (out answer, ((Cons) ev0).Car, this.rand1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2Caar : PrimitiveCombination2
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly SCode rand0rand0;
-
-        protected PrimitiveCombination2Caar (Primitive2 rator, PrimitiveCaar rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand0rand0 = rand0.Operand;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, SCode rand1)
-        {
-            return
-                (rand0 is PrimitiveCaarL) ? PrimitiveCombination2CaarL.Make (rator, (PrimitiveCaarL) rand0, rand1) :
-                (rand1 is LexicalVariable) ? PrimitiveCombination2CaarSL.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? PrimitiveCombination2CaarSQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2Caar (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2Caar.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            unev = this.rand0rand0;
-            env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarL : PrimitiveCombination2Caar
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object rand0Name;
-        public readonly int rand0Depth;
-        public readonly int rand0Offset;
-
-        protected PrimitiveCombination2CaarL (Primitive2 rator, PrimitiveCaarL rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand0Name = rand0.OperandName;
-            this.rand0Depth = rand0.OperandDepth;
-            this.rand0Offset = rand0.OperandOffset;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, SCode rand1)
-        {
-            return
-                (rand0 is PrimitiveCaarA) ? PrimitiveCombination2CaarA.Make (rator, (PrimitiveCaarA) rand0, rand1) :
-                (rand0 is PrimitiveCaarL1) ? PrimitiveCombination2CaarL1.Make (rator, (PrimitiveCaarL1) rand0, rand1):
-                (rand1 is LexicalVariable) ? PrimitiveCombination2CaarLL.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? PrimitiveCombination2CaarLQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CaarL (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CaarL.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarA : PrimitiveCombination2CaarL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination2CaarA (Primitive2 rator, PrimitiveCaarA rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarA rand0, SCode rand1)
-        {
-            return
-                (rand0 is PrimitiveCaarA0) ? PrimitiveCombination2CaarA0.Make (rator, (PrimitiveCaarA0) rand0, rand1) :
-                (rand0 is PrimitiveCaarA1) ? PrimitiveCombination2CaarA1.Make (rator, (PrimitiveCaarA1) rand0, rand1) :
-                //(rand1 is LexicalVariable) ? PrimitiveCombination2CaarLL.Make (rator, rand0, (LexicalVariable) rand1) :
-                //(rand1 is Quotation) ? PrimitiveCombination2CaarLQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CaarA (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CaarA.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-            Cons temp = ((Cons) environment.ArgumentValue (this.rand0Offset)).Car as Cons;
-            if (temp == null) throw new NotImplementedException ();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarA0 : PrimitiveCombination2CaarA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination2CaarA0 (Primitive2 rator, PrimitiveCaarA0 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, SCode rand1)
-        {
-            return
-                (rand1 is LexicalVariable) ? PrimitiveCombination2CaarA0L.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? PrimitiveCombination2CaarA0Q.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CaarA0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CaarA0.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-            Cons temp = ((Cons) environment.Argument0Value).Car as Cons;
-            if (temp == null) throw new NotImplementedException ();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarA0L : PrimitiveCombination2CaarA0
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PrimitiveCombination2CaarA0L (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable rand1)
-        {
-            return
-                (rand1 is Argument) ? PrimitiveCombination2CaarA0A.Make (rator, rand0, (Argument) rand1) :
-                (rand1 is LexicalVariable1) ? PrimitiveCombination2CaarA0L1.Make (rator, rand0, (LexicalVariable1) rand1) :
-                new PrimitiveCombination2CaarA0L (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarA0L.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            Cons temp = ((Cons) environment.Argument0Value).Car as Cons;
-            if (temp == null) throw new NotImplementedException ();
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarA0A : PrimitiveCombination2CaarA0L
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        protected PrimitiveCombination2CaarA0A (Primitive2 rator, PrimitiveCaarA0 rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, Argument rand1)
-        {
-            return
-                (rand1 is Argument0) ? Unimplemented() :
-                (rand1 is Argument1) ? PrimitiveCombination2CaarA0A1.Make (rator, rand0, (Argument1) rand1) :
-                new PrimitiveCombination2CaarA0A (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            Cons temp = ((Cons) environment.Argument0Value).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, environment.ArgumentValue(this.rand1Offset))) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarA0A1 : PrimitiveCombination2CaarA0A
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CaarA0A1 (Primitive2 rator, PrimitiveCaarA0 rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, Argument1 rand1)
-        {
-            return
-                new PrimitiveCombination2CaarA0A1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            Cons temp = ((Cons) environment.Argument0Value).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarA0L1 : PrimitiveCombination2CaarA0L
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CaarA0L1 (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable1 rand1)
-        {
-            return
-                new PrimitiveCombination2CaarA0L1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarA0L1.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString ();
-#endif
-            Cons temp = ((Cons) environment.Argument0Value).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarA0Q : PrimitiveCombination2CaarA0
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Value;
-
-        PrimitiveCombination2CaarA0Q (Primitive2 rator, PrimitiveCaarA0 rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Value = rand1.Quoted;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, Quotation rand1)
-        {
-            return
-                new PrimitiveCombination2CaarA0Q (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-            Cons temp = ((Cons) environment.Argument0Value).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, this.rand1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarA1 : PrimitiveCombination2CaarA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination2CaarA1 (Primitive2 rator, PrimitiveCaarA1 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarA1 rand0, SCode rand1)
-        {
-            return
-                //(rand1 is LexicalVariable) ? PrimitiveCombination2CaarLL.Make (rator, rand0, (LexicalVariable) rand1) :
-                //(rand1 is Quotation) ? PrimitiveCombination2CaarLQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CaarA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CaarA1.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-            Cons temp = ((Cons) environment.Argument1Value).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarL1 : PrimitiveCombination2CaarL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination2CaarL1 (Primitive2 rator, PrimitiveCaarL1 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarL1 rand0, SCode rand1)
-        {
-            return
-                //(rand1 is LexicalVariable) ? PrimitiveCombination2CaarLL.Make (rator, rand0, (LexicalVariable) rand1) :
-                //(rand1 is Quotation) ? PrimitiveCombination2CaarLQ.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveCombination2CaarL1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            ratorHistogram.Note (this.rator);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2CaarL1.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarLL : PrimitiveCombination2CaarL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PrimitiveCombination2CaarLL (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable rand1)
-        {
-            return
-                (rand1 is Argument) ? PrimitiveCombination2CaarLA.Make (rator, rand0, (Argument) rand1) :
-                (rand1 is LexicalVariable1) ? PrimitiveCombination2CaarLL1.Make (rator, rand0, (LexicalVariable1) rand1) :
-                new PrimitiveCombination2CaarLL (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarLL.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarLA : PrimitiveCombination2CaarLL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        protected PrimitiveCombination2CaarLA (Primitive2 rator, PrimitiveCaarL rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, Argument rand1)
-        {
-            return
-                (rand1 is Argument0) ? PrimitiveCombination2CaarLA0.Make (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? PrimitiveCombination2CaarLA1.Make (rator, rand0, (Argument1) rand1) :
-                new PrimitiveCombination2CaarLA (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarLA.EvalStep";
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, environment.ArgumentValue (this.rand1Offset))) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarLA0 : PrimitiveCombination2CaarLA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CaarLA0 (Primitive2 rator, PrimitiveCaarL rand0, Argument0 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, Argument0 rand1)
-        {
-            return
-                new PrimitiveCombination2CaarLA0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarLA0.EvalStep";
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarLA1 : PrimitiveCombination2CaarLA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CaarLA1 (Primitive2 rator, PrimitiveCaarL rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, Argument1 rand1)
-        {
-            return
-                new PrimitiveCombination2CaarLA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarLA1.EvalStep";
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarLL1 : PrimitiveCombination2CaarLL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-
-        PrimitiveCombination2CaarLL1 (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable1 rand1)
-        {
-            return
-                new PrimitiveCombination2CaarLL1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarLL1.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarLQ : PrimitiveCombination2CaarL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Value;
-
-        PrimitiveCombination2CaarLQ (Primitive2 rator, PrimitiveCaarL rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Value = rand1.Quoted;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, Quotation rand1)
-        {
-            return
-                new PrimitiveCombination2CaarLQ (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarLQ.EvalStep";
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, this.rand1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarSL : PrimitiveCombination2Caar
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PrimitiveCombination2CaarSL (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable rand1)
-        {
-            return
-                (rand1 is Argument) ? PrimitiveCombination2CaarSA.Make (rator, rand0, (Argument) rand1) :
-                (rand1 is LexicalVariable1) ? PrimitiveCombination2CaarSL1.Make (rator, rand0, (LexicalVariable1) rand1) :
-                new PrimitiveCombination2CaarSL (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarSL.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination2CaarSA : PrimitiveCombination2CaarSL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        protected PrimitiveCombination2CaarSA (Primitive2 rator, PrimitiveCaar rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, Argument rand1)
-        {
-            return
-                (rand1 is Argument0) ? PrimitiveCombination2CaarSA0.Make (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? PrimitiveCombination2CaarSA1.Make (rator, rand0, (Argument1) rand1) :
-                new PrimitiveCombination2CaarSA (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarSA.EvalStep";
-#endif
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, environment.ArgumentValue(this.rand1Offset))) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarSA0 : PrimitiveCombination2CaarSA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CaarSA0 (Primitive2 rator, PrimitiveCaar rand0, Argument0 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, Argument0 rand1)
-        {
-            return
-                new PrimitiveCombination2CaarSA0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarSA0.EvalStep";
-#endif
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarSA1 : PrimitiveCombination2CaarSA
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        PrimitiveCombination2CaarSA1 (Primitive2 rator, PrimitiveCaar rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, Argument1 rand1)
-        {
-            return
-                new PrimitiveCombination2CaarSA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarSA1.EvalStep";
-#endif
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarSL1 : PrimitiveCombination2CaarSL
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-
-        PrimitiveCombination2CaarSL1 (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable1 rand1)
-        {
-            return
-                new PrimitiveCombination2CaarSL1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarSL1.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination2CaarSQ : PrimitiveCombination2Caar
-    {
-#if DEBUG
-        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
-#endif
-        public readonly object rand1Value;
-
-        PrimitiveCombination2CaarSQ (Primitive2 rator, PrimitiveCaar rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-              this.rand1Value = rand1.Quoted;
-        }
-
-        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, Quotation rand1)
-        {
-            return
-                new PrimitiveCombination2CaarSQ (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0rand0);
-            ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2CaarSQ.EvalStep";
-#endif
-
-            Control unev = this.rand0rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
-            SCode.location = this.rator.Name.ToString();
-#endif
-	    Cons temp = ((Cons)ev0).Car as Cons;
-            if (temp == null) throw new NotImplementedException();
-            if (this.method (out answer, temp.Car, this.rand1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+////    [Serializable]
+////    class PrimitiveCombination2Car : PrimitiveCombination2
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+////        public readonly SCode rand0rand0;
+
+////        protected PrimitiveCombination2Car (Primitive2 rator, PrimitiveCar rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand0rand0 = rand0.Operand;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, SCode rand1)
+////        {
+////            return
+////                (rand0 is PrimitiveCarL) ? PrimitiveCombination2CarL.Make (rator, (PrimitiveCarL) rand0, rand1) :
+////                (rand1 is LexicalVariable) ? PrimitiveCombination2CarSL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                (rand1 is Quotation) ? PrimitiveCombination2CarSQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2Car (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2Car.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            unev = this.rand0rand0;
+////            env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarL : PrimitiveCombination2Car
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+////        public readonly object rand0Name;
+////        public readonly uint rand0Depth;
+////        public readonly uint rand0Offset;
+
+////        protected PrimitiveCombination2CarL (Primitive2 rator, PrimitiveCarL rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand0Name = rand0.OperandName;
+////            this.rand0Depth = rand0.OperandDepth;
+////            this.rand0Offset = rand0.OperandOffset;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, SCode rand1)
+////        {
+////            return
+////                (rand0 is PrimitiveCarA) ? PrimitiveCombination2CarA.Make (rator, (PrimitiveCarA) rand0, rand1) :
+////                (rand0 is PrimitiveCarL1) ? PrimitiveCombination2CarL1.Make (rator, (PrimitiveCarL1) rand0, rand1) :
+////                (rand1 is LexicalVariable) ? PrimitiveCombination2CarLL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                (rand1 is Quotation) ? PrimitiveCombination2CarLQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CarL (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CarL.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarA : PrimitiveCombination2CarL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+
+////        protected PrimitiveCombination2CarA (Primitive2 rator, PrimitiveCarA rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarA rand0, SCode rand1)
+////        {
+////            return
+////                (rand0 is PrimitiveCarA0) ? PrimitiveCombination2CarA0.Make (rator, (PrimitiveCarA0) rand0, rand1) :
+////                (rand0 is PrimitiveCarA1) ? PrimitiveCombination2CarA1.Make (rator, (PrimitiveCarA1) rand0, rand1) :
+////                //(rand1 is LexicalVariable) ? PrimitiveCombination2CarLL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                //(rand1 is Quotation) ? PrimitiveCombination2CarLQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CarA (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CarA.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) closureEnvironment.ArgumentValue (this.rand0Offset)).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarA0 : PrimitiveCombination2CarA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+
+////        protected PrimitiveCombination2CarA0 (Primitive2 rator, PrimitiveCarA0 rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, SCode rand1)
+////        {
+////            return
+////                (rand1 is LexicalVariable) ? PrimitiveCombination2CarA0L.Make (rator, rand0, (LexicalVariable) rand1) :
+////                (rand1 is Quotation) ? PrimitiveCombination2CarA0Q.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CarA0 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CarA0.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) closureEnvironment.Argument0Value).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarA0L : PrimitiveCombination2CarA0
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Name;
+////        public readonly int rand1Depth;
+////        public readonly int rand1Offset;
+
+////        protected PrimitiveCombination2CarA0L (Primitive2 rator, PrimitiveCarA0 rand0, LexicalVariable rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Name = rand1.Name;
+////            this.rand1Depth = rand1.Depth;
+////            this.rand1Offset = rand1.Offset;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, LexicalVariable rand1)
+////        {
+////            return
+////                (rand1 is Argument) ? PrimitiveCombination2CarA0A.Make (rator, rand0, (Argument) rand1) :
+////                (rand1 is LexicalVariable1) ? PrimitiveCombination2CarA0L1.Make (rator, rand0, (LexicalVariable1) rand1) :
+////                new PrimitiveCombination2CarA0L (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarA0L.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) closureEnvironment.Argument0Value).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarA0A : PrimitiveCombination2CarA0L
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        protected PrimitiveCombination2CarA0A (Primitive2 rator, PrimitiveCarA0 rand0, Argument rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, Argument rand1)
+////        {
+////            return
+////                (rand1 is Argument0) ? Unimplemented () :
+////                (rand1 is Argument1) ? PrimitiveCombination2CarA0A1.Make (rator, rand0, (Argument1) rand1) :
+////                new PrimitiveCombination2CarA0A (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) closureEnvironment.Argument0Value).Car, closureEnvironment.ArgumentValue (this.rand1Offset))) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarA0A1 : PrimitiveCombination2CarA0A
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CarA0A1 (Primitive2 rator, PrimitiveCarA0 rand0, Argument1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, Argument1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarA0A1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) closureEnvironment.Argument0Value).Car, closureEnvironment.Argument1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarA0L1 : PrimitiveCombination2CarA0L
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CarA0L1 (Primitive2 rator, PrimitiveCarA0 rand0, LexicalVariable1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, LexicalVariable1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarA0L1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarA0L1.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) closureEnvironment.Argument0Value).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarA0Q : PrimitiveCombination2CarA0
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Value;
+
+////        PrimitiveCombination2CarA0Q (Primitive2 rator, PrimitiveCarA0 rand0, Quotation rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Value = rand1.Quoted;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, Quotation rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarA0Q (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) closureEnvironment.Argument0Value).Car, this.rand1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarA1 : PrimitiveCombination2CarA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+
+////        protected PrimitiveCombination2CarA1 (Primitive2 rator, PrimitiveCarA1 rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarA1 rand0, SCode rand1)
+////        {
+////            return
+////                //(rand1 is LexicalVariable) ? PrimitiveCombination2CarLL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                //(rand1 is Quotation) ? PrimitiveCombination2CarLQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CarA1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CarA1.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) closureEnvironment.Argument1Value).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarL1 : PrimitiveCombination2CarL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+
+////        protected PrimitiveCombination2CarL1 (Primitive2 rator, PrimitiveCarL1 rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarL1 rand0, SCode rand1)
+////        {
+////            return
+////                //(rand1 is LexicalVariable) ? PrimitiveCombination2CarLL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                //(rand1 is Quotation) ? PrimitiveCombination2CarLQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CarL1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CarL1.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarLL : PrimitiveCombination2CarL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Name;
+////        public readonly int rand1Depth;
+////        public readonly int rand1Offset;
+
+////        protected PrimitiveCombination2CarLL (Primitive2 rator, PrimitiveCarL rand0, LexicalVariable rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Name = rand1.Name;
+////            this.rand1Depth = rand1.Depth;
+////            this.rand1Offset = rand1.Offset;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, LexicalVariable rand1)
+////        {
+////            return
+////                (rand1 is Argument) ? PrimitiveCombination2CarLA.Make (rator, rand0, (Argument) rand1) :
+////                (rand1 is LexicalVariable1) ? PrimitiveCombination2CarLL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+////                new PrimitiveCombination2CarLL (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarLL.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+////                throw new NotImplementedException ();
+
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarLA : PrimitiveCombination2CarLL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        protected PrimitiveCombination2CarLA (Primitive2 rator, PrimitiveCarL rand0, Argument rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, Argument rand1)
+////        {
+////            return
+////                (rand1 is Argument0) ? PrimitiveCombination2CarLA0.Make (rator, rand0, (Argument0) rand1) :
+////                (rand1 is Argument1) ? PrimitiveCombination2CarLA1.Make (rator, rand0, (Argument1) rand1) :
+////                new PrimitiveCombination2CarLA (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarLA.EvalStep";
+////#endif
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, closureEnvironment.ArgumentValue (this.rand1Offset))) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarLA0 : PrimitiveCombination2CarLA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CarLA0 (Primitive2 rator, PrimitiveCarL rand0, Argument0 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, Argument0 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarLA0 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarLA0.EvalStep";
+////#endif
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, closureEnvironment.Argument0Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarLA1 : PrimitiveCombination2CarLA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CarLA1 (Primitive2 rator, PrimitiveCarL rand0, Argument1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, Argument1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarLA1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarLA1.EvalStep";
+////#endif
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, closureEnvironment.Argument1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarLL1 : PrimitiveCombination2CarLL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+
+////        PrimitiveCombination2CarLL1 (Primitive2 rator, PrimitiveCarL rand0, LexicalVariable1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, LexicalVariable1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarLL1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarLL1.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+////                throw new NotImplementedException ();
+
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarLQ : PrimitiveCombination2CarL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Value;
+
+////        PrimitiveCombination2CarLQ (Primitive2 rator, PrimitiveCarL rand0, Quotation rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Value = rand1.Quoted;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCarL rand0, Quotation rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarLQ (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarLQ.EvalStep";
+////#endif
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, this.rand1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarSL : PrimitiveCombination2Car
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Name;
+////        public readonly int rand1Depth;
+////        public readonly int rand1Offset;
+
+////        protected PrimitiveCombination2CarSL (Primitive2 rator, PrimitiveCar rand0, LexicalVariable rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Name = rand1.Name;
+////            this.rand1Depth = rand1.Depth;
+////            this.rand1Offset = rand1.Offset;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, LexicalVariable rand1)
+////        {
+////            return
+////                (rand1 is Argument) ? PrimitiveCombination2CarSA.Make (rator, rand0, (Argument) rand1) :
+////                (rand1 is LexicalVariable1) ? PrimitiveCombination2CarSL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+////                new PrimitiveCombination2CarSL (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarSL.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+////                throw new NotImplementedException ();
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CarSA : PrimitiveCombination2CarSL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        protected PrimitiveCombination2CarSA (Primitive2 rator, PrimitiveCar rand0, Argument rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, Argument rand1)
+////        {
+////            return
+////                (rand1 is Argument0) ? PrimitiveCombination2CarSA0.Make (rator, rand0, (Argument0) rand1) :
+////                (rand1 is Argument1) ? PrimitiveCombination2CarSA1.Make (rator, rand0, (Argument1) rand1) :
+////                new PrimitiveCombination2CarSA (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarSA.EvalStep";
+////#endif
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, closureEnvironment.ArgumentValue (this.rand1Offset))) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarSA0 : PrimitiveCombination2CarSA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CarSA0 (Primitive2 rator, PrimitiveCar rand0, Argument0 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, Argument0 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarSA0 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarSA0.EvalStep";
+////#endif
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, closureEnvironment.Argument0Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarSA1 : PrimitiveCombination2CarSA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CarSA1 (Primitive2 rator, PrimitiveCar rand0, Argument1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, Argument1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarSA1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarSA1.EvalStep";
+////#endif
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, closureEnvironment.Argument1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarSL1 : PrimitiveCombination2CarSL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+
+////        PrimitiveCombination2CarSL1 (Primitive2 rator, PrimitiveCar rand0, LexicalVariable1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, LexicalVariable1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarSL1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarSL1.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+////                throw new NotImplementedException ();
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CarSQ : PrimitiveCombination2Car
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Value;
+
+////        PrimitiveCombination2CarSQ (Primitive2 rator, PrimitiveCar rand0, Quotation rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Value = rand1.Quoted;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, Quotation rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CarSQ (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CarSQ.EvalStep";
+////#endif
+
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            if (this.method (out answer, ((Cons) ev0).Car, this.rand1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2Caar : PrimitiveCombination2
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+////        public readonly SCode rand0rand0;
+
+////        protected PrimitiveCombination2Caar (Primitive2 rator, PrimitiveCaar rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand0rand0 = rand0.Operand;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, SCode rand1)
+////        {
+////            return
+////                (rand0 is PrimitiveCaarL) ? PrimitiveCombination2CaarL.Make (rator, (PrimitiveCaarL) rand0, rand1) :
+////                (rand1 is LexicalVariable) ? PrimitiveCombination2CaarSL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                (rand1 is Quotation) ? PrimitiveCombination2CaarSQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2Caar (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2Caar.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            unev = this.rand0rand0;
+////            env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarL : PrimitiveCombination2Caar
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+////        public readonly object rand0Name;
+////        public readonly int rand0Depth;
+////        public readonly int rand0Offset;
+
+////        protected PrimitiveCombination2CaarL (Primitive2 rator, PrimitiveCaarL rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand0Name = rand0.OperandName;
+////            this.rand0Depth = rand0.OperandDepth;
+////            this.rand0Offset = rand0.OperandOffset;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, SCode rand1)
+////        {
+////            return
+////                (rand0 is PrimitiveCaarA) ? PrimitiveCombination2CaarA.Make (rator, (PrimitiveCaarA) rand0, rand1) :
+////                (rand0 is PrimitiveCaarL1) ? PrimitiveCombination2CaarL1.Make (rator, (PrimitiveCaarL1) rand0, rand1):
+////                (rand1 is LexicalVariable) ? PrimitiveCombination2CaarLL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                (rand1 is Quotation) ? PrimitiveCombination2CaarLQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CaarL (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CaarL.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarA : PrimitiveCombination2CaarL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+
+////        protected PrimitiveCombination2CaarA (Primitive2 rator, PrimitiveCaarA rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarA rand0, SCode rand1)
+////        {
+////            return
+////                (rand0 is PrimitiveCaarA0) ? PrimitiveCombination2CaarA0.Make (rator, (PrimitiveCaarA0) rand0, rand1) :
+////                (rand0 is PrimitiveCaarA1) ? PrimitiveCombination2CaarA1.Make (rator, (PrimitiveCaarA1) rand0, rand1) :
+////                //(rand1 is LexicalVariable) ? PrimitiveCombination2CaarLL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                //(rand1 is Quotation) ? PrimitiveCombination2CaarLQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CaarA (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CaarA.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////            Cons temp = ((Cons) closureEnvironment.ArgumentValue (this.rand0Offset)).Car as Cons;
+////            if (temp == null) throw new NotImplementedException ();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarA0 : PrimitiveCombination2CaarA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+
+////        protected PrimitiveCombination2CaarA0 (Primitive2 rator, PrimitiveCaarA0 rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, SCode rand1)
+////        {
+////            return
+////                (rand1 is LexicalVariable) ? PrimitiveCombination2CaarA0L.Make (rator, rand0, (LexicalVariable) rand1) :
+////                (rand1 is Quotation) ? PrimitiveCombination2CaarA0Q.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CaarA0 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CaarA0.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////            Cons temp = ((Cons) closureEnvironment.Argument0Value).Car as Cons;
+////            if (temp == null) throw new NotImplementedException ();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarA0L : PrimitiveCombination2CaarA0
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Name;
+////        public readonly int rand1Depth;
+////        public readonly int rand1Offset;
+
+////        protected PrimitiveCombination2CaarA0L (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Name = rand1.Name;
+////            this.rand1Depth = rand1.Depth;
+////            this.rand1Offset = rand1.Offset;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable rand1)
+////        {
+////            return
+////                (rand1 is Argument) ? PrimitiveCombination2CaarA0A.Make (rator, rand0, (Argument) rand1) :
+////                (rand1 is LexicalVariable1) ? PrimitiveCombination2CaarA0L1.Make (rator, rand0, (LexicalVariable1) rand1) :
+////                new PrimitiveCombination2CaarA0L (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarA0L.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+////                throw new NotImplementedException ();
+
+////            Cons temp = ((Cons) closureEnvironment.Argument0Value).Car as Cons;
+////            if (temp == null) throw new NotImplementedException ();
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarA0A : PrimitiveCombination2CaarA0L
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        protected PrimitiveCombination2CaarA0A (Primitive2 rator, PrimitiveCaarA0 rand0, Argument rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, Argument rand1)
+////        {
+////            return
+////                (rand1 is Argument0) ? Unimplemented() :
+////                (rand1 is Argument1) ? PrimitiveCombination2CaarA0A1.Make (rator, rand0, (Argument1) rand1) :
+////                new PrimitiveCombination2CaarA0A (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            Cons temp = ((Cons) closureEnvironment.Argument0Value).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, closureEnvironment.ArgumentValue(this.rand1Offset))) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarA0A1 : PrimitiveCombination2CaarA0A
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CaarA0A1 (Primitive2 rator, PrimitiveCaarA0 rand0, Argument1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, Argument1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarA0A1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            Cons temp = ((Cons) closureEnvironment.Argument0Value).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, closureEnvironment.Argument1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarA0L1 : PrimitiveCombination2CaarA0L
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CaarA0L1 (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, LexicalVariable1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarA0L1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarA0L1.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString ();
+////#endif
+////            Cons temp = ((Cons) closureEnvironment.Argument0Value).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarA0Q : PrimitiveCombination2CaarA0
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Value;
+
+////        PrimitiveCombination2CaarA0Q (Primitive2 rator, PrimitiveCaarA0 rand0, Quotation rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Value = rand1.Quoted;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarA0 rand0, Quotation rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarA0Q (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////            Cons temp = ((Cons) closureEnvironment.Argument0Value).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, this.rand1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarA1 : PrimitiveCombination2CaarA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+
+////        protected PrimitiveCombination2CaarA1 (Primitive2 rator, PrimitiveCaarA1 rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarA1 rand0, SCode rand1)
+////        {
+////            return
+////                //(rand1 is LexicalVariable) ? PrimitiveCombination2CaarLL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                //(rand1 is Quotation) ? PrimitiveCombination2CaarLQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CaarA1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CaarA1.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////            Cons temp = ((Cons) closureEnvironment.Argument1Value).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarL1 : PrimitiveCombination2CaarL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+////#endif
+
+////        protected PrimitiveCombination2CaarL1 (Primitive2 rator, PrimitiveCaarL1 rand0, SCode rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarL1 rand0, SCode rand1)
+////        {
+////            return
+////                //(rand1 is LexicalVariable) ? PrimitiveCombination2CaarLL.Make (rator, rand0, (LexicalVariable) rand1) :
+////                //(rand1 is Quotation) ? PrimitiveCombination2CaarLQ.Make (rator, rand0, (Quotation) rand1) :
+////                new PrimitiveCombination2CaarL1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand1);
+////            ratorHistogram.Note (this.rator);
+////            rand1TypeHistogram.Note (this.rand1Type);
+////            SCode.location = "PrimitiveCombination2CaarL1.EvalStep";
+////#endif
+////            Control unev = this.rand1;
+////            Environment env = closureEnvironment;
+////            object ev1;
+////            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+////            if (ev1 == Interpreter.Unwind) {
+////                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+////                answer = Interpreter.Unwind;
+////                closureEnvironment = env;
+////                return false;
+////            }
+
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarLL : PrimitiveCombination2CaarL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Name;
+////        public readonly int rand1Depth;
+////        public readonly int rand1Offset;
+
+////        protected PrimitiveCombination2CaarLL (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Name = rand1.Name;
+////            this.rand1Depth = rand1.Depth;
+////            this.rand1Offset = rand1.Offset;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable rand1)
+////        {
+////            return
+////                (rand1 is Argument) ? PrimitiveCombination2CaarLA.Make (rator, rand0, (Argument) rand1) :
+////                (rand1 is LexicalVariable1) ? PrimitiveCombination2CaarLL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+////                new PrimitiveCombination2CaarLL (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarLL.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+////                throw new NotImplementedException ();
+
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarLA : PrimitiveCombination2CaarLL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        protected PrimitiveCombination2CaarLA (Primitive2 rator, PrimitiveCaarL rand0, Argument rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, Argument rand1)
+////        {
+////            return
+////                (rand1 is Argument0) ? PrimitiveCombination2CaarLA0.Make (rator, rand0, (Argument0) rand1) :
+////                (rand1 is Argument1) ? PrimitiveCombination2CaarLA1.Make (rator, rand0, (Argument1) rand1) :
+////                new PrimitiveCombination2CaarLA (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarLA.EvalStep";
+////#endif
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, closureEnvironment.ArgumentValue (this.rand1Offset))) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarLA0 : PrimitiveCombination2CaarLA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CaarLA0 (Primitive2 rator, PrimitiveCaarL rand0, Argument0 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, Argument0 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarLA0 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarLA0.EvalStep";
+////#endif
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, closureEnvironment.Argument0Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarLA1 : PrimitiveCombination2CaarLA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CaarLA1 (Primitive2 rator, PrimitiveCaarL rand0, Argument1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, Argument1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarLA1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarLA1.EvalStep";
+////#endif
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, closureEnvironment.Argument1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarLL1 : PrimitiveCombination2CaarLL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+
+////        PrimitiveCombination2CaarLL1 (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, LexicalVariable1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarLL1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarLL1.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+////                throw new NotImplementedException ();
+
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarLQ : PrimitiveCombination2CaarL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Value;
+
+////        PrimitiveCombination2CaarLQ (Primitive2 rator, PrimitiveCaarL rand0, Quotation rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Value = rand1.Quoted;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaarL rand0, Quotation rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarLQ (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarLQ.EvalStep";
+////#endif
+////            object ev0;
+////            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+////                throw new NotImplementedException ();
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, this.rand1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarSL : PrimitiveCombination2Caar
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Name;
+////        public readonly int rand1Depth;
+////        public readonly int rand1Offset;
+
+////        protected PrimitiveCombination2CaarSL (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////            this.rand1Name = rand1.Name;
+////            this.rand1Depth = rand1.Depth;
+////            this.rand1Offset = rand1.Offset;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable rand1)
+////        {
+////            return
+////                (rand1 is Argument) ? PrimitiveCombination2CaarSA.Make (rator, rand0, (Argument) rand1) :
+////                (rand1 is LexicalVariable1) ? PrimitiveCombination2CaarSL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+////                new PrimitiveCombination2CaarSL (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarSL.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+////                throw new NotImplementedException ();
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    class PrimitiveCombination2CaarSA : PrimitiveCombination2CaarSL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        protected PrimitiveCombination2CaarSA (Primitive2 rator, PrimitiveCaar rand0, Argument rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, Argument rand1)
+////        {
+////            return
+////                (rand1 is Argument0) ? PrimitiveCombination2CaarSA0.Make (rator, rand0, (Argument0) rand1) :
+////                (rand1 is Argument1) ? PrimitiveCombination2CaarSA1.Make (rator, rand0, (Argument1) rand1) :
+////                new PrimitiveCombination2CaarSA (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarSA.EvalStep";
+////#endif
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, closureEnvironment.ArgumentValue(this.rand1Offset))) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarSA0 : PrimitiveCombination2CaarSA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CaarSA0 (Primitive2 rator, PrimitiveCaar rand0, Argument0 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, Argument0 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarSA0 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarSA0.EvalStep";
+////#endif
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, closureEnvironment.Argument0Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarSA1 : PrimitiveCombination2CaarSA
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        PrimitiveCombination2CaarSA1 (Primitive2 rator, PrimitiveCaar rand0, Argument1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, Argument1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarSA1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarSA1.EvalStep";
+////#endif
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, closureEnvironment.Argument1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarSL1 : PrimitiveCombination2CaarSL
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+
+////        PrimitiveCombination2CaarSL1 (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable1 rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, LexicalVariable1 rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarSL1 (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarSL1.EvalStep";
+////#endif
+////            object ev1;
+////            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+////                throw new NotImplementedException ();
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, ev1)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
+
+////    [Serializable]
+////    sealed class PrimitiveCombination2CaarSQ : PrimitiveCombination2Caar
+////    {
+////#if DEBUG
+////        static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
+////#endif
+////        public readonly object rand1Value;
+
+////        PrimitiveCombination2CaarSQ (Primitive2 rator, PrimitiveCaar rand0, Quotation rand1)
+////            : base (rator, rand0, rand1)
+////        {
+////              this.rand1Value = rand1.Quoted;
+////        }
+
+////        public static SCode Make (Primitive2 rator, PrimitiveCaar rand0, Quotation rand1)
+////        {
+////            return
+////                new PrimitiveCombination2CaarSQ (rator, rand0, rand1);
+////        }
+
+////        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+////        {
+////#if DEBUG
+////            Warm ("-");
+////            NoteCalls (this.rand0rand0);
+////            ratorHistogram.Note (this.rator);
+////            SCode.location = "PrimitiveCombination2CaarSQ.EvalStep";
+////#endif
+
+////            Control unev = this.rand0rand0;
+////            Environment env = closureEnvironment;
+////            object ev0;
+////            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+////            if (ev0 == Interpreter.Unwind) {
+////                throw new NotImplementedException ();
+////                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, closureEnvironment, ev1));
+////                //answer = Interpreter.Unwind;
+////                //closureEnvironment = env;
+////                //return false;
+////            }
+
+////            // It is expensive to bounce down to invoke the procedure
+////            // we invoke it directly and pass along the ref args.
+////#if DEBUG
+////            Primitive.hotPrimitives.Note (this.rator);
+////            SCode.location = this.rator.Name.ToString();
+////#endif
+////        Cons temp = ((Cons)ev0).Car as Cons;
+////            if (temp == null) throw new NotImplementedException();
+////            if (this.method (out answer, temp.Car, this.rand1Value)) {
+////                TailCallInterpreter tci = answer as TailCallInterpreter;
+////                if (tci != null) {
+////                    answer = null;
+////                    expression = tci.Expression;
+////                    closureEnvironment = tci.Environment;
+////                    return true;
+////                }
+////                else
+////                    throw new NotImplementedException ();
+////            }
+////            else return false;
+////        }
+////    }
 
     [Serializable]
     class PrimitiveCombination2L : PrimitiveCombination2
@@ -3483,7 +3497,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("PrimitiveCombination2L.EvalStep");
-            noteCalls (this.rand1);
+            NoteCalls (this.rand1);
 #endif
             Control unev = this.rand1;
             Environment env = environment;
@@ -3491,14 +3505,14 @@ namespace Microcode
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
             if (ev1 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+                //answer = Interpreter.Unwind;
+                //closureEnvironment = env;
                 //return false;
             }
 
             object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+            if (environment.LexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
                 throw new NotImplementedException ();
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
@@ -3541,7 +3555,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            noteCalls (this.rand1);
+            NoteCalls (this.rand1);
             SCode.location = "PrimitiveCombination2A.EvalStep";
 #endif
             Control unev = this.rand1;
@@ -3596,7 +3610,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            noteCalls(this.rand1);
+            NoteCalls(this.rand1);
             SCode.location = "PrimitiveCombination2A0";
 #endif
             Control unev = this.rand1;
@@ -3648,7 +3662,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            noteCalls (this.rand1);
+            NoteCalls (this.rand1);
             Warm ("PrimitiveCombination2A1.EvalStep");
             Primitive.hotPrimitives.Note (this.rator);
 #endif
@@ -3659,9 +3673,9 @@ namespace Microcode
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
             if (ev1 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+                //answer = Interpreter.Unwind;
+                //closureEnvironment = env;
                 //return false;
             }
 
@@ -3700,7 +3714,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("PrimitiveCombination2L1.EvalStep");
-            noteCalls (this.rand1);
+            NoteCalls (this.rand1);
 #endif
             Control unev = this.rand1;
             Environment env = environment;
@@ -3713,8 +3727,8 @@ namespace Microcode
                 return false;
             }
             object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                
+            //if (closureEnvironment.LexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+              
             throw new NotImplementedException (); 
 
 #if DEBUG
@@ -3736,537 +3750,537 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    class PrimitiveCombination2Q : PrimitiveCombination2
-    {
-        public readonly object rand0Value;
+//    [Serializable]
+//    class PrimitiveCombination2Q : PrimitiveCombination2
+//    {
+//        public readonly object rand0Value;
 
-        protected PrimitiveCombination2Q (Primitive2 rator, Quotation rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-                this.rand0Value = rand0.Quoted;
-        }
+//        protected PrimitiveCombination2Q (Primitive2 rator, Quotation rand0, SCode rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//                this.rand0Value = rand0.Quoted;
+//        }
 
-        static SCode RewriteConditional (Primitive2 rator, Quotation rand0, Conditional rand1)
-        {
-            return Conditional.Make (rand1.Predicate,
-                                     PrimitiveCombination2.Make (rator, rand0, rand1.Consequent),
-                                     PrimitiveCombination2.Make (rator, rand0, rand1.Alternative));
-        }
+//        static SCode RewriteConditional (Primitive2 rator, Quotation rand0, Conditional rand1)
+//        {
+//            return Conditional.Make (rand1.Predicate,
+//                                     PrimitiveCombination2.Make (rator, rand0, rand1.Consequent),
+//                                     PrimitiveCombination2.Make (rator, rand0, rand1.Alternative));
+//        }
 
-        public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
-        {
-            return
-                //(rand1 is Conditional) ? RewriteConditional (rator, rand0, (Conditional) rand1) :
-                //(rand1 is Disjunction) ? Unimplemented() :
-                (rand1 is LexicalVariable) ? PrimitiveCombination2QL.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? PrimitiveCombination2QQ.Make (rator, rand0, (Quotation) rand1) :
-                //(rand1 is Sequence2) ? Unimplemented() :
-               // (rand1 is Sequence3) ? Unimplemented() :
-                new PrimitiveCombination2Q (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
+//        {
+//            return
+//                //(rand1 is Conditional) ? RewriteConditional (rator, rand0, (Conditional) rand1) :
+//                //(rand1 is Disjunction) ? Unimplemented() :
+//                (rand1 is LexicalVariable) ? PrimitiveCombination2QL.Make (rator, rand0, (LexicalVariable) rand1) :
+//                (rand1 is Quotation) ? PrimitiveCombination2QQ.Make (rator, rand0, (Quotation) rand1) :
+//                //(rand1 is Sequence2) ? Unimplemented() :
+//               // (rand1 is Sequence3) ? Unimplemented() :
+//                new PrimitiveCombination2Q (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveCombination2Q.EvalStep");
-            noteCalls (this.rand1);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("PrimitiveCombination2Q.EvalStep");
+//            NoteCalls (this.rand1);
+//#endif
+//            Control unev = this.rand1;
+//            Environment env = closureEnvironment;
+//            object ev1;
+//            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+//            if (ev1 == Interpreter.Unwind) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+//                //answer = Interpreter.Unwind;
+//                //closureEnvironment = env;
+//                //return false;
+//            }
 
-            object ev0 = this.rand0Value;
+//            object ev0 = this.rand0Value;
 
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
+//#if DEBUG
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, ev0, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, ev0, ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    class PrimitiveCombination2SL : PrimitiveCombination2
-    {
-#if DEBUG
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type>();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
+//    [Serializable]
+//    class PrimitiveCombination2SL : PrimitiveCombination2
+//    {
+//#if DEBUG
+//        static Histogram<Type> rand0TypeHistogram = new Histogram<Type>();
+//#endif
+//        public readonly object rand1Name;
+//        public readonly int rand1Depth;
+//        public readonly int rand1Offset;
 
-        protected PrimitiveCombination2SL (Primitive2 rator, SCode rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
+//        protected PrimitiveCombination2SL (Primitive2 rator, SCode rand0, LexicalVariable rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//            this.rand1Name = rand1.Name;
+//            this.rand1Depth = rand1.Depth;
+//            this.rand1Offset = rand1.Offset;
+//        }
 
-        public static SCode Make (Primitive2 rator, SCode rand0, LexicalVariable rand1)
-        {
-            return 
-                (rand1 is Argument) ? PrimitiveCombination2SA.Make (rator, rand0, (Argument) rand1) :
-                (rand1 is LexicalVariable1) ? PrimitiveCombination2SL1.Make (rator, rand0, (LexicalVariable1) rand1) :
-                new PrimitiveCombination2SL (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, SCode rand0, LexicalVariable rand1)
+//        {
+//            return 
+//                (rand1 is Argument) ? PrimitiveCombination2SA.Make (rator, rand0, (Argument) rand1) :
+//                (rand1 is LexicalVariable1) ? PrimitiveCombination2SL1.Make (rator, rand0, (LexicalVariable1) rand1) :
+//                new PrimitiveCombination2SL (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand0);
-            rand0TypeHistogram.Note (this.rand0Type);
-            SCode.location = "PrimitiveCombination2SL.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            NoteCalls (this.rand0);
+//            rand0TypeHistogram.Note (this.rand0Type);
+//            SCode.location = "PrimitiveCombination2SL.EvalStep";
+//#endif
+//            object ev1;
+//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//                throw new NotImplementedException ();
 
-            Control unev = this.rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
+//            Control unev = this.rand0;
+//            Environment env = closureEnvironment;
+//            object ev0;
+//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+//            if (ev1 == Interpreter.Unwind) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+//                //answer = Interpreter.Unwind;
+//                //closureEnvironment = env;
+//                //return false;
+//            }
 
-#if DEBUG
-            SCode.location = "-";
-            Primitive.hotPrimitives.Note (this.rator);
+//#if DEBUG
+//            SCode.location = "-";
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, ev0, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, ev0, ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
 
-        }
-    }
+//        }
+//    }
 
-    [Serializable]
-    class PrimitiveCombination2SA : PrimitiveCombination2SL
-    {
+//    [Serializable]
+//    class PrimitiveCombination2SA : PrimitiveCombination2SL
+//    {
 
-        protected PrimitiveCombination2SA (Primitive2 rator, SCode rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
+//        protected PrimitiveCombination2SA (Primitive2 rator, SCode rand0, Argument rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//        }
 
-        public static SCode Make (Primitive2 rator, SCode rand0, Argument rand1)
-        {
-            return 
-                (rand1 is Argument0) ? PrimitiveCombination2SA0.Make (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? PrimitiveCombination2SA1.Make (rator, rand0, (Argument1) rand1) :
-                new PrimitiveCombination2SA (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, SCode rand0, Argument rand1)
+//        {
+//            return 
+//                (rand1 is Argument0) ? PrimitiveCombination2SA0.Make (rator, rand0, (Argument0) rand1) :
+//                (rand1 is Argument1) ? PrimitiveCombination2SA1.Make (rator, rand0, (Argument1) rand1) :
+//                new PrimitiveCombination2SA (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls(this.rand0);
-            SCode.location = "PrimitiveCombination2SA.EvalStep";
-#endif
-            object ev1 = environment.ArgumentValue (this.rand1Offset);
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            NoteCalls(this.rand0);
+//            SCode.location = "PrimitiveCombination2SA.EvalStep";
+//#endif
+//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
 
-            Control unev = this.rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2SAFrame0 (this, environment, ev1));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
+//            Control unev = this.rand0;
+//            Environment env = closureEnvironment;
+//            object ev0;
+//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+//            if (ev0 == Interpreter.Unwind) {
+//                ((UnwinderState) env).AddFrame (new PrimitiveCombination2SAFrame0 (this, closureEnvironment, ev1));
+//                answer = Interpreter.Unwind;
+//                closureEnvironment = env;
+//                return false;
+//            }
        
 
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
+//#if DEBUG
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, ev0, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, ev0, ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    sealed class PrimitiveCombination2SAFrame0 : SubproblemContinuation<PrimitiveCombination2SA>, ISystemVector
-    {
-        readonly object ev1;
-        public PrimitiveCombination2SAFrame0 (PrimitiveCombination2SA expression, Environment environment, object ev1)
-            : base (expression, environment)
-        {
-            this.ev1 = ev1;
-        }
+//    [Serializable]
+//    sealed class PrimitiveCombination2SAFrame0 : SubproblemContinuation<PrimitiveCombination2SA>, ISystemVector
+//    {
+//        readonly object ev1;
+//        public PrimitiveCombination2SAFrame0 (PrimitiveCombination2SA expression, Environment closureEnvironment, object ev1)
+//            : base (expression, closureEnvironment)
+//        {
+//            this.ev1 = ev1;
+//        }
 
-        #region ISystemVector Members
+//        #region ISystemVector Members
 
-        public int SystemVectorSize
-        {
-            get { throw new NotImplementedException (); }
-        }
+//        public int SystemVectorSize
+//        {
+//            get { throw new NotImplementedException (); }
+//        }
 
-        public object SystemVectorRef (int index)
-        {
-            throw new NotImplementedException ();
-        }
+//        public object SystemVectorRef (int index)
+//        {
+//            throw new NotImplementedException ();
+//        }
 
-        public object SystemVectorSet (int index, object newValue)
-        {
-            throw new NotImplementedException ();
-        }
+//        public object SystemVectorSet (int index, object newValue)
+//        {
+//            throw new NotImplementedException ();
+//        }
 
-        #endregion
+//        #endregion
 
-        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev0)
-        {
-            #if DEBUG
-            Primitive.hotPrimitives.Note (this.expression.Rator);
+//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object ev0)
+//        {
+//            #if DEBUG
+//            Primitive.hotPrimitives.Note (this.expression.Rator);
             
-            SCode.location = this.expression.Rator.Name.ToString();
-#endif
-            if (this.expression.Rator.Method (out answer, ev0, this.ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
+//            SCode.location = this.expression.Rator.Name.ToString();
+//#endif
+//            if (this.expression.Rator.Method (out answer, ev0, this.ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
 
-    }
+//    }
 
-    [Serializable]
-    sealed class PrimitiveCombination2SA0 : PrimitiveCombination2SA
-    {
+//    [Serializable]
+//    sealed class PrimitiveCombination2SA0 : PrimitiveCombination2SA
+//    {
 
-        PrimitiveCombination2SA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
+//        PrimitiveCombination2SA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//        }
 
-        public static SCode Make (Primitive2 rator, SCode rand0, Argument0 rand1)
-        {
-            return new PrimitiveCombination2SA0 (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, SCode rand0, Argument0 rand1)
+//        {
+//            return new PrimitiveCombination2SA0 (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveCombination2SA0.EvalStep");
-            noteCalls (this.rand0);
-#endif
-            object ev1 = environment.Argument0Value;
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("PrimitiveCombination2SA0.EvalStep");
+//            NoteCalls (this.rand0);
+//#endif
+//            object ev1 = closureEnvironment.Argument0Value;
 
-            Control unev = this.rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
+//            Control unev = this.rand0;
+//            Environment env = closureEnvironment;
+//            object ev0;
+//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+//            if (ev0 == Interpreter.Unwind) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+//                //answer = Interpreter.Unwind;
+//                //closureEnvironment = env;
+//                //return false;
+//            }
 
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
+//#if DEBUG
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, ev0, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, ev0, ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    sealed class PrimitiveCombination2SA1 : PrimitiveCombination2SA
-    {
+//    [Serializable]
+//    sealed class PrimitiveCombination2SA1 : PrimitiveCombination2SA
+//    {
 
-        PrimitiveCombination2SA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
+//        PrimitiveCombination2SA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//        }
 
-        public static SCode Make (Primitive2 rator, SCode rand0, Argument1 rand1)
-        {
-            return new PrimitiveCombination2SA1 (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, SCode rand0, Argument1 rand1)
+//        {
+//            return new PrimitiveCombination2SA1 (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveCombination2SA1.EvalStep");
-            noteCalls(this.rand0);
-#endif
-            object ev1 = environment.Argument1Value;
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("PrimitiveCombination2SA1.EvalStep");
+//            NoteCalls(this.rand0);
+//#endif
+//            object ev1 = closureEnvironment.Argument1Value;
 
-            Control unev = this.rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
+//            Control unev = this.rand0;
+//            Environment env = closureEnvironment;
+//            object ev0;
+//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+//            if (ev0 == Interpreter.Unwind) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+//                //answer = Interpreter.Unwind;
+//                //closureEnvironment = env;
+//                //return false;
+//            }
 
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
+//#if DEBUG
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, ev0, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, ev0, ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    class PrimitiveCombination2SL1 : PrimitiveCombination2SL
-    {
+//    [Serializable]
+//    class PrimitiveCombination2SL1 : PrimitiveCombination2SL
+//    {
 
-        protected PrimitiveCombination2SL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
+//        protected PrimitiveCombination2SL1 (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//        }
 
-        public static SCode Make (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
-        {
-            return new PrimitiveCombination2SL1 (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, SCode rand0, LexicalVariable1 rand1)
+//        {
+//            return new PrimitiveCombination2SL1 (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls(this.rand0);
-            SCode.location = "PrimitiveCombination2SL1.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            NoteCalls(this.rand0);
+//            SCode.location = "PrimitiveCombination2SL1.EvalStep";
+//#endif
+//            object ev1;
+//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//                throw new NotImplementedException ();
 
-            Control unev = this.rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
+//            Control unev = this.rand0;
+//            Environment env = closureEnvironment;
+//            object ev0;
+//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+//            if (ev0 == Interpreter.Unwind) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, closureEnvironment));
+//                //answer = Interpreter.Unwind;
+//                //closureEnvironment = env;
+//                //return false;
+//            }
 
-#if DEBUG
-            SCode.location = "-";
-            Primitive.hotPrimitives.Note (this.rator);
+//#if DEBUG
+//            SCode.location = "-";
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, ev0, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, ev0, ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    sealed class PrimitiveCombination2SQ : PrimitiveCombination2
-    {
-        public readonly object rand1Value;
+//    [Serializable]
+//    sealed class PrimitiveCombination2SQ : PrimitiveCombination2
+//    {
+//        public readonly object rand1Value;
 
-        PrimitiveCombination2SQ (Primitive2 rator, SCode rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-              this.rand1Value = rand1.Quoted;
-        }
+//        PrimitiveCombination2SQ (Primitive2 rator, SCode rand0, Quotation rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//              this.rand1Value = rand1.Quoted;
+//        }
                
-        static SCode RewriteConditional (Primitive2 rator, Conditional rand0, Quotation rand1)
-        {
-            return Conditional.Make (rand0.Predicate,
-                                     PrimitiveCombination2.Make (rator, rand0.Consequent, rand1),
-                                     PrimitiveCombination2.Make (rator, rand0.Alternative, rand1));
-        }
+//        static SCode RewriteConditional (Primitive2 rator, Conditional rand0, Quotation rand1)
+//        {
+//            return Conditional.Make (rand0.Predicate,
+//                                     PrimitiveCombination2.Make (rator, rand0.Consequent, rand1),
+//                                     PrimitiveCombination2.Make (rator, rand0.Alternative, rand1));
+//        }
 
-        public static SCode Make (Primitive2 rator, SCode rand0, Quotation rand1)
-        {
-            return 
-                //(rand0 is Conditional) ? RewriteConditional (rator, (Conditional) rand0, rand1) :
-                new PrimitiveCombination2SQ (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, SCode rand0, Quotation rand1)
+//        {
+//            return 
+//                //(rand0 is Conditional) ? RewriteConditional (rator, (Conditional) rand0, rand1) :
+//                new PrimitiveCombination2SQ (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls(this.rand0);
-            SCode.location = "PrimitiveCombination2SQ.EvalStep";
-#endif
-            Control unev = this.rand0;
-            Environment env = environment;
-            object ev0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination2SQFrame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-#if DEBUG
-            SCode.location = "-";
-            Primitive.hotPrimitives.Note (this.rator);
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            NoteCalls(this.rand0);
+//            SCode.location = "PrimitiveCombination2SQ.EvalStep";
+//#endif
+//            Control unev = this.rand0;
+//            Environment env = closureEnvironment;
+//            object ev0;
+//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+//            if (ev0 == Interpreter.Unwind) {
+//                ((UnwinderState) env).AddFrame (new PrimitiveCombination2SQFrame0 (this, closureEnvironment));
+//                answer = Interpreter.Unwind;
+//                closureEnvironment = env;
+//                return false;
+//            }
+//#if DEBUG
+//            SCode.location = "-";
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, ev0, this.rand1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, ev0, this.rand1Value)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    sealed class PrimitiveCombination2SQFrame0 : SubproblemContinuation<PrimitiveCombination2SQ>, ISystemVector
-    {
-        public PrimitiveCombination2SQFrame0 (PrimitiveCombination2SQ expr, Environment env)
-            : base (expr, env)
-        {
-        }
+//    [Serializable]
+//    sealed class PrimitiveCombination2SQFrame0 : SubproblemContinuation<PrimitiveCombination2SQ>, ISystemVector
+//    {
+//        public PrimitiveCombination2SQFrame0 (PrimitiveCombination2SQ expr, Environment env)
+//            : base (expr, env)
+//        {
+//        }
 
 
-        #region ISystemVector Members
+//        #region ISystemVector Members
 
-        public int SystemVectorSize
-        {
-            get { throw new NotImplementedException (); }
-        }
+//        public int SystemVectorSize
+//        {
+//            get { throw new NotImplementedException (); }
+//        }
 
-        public object SystemVectorRef (int index)
-        {
-            throw new NotImplementedException ();
-        }
+//        public object SystemVectorRef (int index)
+//        {
+//            throw new NotImplementedException ();
+//        }
 
-        public object SystemVectorSet (int index, object newValue)
-        {
-            throw new NotImplementedException ();
-        }
+//        public object SystemVectorSet (int index, object newValue)
+//        {
+//            throw new NotImplementedException ();
+//        }
 
-        #endregion
+//        #endregion
 
-        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
-        {
-#if DEBUG
-            SCode.location = "-";
-            Primitive.hotPrimitives.Note (this.expression.Rator);
+//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object value)
+//        {
+//#if DEBUG
+//            SCode.location = "-";
+//            Primitive.hotPrimitives.Note (this.expression.Rator);
 
-            SCode.location = this.expression.Rator.Name.ToString();
-#endif
-            if (this.expression.Rator.Method (out answer, value, this.expression.rand1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.expression.Rator.Name.ToString();
+//#endif
+//            if (this.expression.Rator.Method (out answer, value, this.expression.rand1Value)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
 
     [Serializable]
@@ -4298,15 +4312,15 @@ namespace Microcode
             Warm ("PrimitiveCombination2LL.EvalStep");
 #endif
             object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
                 throw new NotImplementedException ();
             object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+            //if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
                 throw new NotImplementedException ();
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4348,13 +4362,13 @@ namespace Microcode
 #endif
             object ev1 = environment.ArgumentValue (this.rand1Offset);
             object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+            //if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
                 throw new NotImplementedException ();
 
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4393,13 +4407,13 @@ namespace Microcode
 #endif
             object ev1 = environment.Argument0Value;
             object ev0;
-            if (environment.FastLexicalRef (out ev0, rand0Name, rand0Depth, rand0Offset))
-               
+            //if (closureEnvironment.FastLexicalRef (out ev0, rand0Name, rand0Depth, rand0Offset))
+             
             throw new NotImplementedException (); 
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4438,12 +4452,12 @@ namespace Microcode
 #endif
             object ev1 = environment.Argument1Value;
             object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+            //if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
             throw new NotImplementedException (); 
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4481,15 +4495,15 @@ namespace Microcode
             Warm ("PrimitiveCombination2LL1.EvalStep");
 #endif
             object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
                 throw new NotImplementedException ();
             object ev0;
-            if (environment.LexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+            //if (closureEnvironment.LexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
             throw new NotImplementedException ();
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4530,12 +4544,12 @@ namespace Microcode
 #endif
             object ev1 = this.rand1Value;
             object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+            //if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
                 throw new NotImplementedException ();
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4583,13 +4597,13 @@ namespace Microcode
             Warm ("PrimitiveCombination2AL.EvalStep");
 #endif
             object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
                 throw new NotImplementedException ();
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4634,7 +4648,7 @@ namespace Microcode
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4676,7 +4690,7 @@ namespace Microcode
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4715,11 +4729,11 @@ namespace Microcode
 #endif
             object ev1 = environment.Argument1Value;
             object ev0 = environment.ArgumentValue (this.rand0Offset);
-           
+         
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4757,13 +4771,13 @@ namespace Microcode
             Warm ("PrimitiveCombination2AL1.EvalStep");
 #endif
             object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
                 throw new NotImplementedException ();
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4807,7 +4821,7 @@ namespace Microcode
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4855,12 +4869,12 @@ namespace Microcode
             Warm ("PrimitiveCombination2A0L.EvalStep");
 #endif
             object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
                 throw new NotImplementedException ();
 #if DEBUG
             SCode.location = "-";
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, environment.Argument0Value, ev1)) {
@@ -4905,7 +4919,7 @@ namespace Microcode
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -4946,7 +4960,7 @@ namespace Microcode
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev0)) {
@@ -4983,7 +4997,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, environment.Argument0Value, environment.Argument1Value)) {
@@ -5021,13 +5035,13 @@ namespace Microcode
             Warm ("PrimitiveCombination2A0L1.EvalStep");
 #endif
             object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
               throw new NotImplementedException ();
             object ev0 = environment.Argument0Value;
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -5066,7 +5080,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, environment.Argument0Value, this.rand1Value)) {
@@ -5113,10 +5127,10 @@ namespace Microcode
 #if DEBUG
             Warm ("PrimitiveCombination2A1L.EvalStep");
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
 #endif
             object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
                 throw new NotImplementedException ();
 
             if (this.method (out answer, environment.Argument1Value, ev1)) {
@@ -5224,13 +5238,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveCombination2A1A1");
 #endif
             throw new NotImplementedException (); object ev0 = null; object ev1 = null;
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
 #endif
             if (this.method (out answer, ev0, ev1)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -5268,7 +5282,7 @@ namespace Microcode
             Primitive.hotPrimitives.Note (this.rator);
 #endif
             object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
                 throw new NotImplementedException ();
 
             if (this.method (out answer, environment.Argument1Value, ev1)) {
@@ -5353,15 +5367,15 @@ namespace Microcode
             Warm ("PrimitiveCombination2L1L.EvalStep");
 #endif
             object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
                 throw new NotImplementedException ();
             object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -5399,13 +5413,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("PrimitiveCombination2L1A");
 #endif
             throw new NotImplementedException (); object ev0 = null; object ev1 = null;
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
 #endif
             if (this.method (out answer, ev0, ev1)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -5443,11 +5457,11 @@ namespace Microcode
 #endif
             object ev1 = environment.Argument0Value;
             object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -5485,11 +5499,11 @@ namespace Microcode
             Warm ("PrimitiveCombination2L1A1.EvalStep");
 #endif
             object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException (); 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, environment.Argument1Value)) {
@@ -5527,16 +5541,16 @@ namespace Microcode
             Warm ("PrimitiveCombination2L1L1.EvalStep");
 #endif
             object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
                 throw new NotImplementedException ();
             object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -5577,12 +5591,12 @@ namespace Microcode
 #endif
             object ev1 = this.rand1Value;
             object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+            //if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.rator);
-            
+          
             SCode.location = this.rator.Name.ToString();
 #endif
             if (this.method (out answer, ev0, ev1)) {
@@ -5602,269 +5616,268 @@ namespace Microcode
 
         
     
-    [Serializable]
-    class PrimitiveCombination2QL : PrimitiveCombination2Q
-    {
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
+//    [Serializable]
+//    class PrimitiveCombination2QL : PrimitiveCombination2Q
+//    {
+//        public readonly object rand1Name;
+//        public readonly int rand1Depth;
+//        public readonly int rand1Offset;
 
-        protected PrimitiveCombination2QL (Primitive2 rator, Quotation rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-              this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
+//        protected PrimitiveCombination2QL (Primitive2 rator, Quotation rand0, LexicalVariable rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//              this.rand1Name = rand1.Name;
+//            this.rand1Depth = rand1.Depth;
+//            this.rand1Offset = rand1.Offset;
+//        }
 
-        public static SCode Make (Primitive2 rator, Quotation rand0, LexicalVariable rand1)
-        {
-            return 
-                (rand1 is Argument) ? PrimitiveCombination2QA.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveCombination2QL1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveCombination2QL (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, Quotation rand0, LexicalVariable rand1)
+//        {
+//            return 
+//                (rand1 is Argument) ? PrimitiveCombination2QA.Make (rator, rand0, (Argument) rand1)
+//                : (rand1 is LexicalVariable1) ? PrimitiveCombination2QL1.Make (rator, rand0, (LexicalVariable1) rand1)
+//                : new PrimitiveCombination2QL (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveCombination2QL.EvalStep");
-#endif
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("PrimitiveCombination2QL.EvalStep");
+//#endif
 
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
-            object ev0 = this.rand0Value;
+//            object ev1;
+//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//                throw new NotImplementedException ();
+//            object ev0 = this.rand0Value;
 
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
+//#if DEBUG
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, ev0, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, ev0, ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    class PrimitiveCombination2QA : PrimitiveCombination2QL
-    {
+//    [Serializable]
+//    class PrimitiveCombination2QA : PrimitiveCombination2QL
+//    {
 
-        protected PrimitiveCombination2QA (Primitive2 rator, Quotation rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
+//        protected PrimitiveCombination2QA (Primitive2 rator, Quotation rand0, Argument rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//        }
 
-        public static SCode Make (Primitive2 rator, Quotation rand0, Argument rand1)
-        {
-            return 
-                (rand1 is Argument0) ? PrimitiveCombination2QA0.Make (rator, rand0, (Argument0) rand1)
-                : (rand1 is Argument1) ? PrimitiveCombination2QA1.Make (rator, rand0, (Argument1) rand1)
-                : new PrimitiveCombination2QA (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, Quotation rand0, Argument rand1)
+//        {
+//            return 
+//                (rand1 is Argument0) ? PrimitiveCombination2QA0.Make (rator, rand0, (Argument0) rand1)
+//                : (rand1 is Argument1) ? PrimitiveCombination2QA1.Make (rator, rand0, (Argument1) rand1)
+//                : new PrimitiveCombination2QA (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveCombination2QA.EvalStep");
-#endif
-            object ev1 = environment.ArgumentValue (this.rand1Offset);
-            object ev0 = this.rand0Value;
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("PrimitiveCombination2QA.EvalStep");
+//#endif
+//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev0 = this.rand0Value;
 
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.rator);
+//#if DEBUG
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, ev0, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, ev0, ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    class PrimitiveCombination2QA0 : PrimitiveCombination2QA
-    {
+//    [Serializable]
+//    class PrimitiveCombination2QA0 : PrimitiveCombination2QA
+//    {
 
-        protected PrimitiveCombination2QA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
+//        protected PrimitiveCombination2QA0 (Primitive2 rator, Quotation rand0, Argument0 rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//        }
 
-        public static SCode Make (Primitive2 rator, Quotation rand0, Argument0 rand1)
-        {
-            return new PrimitiveCombination2QA0 (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, Quotation rand0, Argument0 rand1)
+//        {
+//            return new PrimitiveCombination2QA0 (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            Primitive.hotPrimitives.Note (this.rator);
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, this.rand0Value, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, this.rand0Value, closureEnvironment.Argument0Value)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    class PrimitiveCombination2QA1 : PrimitiveCombination2QA
-    {
+//    [Serializable]
+//    class PrimitiveCombination2QA1 : PrimitiveCombination2QA
+//    {
 
-        protected PrimitiveCombination2QA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
+//        protected PrimitiveCombination2QA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//        }
 
-        public static SCode Make (Primitive2 rator, Quotation rand0, Argument1 rand1)
-        {
-            return new PrimitiveCombination2QA1 (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, Quotation rand0, Argument1 rand1)
+//        {
+//            return new PrimitiveCombination2QA1 (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            Primitive.hotPrimitives.Note (this.rator);
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, this.rand0Value, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, this.rand0Value, closureEnvironment.Argument1Value)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    class PrimitiveCombination2QL1 : PrimitiveCombination2QL
-    {
+//    [Serializable]
+//    class PrimitiveCombination2QL1 : PrimitiveCombination2QL
+//    {
 
-        protected PrimitiveCombination2QL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
+//        protected PrimitiveCombination2QL1 (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//        }
 
-        public static SCode Make (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
-        {
-            return new PrimitiveCombination2QL1 (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, Quotation rand0, LexicalVariable1 rand1)
+//        {
+//            return new PrimitiveCombination2QL1 (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveCombination2QL1.EvalStep");
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-#if DEBUG
-            SCode.location = "-";
-            Primitive.hotPrimitives.Note (this.rator);
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("PrimitiveCombination2QL1.EvalStep");
+//#endif
+//            object ev1;
+//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//                throw new NotImplementedException ();
+//#if DEBUG
+//            SCode.location = "-";
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, this.rand0Value, ev1)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, this.rand0Value, ev1)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 
-    [Serializable]
-    sealed class PrimitiveCombination2QQ : PrimitiveCombination2Q
-    {
-        public readonly object rand1Value;
+//    [Serializable]
+//    sealed class PrimitiveCombination2QQ : PrimitiveCombination2Q
+//    {
+//        public readonly object rand1Value;
 
-        PrimitiveCombination2QQ (Primitive2 rator, Quotation rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-              this.rand1Value = rand1.Quoted;
-        }
+//        PrimitiveCombination2QQ (Primitive2 rator, Quotation rand0, Quotation rand1)
+//            : base (rator, rand0, rand1)
+//        {
+//              this.rand1Value = rand1.Quoted;
+//        }
 
-        public static SCode Make (Primitive2 rator, Quotation rand0, Quotation rand1)
-        {
-            if (true
-                // These cons, so we can't cache the value.
-                && rator != Primitive.Cons
-                && rator != Primitive.IntegerMultiply // just hard
-                && rator != Primitive.MakeBitString
-                && rator != Primitive.ObjectSetType
-                && rator != Primitive.PrimitiveObjectSetType
-                && rator != Primitive.VectorCons
-                )
-                Debugger.Break ();
-            return new PrimitiveCombination2QQ (rator, rand0, rand1);
-        }
+//        public static SCode Make (Primitive2 rator, Quotation rand0, Quotation rand1)
+//        {
+//            if (true
+//                // These cons, so we can't cache the value.
+//                && rator != Primitive.Cons
+//                && rator != Primitive.IntegerMultiply // just hard
+//                && rator != Primitive.MakeBitString
+//                && rator != Primitive.ObjectSetType
+//                && rator != Primitive.PrimitiveObjectSetType
+//                && rator != Primitive.VectorCons
+//                )
+//                Debugger.Break ();
+//            return new PrimitiveCombination2QQ (rator, rand0, rand1);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            Primitive.hotPrimitives.Note (this.rator);
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        {
+//#if DEBUG
+//            Warm ("-");
+//            Primitive.hotPrimitives.Note (this.rator);
             
-            SCode.location = this.rator.Name.ToString();
-#endif
-            if (this.method (out answer, this.rand0Value, this.rand1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null;
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
+//            SCode.location = this.rator.Name.ToString();
+//#endif
+//            if (this.method (out answer, this.rand0Value, this.rand1Value)) {
+//                TailCallInterpreter tci = answer as TailCallInterpreter;
+//                if (tci != null) {
+//                    answer = null;
+//                    expression = tci.Expression;
+//                    closureEnvironment = tci.Environment;
+//                    return true;
+//                }
+//                else
+//                    throw new NotImplementedException ();
+//            }
+//            else return false;
+//        }
+//    }
 }

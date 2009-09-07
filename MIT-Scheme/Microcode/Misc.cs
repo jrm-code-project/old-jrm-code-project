@@ -129,9 +129,8 @@ namespace Microcode
         [SchemePrimitive ("FILE-ACCESS", 2, false)]
         public static bool FileAccess (out object answer, object arg0, object arg1)
         {
-            string filename = new String ((char []) arg0);
-            int mode = (int) arg1;
-            answer = System.IO.File.Exists (filename);
+            //int mode = (int) arg1;
+            answer = System.IO.File.Exists (new String ((char []) arg0));
             return false;
         }
 
@@ -310,7 +309,7 @@ namespace Microcode
         [SchemePrimitive ("NT-GET-VOLUME-INFORMATION", 1, false)]
         public static bool NTGetVolumeInformation (out object answer, object arg)
         {
-            if (((char []) arg).ToString ().Equals("c:\\", StringComparison.InvariantCultureIgnoreCase))
+            if (((char []) arg).ToString ().Equals("c:\\", StringComparison.OrdinalIgnoreCase))
                 answer = Constant.sharpF;
             else {
                 object [] temp = { "".ToCharArray(),

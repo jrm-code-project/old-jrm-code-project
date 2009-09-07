@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Microcode
 {
@@ -10,13 +7,15 @@ namespace Microcode
     sealed class Ratnum : SchemeObject, ISystemPair
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.RATNUM; } }
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object numerator;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object denominator;
 
         public Ratnum (object numerator, object denominator)
-            : base (TC.RATNUM)
         {
             this.numerator = numerator;
             this.denominator = denominator;

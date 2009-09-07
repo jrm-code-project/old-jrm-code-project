@@ -1303,112 +1303,112 @@ namespace Microcode
 
     }
 
-    [Serializable]
-    class SComb1Fragment3 : SLet1CA0PA0CondComb1LCdrL
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> predicate1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequent1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternative1TypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object pred1Rand1Name;
-        public readonly int pred1Rand1Depth;
-        public readonly int pred1Rand1Offset;
+//    [Serializable]
+//    class SComb1Fragment3 : SLet1CA0PA0CondComb1LCdrL
+//    {
+//#if DEBUG
+//        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+//        static Histogram<Type> predicate1TypeHistogram = new Histogram<Type> ();
+//        static Histogram<Type> consequent1TypeHistogram = new Histogram<Type> ();
+//        static Histogram<Type> alternative1TypeHistogram = new Histogram<Type> ();
+//#endif
+//        public readonly object pred1Rand1Name;
+//        public readonly int pred1Rand1Depth;
+//        public readonly int pred1Rand1Offset;
 
-        protected SComb1Fragment3 (SimpleLambda rator, PrimitiveIsPairA0 predicate, Conditional consequent,
-            PrimitiveIsEqCarA0L consPredicate, SCode consConsequent, Combination1LCdrL consAlternative,
-            SCode alternative, PrimitiveCarA0 rand)
-            : base (rator, predicate, consequent, consPredicate, consConsequent, consAlternative, alternative, rand)
-        {
-            this.pred1Rand1Name = consPredicate.rand1Name;
-            this.pred1Rand1Depth = consPredicate.rand1Depth;
-            this.pred1Rand1Offset = consPredicate.rand1Offset;
+//        protected SComb1Fragment3 (SimpleLambda rator, PrimitiveIsPairA0 predicate, Conditional consequent,
+//            PrimitiveIsEqCarA0L consPredicate, SCode consConsequent, Combination1LCdrL consAlternative,
+//            SCode alternative, PrimitiveCarA0 rand)
+//            : base (rator, predicate, consequent, consPredicate, consConsequent, consAlternative, alternative, rand)
+//        {
+//            this.pred1Rand1Name = consPredicate.rand1Name;
+//            this.pred1Rand1Depth = consPredicate.rand1Depth;
+//            this.pred1Rand1Offset = consPredicate.rand1Offset;
 
-        }
+//        }
 
-        static public SCode Make (SimpleLambda rator, PrimitiveIsPairA0 predicate, Conditional consequent,
-            PrimitiveIsEqCarA0L consPredicate, SCode consConsequent, Combination1LCdrL consAlternative,
-            SCode alternative, PrimitiveCarA0 rand)
-        {
-            return
-                 new SComb1Fragment3 (rator, predicate, consequent, consPredicate, consConsequent, consAlternative, alternative, rand);
-        }
+//        static public SCode Make (SimpleLambda rator, PrimitiveIsPairA0 predicate, Conditional consequent,
+//            PrimitiveIsEqCarA0L consPredicate, SCode consConsequent, Combination1LCdrL consAlternative,
+//            SCode alternative, PrimitiveCarA0 rand)
+//        {
+//            return
+//                 new SComb1Fragment3 (rator, predicate, consequent, consPredicate, consConsequent, consAlternative, alternative, rand);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("SComb1Fragment3.EvalStep");
-#endif
-            Cons evarg = environment.Argument0Value as Cons;
-            if (evarg == null) throw new NotImplementedException ();
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ("SComb1Fragment3.EvalStep");
+//#endif
+//            Cons evarg = environment.Argument0Value as Cons;
+//            if (evarg == null) throw new NotImplementedException ();
 
-            SimpleClosure cl = new SimpleClosure ((SimpleLambda) this.rator, environment);
-            environment = new SmallEnvironment1 (cl, evarg.Car);
+//            SimpleClosure cl = new SimpleClosure ((SimpleLambda) this.rator, environment);
+//            environment = new SmallEnvironment1 (cl, evarg.Car);
 
-            if (!(evarg.Car is Cons)) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
-                object ev;
-                object pred1Arg1;
-                if (environment.FastLexicalRef (out pred1Arg1, this.pred1Rand1Name, this.pred1Rand1Depth, this.pred1Rand1Offset))
-                    throw new NotImplementedException ();
-                object pred1Arg0 = ((Cons) evarg.Car).Car;
+//            if (!(evarg.Car is Cons)) {
+//#if DEBUG
+//                noteCalls (this.alternative);
+//                alternativeTypeHistogram.Note (this.alternativeType);
+//#endif
+//                expression = this.alternative;
+//                answer = null;
+//                return true;
+//            }
+//            else {
+//                object ev;
+//                object pred1Arg1;
+//                if (environment.FastLexicalRef (out pred1Arg1, this.pred1Rand1Name, this.pred1Rand1Depth, this.pred1Rand1Offset))
+//                    throw new NotImplementedException ();
+//                object pred1Arg0 = ((Cons) evarg.Car).Car;
 
-                ObjectModel.Eq (out ev, pred1Arg0, pred1Arg1);
-                //Control unev = this.predicate1;
-                //Environment env = environment;
+//                ObjectModel.Eq (out ev, pred1Arg0, pred1Arg1);
+//                //Control unev = this.predicate1;
+//                //Environment env = environment;
 
-                //while (unev.EvalStep (out ev, ref unev, ref env)) { };
-                //if (ev == Interpreter.UnwindStack) {
-                //    throw new NotImplementedException ();
-                //    //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
-                //    //environment = env;
-                //    //answer = Interpreter.UnwindStack;
-                //    //return false;
-                //}
+//                //while (unev.EvalStep (out ev, ref unev, ref env)) { };
+//                //if (ev == Interpreter.UnwindStack) {
+//                //    throw new NotImplementedException ();
+//                //    //((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
+//                //    //environment = env;
+//                //    //answer = Interpreter.UnwindStack;
+//                //    //return false;
+//                //}
 
-                if ((ev is bool) && (bool) ev == false) {
+//                if ((ev is bool) && (bool) ev == false) {
 
-                    object alt1Evrandtemp;
-                    if (environment.FastLexicalRef (out alt1Evrandtemp, this.altRandName, this.altRandDepth, this.altRandOffset))
-                        throw new NotImplementedException ();
+//                    object alt1Evrandtemp;
+//                    if (environment.FastLexicalRef (out alt1Evrandtemp, this.altRandName, this.altRandDepth, this.altRandOffset))
+//                        throw new NotImplementedException ();
 
-                    object alt1Evrand = ((Cons) alt1Evrandtemp).Cdr;
+//                    object alt1Evrand = ((Cons) alt1Evrandtemp).Cdr;
 
-                    object evop;
-                    if (environment.FastLexicalRef (out evop, this.altRatorName, this.altRatorDepth, this.altRatorOffset))
-                        throw new NotImplementedException ();
-                    return Interpreter.Call (out answer, ref expression, ref environment, evop, alt1Evrand);
-                    //#if DEBUG
-                    //                    noteCalls (this.alternative1);
-                    //                    alternative1TypeHistogram.Note (this.alternative1Type);
-                    //                    Debug.WriteLineIf (Primitive.Noisy, "    => #f");
-                    //#endif
-                    //                    expression = this.alternative1;
-                    //                    answer = null;
-                    //                    return true;
-                }
-                else {
-#if DEBUG
-                    noteCalls (this.consequent1);
-                    consequent1TypeHistogram.Note (this.consequent1Type);
-#endif
-                    expression = this.consequent1;
-                    answer = null;
-                    return true;
-                }
-            }
-        }
+//                    object evop;
+//                    if (environment.FastLexicalRef (out evop, this.altRatorName, this.altRatorDepth, this.altRatorOffset))
+//                        throw new NotImplementedException ();
+//                    return Interpreter.Call (out answer, ref expression, ref environment, evop, alt1Evrand);
+//                    //#if DEBUG
+//                    //                    noteCalls (this.alternative1);
+//                    //                    alternative1TypeHistogram.Note (this.alternative1Type);
+//                    //                    Debug.WriteLineIf (Primitive.Noisy, "    => #f");
+//                    //#endif
+//                    //                    expression = this.alternative1;
+//                    //                    answer = null;
+//                    //                    return true;
+//                }
+//                else {
+//#if DEBUG
+//                    noteCalls (this.consequent1);
+//                    consequent1TypeHistogram.Note (this.consequent1Type);
+//#endif
+//                    expression = this.consequent1;
+//                    answer = null;
+//                    return true;
+//                }
+//            }
+//        }
 
-    }
+//    }
 
     [Serializable]
     class SimpleLet1CarA0Z2 : SimpleLet1CarA0

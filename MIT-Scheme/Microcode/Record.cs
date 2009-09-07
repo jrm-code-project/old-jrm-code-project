@@ -1,21 +1,20 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Microcode
 {
     [Serializable]
     sealed class Record: SchemeObject, ISystemPair
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.RECORD; } }
+
         static int [] histogram = new int [128];
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly object [] slots;
 
         public Record (object [] slots)
-            : base (TC.RECORD)
         {
             this.slots = slots;
         }

@@ -9,48 +9,50 @@ namespace Microcode
     [Serializable]
     public class Symbol : SchemeObject, ISerializable, ISystemPair
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode
+        {
+            get
+            {
+                return this.IsInterned() ? TC.INTERNED_SYMBOL : TC.UNINTERNED_SYMBOL;
+            }
+        }
+
         static Dictionary<string,Symbol> symbolTable = new Dictionary<string, Symbol> ();
         readonly string name;
         readonly int hashCode;
         static object [] obarray = new object [1];
 
         Symbol (string name, bool intern)
-            : base (intern ? TC.INTERNED_SYMBOL : TC.UNINTERNED_SYMBOL)
         {
-            this.name = name;
-            this.hashCode = name.GetHashCode ();
+            if (name == null) throw new ArgumentNullException ("name");
             if (intern) {
-                symbolTable.Add (name, this);
+                this.name = String.Intern (name);
+                symbolTable.Add (this.name, this);
                 obarray [0] = new Cons (this, obarray [0]);
             }
+            else {
+                this.name = name;
+            }
+            this.hashCode = name.GetHashCode ();
+        }
+
+        protected Symbol (SerializationInfo info, StreamingContext context)
+        {
+            throw new NotImplementedException ();
         }
 
         static public Symbol Make (string name)
         {
-            string canonicalName = String.Intern (name);
             Symbol canonicalSymbol;
             if (symbolTable.TryGetValue (name, out canonicalSymbol) == false)
-                canonicalSymbol = new Symbol (canonicalName, true);
+                canonicalSymbol = new Symbol (name, true);
             return canonicalSymbol;
         }
 
         static public object [] GetObarray ()
         {
             return obarray;
-        }
-
-        void CheckInterning ()
-        {
-            Symbol canonicalSymbol;
-            if (symbolTable.TryGetValue (this.name, out canonicalSymbol) == false ||
-                this != canonicalSymbol) {
-                if (this.TypeCode != TC.UNINTERNED_SYMBOL)
-                    throw new NotImplementedException();
-            }
-            else {
-                if (this.TypeCode != TC.INTERNED_SYMBOL)
-                    throw new NotImplementedException();
-            }
         }
 
         static public Symbol MakeUninterned (string name)
@@ -60,9 +62,6 @@ namespace Microcode
 
         public char [] ToCharArray ()
         {
-#if DEBUG
-            CheckInterning();
-#endif
             return this.name.ToCharArray ();
         }
 
@@ -78,15 +77,19 @@ namespace Microcode
             return this.hashCode;
         }
 
+        public bool IsInterned ()
+        {
+            Symbol canonicalSymbol;
+            return symbolTable.TryGetValue (this.name, out canonicalSymbol) &&
+                    this == canonicalSymbol;
+        }
+
         #region ISystemPair Members
 
         public object SystemPairCar
         {
             get
             {
-#if DEBUG
-            CheckInterning();
-#endif
                 return this.name.ToCharArray();
             }
             set
@@ -114,7 +117,7 @@ namespace Microcode
         #endregion
 
         [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        public virtual void GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (SymbolDeserializer));
             info.AddValue ("name", this.name);
@@ -125,20 +128,20 @@ namespace Microcode
     [Serializable]
     internal sealed class SymbolDeserializer : IObjectReference
     {
-        // This object has no fields (although it could).
         string name;
-        bool intern;
+        Boolean intern;
 
         // GetRealObject is called after this object is deserialized.
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         public Object GetRealObject (StreamingContext context)
         {
-            if (intern)
-                return Symbol.Make (this.name);
-            else
-                return Symbol.MakeUninterned (this.name);
+            return this.intern ?
+                Symbol.Make (this.name) :
+                Symbol.MakeUninterned (this.name);
         }
 
-        public void SetName (string value) { this.name = value; }
-        public void SetIntern (bool value) { this.intern = value; }
+        // Muffle compiler
+        string Name { set { this.name = value; } }
+        Boolean Intern { set { this.intern = value; } }
     }
 }

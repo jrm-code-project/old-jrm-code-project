@@ -485,7 +485,7 @@ namespace Microcode
                     break;
 
                 case TC.COMBINATION:
-                    banswer = arg1 is Combination || arg1 is Combination0 || arg1 is Combination3 || arg1 is Combination4;
+                    banswer = arg1 is Combination || arg1 is Combination0; // || arg1 is Combination3 || arg1 is Combination4;
                     break;
 
                 case TC.COMBINATION_1:
@@ -817,7 +817,7 @@ namespace Microcode
         public static bool SystemListToVector (out object answer, object arg0, object arg1)
         {
             TC code = (TC) arg0;
-            switch ((TC) arg0) {
+            switch (code) {
                 case TC.COMBINATION:
                     answer = Combination.FromList ((Cons) arg1);
                     break;

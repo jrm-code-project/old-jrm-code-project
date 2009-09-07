@@ -8,19 +8,18 @@ namespace Microcode
     // Recapitulate the lambda hierarchy
 
     [Serializable]
-    abstract class ClosureBase : SchemeObject, IApplicable, ISystemPair
+    abstract public class ClosureBase : SchemeObject, IApplicable, ISystemPair
     {
 #if DEBUG
         static Histogram<ClosureBase> hotClosures = new Histogram<ClosureBase>();
         protected long callCount;
 #endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected Environment environment;
+        protected Environment closureEnvironment;
 
-        protected ClosureBase (TC typeCode, Environment environment)
-            : base (typeCode)
+        protected ClosureBase (Environment environment)
         {
-            this.environment = environment;
+            this.closureEnvironment = environment;
         }
 
         public abstract LambdaBase Lambda { get; }
@@ -44,9 +43,9 @@ namespace Microcode
             get
             {
                 Symbol name = this.Lambda.Name;
-                if ((name == LambdaBase.unnamed
-                    || name == LambdaBase.internalLambda
-                    || name == LambdaBase.let)
+                if ((name == LambdaBase.Unnamed
+                    || name == LambdaBase.InternalLambda
+                    || name == LambdaBase.Let)
                     && this.Environment.closure != null)
                     return this.Environment.closure.LongName + " " + name;
                 else
@@ -57,12 +56,13 @@ namespace Microcode
         public Environment Environment
         {
             [DebuggerStepThrough]
-            get { return this.environment; }
+            get { return this.closureEnvironment; }
         }
 
 #if DEBUG
         protected void BumpCallCount() 
-        {callCount+= 1;
+        {
+            callCount+= 1;
             if ((callCount % 500) == 499)
                 hotClosures.Note (this);   
         }
@@ -100,10 +100,10 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                if (this.environment is GlobalEnvironment)
+                if (this.closureEnvironment is GlobalEnvironment)
                     return Constant.sharpF;
                 else
-                    return this.environment;
+                    return this.closureEnvironment;
             }
 
             set
@@ -118,8 +118,11 @@ namespace Microcode
     [Serializable]
     abstract class ExtendedClosure : ClosureBase
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.EXTENDED_PROCEDURE; } }
+
         protected ExtendedClosure (Environment environment)
-            : base (TC.EXTENDED_PROCEDURE, environment)
+            : base (environment)
         {
         }
 
@@ -133,6 +136,74 @@ namespace Microcode
         public override string ToString ()
         {
             return "#<EXTENDED-PROCEDURE " + this.Name + ">";
+        }
+    }
+
+    public class PartialClosure : ClosureBase
+    {
+        LambdaBase closureLambda;
+        Boolean needsEnvironment;
+
+        public PartialClosure (LambdaBase lambda, Environment environment)
+            : base (environment)
+        {
+            this.closureLambda = lambda;
+            this.needsEnvironment = lambda.CallsTheEnvironment();
+        }
+
+        public override LambdaBase Lambda
+        {
+            get { return this.closureLambda; }
+        }
+
+        public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override TC TypeCode
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        public Boolean FirstClassEnvironment
+        {
+            get { return this.needsEnvironment; }
         }
     }
 
@@ -200,7 +271,7 @@ namespace Microcode
             SCode.location = "StandardExtendedClosure.Apply";
             this.BumpCallCount ();
 #endif
-            //object [] rands = environment.FrameVector;
+            //object [] rands = closureEnvironment.FrameVector;
             int nargs = args.Length;
             int nparams = this.lambda.Formals.Length; // param 0 is self
             int formals = (int) this.lambda.required;
@@ -321,7 +392,7 @@ namespace Microcode
             SCode.location = "StaticExtendedClosure.Apply";
             this.BumpCallCount ();
 #endif
-            //object [] rands = environment.FrameVector;
+            //object [] rands = closureEnvironment.FrameVector;
             int nargs = args.Length;
             int nparams = this.lambda.Formals.Length; // param 0 is self
             int formals = (int) this.lambda.required;
@@ -382,8 +453,12 @@ namespace Microcode
     [Serializable]
     abstract class Closure : ClosureBase
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.PROCEDURE; } }
+
         protected Closure (Environment environment)
-            : base (TC.PROCEDURE, environment)
+            //: base (TC.PROCEDURE, closureEnvironment)
+            : base (environment)
         {
         }
 
@@ -506,7 +581,6 @@ namespace Microcode
         {
         }
 
-
         #region IApplicable Members
 
         public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
@@ -561,17 +635,82 @@ namespace Microcode
         }
 
         #endregion
-
     }
 
     [Serializable]
-    sealed class SimpleClosure : StaticClosureBase<SimpleLambda>, ISerializable
+    sealed class NonClosure : StaticClosureBase<StaticLambda>
+    {
+        internal NonClosure (StaticLambda lambda)
+            : base (null, lambda)
+        {
+            if (lambda.Body.CallsTheEnvironment ())
+                throw new NotImplementedException ();
+        }
+
+        #region IApplicable Members
+
+        public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
+        {
+#if DEBUG
+            this.BumpCallCount ();
+            SCode.location = "NonClosure.Apply";
+#endif
+            if (this.argumentCount != args.Length)
+                throw new NotImplementedException ();
+            expression = this.lambda.Body;
+            environment = new StaticEnvironment (this, args);
+            answer = null; // happy compiler
+            return true;
+        }
+
+        static object [] noArguments = new object [] { };
+        public override bool Call (out object answer, ref Control expression, ref Environment environment)
+        {
+            return this.Apply (out answer, ref expression, ref environment, noArguments);
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
+        {
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0 });
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        {
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1 });
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2 });
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2, arg3 });
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+    }
+
+
+    [Serializable]
+    sealed class SimpleClosure : StaticClosureBase<SimpleLambda>
     {
         SCode body;
         internal SimpleClosure (SimpleLambda lambda, Environment environment)
             : base (environment, lambda)
         {
-            if (lambda.Formals.Length == 0) throw new NotImplementedException ();
+            //if (lambda.Formals.Length == 0) throw new NotImplementedException ();
             this.body = lambda.Body;
         }
 
@@ -581,6 +720,7 @@ namespace Microcode
         {
 
             switch (args.Length) {
+                case 0: return this.Call (out answer, ref expression, ref environment);
                 case 1: return this.Call (out answer, ref expression, ref environment, args [0]);
                 case 2: return this.Call (out answer, ref expression, ref environment, args [0], args [1]);
                 case 3: return this.Call (out answer, ref expression, ref environment, args [0], args [1], args [2]);
@@ -600,7 +740,22 @@ namespace Microcode
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment)
         {
-            throw new NotImplementedException ("SimpleClosure called with no arguments.");
+#if DEBUG
+            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call.0";
+#endif
+            if (this.argumentCount != 0)
+                throw new NotImplementedException ("Wrong number of arguments.  Got 0, wanted " + this.argumentCount);
+            expression = this.body;
+#if DEBUG
+            SCode.location = "new SmallEnvironment0";
+#endif
+            environment = new SmallEnvironment0 (this);
+#if DEBUG
+            SCode.location = "SimpleClosure.Call.0";
+#endif
+            answer = null; // keep the compiler happy
+            return true;
         }
 
         public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
@@ -681,34 +836,140 @@ namespace Microcode
         }
 
         #endregion
-
-
-        #region ISerializable Members
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (SimpleClosureDeserializer));
-            info.AddValue ("lambda", this.lambda);
-            info.AddValue ("environment", this.environment);
-        }
-
-        #endregion
     }
 
     [Serializable]
-    internal sealed class SimpleClosureDeserializer : IObjectReference
+    sealed class SimpleNonClosure : StaticClosureBase<SimpleLambda>
     {
-        SimpleLambda lambda;
-        Environment environment;
-
-        public Object GetRealObject (StreamingContext context)
+        SCode body;
+        internal SimpleNonClosure (SimpleLambda lambda)
+            : base (null, lambda)
         {
-            SCode bound = this.lambda.Bind (LexicalMap.Make (this.environment));
-            return new SimpleClosure ((SimpleLambda) bound, environment);
+            //if (lambda.Formals.Length == 0) throw new NotImplementedException ();
+            this.body = lambda.Body;
         }
-        // Muffle compiler
-        SimpleLambda Lambda { set { this.lambda = value; } }
-        Environment Environment { set { this.environment = value; } }
+
+        #region IApplicable Members
+
+        public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
+        {
+
+            switch (args.Length) {
+                case 0: return this.Call (out answer, ref expression, ref environment);
+                case 1: return this.Call (out answer, ref expression, ref environment, args [0]);
+                case 2: return this.Call (out answer, ref expression, ref environment, args [0], args [1]);
+                case 3: return this.Call (out answer, ref expression, ref environment, args [0], args [1], args [2]);
+                case 4: return this.Call (out answer, ref expression, ref environment, args [0], args [1], args [2], args [3]);
+                default:
+#if DEBUG
+                    this.BumpCallCount ();
+#endif
+                    if (args.Length != this.argumentCount)
+                        throw new NotImplementedException ();
+                    expression = this.body;
+                    environment = (Environment) new SimpleEnvironment (this, args);
+                    answer = null; // keep the compiler happy
+                    return true;
+            }
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            this.BumpCallCount ();
+            SCode.location = "SimpleNonClosure.Call.0";
+#endif
+            if (this.argumentCount != 0)
+                throw new NotImplementedException ("Wrong number of arguments.  Got 0, wanted " + this.argumentCount);
+            expression = this.body;
+#if DEBUG
+            SCode.location = "new SmallEnvironment0";
+#endif
+            environment = new SmallEnvironment0 (this);
+#if DEBUG
+            SCode.location = "SimpleNonClosure.Call.0";
+#endif
+            answer = null; // keep the compiler happy
+            return true;
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
+        {
+#if DEBUG
+            this.BumpCallCount ();
+            SCode.location = "SimpleNonClosure.Call.1";
+#endif
+            if (this.argumentCount != 1)
+                throw new NotImplementedException ("Wrong number of arguments.  Got 1, wanted " + this.argumentCount);
+            expression = this.body;
+#if DEBUG
+            SCode.location = "new SmallEnvironment1";
+#endif
+            environment = new SmallEnvironment1 (this, arg0);
+#if DEBUG
+            SCode.location = "SimpleNonClosure.Call.1";
+#endif
+            answer = null; // keep the compiler happy
+            return true;
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        {
+#if DEBUG
+            SCode.location = "-";
+            this.BumpCallCount ();
+            SCode.location = "SimpleNonClosure.Call.2";
+#endif
+            if (this.argumentCount != 2)
+                throw new NotImplementedException ();
+            expression = this.body;
+#if DEBUG
+            SCode.location = "new SmallEnvironment2";
+#endif
+            environment = new SmallEnvironment2 (this, arg0, arg1);
+#if DEBUG
+            SCode.location = "SimpleNonClosure.Call.2";
+#endif
+            answer = null; // keep the compiler happy
+            return true;
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+#if DEBUG
+            this.BumpCallCount ();
+#endif
+            if (this.argumentCount != 3)
+                throw new NotImplementedException ();
+            expression = this.lambda.Body;
+            environment = new SmallEnvironment3 (this, arg0, arg1, arg2);
+            answer = null; // keep the compiler happy
+            return true;
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+#if DEBUG
+            this.BumpCallCount ();
+#endif
+            if (this.argumentCount != 4)
+                throw new NotImplementedException ();
+            expression = this.lambda.Body;
+            environment = new SmallEnvironment4 (this, arg0, arg1, arg2, arg3);
+            answer = null; // keep the compiler happy
+            return true;
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ("SimpleNonClosure called with 5 arguments");
+        }
+
+        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        {
+            throw new NotImplementedException ("SimpleNonClosure called with 6 arguments");
+        }
+
+        #endregion
     }
 }

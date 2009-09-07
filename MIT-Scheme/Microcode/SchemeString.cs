@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -7,16 +8,10 @@ namespace Microcode
 {
     static class SchemeString
     {
-        [SchemePrimitive ("SET-STRING-MAXIMUM-LENGTH!", 2, false)]
-        public static bool SetStringMaximumLength (out object answer, object arg0, object arg1)
+        [SchemePrimitive ("STRING-MAXIMUM-LENGTH", 1, false)]
+        public static bool StringMaximumLength (out object answer, object arg)
         {
-            char [] str = (char []) arg0;
-            int len = (int) arg1;
-            char [] result = new char [len];
-            for (int i = 0; i < len; i++) {
-                result [i] = str [i];
-            }
-            answer = result;
+            answer = answer = ((char []) arg).Length;
             return false;
         }
 
@@ -92,11 +87,11 @@ namespace Microcode
         public static bool SubstringMoveRight (out object answer, object [] arglist)
         {
             char [] ptr1 = (char []) (arglist [0]);
-            int len1 = ptr1.Length;
+            //int len1 = ptr1.Length;
             int end1 = (int) (arglist [2]);
             int start1 = (int) (arglist [1]);
             char [] ptr2 = (char []) (arglist [3]);
-            int len2 = ptr2.Length;
+            //int len2 = ptr2.Length;
             int start2 = (int) (arglist [4]);
             int length = end1 - start1;
             int end2 = start2 + length;
@@ -114,14 +109,14 @@ namespace Microcode
         public static bool SubstringMoveLeft (out object answer, object [] arglist)
         {
             char [] ptr1 = (char []) (arglist [0]);
-            int len1 = ptr1.Length;
+            //int len1 = ptr1.Length;
             int end1 = (int) (arglist [2]);
             int start1 = (int) (arglist [1]);
             char [] ptr2 = (char []) (arglist [3]);
-            int len2 = ptr2.Length;
+            //int len2 = ptr2.Length;
             int start2 = (int) (arglist [4]);
             int length = end1 - start1;
-            int end2 = start2 + length;
+            //int end2 = start2 + length;
 
             int scan1 = start1;
             int scan2 = start2;
@@ -165,7 +160,7 @@ namespace Microcode
             int scan = start;
             while ((length--) > 0) {
                 char temp = str [scan];
-                str [scan++] = Char.ToLower (temp);
+                str [scan++] = Char.ToLower (temp, CultureInfo.InvariantCulture);
             }
             answer = Constant.Unspecific;
             return false;
@@ -182,6 +177,24 @@ namespace Microcode
             while (scan < limit) {
                 if (charset [str [scan++]] != '\0') {
                     answer = scan - 1;
+                    return false;
+                }
+            }
+            answer = false;
+            return false;
+        }
+
+        [SchemePrimitive ("SUBSTRING-FIND-PREVIOUS-CHAR-IN-SET", 4, false)]
+        public static bool SubstringFindPreviousCharInSet (out object answer, object [] arglist)
+        {
+            char [] str = (char []) (arglist [0]);
+            int limit = (int) (arglist [1]);
+            int scan = (int) (arglist [2]);
+            char [] charset = (char []) (arglist [3]);
+
+            while (scan > limit) {
+                if (charset [str [--scan]] != '\0') {
+                    answer = scan;
                     return false;
                 }
             }

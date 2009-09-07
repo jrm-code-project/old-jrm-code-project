@@ -95,13 +95,13 @@ namespace Microcode
         // #define MAX_RETURN_CODE			0x5F
     }
 
-    public sealed class UnwindStack
+    public sealed class Unwind
     {
-        private static readonly UnwindStack instance = new UnwindStack ();
+        private static readonly Unwind instance = new Unwind ();
 
-        private UnwindStack () { }
+        private Unwind () { }
 
-        public static UnwindStack Instance
+        public static Unwind Instance
         {
             get
             {
@@ -111,25 +111,25 @@ namespace Microcode
     }
 
 
-    public sealed class ExitInterpreterException : Exception
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Termination termination;
+    //public sealed class ExitInterpreterException : Exception
+    //{
+    //    [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+    //    readonly Termination termination;
 
-        public ExitInterpreterException (Termination termination)
-        {
-            this.termination = termination;
-        }
+    //    public ExitInterpreterException (Termination termination)
+    //    {
+    //        this.termination = termination;
+    //    }
 
-        public Termination Termination
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.termination;
-            }
-        }
-    }
+    //    public Termination Termination
+    //    {
+    //        [DebuggerStepThrough]
+    //        get
+    //        {
+    //            return this.termination;
+    //        }
+    //    }
+    //}
 
     public sealed class Interpreter
     {
@@ -150,8 +150,8 @@ namespace Microcode
 
         // If you return this object, the stack will unwind.
         // You should not return this object from a primitive.   
-        public static readonly UnwindStack UnwindStack = UnwindStack.Instance;
-        public static readonly SCode UnwindStackExpression = Quotation.Make (UnwindStack.Instance);
+        public static readonly Unwind UnwindStack = Unwind.Instance;
+        public static readonly SCode UnwindStackExpression = Quotation.Make (Unwind.Instance);
 
         public Interpreter ()
         { }
@@ -213,6 +213,26 @@ namespace Microcode
             return true;
         }
 
+        [SchemePrimitive ("EXIT", 0, false)]
+        public static bool Exit (out object answer)
+        {
+            UnwinderState env = new UnwinderState (null);
+            env.ExitValue = 0;
+            // Return from the primitive with instructions to unwind the stack.
+            answer = new TailCallInterpreter (Interpreter.UnwindStackExpression, env);
+            return true;
+        }
+
+        [SchemePrimitive ("EXIT-WITH-VALUE", 1, false)]
+        public static bool Exit (out object answer, object arg)
+        {
+            UnwinderState env = new UnwinderState (null);
+            env.ExitValue = arg;
+            // Return from the primitive with instructions to unwind the stack.
+            answer = new TailCallInterpreter (Interpreter.UnwindStackExpression, env);
+            return true;
+        }
+
         [SchemePrimitive ("WITHIN-CONTROL-POINT", 2, false)]
         public static bool WithinControlPoint (out object answer, object arg0, object arg1)
         {
@@ -241,13 +261,11 @@ namespace Microcode
         public static bool ScodeEval (out object answer, object arg0, object arg1)
         {
             Environment env = Environment.ToEnvironment (arg1);
-            LexicalMap ctenv = LexicalMap.Make (env);
             //CompileTimeEnvironment ctenv = (env is StandardEnvironment)
             //    ? new CompileTimeEnvironment (((StandardEnvironment) env).Closure.Lambda.Formals)
             //    : new CompileTimeEnvironment (null);
             SCode sarg0 = SCode.EnsureSCode (arg0);
-            SCode xarg0 = sarg0.Bind (LexicalMap.Make (env));
-            answer = new TailCallInterpreter (xarg0, env);
+            answer = new TailCallInterpreter (sarg0.PartialEval(env).Residual, env);
             return true;
         }
 
@@ -454,13 +472,13 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class ApplyFromPrimitive : Control
+    sealed class ApplyFromPrimitive : SpecialControl
     {
         internal IApplicable op;
         internal Cons rands;
 
         internal ApplyFromPrimitive (IApplicable op, Cons rands)
-            : base (TC.SPECIAL)
+            : base ()
         {
             this.op = op;
             this.rands = rands;
@@ -472,9 +490,9 @@ namespace Microcode
         }
     }
 
-    abstract class CallFromPrimitive : Control
+    abstract class CallFromPrimitive : SpecialControl
     {
-        internal CallFromPrimitive (TC code) : base (code) { }
+        internal CallFromPrimitive () : base () { }
 
         public static CallFromPrimitive Make (IApplicable op)
         {
@@ -502,7 +520,7 @@ namespace Microcode
         IApplicable op;
 
         internal CallFromPrimitive0 (IApplicable op)
-            : base (TC.SPECIAL)
+            : base ()
         {
             this.op = op;
         }
@@ -519,7 +537,7 @@ namespace Microcode
         object arg0;
 
         internal CallFromPrimitive1 (IApplicable op, object arg0)
-            : base (TC.SPECIAL)
+            : base ()
         {
             this.op = op;
             this.arg0 = arg0;
@@ -538,7 +556,7 @@ namespace Microcode
         object arg1;
 
         internal CallFromPrimitive2 (IApplicable op, object arg0, object arg1)
-            : base (TC.SPECIAL)
+            : base ()
         {
             this.op = op;
             this.arg0 = arg0;
@@ -552,12 +570,12 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class HistoryDisabled : Control
+    sealed class HistoryDisabled : SpecialControl
     {
         readonly IApplicable thunk;
 
         internal HistoryDisabled (IApplicable arg0)
-            : base (TC.SPECIAL)
+            : base ()
         {
             this.thunk = arg0;
         }
@@ -599,7 +617,7 @@ namespace Microcode
             while (expr.EvalStep (out answer, ref expr, ref env)) { };
             if (answer == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AppendContinuationFrames (this.continuation);
-                //((UnwinderState) env).AppendContinuationFrames ((RewindState) environment.OldFrames);
+                //((UnwinderState) env).AppendContinuationFrames ((RewindState) closureEnvironment.OldFrames);
                 environment = env;
                 return false;
             }
@@ -628,13 +646,13 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class InterruptMask : Control
+    sealed class InterruptMask : SpecialControl
     {
         readonly object arg0;
         readonly IApplicable receiver;
 
         internal InterruptMask (object arg0, IApplicable receiver)
-            : base (TC.SPECIAL)
+            : base ()
         {
             this.arg0 = arg0;
             this.receiver = receiver;
@@ -662,14 +680,14 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class StackMarker : Control
+    sealed class StackMarker : SpecialControl
     {
         readonly IApplicable thunk;
         object mark1;
         object mark2;
 
         internal StackMarker (IApplicable thunk, object mark1, object mark2)
-            : base (TC.SPECIAL)
+            : base ()
         {
             this.thunk = thunk;
             this.mark1 = mark1;
@@ -712,7 +730,7 @@ namespace Microcode
             while (expr.EvalStep (out answer, ref expr, ref env)) { };
             if (answer == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AppendContinuationFrames (this.continuation);
-                //((UnwinderState) env).AppendContinuationFrames ((RewindState) environment.OldFrames);
+                //((UnwinderState) env).AppendContinuationFrames ((RewindState) closureEnvironment.OldFrames);
                 environment = env;
                 return false;
             }
@@ -757,7 +775,7 @@ namespace Microcode
             while (expr.EvalStep (out answer, ref expr, ref env)) { };
             if (answer == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AppendContinuationFrames (this.continuation);
-                //((UnwinderState) env).AppendContinuationFrames ((RewindState) environment.OldFrames);
+                //((UnwinderState) env).AppendContinuationFrames ((RewindState) closureEnvironment.OldFrames);
                 environment = env;
                 answer = Interpreter.UnwindStack;
                 return false;

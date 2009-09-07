@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 
 namespace Microcode
 {
     [Serializable]
     sealed class ReturnAddress : SchemeObject
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public override TC TypeCode { get { return TC.FIXNUM; } }
+
         ReturnCode code;
 
         public ReturnAddress (ReturnCode code)
-            : base (TC.FIXNUM)
         {
             this.code = code;
         }
