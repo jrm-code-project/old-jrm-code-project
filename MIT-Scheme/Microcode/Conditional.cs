@@ -213,9 +213,8 @@ namespace Microcode
 
         public static SCode Make (SCode predicate, SCode consequent, SCode alternative)
         {
-            return new Conditional (predicate, consequent, alternative);
-            //   (! Configuration.EnableConditionalOptimization) ? new Conditional (predicate, consequent, alternative) :
-
+            return
+               new Conditional (predicate, consequent, alternative);
             //(predicate is Conditional && 
             //Configuration.EnableCodeRewriting &&
             //Configuration.EnableConditionalDistribution) ? SpecialMake ((Conditional) predicate, consequent, alternative) :
@@ -353,10 +352,9 @@ namespace Microcode
             }
         }
 
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return new List<Symbol> (this.predicate.FreeVariables ().Union (new List<Symbol> (this.consequent.FreeVariables ().Union (this.alternative.FreeVariables ()))));
+            return new List<Symbol> (this.predicate.ComputeFreeVariables ().Union (new List<Symbol> (this.consequent.ComputeFreeVariables ().Union (this.alternative.ComputeFreeVariables ()))));
         }
 
         public override bool MutatesAny (Symbol [] formals)
@@ -420,7 +418,7 @@ namespace Microcode
 
         #endregion
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult p = this.predicate.PartialEval (environment);
             PartialResult c = this.consequent.PartialEval (environment);
@@ -428,6 +426,14 @@ namespace Microcode
             return new PartialResult (p.Residual == this.predicate &&
                 c.Residual == this.consequent &&
                 a.Residual == this.alternative ? this : Conditional.Make (p.Residual, c.Residual, a.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            return 
+                this.predicate.LambdaCount () +
+                this.consequent.LambdaCount () +
+                this.alternative.LambdaCount ();
         }
     }
 
@@ -5037,7 +5043,6 @@ namespace Microcode
 ////        }
 ////    }
 
-
     [Serializable]
     class Disjunction : SCode, ISerializable, ISystemPair
     {
@@ -5231,27 +5236,24 @@ namespace Microcode
 
         #endregion
 
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    SCode boundPredicate = this.predicate.BindVariables (lexicalMap);
-        //    SCode boundAlternative = this.alternative.BindVariables (lexicalMap);
-        //    return (boundPredicate == this.predicate &&
-        //            boundAlternative == this.alternative)
-        //            ? this :
-        //            Disjunction.Make (boundPredicate, boundAlternative);
-        //}
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return new List<Symbol> (this.predicate.FreeVariables ().Union (this.alternative.FreeVariables ()));
+            return new List<Symbol> (this.predicate.ComputeFreeVariables ().Union (this.alternative.ComputeFreeVariables ()));
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult pred = this.predicate.PartialEval (environment);
             PartialResult alt = this.alternative.PartialEval (environment);
             return new PartialResult ((pred.Residual == this.predicate &&
                 alt.Residual == this.alternative) ? this : Disjunction.Make (pred.Residual, alt.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            return
+                this.predicate.LambdaCount () +
+                this.alternative.LambdaCount ();
         }
     }
 

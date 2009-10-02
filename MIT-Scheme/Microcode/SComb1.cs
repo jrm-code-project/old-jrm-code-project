@@ -192,22 +192,12 @@ namespace Microcode
 
         #endregion
 
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    SCode boundRator = this.rator.BindVariables (lexicalMap);
-        //    SCode boundRand = this.rand.BindVariables (lexicalMap);
-        //    return (boundRator == this.rator &&
-        //        boundRand == this.rand) ?
-        //        this :
-        //        Combination1.Make (boundRator, boundRand);
-        //}
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return new List<Symbol> (this.rator.FreeVariables ().Union (this.rand.FreeVariables ()));
+            return new List<Symbol> (this.rator.ComputeFreeVariables ().Union (this.rand.ComputeFreeVariables ()));
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult rator = this.rator.PartialEval (environment);
             PartialResult rand = this.rand.PartialEval (environment);
@@ -215,6 +205,13 @@ namespace Microcode
                     rand.Residual == this.rand ?
                     this :
                     Combination1.Make(rator.Residual, rand.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            return
+                this.rator.LambdaCount () +
+                this.rand.LambdaCount ();
         }
     }
 

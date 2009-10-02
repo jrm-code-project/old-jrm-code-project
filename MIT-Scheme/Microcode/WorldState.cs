@@ -5,22 +5,25 @@ using System.Text;
 
 namespace Microcode
 {
+    /// <summary>
+    /// Holds a dumped image.
+    /// Must be public for listener.
+    /// </summary>
     [Serializable]
     public class WorldState
     {
-        public readonly ControlPoint  cp;
-        public readonly GlobalEnvironment ge;
+        internal readonly ControlPoint  cp;
+        internal readonly GlobalEnvironment ge;
 
-
-        public  Constant defaultObject;
-        public  Constant eofObject;
-        public  Constant aux;
-        public  Constant key;
-        public  Constant optional;
-        public  Constant rest;
-        public  Constant externalUnassigned;
-        public  Constant unspecific;
-        public WorldState (ControlPoint cp, GlobalEnvironment ge)
+        internal Constant defaultObject;
+        internal Constant eofObject;
+        internal Constant aux;
+        internal Constant key;
+        internal Constant optional;
+        internal Constant rest;
+        internal Constant externalUnassigned;
+        internal Constant unspecific;
+        internal WorldState (ControlPoint cp, GlobalEnvironment ge)
         {
             this.cp = cp;
             this.ge = ge;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics; 
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
@@ -12,7 +12,7 @@ namespace Microcode
     /// Base class for lambda expressions.
     /// </summary>
     [Serializable]
-    abstract public class LambdaBase : SCode
+    abstract class LambdaBase : SCode
     {
         static public readonly Symbol InternalLambda = Symbol.Make ("#[internal-lambda]");
         static public readonly Symbol Unnamed = Symbol.Make ("#[unnamed-procedure]");
@@ -26,21 +26,29 @@ namespace Microcode
         protected readonly Symbol [] lambdaFormals;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        protected ICollection<Symbol> freeVariables;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected SCode lambdaBody;
 
+        protected object [] lambdaStatics;
+        protected int [] staticMapping;
+
+        public readonly int internalLambdaCount;
+
         // Count of times this lambda is closed over.
-        protected int closeCount = 0;
+        internal long closeCount = 0;
         // Count of times this lambda body is evaluated.
-        protected int evaluationCount = 0;
+        internal long evaluationCount = 0;
 
-        protected IList<Symbol> freeVars;
-
-        protected LambdaBase (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
+        protected LambdaBase (Symbol name, Symbol [] formals, SCode body)
         {
             this.lambdaName = name;
             this.lambdaFormals = formals;
             this.lambdaBody = body;
-            this.freeVars = freeVariables;
+            this.freeVariables = new List<Symbol> (body.ComputeFreeVariables ().Except<Symbol> (formals));
+            this.internalLambdaCount = body.LambdaCount ();
+
 #if DEBUG
             // Paranoia:  check for duplicate names
             if (name != Dummy)
@@ -50,8 +58,9 @@ namespace Microcode
                             if (formals [i] == formals [j]) 
                                 Debugger.Break ();
 
-            // Check for eta-reducible primitive lambdas.  There seem to be
-            // too many of these.
+            // //Check for eta-reducible primitive lambdas.  There seem to be
+            // //too many of these.
+            // Bug found and fixed.
             //if (body is PrimitiveCombination0 &&
             //    formals.Length == 0 )
             //    Debugger.Break ();
@@ -89,12 +98,30 @@ namespace Microcode
 
         public int LexicalOffset (object name)
         {
-            // This way is *slow*
-            // return Array.IndexOf (this.lambdaFormals, ratorName);
             for (int i = 0; i < this.lambdaFormals.Length; i++)
                 if (name == this.lambdaFormals [i])
                     return i;
             return -1;
+            // This way is *slow*
+            // return Array.IndexOf (this.lambdaFormals, ratorName);
+        }
+
+
+        public int StaticOffset (object name, Environment environment)
+        {
+            if (this.lambdaStatics == null)
+                this.lambdaStatics = environment.GetStaticMappingNames (this.freeVariables);
+            for (int i = 0; i < this.lambdaStatics.Length; i++)
+                if (name == this.lambdaStatics [i])
+                    return i;
+            return -1;
+        }
+
+        public int [] GetStaticMapping (Environment environment)
+        {
+            if (this.staticMapping == null)
+                this.staticMapping = environment.GetStaticMapping (this.freeVariables);
+            return this.staticMapping;
         }
 
         public override bool MutatesAny (Symbol [] formals)
@@ -103,31 +130,22 @@ namespace Microcode
             return this.lambdaBody.MutatesAny (formals);
         }
 
-        public override bool CallsTheEnvironment ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            throw new NotImplementedException ();
+            return this.freeVariables;
         }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        public PartialClosure PartialClose (Environment environment, int [] mapping)
         {
-            throw new NotImplementedException ();
-        }
-
-        public override TC TypeCode
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        internal abstract ClosureBase Close (Environment environment);
-
-        public override IList<Symbol> FreeVariables ()
-        {
-            return this.freeVars;
-        }
-
-        public PartialClosure PartialClose (Environment environment)
-        {
+            if (this.staticMapping != null)
+                throw new NotImplementedException ();
+            this.staticMapping = mapping;
             return new PartialClosure (this, environment);
+        }
+
+        public override int LambdaCount ()
+        {
+            return 1;
         }
     }
 
@@ -141,12 +159,12 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.LAMBDA; } }
 
-        protected Lambda (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
-            : base (name, formals, freeVariables, body)
+        protected Lambda (Symbol name, Symbol [] formals, SCode body)
+            : base (name, formals, body)
         {
         }
 
-        public static Lambda Make (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
+        public static Lambda Make (Symbol name, Symbol [] formals, SCode body)
         {
             if (body == null)
                 throw new ArgumentNullException ("body");
@@ -154,11 +172,15 @@ namespace Microcode
                 throw new ArgumentNullException ("formals");
             if (name == null)
                 throw new ArgumentNullException ("name");
-  
-            return StandardLambda.Make (name, formals, freeVariables, body);
+            return
+                new StandardLambda (name, formals, body);
+                //body.CallsTheEnvironment () ? (Lambda) new StandardLambda (name, formals, body) :
+                //(Lambda) new StaticLambda (name, formals, body);
+                //body.MutatesAny (formals) ? (Lambda) new StaticLambda (name, formals, body) :
+                //(Lambda) new SimpleLambda (name, formals, body);
         }
 
-        public static SCode Make (object name, object formals, object freeVariables, object body)
+        public static SCode Make (object name, object formals, object body)
         {
             if (formals == null)
                 throw new ArgumentNullException ("formals");
@@ -167,7 +189,7 @@ namespace Microcode
             for (int i = 0; i < formalsArray.Length; i++) {
                 realFormals [i] = (Symbol) formalsArray [i];
             }
-            return Make ((Symbol) name, (Symbol []) realFormals, (IList<Symbol>) freeVariables, EnsureSCode (body));
+            return Make ((Symbol) name, (Symbol []) realFormals, EnsureSCode (body));
         }
 
         [SchemePrimitive ("LAMBDA?", 1, true)]
@@ -200,6 +222,7 @@ namespace Microcode
             {
                 // ugh!  but the advice mechanism uses it.
                 this.lambdaBody = EnsureSCode (value);
+                this.freeVariables = new List<Symbol> (this.lambdaBody.ComputeFreeVariables ().Except<Symbol> (this.lambdaFormals));
             }
         }
 
@@ -221,7 +244,6 @@ namespace Microcode
             }
         }
         #endregion
-
     }
 
     /// <summary>
@@ -244,16 +266,15 @@ namespace Microcode
         public readonly bool rest;
 
         protected ExtendedLambda (Symbol name, Symbol [] formals, 
-            IList<Symbol> freeVariables,
             SCode body, uint required, uint optional, bool rest)
-            : base (name, formals, freeVariables, body)
+            : base (name, formals, body)
         {
             this.required = required;
             this.optional = optional;
             this.rest = rest;
         }
 
-        public static LambdaBase Make (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body, uint required, uint optional, bool rest)
+        public static LambdaBase Make (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
                 throw new ArgumentNullException ("body");
@@ -264,11 +285,12 @@ namespace Microcode
 
             return
                 // If no optional, rest, or aux arguments, just make a regular lambda.
-                (required == formals.Length && 
-                optional == 0 && 
-                rest == false) ? UnanalyzedLambda.Make (name, formals, 
-                    freeVariables, body) :  
-                (LambdaBase) StandardExtendedLambda.Make (name, formals, freeVariables, body, required, optional, rest);
+                (required == formals.Length &&
+                optional == 0 &&
+                rest == false) ? (LambdaBase) Lambda.Make (name, formals, body) :
+                (LambdaBase) StandardExtendedLambda.Make (name, formals, body, required, optional, rest);
+                //body.CallsTheEnvironment () ? (LambdaBase) StandardExtendedLambda.Make (name, formals, body, required, optional, rest) :
+                //(LambdaBase) StaticExtendedLambda.Make (name, formals, body, required, optional, rest);
         }
 
         public static SCode Make (Hunk3 init)
@@ -280,8 +302,7 @@ namespace Microcode
                 formals [i] = (Symbol) cdrArray [i + 1];
             uint code = (uint) (int) (init.Cxr2);
             SCode body = EnsureSCode (init.Cxr0);
-            return Make (name, formals, 
-                new List<Symbol> (body.FreeVariables().Except(formals)),
+            return Make (name, formals,
                 body, (code >> 8) & 0xFF, code & 0xFF, ((code >> 16) & 0x1) == 0x1);
         }
 
@@ -290,6 +311,12 @@ namespace Microcode
         {
             answer = arg is ExtendedLambda;
             return false;
+        }
+
+        internal override PartialResult PartialEval (Environment environment)
+        {
+            PartialResult pbody = this.lambdaBody.PartialEval (environment.PartialExtend (this));
+            return new PartialResult (ExtendedLambda.Make (this.lambdaName, this.lambdaFormals, pbody.Residual, this.required, this.optional, this.rest));
         }
 
         #region ISystemHunk3 Members
@@ -343,32 +370,21 @@ namespace Microcode
         }
 
         #endregion
-
-        internal override ClosureBase Close (Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override PartialResult PartialEval (Environment environment)
-        {
-            PartialResult pbody = this.lambdaBody.PartialEval (environment.PartialExtend (this));
-            return new PartialResult (ExtendedLambda.Make (this.lambdaName, this.lambdaFormals, this.freeVars, pbody.Residual, this.required, this.optional, this.rest));
-        }
     }
 
     /// <summary>
-    /// Supports option, rest, and aux args, 
+    /// Concrete class that supports option, rest, and aux args, 
     /// and incremental definitions.
     /// </summary>
     [Serializable]
     sealed class StandardExtendedLambda : ExtendedLambda, ISerializable
     {
-        StandardExtendedLambda (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body, uint required, uint optional, bool rest)
-            : base (name, formals, freeVariables, body, required, optional, rest)
+        StandardExtendedLambda (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
+            : base (name, formals, body, required, optional, rest)
         {
         }
 
-        public static new StandardExtendedLambda Make (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body, uint required, uint optional, bool rest)
+        internal static new StandardExtendedLambda Make (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
                 throw new ArgumentNullException ("body");
@@ -377,7 +393,7 @@ namespace Microcode
             if (name == null)
                 throw new ArgumentNullException ("name");
 
-            return new StandardExtendedLambda (name, formals, freeVariables, body, required, optional, rest);
+            return new StandardExtendedLambda (name, formals, body, required, optional, rest);
         }
 
         public override bool CallsTheEnvironment ()
@@ -385,13 +401,18 @@ namespace Microcode
             return true;
         }
 
+        internal StandardExtendedClosure Close (Environment environment)
+        {
+            this.closeCount += 1;
+            return new StandardExtendedClosure (this, environment);
+        }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("StandardExtendedLambda.EvalStep");
 #endif
-            this.closeCount += 1;
-            answer = new StandardExtendedClosure (this, environment);
+            answer = environment.CloseOver (this);
             return false;
         }
 
@@ -430,11 +451,6 @@ namespace Microcode
         }
 
         #endregion
-
-        internal override ClosureBase Close (Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
@@ -462,8 +478,8 @@ namespace Microcode
         StandardExtendedLambdaDeserializer (SerializationInfo info, StreamingContext context)
         {
             this.name = info.GetBoolean ("name_interned") ?
-Symbol.Make (info.GetString ("name")) :
-(Symbol) info.GetValue ("name", typeof (Symbol));
+                        Symbol.Make (info.GetString ("name")) :
+                        (Symbol) info.GetValue ("name", typeof (Symbol));
             uint formalCount = info.GetUInt32 ("formalCount");
             this.formals = new Symbol [formalCount];
             for (int i = 0; i < formalCount; i++) {
@@ -491,376 +507,12 @@ Symbol.Make (info.GetString ("name")) :
         public object GetRealObject (StreamingContext context)
         {
             if (this.realObject == null)
-                this.realObject = StandardExtendedLambda.Make (this.name, this.formals, 
-                    new List<Symbol> (body.FreeVariables().Except(this.formals)),
+                this.realObject = StandardExtendedLambda.Make (this.name, this.formals,
                     this.body, this.required, this.optional, this.rest);
             return this.realObject;
         }
         #endregion
     }
-
-    /// <summary>
-    /// Supports option, rest, and aux args, 
-    /// but not incremental definitions.
-    /// </summary>
-    [Serializable]
-    sealed class StaticExtendedLambda : ExtendedLambda, ISerializable
-    {
-        StaticExtendedLambda (Symbol name, Symbol [] formals, 
-            IList<Symbol> freeVariables, SCode body, uint required, uint optional, bool rest)
-            : base (name, formals, freeVariables, body, required, optional, rest)
-        {
-        }
-
-        public static new StaticExtendedLambda Make (Symbol name, Symbol [] formals, 
-            IList<Symbol> freeVariables, SCode body, uint required, uint optional, bool rest)
-        {
-            if (body == null)
-                throw new ArgumentNullException ("body");
-            if (formals == null)
-                throw new ArgumentNullException ("formals");
-            if (name == null)
-                throw new ArgumentNullException ("name");
-
-            return new StaticExtendedLambda (name, formals, freeVariables, body, required, optional, rest);
-        }
-
-        public override bool CallsTheEnvironment ()
-        {
-            return false;
-        }
- 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("StaticExtendedLambda.EvalStep");
-#endif
-            answer = new StaticExtendedClosure (this, environment);
-            return false;
-        }
-
-        #region ISerializable Members
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (StaticExtendedLambdaDeserializer));
-            // We specially handle the names and formals
-            // in order to ensure that they are available when
-            // we deserialize the lambda.
-            if (this.Name.IsInterned ()) {
-                info.AddValue ("name_interned", true);
-                info.AddValue ("name", this.Name.ToString ());
-            }
-            else {
-                info.AddValue ("name_interned", false);
-                info.AddValue ("name", this.Name);
-            }
-            info.AddValue ("formalCount", this.Formals.Length);
-            for (int i = 0; i < this.Formals.Length; i++) {
-                if (this.Formals [i].IsInterned ()) {
-                    info.AddValue ("arg_" + i + "_interned", true);
-                    info.AddValue ("arg_" + i + "_name", this.Formals [i].ToString ());
-                }
-                else {
-                    info.AddValue ("arg_" + i + "_interned", false);
-                    info.AddValue ("arg_" + i, this.Formals [i]);
-                }
-            }
-            info.AddValue ("required", this.required);
-            info.AddValue ("optional", this.optional);
-            info.AddValue ("rest", this.rest);
-            info.AddValue ("body", this.Body);
-        }
-
-        #endregion
-
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    SCode boundBody = this.lambdaBody.BindVariables (lexicalMap.Extend (this));
-        //    return (boundBody == this.lambdaBody) ?
-        //        this :
-        //        StaticExtendedLambda.Make (this.Name, this.Formals, 
-        //        this.freeVars,
-        //        boundBody,
-        //        this.required, this.optional, this.rest);
-
-        //}
-
-        internal override ClosureBase Close (Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    sealed class StaticExtendedLambdaDeserializer : ISerializable, IObjectReference
-    {
-        [NonSerialized]
-        Symbol name;
-
-        [NonSerialized]
-        Symbol [] formals;
-
-        [NonSerialized]
-        SCode body;
-
-        [NonSerialized]
-        uint required;
-        [NonSerialized]
-        uint optional;
-        [NonSerialized]
-        bool rest;
-
-        [NonSerialized]
-        StaticExtendedLambda realObject;
-
-        StaticExtendedLambdaDeserializer (SerializationInfo info, StreamingContext context)
-        {
-            this.name = info.GetBoolean ("name_interned") ?
-                Symbol.Make (info.GetString ("name")) :
-                (Symbol) info.GetValue ("name", typeof (Symbol));
-            uint formalCount = info.GetUInt32 ("formalCount");
-            this.formals = new Symbol [formalCount];
-            for (int i = 0; i < formalCount; i++) {
-                formals [i] = info.GetBoolean ("arg_" + i + "_interned") ?
-                    Symbol.Make (info.GetString ("arg_" + i + "_name")) :
-                    (Symbol) info.GetValue ("arg_" + i, typeof (Symbol));
-            }
-            this.required = info.GetUInt32 ("required");
-            this.optional = info.GetUInt32 ("optional");
-            this.rest = info.GetBoolean ("rest");
-            this.body = (SCode) info.GetValue ("body", typeof (SCode));
-        }
-
-        #region ISerializable Members
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            throw new NotImplementedException ();
-        }
-        #endregion
-
-        #region IObjectReference Members
-
-        public object GetRealObject (StreamingContext context)
-        {
-            if (this.realObject == null)
-                this.realObject = StaticExtendedLambda.Make (this.name, this.formals, 
-                    new List<Symbol> (this.body.FreeVariables().Except(this.formals)),
-                    this.body, this.required, this.optional, this.rest);
-            return this.realObject;
-        }
-        #endregion
-    }
-
-    [Serializable]
-    sealed class UnanalyzedLambda : Lambda, ISerializable
-    {
-        bool firstClassEnvironment;
-        //LambdaBase analyzed;
-
-        UnanalyzedLambda (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
-            : base (name, formals, freeVariables, body)
-        {
-            this.firstClassEnvironment = body.CallsTheEnvironment ();
-        }
-
-        public static new LambdaBase Make (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
-        {
-            return new UnanalyzedLambda (name, formals, freeVariables, body);
-        }
-
-        public static new SCode Make (object name, object formals, object freeVariables, object body)
-        {
-            if (formals == null)
-                throw new ArgumentNullException ("formals");
-            object [] formalsArray = (object []) formals;
-            Symbol [] realFormals = new Symbol [formalsArray.Length];
-            for (int i = 0; i < formalsArray.Length; i++) {
-                realFormals [i] = (Symbol) formalsArray [i];
-            }
-            SCode realBody = EnsureSCode (body);
-            return Make ((Symbol) name, realFormals, (IList<Symbol>) freeVariables,
-
-                realBody);
-        }
-
-        public static SCode Make (object name, object formals, object body)
-        {
-            if (formals == null)
-                throw new ArgumentNullException ("formals");
-            object [] formalsArray = (object []) formals;
-            Symbol [] realFormals = new Symbol [formalsArray.Length];
-            for (int i = 0; i < formalsArray.Length; i++) {
-                realFormals [i] = (Symbol) formalsArray [i];
-            }
-            SCode realBody = EnsureSCode (body);
-            return Make ((Symbol) name, realFormals, new List<Symbol> (realBody.FreeVariables().Except(realFormals)),
-
-                realBody);
-        }
-
-        public override bool CallsTheEnvironment ()
-        {
-            return this.firstClassEnvironment;
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("UnanalyzedLambda.EvalStep");
-#endif
-            throw new NotImplementedException ();
-            //if (this.analyzed == null) {
-            //    if (this.firstClassEnvironment) {
-            //        this.analyzed = StandardLambda.Make (this.lambdaName,
-            //            this.lambdaFormals,
-            //            this.freeVars,
-            //            this.lambdaBody.BindVariables (LexicalMap.Make (closureEnvironment).Extend (this)));
-            //    }
-            //    else {
-            //        this.analyzed = StaticLambda.Make (this.lambdaName,
-            //        this.lambdaFormals,
-            //        this.freeVars,
-            //        this.lambdaBody.BindVariables (LexicalMap.Make (closureEnvironment).Extend (this)));
-            //    }
-            //}
-            //answer = this.analyzed.Close (closureEnvironment);
-            //return false;
-        }
-
-        
-
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    if (this.firstClassEnvironment) {
-        //        return StandardLambda.Make (this.lambdaName,
-        //            this.lambdaFormals,
-        //            this.freeVars,
-        //            this.lambdaBody.BindVariables (lexicalMap.Extend (this)));
-        //    }
-        //    else {
-        //        return StaticLambda.Make (this.lambdaName,
-        //    this.lambdaFormals,
-        //    this.freeVars,
-        //    this.lambdaBody.BindVariables (lexicalMap.Extend (this)));
-        //    }
-
-        //}
-
-        internal override ClosureBase Close (Environment environment)
-        {
-            throw new NotImplementedException ();
-            //if (this.firstClassEnvironment) {
-            //    return StandardLambda.Make (this.lambdaName,
-            //        this.lambdaFormals,
-            //        this.freeVars,
-            //        this.lambdaBody.BindVariables (LexicalMap.Make (closureEnvironment).Extend (this))).Close(closureEnvironment);
-            //}
-            //else {
-            //    return StaticLambda.Make (this.lambdaName,
-            //this.lambdaFormals,
-            //this.freeVars,
-            //this.lambdaBody.BindVariables (LexicalMap.Make (closureEnvironment).Extend (this))).Close(closureEnvironment);
-            //}
-        }
-
-        #region ISerializable Members
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (UnanalyzedLambdaDeserializer));
-            // We specially handle the names and formals
-            // in order to ensure that they are available when
-            // we deserialize the lambda.
-            if (this.Name.IsInterned ()) {
-                info.AddValue ("name_interned", true);
-                info.AddValue ("name", this.Name.ToString ());
-            }
-            else {
-                info.AddValue ("name_interned", false);
-                info.AddValue ("name", this.Name);
-            }
-            info.AddValue ("formalCount", this.Formals.Length);
-            for (int i = 0; i < this.Formals.Length; i++) {
-                if (this.Formals [i].IsInterned ()) {
-                    info.AddValue ("arg_" + i + "_interned", true);
-                    info.AddValue ("arg_" + i + "_name", this.Formals [i].ToString ());
-                }
-                else {
-                    info.AddValue ("arg_" + i + "_interned", false);
-                    info.AddValue ("arg_" + i, this.Formals [i]);
-                }
-            }
-            info.AddValue ("body", this.Body);
-        }
-
-        #endregion
-
-        public override PartialResult PartialEval (Environment environment)
-        {
-            PartialResult pbody = this.lambdaBody.PartialEval (environment.PartialExtend (this));
-            return new PartialResult (Lambda.Make (this.lambdaName, this.lambdaFormals, this.freeVars, pbody.Residual));
-        }
-    }
-
-    [Serializable]
-    sealed class UnanalyzedLambdaDeserializer : ISerializable, IObjectReference
-    {
-        [NonSerialized]
-        Symbol name;
-
-        [NonSerialized]
-        Symbol [] formals;
-
-        [NonSerialized]
-        SCode body;
-
-        [NonSerialized]
-        LambdaBase realObject;
-
-        UnanalyzedLambdaDeserializer (SerializationInfo info, StreamingContext context)
-        {
-            this.name = info.GetBoolean ("name_interned") ?
-                Symbol.Make (info.GetString ("name")) :
-                (Symbol) info.GetValue ("name", typeof (Symbol));
-            uint formalCount = info.GetUInt32 ("formalCount");
-            this.formals = new Symbol [formalCount];
-            for (int i = 0; i < formalCount; i++) {
-                formals [i] = info.GetBoolean ("arg_" + i + "_interned") ?
-                    Symbol.Make (info.GetString ("arg_" + i + "_name")) :
-                    (Symbol) info.GetValue ("arg_" + i, typeof (Symbol));
-            }
-            this.body = (SCode) info.GetValue ("body", typeof (SCode));
-        }
-
-        #region ISerializable Members
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            throw new NotImplementedException ();
-        }
-        #endregion
-
-        #region IObjectReference Members
-
-        public object GetRealObject (StreamingContext context)
-        {
-            if (this.realObject == null)
-                this.realObject = UnanalyzedLambda.Make (this.name, this.formals, 
-                    new List<Symbol>(this.body.FreeVariables().Except(this.formals)),
-                    this.body);
-            return this.realObject;
-        }
-        #endregion
-    }
-
-
-
 
     /// <summary>
     /// A StandardLambda creates StandardClosures.  These support first-class
@@ -869,17 +521,14 @@ Symbol.Make (info.GetString ("name")) :
     [Serializable]
     sealed class StandardLambda : Lambda, ISerializable
     {
-        StandardLambda (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
-            : base (name, formals, freeVariables, body)
-        { }
-
-        public static new StandardLambda Make (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
+        internal StandardLambda (Symbol name, Symbol [] formals, SCode body)
+            : base (name, formals, body)
         {
-           return new StandardLambda (name, formals, freeVariables, body);
         }
 
-        internal override ClosureBase Close (Environment environment)
+        internal StandardClosure Close (Environment environment)
         {
+            this.closeCount += 1;
             return new StandardClosure (this, environment);
         }
 
@@ -893,8 +542,7 @@ Symbol.Make (info.GetString ("name")) :
 #if DEBUG
             Warm ("StandardLambda.EvalStep");
 #endif
-            this.closeCount += 1;
-            answer = new StandardClosure (this, environment);
+            answer = environment.CloseOver(this);
             return false;
         }
 
@@ -931,9 +579,11 @@ Symbol.Make (info.GetString ("name")) :
 
         #endregion
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
-            throw new NotImplementedException ();
+            Environment extendedEnvironment = environment.PartialExtend (this);
+            SCode pbody = this.lambdaBody.PartialEval (extendedEnvironment).Residual;
+            return new PartialResult (StandardLambda.Make (this.lambdaName, this.lambdaFormals, pbody));
         }
     }
 
@@ -981,306 +631,7 @@ Symbol.Make (info.GetString ("name")) :
         public object GetRealObject (StreamingContext context)
         {
             if (this.realObject == null)
-                this.realObject = StandardLambda.Make (this.name, this.formals, 
-                    new List<Symbol> (this.body.FreeVariables().Except(this.formals)),
-                    this.body);
-            return this.realObject;
-        }
-        #endregion
-    }
-
-    /// <summary>
-    /// This is the abstract base class for all lambdas that do not support
-    /// incremental definition.  This allows us to optimize for the case
-    /// where we know the lexical addresses of free variables and don't
-    /// have to worry about shadowing definition.
-    /// </summary>
-    [Serializable]
-    abstract class StaticLambdaBase : Lambda
-    {
-        protected StaticLambdaBase (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
-            : base (name, formals, freeVariables, body)
-        { }
-
-        public override bool CallsTheEnvironment ()
-        {
-            return false;
-        }
- 
-        internal override ClosureBase Close (Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    /// <summary>
-    /// A Static lambda does not support incremental definition, but it does
-    /// support assignment and unassigned variables.
-    /// </summary>
-    [Serializable]
-    sealed class StaticLambda : StaticLambdaBase, ISerializable
-    {
-        internal StaticLambda (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
-            : base (name, formals, freeVariables, body)
-        {         
-        }
-
-        public static new LambdaBase Make (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
-        {
-            return body.MutatesAny(formals) ?
-                (LambdaBase)new StaticLambda (name, formals, freeVariables, body) :
-                (LambdaBase)new SimpleLambda (name, formals, freeVariables, body);
-        }
-
-        internal override ClosureBase Close (Environment environment)
-        {
-            return new StaticClosure (this, environment);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("StaticLambda.EvalStep");
-#endif
-            answer = (this.freeVars.Count == 0) ?
-                (ClosureBase) new NonClosure (this) :
-                (ClosureBase) new StaticClosure (this, environment);
-            return false;
-        }
-
-        #region ISerializable Members
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (StaticLambdaDeserializer));
-            // We specially handle the names and formals
-            // in order to ensure that they are available when
-            // we deserialize the lambda.
-            if (this.Name.IsInterned ()) {
-                info.AddValue ("name_interned", true);
-                info.AddValue ("name", this.Name.ToString ());
-            }
-            else {
-                info.AddValue ("name_interned", false);
-                info.AddValue ("name", this.Name);
-            }
-            info.AddValue ("formalCount", this.Formals.Length);
-            for (int i = 0; i < this.Formals.Length; i++) {
-                if (this.Formals [i].IsInterned ()) {
-                    info.AddValue ("arg_" + i + "_interned", true);
-                    info.AddValue ("arg_" + i + "_name", this.Formals [i].ToString ());
-                }
-                else {
-                    info.AddValue ("arg_" + i + "_interned", false);
-                    info.AddValue ("arg_" + i, this.Formals [i]);
-                }
-            }
-            info.AddValue ("body", this.Body);
-        }
-
-        #endregion
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    throw new NotImplementedException ();
-        //    //SCode boundBody = this.lambdaBody.BindVariables (new LexicalMap (this, lexicalMap));
-        //    //return (boundBody == this.lambdaBody) ?
-        //    //    this :
-        //    //    StaticLambda.Make (this.Name, this.Formals, boundBody);
-
-        //}
-
-        public override PartialResult PartialEval (Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    sealed class StaticLambdaDeserializer : ISerializable, IObjectReference
-    {
-        [NonSerialized]
-        Symbol name;
-
-        [NonSerialized]
-        Symbol [] formals;
-
-        [NonSerialized]
-        SCode body;
-
-        [NonSerialized]
-        LambdaBase realObject;
-
-        StaticLambdaDeserializer (SerializationInfo info, StreamingContext context)
-        {
-            this.name = info.GetBoolean ("name_interned") ?
-                Symbol.Make (info.GetString ("name")) :
-                (Symbol) info.GetValue ("name", typeof (Symbol));
-            uint formalCount = info.GetUInt32 ("formalCount");
-            this.formals = new Symbol [formalCount];
-            for (int i = 0; i < formalCount; i++) {
-                formals [i] = info.GetBoolean ("arg_" + i + "_interned") ?
-                    Symbol.Make (info.GetString ("arg_" + i + "_name")) :
-                    (Symbol) info.GetValue ("arg_" + i, typeof (Symbol));
-            }
-            this.body = (SCode) info.GetValue ("body", typeof (SCode));
-            //Debugger.Break ();
-        }
-
-        #region ISerializable Members
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            Debugger.Break ();
-            throw new NotImplementedException ();
-        }
-        #endregion
-
-        #region IObjectReference Members
-
-        public object GetRealObject (StreamingContext context)
-        {
-            if (this.realObject == null)
-                this.realObject = StaticLambda.Make (this.name, this.formals, 
-                    new List<Symbol>(this.body.FreeVariables().Except(this.formals)),
-                    this.body);
-            return this.realObject;
-        }
-        #endregion
-    }
-
-    /// <summary>
-    /// A SimpleLambda creates SimpleClosures.  There can be no incremental
-    /// definition, no assignment, and no unassigned variables.  Despite these
-    /// restrictions, this is the most popular kind of lambda.
-    /// </summary>
-    [Serializable]
-    sealed class SimpleLambda : StaticLambdaBase, ISerializable
-    {
-        internal SimpleLambda (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
-            : base (name, formals, freeVariables, body)
-        {
-        }
-
-        public static new SimpleLambda Make (Symbol name, Symbol [] formals, IList<Symbol> freeVariables, SCode body)
-        {
-            return new SimpleLambda (name, formals, freeVariables, body);
-        }
-
-        internal override ClosureBase Close (Environment environment)
-        {
-            return (this.freeVars.Count == 0) ?
-                (ClosureBase) new SimpleNonClosure (this) :
-                (ClosureBase) new SimpleClosure (this, environment);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("SimpleLambda.EvalStep");
-#endif
-            answer = (this.freeVars.Count == 0) ?
-                (ClosureBase) new SimpleNonClosure (this) :
-                (ClosureBase) new SimpleClosure (this, environment);
-            return false;
-        }
-
-        #region ISerializable Members
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            info.SetType (typeof (SimpleLambdaDeserializer));
-            // We specially handle the names and formals
-            // in order to ensure that they are available when
-            // we deserialize the lambda.
-            if (this.Name.IsInterned ()) {
-                info.AddValue ("name_interned", true);
-                info.AddValue ("name", this.Name.ToString ());
-            }
-            else {
-                info.AddValue ("name_interned", false);
-                info.AddValue ("name", this.Name);
-            }
-            info.AddValue ("formalCount", this.Formals.Length);
-            for (int i = 0; i < this.Formals.Length; i++) {
-                if (this.Formals [i].IsInterned ()) {
-                    info.AddValue ("arg_" + i + "_interned", true);
-                    info.AddValue ("arg_" + i + "_name", this.Formals [i].ToString ());
-                }
-                else {
-                    info.AddValue ("arg_" + i + "_interned", false);
-                    info.AddValue ("arg_" + i, this.Formals [i]);
-                }
-            }
-            info.AddValue ("body", this.Body);
-        }
-
-        #endregion
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    throw new NotImplementedException ();
-        //    //SCode boundBody = this.lambdaBody.BindVariables (new LexicalMap (this, lexicalMap));
-        //    //return (boundBody == this.lambdaBody) ?
-        //    //    this :
-        //    //    SimpleLambda.Make (this.Name, this.Formals, boundBody);
-
-        //}
-
-        public override PartialResult PartialEval (Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    sealed class SimpleLambdaDeserializer : ISerializable, IObjectReference
-    {
-        [NonSerialized]
-        Symbol name;
-
-        [NonSerialized]
-        Symbol [] formals;
-
-        [NonSerialized]
-        SCode body;
-
-        [NonSerialized]
-        SimpleLambda realObject;
-
-        SimpleLambdaDeserializer (SerializationInfo info, StreamingContext context)
-        {
-            this.name = info.GetBoolean ("name_interned") ?
-                Symbol.Make (info.GetString ("name")) :
-                (Symbol) info.GetValue ("name", typeof (Symbol));
-            uint formalCount = info.GetUInt32 ("formalCount");
-            this.formals = new Symbol [formalCount];
-            for (int i = 0; i < formalCount; i++) {
-                formals [i] = info.GetBoolean ("arg_" + i + "_interned") ?
-                    Symbol.Make (info.GetString ("arg_" + i + "_name")) :
-                    (Symbol) info.GetValue ("arg_" + i, typeof (Symbol));
-            }
-            this.body = (SCode) info.GetValue ("body", typeof (SCode));
-        }
-
-        #region ISerializable Members
-
-        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            throw new NotImplementedException ();
-        }
-        #endregion
-
-        #region IObjectReference Members
-
-        public object GetRealObject (StreamingContext context)
-        {
-            if (this.realObject == null)
-                this.realObject = SimpleLambda.Make (this.name, this.formals, 
-                    new List<Symbol>(this.body.FreeVariables().Except(this.formals)),
-                    
+                this.realObject = (StandardLambda) Lambda.Make (this.name, this.formals,
                     this.body);
             return this.realObject;
         }

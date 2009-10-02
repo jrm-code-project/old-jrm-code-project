@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
 namespace Microcode
 {
-    public struct PartialResult
+   struct PartialResult
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode residual;
 
         public PartialResult (SCode residual)

@@ -24,7 +24,7 @@ namespace Microcode
         public short Offset { [DebuggerStepThrough] get { return this.offset; } }
     }
 
-    public class LexicalBinding
+    class LexicalBinding
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly LambdaBase binder;
@@ -47,7 +47,7 @@ namespace Microcode
         }
     }
 
-    public abstract class LexicalMap
+    abstract class LexicalMap
     {
         Dictionary<Symbol,SCode> cache;
         protected LexicalMap () {
@@ -109,7 +109,7 @@ namespace Microcode
         }
     }
 
-    public abstract class ExtendedLexicalMap : LexicalMap
+    abstract class ExtendedLexicalMap : LexicalMap
     {
         protected readonly LexicalMap parent;
 
@@ -120,7 +120,7 @@ namespace Microcode
         }
     }
 
-    public class FirstClassLexicalMap : ExtendedLexicalMap
+    class FirstClassLexicalMap : ExtendedLexicalMap
     {
         LambdaBase lambda;
         FirstClassLexicalMap (LexicalMap parent, LambdaBase lambda)
@@ -188,7 +188,7 @@ namespace Microcode
         }
     }
 
-    public class StaticLexicalMap : ExtendedLexicalMap
+    class StaticLexicalMap : ExtendedLexicalMap
     {
         LambdaBase lambda;
         StaticLexicalMap (LexicalMap parent, LambdaBase lambda)
@@ -317,7 +317,7 @@ namespace Microcode
         }
     }
 
-    //public class TopLevelLexicalMap 
+    // class TopLevelLexicalMap 
     //{
     //    LambdaBase lambda;
     //    Environment closureEnvironment;

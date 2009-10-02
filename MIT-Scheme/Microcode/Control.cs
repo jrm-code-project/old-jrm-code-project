@@ -24,10 +24,10 @@ namespace Microcode
 
     /// <summary>
     /// Represents an object used to influence the interpreter
-    /// flow of control that is ideosyncratic to this interpreter.
+    /// flow of control that is idiosyncratic to this interpreter.
     /// </summary>
     [Serializable]
-    public abstract class SpecialControl : Control
+    abstract class SpecialControl : Control
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.SPECIAL; } }

@@ -6,7 +6,7 @@ using System.Threading;
 namespace Microcode
 {
     [Serializable]
-    public abstract class ContinuationFrame : Control
+    abstract class ContinuationFrame : Control
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.CONTROL_POINT; } }
@@ -21,7 +21,7 @@ namespace Microcode
     }
 
     [Serializable]
-    public abstract class SubproblemContinuation<T> : ContinuationFrame where T : SCode
+    abstract class SubproblemContinuation<T> : ContinuationFrame where T : SCode
     {
         protected T expression;
         protected Environment environment;
@@ -52,12 +52,15 @@ namespace Microcode
         }
     }
 
+    /// <summary>
+    /// Represents the future of the computation.  Must be public.
+    /// </summary>
     public class Continuation : SchemeObject
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.CONTROL_POINT; } }
 
-        public Continuation (ContinuationFrameList new_frames, ContinuationFrameList old_frames)
+        internal Continuation (ContinuationFrameList new_frames, ContinuationFrameList old_frames)
         {
         }
 

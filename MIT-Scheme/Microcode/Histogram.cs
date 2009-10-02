@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Microcode
 {
-    sealed public class Histogram<T>
+    sealed class Histogram<T>
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         private object l = new Object ();

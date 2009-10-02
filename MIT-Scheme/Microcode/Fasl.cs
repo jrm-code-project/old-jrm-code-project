@@ -187,7 +187,7 @@ namespace Microcode
     }
 
     [Serializable]
-    public class BadFaslFileException : Exception
+    class BadFaslFileException : Exception
     {
         public BadFaslFileException ()
              { }
@@ -422,9 +422,7 @@ namespace Microcode
             uint required = (argcount.Datum & 0xFF00) >> 8;
             bool rest = ((argcount.Datum & 0x10000) == 0x10000);
             SCode body = SCode.EnsureSCode (ReadObject (location));
-            return ExtendedLambda.Make (name, formals,
-                new List<Symbol>(body.FreeVariables().Except(formals)),
-                body, required, optional, rest);
+            return ExtendedLambda.Make (name, formals, body, required, optional, rest);
         }
 
         static int gensymCounter;
@@ -516,8 +514,7 @@ namespace Microcode
                     Symbol name;
                     Symbol [] formals;
                     ReadFormals (encoded.Datum + 4, out name, out formals);
-                    SCode body = SCode.EnsureSCode( ReadObject (encoded.Datum));
-                    return UnanalyzedLambda.Make (name, formals, new List<Symbol>(body.FreeVariables().Except(formals)), body);
+                    return Lambda.Make (name, formals, SCode.EnsureSCode (ReadObject (encoded.Datum)));
 
                 case TC.LIST:
                     object second = ReadObject (encoded.Datum + 4);

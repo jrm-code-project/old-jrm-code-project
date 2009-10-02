@@ -6,7 +6,7 @@ using System.Security.Permissions;
 namespace Microcode
 {
     [Serializable]
-    public sealed class Constant : SchemeObject, ISerializable
+    sealed class Constant : SchemeObject, ISerializable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.CONSTANT; } }

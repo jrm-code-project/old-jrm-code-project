@@ -39,20 +39,37 @@ namespace TakTest
         }
     }
 
-    delegate Answer Step ();
+    delegate Answer2 Step2 ();
+    delegate Answer3 Step3 ();
 
-    struct Answer
+    struct Answer2
     {
-        public readonly Step Next;
+        public readonly Step2 Next;
         public readonly object FinalAnswer;
 
-        public Answer (Step next, object finalAnswer)
+        public Answer2 (Step2 next, object finalAnswer)
         {
             this.Next = next;
             this.FinalAnswer = finalAnswer;
         }
     }
 
+    struct Answer3
+    {
+        public readonly Step3 Next;
+        public readonly object Unload;
+        public readonly object FinalAnswer;
+
+        public Answer3 (Step3 next, object finalAnswer)
+        {
+            this.Next = next;
+            this.Unload = null;
+            this.FinalAnswer = finalAnswer;
+        }
+    }
+
+
+    delegate bool TakOut3d (out TakOut3d again, out int answer);
 
     class Program
     {
@@ -136,6 +153,33 @@ namespace TakTest
             TakOut (out answer, x1, y1, z1);
         }
 
+        static bool TakOut3a (out TakOut3d again, out int answer, int x, int y, int z)
+        {
+            if (!(y < x)) {
+                again = null;
+                answer = z;
+                return false;
+            }
+            TakOut3d xagain;
+            int x1;
+            TakOut3d yagain;
+            int y1;
+            TakOut3d zagain;
+            int z1;
+            for (bool a = TakOut3b (out xagain, out x1, x, y, z); a; a = xagain (out xagain, out x1)) { };
+            for (bool a = TakOut3b (out yagain, out y1, y, z, x); a; a = yagain (out yagain, out y1)) { };
+            for (bool a = TakOut3b (out zagain, out z1, z, x, y); a; a = zagain (out zagain, out z1)) { };
+            return TakOut3a (out again, out answer, x1, y1, z1);
+        }
+
+        static bool TakOut3b (out TakOut3d again, out int answer, int x, int y, int z)
+        {
+            //return TakOut3a (out again, out answer, x - 1, y, z);
+            answer = 0;
+            again = new TakOut3d (delegate (out TakOut3d aa, out int nn) { return TakOut3a (out aa, out nn, x - 1, y, z); });
+            return true;
+        }
+
         static void TakRef (ref int answer, int x, int y, int z)
         {
             if (!(y < x)) {
@@ -199,26 +243,82 @@ namespace TakTest
                             TakVal2 (z - 1, x, y).value);
         }
 
-        public static Answer TakAnswer (int x, int y, int z)
+        static Answer2 TakAnswer2 (int x, int y, int z)
         {
             if (!(y < x))
-                return new Answer (null, z);
-            Answer a1 = TakAnswer (x - 1, y, z);
+                return new Answer2 (null, z);
+            Answer2 a1 = TakAnswer2 (x - 1, y, z);
             while (a1.Next != null) {
                 a1 = a1.Next ();
             };
-            Answer a2 = TakAnswer (y - 1, z, x);
+            Answer2 a2 = TakAnswer2 (y - 1, z, x);
             while (a2.Next != null) {
                 a2 = a2.Next ();
             };
-            Answer a3 = TakAnswer (z - 1, x, y);
+            Answer2 a3 = TakAnswer2 (z - 1, x, y);
             while (a3.Next != null) {
                 a3 = a3.Next ();
             };
-            return new Answer (
-                new Step (delegate () { return TakAnswer ((int)a1.FinalAnswer, (int)a2.FinalAnswer, (int)a3.FinalAnswer); }),
+            return new Answer2 (
+                new Step2 (delegate () { return TakAnswer2 ((int)a1.FinalAnswer, (int)a2.FinalAnswer, (int)a3.FinalAnswer); }),
                 null);
         }
+
+        static Answer2 TakAnswer2a (int x, int y, int z)
+        {
+            if (!(y < x))
+                return new Answer2 (null, z);
+            Answer2 a1 = TakAnswer2b (x, y, z);
+            while (a1.Next != null) {
+                a1 = a1.Next ();
+            };
+            Answer2 a2 = TakAnswer2b (y, z, x);
+            while (a2.Next != null) {
+                a2 = a2.Next ();
+            };
+            Answer2 a3 = TakAnswer2b (z, x, y);
+            while (a3.Next != null) {
+                a3 = a3.Next ();
+            };
+            return new Answer2 (
+                new Step2 (delegate () { return TakAnswer2c ((int) a1.FinalAnswer, (int) a2.FinalAnswer, (int) a3.FinalAnswer); }),
+                null);
+        }
+
+        static Answer2 TakAnswer2b (int x, int y, int z)
+        {
+            return TakAnswer2a (x - 1, y, z);
+        }
+
+        static Answer2 TakAnswer2c (int x, int y, int z)
+        {
+            return TakAnswer2a (x, y, z);
+        }
+
+        static Answer3 TakAnswer3 (int x, int y, int z)
+        {
+            if (!(y < x))
+                return new Answer3 (null, z);
+            Answer3 a1 = TakAnswer3 (x - 1, y, z);
+            while (a1.Next != null) {
+                a1 = a1.Next ();
+            };
+            if (a1.Unload != null) throw new NotImplementedException ();
+            Answer3 a2 = TakAnswer3 (y - 1, z, x);
+            while (a2.Next != null) {
+                a2 = a2.Next ();
+            };
+            if (a2.Unload != null) throw new NotImplementedException ();
+            Answer3 a3 = TakAnswer3 (z - 1, x, y);
+            while (a3.Next != null) {
+                a3 = a3.Next ();
+            };
+            if (a3.Unload != null) throw new NotImplementedException ();
+            return new Answer3 (
+                new Step3 (delegate () { return TakAnswer3 ((int) a1.FinalAnswer, (int) a2.FinalAnswer, (int) a3.FinalAnswer); }),
+                null);
+        }
+
 
 
 
@@ -255,18 +355,28 @@ namespace TakTest
                 System.Environment.CurrentDirectory = "C:\\jrm-code-project\\TakTest\\";
                 Primitive.Initialize ();
                 FixedObjectsVector.Initialize ();
-                bootstrap = Fasl.Fasload ("tak.bin") as SCode;
+                bootstrap = (Fasl.Fasload ("tak.bin") as SCode).Bind (new RootBindingEnvironment (Microcode.Environment.Global));
             }
             finally {
                 System.Environment.CurrentDirectory = originalDirectory;
             }
         }
 
-        public static int TakTramp ()
+        //public static int TakTramp ()
+        //{
+        //        Interpreter interpreter = new Interpreter ();
+        //        interpreter.Start (bootstrap);
+        //        return 0;
+        //}
+
+        static int TakInterpNew ()
         {
-                Interpreter interpreter = new Interpreter ();
-                interpreter.Start (bootstrap);
-                return 0;
+            Control expr = bootstrap;
+            Microcode.Environment env = Microcode.Environment.Global;
+            object answer = null;
+            while (expr.EvalStep (out answer, ref expr, ref env)) { };
+            return (int) answer;
+ 
         }
 
         static int Tak5 (int count, int arg, int arg1, int arg2, int arg3, int x, int y, int z)
@@ -317,7 +427,7 @@ namespace TakTest
                     mo.GetPropertyValue ("Version").ToString ());
 
             }
-            oport.WriteLine ("{0}{1} processor{2}", prefix, Environment.ProcessorCount, Environment.ProcessorCount == 1 ? "" : "s");
+            oport.WriteLine ("{0}{1} processor{2}", prefix, System.Environment.ProcessorCount, System.Environment.ProcessorCount == 1 ? "" : "s");
             foreach (ManagementObject proc in new ManagementObjectSearcher (new SelectQuery ("Win32_Processor")).Get ()) {
                 oport.WriteLine ("{0}    {1}", prefix, proc.GetPropertyValue ("Manufacturer").ToString ());
                 oport.WriteLine ("{0}    {1}", prefix, proc.GetPropertyValue ("Name").ToString ());
@@ -342,8 +452,8 @@ namespace TakTest
             // tested, including the .NET Component;
 
             oport.WriteLine ("{0}{1}", prefix, DateTime.Now.ToUniversalTime ());
-            oport.WriteLine ("{0}{1}", prefix, Environment.OSVersion.ToString ());
-            oport.WriteLine ("{0}CLR {1}", prefix, Environment.Version);
+            oport.WriteLine ("{0}{1}", prefix, System.Environment.OSVersion.ToString ());
+            oport.WriteLine ("{0}CLR {1}", prefix, System.Environment.Version);
             oport.WriteLine ("{0}", prefix);
             // (4) it shall be sufficient if you make the disclosures provided for above
             // at a publicly available location such as a Web site, so long as every public
@@ -374,7 +484,7 @@ namespace TakTest
                 total += kvp.Value;
                 double seconds = (double) kvp.Key / (double) Stopwatch.Frequency;
                 double nspc = seconds / normalization;
-                oport.WriteLine ("{0}, {1}, {2}, {3}", kvp.Key, kvp.Value, total, nspc);
+                oport.WriteLine ("{0}, {1}, {2}, {3}, {4}", kvp.Key, kvp.Value, total, seconds, nspc);
             }
         }
 
@@ -385,18 +495,18 @@ namespace TakTest
             Console.WriteLine ("set logscale x");
             Console.WriteLine ("set grid");
             Console.Write ("plot \"-\" using 4:3 with lines");
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
                 Console.Write (", \"-\" using 4:3 with lines");
             Console.WriteLine ("");
 
-            int nruns = 10;
+            int nruns = 21;
             //DumpHistogram ("c:\\jrm-code-project\\TakTest\\takval2.txt", runThunk (1000, 10, delegate () { 
             //    TakVal2 (18, 12, 6);
             //}), .000063609);
             DumpHistogram (Console.Out, runThunk (nruns, 10, delegate() { Tak (18, 12, 6); }), .000063609);
             Console.WriteLine ("e");
-            DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { Tak1a (0, 18, 12, 6); }), .000063609);
-            Console.WriteLine ("e");
+            //DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { Tak1a (0, 18, 12, 6); }), .000063609);
+            //Console.WriteLine ("e");
             //DumpHistogram (Console.Out, runThunk (1000, 10, delegate () { Tak1b (0, 18, 12, 6); }), .000063609);
             //Console.WriteLine ("e");
             //DumpHistogram (Console.Out, runThunk (1000, 10, delegate () { Tak2 (0, 1, 18, 12, 6); }), .000063609);
@@ -405,20 +515,38 @@ namespace TakTest
             //Console.WriteLine ("e");
             DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { int answer; TakOut (out answer, 18, 12, 6); }), .000063609);
             Console.WriteLine ("e");
+            DumpHistogram (Console.Out, runThunk (nruns, 10, delegate ()
+            {
+                int answer;
+                TakOut3d again;
+                for (bool a = TakOut3a (out again, out answer, 18, 12, 6); 
+                    a;
+                    a = again (out again, out answer)) { };
+
+            }), .000063609);
+            Console.WriteLine ("e");
+
             //DumpHistogram (Console.Out, runThunk (1000, 10, delegate () { int answer = 0; TakRef (ref answer, 18, 12, 6); }), .000063609);
             //Console.WriteLine ("e");
-            DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { TakBox (18, 12, 6); }), .000063609);
-            Console.WriteLine ("e");
-            DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { TakValb (18, 12, 6); }), .000063609);
-            Console.WriteLine ("e");
-            DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { TakGlob (18, 12, 6); }), .000063609);
-            Console.WriteLine ("e");
-            //DumpHistogram (Console.Out, runThunk (1000, 10, delegate () { Answer a = TakAnswer (18,12,6); while (a.Next != null) {a = a.Next();}; }), .000063609);
+            //DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { TakBox (18, 12, 6); }), .000063609);
             //Console.WriteLine ("e");
-            //TakTrampInit ();
-            //DumpHistogram (Console.Out, runThunk (1000, 10, delegate () { TakTramp (); }), .00063609);
+            //DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { TakValb (18, 12, 6); }), .000063609);
+            //Console.WriteLine ("e");
+            //DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { TakGlob (18, 12, 6); }), .000063609);
+            //Console.WriteLine ("e");
+            //DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { Answer2 a = TakAnswer2 (18,12,6); while (a.Next != null) {a = a.Next();}; }), .000063609);
+            //Console.WriteLine ("e");
+            DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { Answer2 a = TakAnswer2a (18, 12, 6); while (a.Next != null) { a = a.Next (); }; }), .000063609);
+            Console.WriteLine ("e");
+            DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { Answer3 a = TakAnswer3 (18, 12, 6); while (a.Next != null) { a = a.Next (); }; }), .000063609);
+            Console.WriteLine ("e");
+            TakTrampInit ();
+            DumpHistogram (Console.Out, runThunk (nruns, 1, delegate () { TakInterpNew (); }), .000063609);
+            Console.WriteLine ("e");
 
 
+            //DumpHistogram (Console.Out, runThunk (nruns, 10, delegate () { TakTramp (); }), .000063609);
+            //Console.WriteLine ("e");
 
             //DumpHistogram (Console.Out, runThunk (1000, 10, delegate () { Tak4 (0, 1, 2, 3, 18, 12, 6); }), .000063609);
 

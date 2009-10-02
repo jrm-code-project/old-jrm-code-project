@@ -53,10 +53,8 @@
   <ItemGroup>
     <Compile Include="BigInteger.cs" />
     <Compile Include="Error.cs" />
-    <Compile Include="LexicalMap.cs" />
     <Compile Include="PartialResult.cs" />
     <Compile Include="PCond1.cs" />
-    <Compile Include="StaticBinding.cs" />
     <Compile Include="BitString.cs" />
     <Compile Include="Cell.cs" />
     <Compile Include="Channel.cs" />

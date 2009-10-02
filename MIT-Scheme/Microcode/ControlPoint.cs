@@ -7,7 +7,7 @@ using System.Text;
 namespace Microcode
 {
     [Serializable]
-    public class ControlPoint : SchemeObject, ISystemVector
+    class ControlPoint : SchemeObject, ISystemVector
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.CONTROL_POINT; } }

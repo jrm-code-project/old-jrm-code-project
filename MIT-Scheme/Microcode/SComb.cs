@@ -230,28 +230,15 @@ namespace Microcode
 
         #endregion
 
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    bool anyChange = false;
-        //    SCode [] opt = new SCode [this.components.Length];
-        //    for (int i = 0; i < this.components.Length; i++) {
-        //        opt [i] = this.components [i].BindVariables (lexicalMap);
-        //        anyChange = anyChange || (opt [i] != this.components [i]);
-        //    }
-        //    return anyChange
-        //        ? Combination.Make (opt)
-        //        : this;
-        //}
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
             IList<Symbol> answer = new List<Symbol> (0);
             for (int i = 0; i < this.components.Length; i++)
-                answer = new List<Symbol> (answer.Union (this.components [i].FreeVariables ()));
+                answer = new List<Symbol> (answer.Union (this.components [i].ComputeFreeVariables ()));
             return answer;
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             bool changed = false;
             PartialResult [] ra = new PartialResult [this.components.Length];
@@ -269,6 +256,14 @@ namespace Microcode
             else {
                 return new PartialResult (this);
             }
+        }
+
+        public override int LambdaCount ()
+        {
+            int count = 0;
+            for (int i = 0; i < this.components.Length; i++)
+                count = count + this.components [i].LambdaCount();
+            return count;
         }
     }
 
@@ -402,13 +397,13 @@ namespace Microcode
             this.rator = EnsureSCode (rator);
         }
 
-        static SCode SpecialMake (StaticLambda rator)
-        {
-            // Can you believe this happens too often?!
-           // Debug.WriteLine ("; Optimize (let () <lambdaBody>) => <lambdaBody>");
-            Debug.Write (".");
-            return rator.Body;
-        }
+        //static SCode SpecialMake (StaticLambda rator)
+        //{
+        //    // Can you believe this happens too often?!
+        //   // Debug.WriteLine ("; Optimize (let () <lambdaBody>) => <lambdaBody>");
+        //    Debug.Write (".");
+        //    return rator.Body;
+        //}
 
         public static SCode Make (object rator)
         {
@@ -484,12 +479,17 @@ namespace Microcode
 
         #endregion
 
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
             throw new NotImplementedException ();
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override int LambdaCount ()
         {
             throw new NotImplementedException ();
         }
@@ -529,35 +529,35 @@ namespace Microcode
         }
     }
 
-    class SpecialCombination0 : Combination0
-    {
-        Symbol name;
-        Symbol [] formals;
-        SCode body;
+//    class SpecialCombination0 : Combination0
+//    {
+//        Symbol name;
+//        Symbol [] formals;
+//        SCode body;
 
-        protected SpecialCombination0 (StaticLambda rator)
-            : base (rator)
-        {
-            this.name = rator.Name;
-            this.formals = rator.Formals;
-            this.body = rator.Body;
-        }
+//        //protected SpecialCombination0 (StaticLambda rator)
+//        //    : base (rator)
+//        //{
+//        //    this.name = rator.Name;
+//        //    this.formals = rator.Formals;
+//        //    this.body = rator.Body;
+//        //}
 
-        public static SCode Make (StaticLambda rator)
-        {
-            return new SpecialCombination0 (rator);
-        }
+//        public static SCode Make (StaticLambda rator)
+//        {
+//            return new SpecialCombination0 (rator);
+//        }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("SpecialCombination0.EvalStep");
-#endif
-            expression = this.body;
-            answer = null;
-            return true;
-        }
-    }
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+//        {
+//#if DEBUG
+//            Warm ("SpecialCombination0.EvalStep");
+//#endif
+//            expression = this.body;
+//            answer = null;
+//            return true;
+//        }
+//    }
 
 
 //    [Serializable]
@@ -1139,14 +1139,19 @@ namespace Microcode
             info.AddValue ("procedure", this.procedure);
         }
 
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
             return noFreeVariables;
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             return new PartialResult (this);
+        }
+
+        public override int LambdaCount ()
+        {
+            return 0;
         }
     }
 
@@ -1418,24 +1423,12 @@ namespace Microcode
             info.AddValue ("rand2", this.arg2);
         }
 
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    SCode boundRand0 = this.arg0.BindVariables (lexicalMap);
-        //    SCode boundRand1 = this.arg1.BindVariables (lexicalMap);
-        //    SCode boundRand2 = this.arg2.BindVariables (lexicalMap);
-        //    return (boundRand0 == this.arg0 &&
-        //        boundRand1 == this.arg1 &&
-        //        boundRand2 == this.arg2) ?
-        //        this :
-        //        PrimitiveCombination3.Make (this.procedure, boundRand0, boundRand1, boundRand2);
-        //}
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return new List<Symbol> (this.arg0.FreeVariables ().Union (new List<Symbol> (this.arg1.FreeVariables ().Union (this.arg2.FreeVariables ()))));
+            return new List<Symbol> (this.arg0.ComputeFreeVariables ().Union (new List<Symbol> (this.arg1.ComputeFreeVariables ().Union (this.arg2.ComputeFreeVariables ()))));
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult r0 = this.arg0.PartialEval (environment);
             PartialResult r1 = this.arg1.PartialEval (environment);
@@ -1444,6 +1437,14 @@ namespace Microcode
                 r0.Residual == this.arg0 &&
                 r1.Residual == this.arg1 &&
                 r2.Residual == this.arg2 ? this : PrimitiveCombination3.Make (this.procedure, r0.Residual, r1.Residual, r2.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            return
+                this.arg0.LambdaCount () +
+                this.arg1.LambdaCount () +
+                this.arg2.LambdaCount ();
         }
     }
 

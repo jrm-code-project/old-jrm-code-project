@@ -63,6 +63,23 @@ namespace BHCTest
             return Math.Log10 (x) * 10.0;
         }
 
+        public static double ProbabilityToLogOdds (double p)
+        {
+            return TenLogTen (ProbabilityToOdds (p));
+        }
+
+        public static double ProbabilityToOdds (double p)
+        {
+            return p / (1.0 - p);
+        }
+
+
+        public static Func<double, double> P2O =
+         delegate (double p)
+        {
+            return p / (1.0 - p);
+        };
+
         public static double BernoulliBeta (double alpha, double beta, int heads, int tails)
         {
             return (Utility.Gamma (alpha + beta) * Utility.Gamma (alpha + heads) * Utility.Gamma (beta + tails))
@@ -109,6 +126,43 @@ namespace BHCTest
         public abstract double Pi ();
         public abstract double P ();
 
+        //public double ROdds ()
+        //{
+        //    // return p => (p / (1.0 - p)) ((Pi () * PH1 ()) / P ());
+        //    // return ((Func<double,double>) (p => (p / (1.0 - p)))) ((Pi () * PH1 ()) / P ());
+        //    //return ((Func<double, double>) delegate (double p) { return p / (1.0 - p); }) ((Pi () * PH1 ()) / P ());
+        //    // return ((Pi () * PH1 ()) / P ()) / (1.0 - (Pi () * PH1 ()) / P ());
+        //    double t0 = PH1 ();
+        //    // double t1 = Pi ();
+        //    //double t1 = (this is DataPoint)
+        //    //    ? 1
+        //    //    : Globals.TuningAlpha * Utility.Gamma (N ()) / D ();
+        //    //double t1 = (this is DataPoint)
+        //    //    ? 1
+        //    //    : Globals.TuningAlpha * Utility.Gamma (N ())
+        //    //        / ((this is DataPoint)
+        //    //            ? Globals.TuningAlpha
+        //    //            : Globals.TuningAlpha * Utility.Gamma (N ()) 
+        //    //               + ((Tree)this).leftChild.D () * ((Tree)this).rightChild.D ());
+        //    double t1 =  Globals.TuningAlpha * Utility.Gamma (N ())
+        /// ( Globals.TuningAlpha * Utility.Gamma (N ())
+        //       + ((Tree) this).leftChild.D () * ((Tree) this).rightChild.D ());
+
+        //    // double pi_k = Pi ();
+        //    //double t2 = (this is DataPoint) 
+        //    //    ? PH1() 
+        //    //    : t1 * PH1 () + ((1.0 - t1) * ((Tree)this).leftChild.P () * ((Tree)this).rightChild.P ());
+        //    double t2 = t1 * PH1 () + ((1.0 - t1) * ((Tree) this).leftChild.P () * ((Tree) this).rightChild.P ());
+
+        //    return (t1 * t0 / t2) / (1.0 - (t1 * t0 / t2));
+        //}
+
+        public abstract double Px ();
+        public double P1a () 
+        {      
+            return Globals.TuningAlpha * Utility.Gamma (N ()) * PH1 ();
+        }
+
     }
 
     class DataPoint : Cluster
@@ -143,6 +197,12 @@ namespace BHCTest
         public override double P ()
         {
             return PH1 ();
+        }
+
+ 
+        public override double Px ()
+        {
+            return P1a();
         }
 
     }
@@ -186,7 +246,72 @@ namespace BHCTest
 
         public double R ()
         {
-            return (Pi () * PH1 ()) / P ();
+            return Pi () * PH1 () / P ();
+        }
+
+        public double ROdds1 ()
+        {
+            double p;
+            return ((p = (Pi () * PH1 ()) / P ()) == 0.0 || true) ? 
+                        
+                p / (1.0 - p) : (double) 0.0;
+        }
+
+        public double ROdds ()
+        {
+            // return p => (p / (1.0 - p)) ((Pi () * PH1 ()) / P ());
+            // return ((double p) => (p / (1.0 - p))) (Pi () * PH1 () / P ());
+            // return ((Func<double,double>) (p => (p / (1.0 - p)))) ((Pi () * PH1 ()) / P ());
+            //return ((Func<double, double>) delegate (double p) { return p / (1.0 - p); }) ((Pi () * PH1 ()) / P ());
+            // return ((Pi () * PH1 ()) / P ()) / (1.0 - (Pi () * PH1 ()) / P ());
+            // double t0 = PH1 ();
+            // double t1 = Pi ();
+            //double t1 = (this is DataPoint)
+            //    ? 1
+            //    : Globals.TuningAlpha * Utility.Gamma (N ()) / D ();
+            //double t1 = this is DataPoint
+            //    ? 1
+            //    : Globals.TuningAlpha * Utility.Gamma (N ())
+            //        / ((this is DataPoint)
+            //            ? Globals.TuningAlpha
+            //            : Globals.TuningAlpha * Utility.Gamma (N ())
+            //               + ((Tree) this).leftChild.D () * ((Tree) this).rightChild.D ());
+            // double t3 = Globals.TuningAlpha * Utility.Gamma (N ());
+            //double t1 =  Globals.TuningAlpha * Utility.Gamma (N ())
+            //            / (Globals.TuningAlpha * Utility.Gamma (N ())
+            //               + leftChild.D () * rightChild.D ());
+            //double t1 =  t3 / (t3 + leftChild.D () * rightChild.D ());
+
+            // double pi_k = Pi ();
+            //double t2 = (this is DataPoint) 
+            //    ? PH1() 
+            //    : t1 * PH1 () + ((1.0 - t1) * ((Tree)this).leftChild.P () * ((Tree)this).rightChild.P ());
+            //double t4 = t1 * t0;
+            // double t2 = t4 + ((1.0 - t1) * leftChild.P () * rightChild.P ());
+
+            // return (t1 * t0 / t2) / (1.0 - (t1 * t0 / t2));
+            // return (t4 / t2) / (1.0 - t4 / t2);
+            // return t4 /((1.0 - t1) * leftChild.P () * rightChild.P ());
+            //return t4 / ((leftChild.P () * rightChild.P ())
+            //              - (t1 * leftChild.P () * rightChild.P ()));
+            //return (t4 / t1) / (((leftChild.P () * rightChild.P ())
+            //              - (t1 * leftChild.P () * rightChild.P ())) / t1);
+            // return t0 / ((leftChild.P () * rightChild.P ()) / (t3 / (t3 + leftChild.D () * rightChild.D ())) - leftChild.P () * rightChild.P ());
+ 
+            //return t0 / (leftChild.P () * rightChild.P () * (t3 + leftChild.D () * rightChild.D ()) / t3
+            //             - leftChild.P () * rightChild.P ());
+            // return (t0 * t3)/ (t3 * leftChild.P () * rightChild.P () * ((t3 + leftChild.D () * rightChild.D ()) / t3 - 1));
+            // return (t0 * t3) / (leftChild.P () * rightChild.P () * leftChild.D () * rightChild.D ());
+            //return Globals.TuningAlpha * Utility.Gamma (N ()) * PH1 ()
+            //        / (leftChild.Px () * rightChild.Px ());
+
+
+           return P1a () / (leftChild.Px () * rightChild.Px ());
+        }
+
+        public override double Px ()
+        {
+            return P1a() + leftChild.Px () * rightChild.Px ();
         }
     }
 
@@ -206,9 +331,13 @@ namespace BHCTest
             Tree c2 = new Tree (dp1, dp2);
             Tree c3 = new Tree (c2, dp3);
 
-            Console.Out.WriteLine (c1.R());
-            Console.Out.WriteLine (c2.R());
-            Console.Out.WriteLine (c3.R());
+            Console.Out.WriteLine (Utility.P2O);
+            Console.Out.WriteLine (Utility.P2O (c1.R()));
+            Console.Out.WriteLine (c1.ROdds1 ());
+            Console.Out.WriteLine (Utility.ProbabilityToOdds (c2.R()));
+            Console.Out.WriteLine (c2.ROdds ());
+            Console.Out.WriteLine (Utility.ProbabilityToOdds (c3.R()));
+            Console.Out.WriteLine (c3.ROdds ());
             return;
         }
     }

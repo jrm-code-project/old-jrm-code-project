@@ -114,12 +114,12 @@
 		 (do-tree (right-child tree)))))
 
     (for-each do-tree trees)
-    (head-reduce (lambda (termlist entry)
-		   (if (> (cdr entry) 1)
-		       (adjoin/eq termlist (car entry))
-		       termlist))
-		 '()
-		 (hash-table->alist term-table))))
+    (fold-left (lambda (termlist entry)
+		 (if (> (cdr entry) 1)
+		     (adjoin/eq termlist (car entry))
+		     termlist))
+	       '()
+	       (hash-table->alist term-table))))
 
 (define (print-tree terms tree)
   (define (indent n)

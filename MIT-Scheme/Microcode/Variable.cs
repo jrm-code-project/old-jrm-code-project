@@ -142,23 +142,20 @@ namespace Microcode
             info.AddValue ("env", this.env);
         }
 
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    SCode boundEnv = this.env.BindVariables (lexicalMap);
-        //    return (boundEnv == this.env) ?
-        //        this :
-        //        Access.Make (boundEnv, this.var);
-        //}
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return this.env.FreeVariables ();
+            return this.env.ComputeFreeVariables ();
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult penv = this.env.PartialEval (environment);
             return new PartialResult (penv.Residual == this.env ? this : Access.Make (penv.Residual, this.var));
+        }
+
+        public override int LambdaCount ()
+        {
+            return this.env.LambdaCount ();
         }
     }
 
@@ -393,25 +390,23 @@ namespace Microcode
             info.AddValue ("value", this.value);
         }
 
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    SCode boundValue = this.value.BindVariables (lexicalMap);
-        //    return (boundValue == this.value) ?
-        //        this :
-        //        Assignment.Make (this.target, boundValue);
-        //}
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            List<Symbol> singleton = new List<Symbol>(1);
-            singleton.Add(this.target.Name);
-            return new List<Symbol> (this.Value.FreeVariables ().Union (singleton));
+            SCode v = this.value;
+            ICollection<Symbol> fv = v.ComputeFreeVariables ();
+            List<Symbol> x = new List<Symbol> (fv.Union<Symbol> (singletonFreeVariable (this.target.Name)));
+            return x;
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult val = this.value.PartialEval (environment);
             return new PartialResult (this.value == val.Residual ? this : Assignment.Make (this.target, val.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            return this.value.LambdaCount ();
         }
     }
 
@@ -552,7 +547,7 @@ namespace Microcode
 //    }
 
     [Serializable]
-    public class Variable : SCode, ISerializable, ISystemHunk3
+    class Variable : SCode, ISerializable, ISystemHunk3
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.VARIABLE; } }
@@ -701,30 +696,9 @@ namespace Microcode
             info.AddValue ("name", this.varname);
         }
 
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    return lexicalMap.LookupVariable (this.varname,
-        //        delegate (int d, int o) { return LexicalVariable.Make (this.varname, d, o); },
-        //        delegate (int d, int o) { return ShadowableLexicalVariable.Make (this.varname, d, o); },
-        //        delegate (StandardEnvironment env) { return AuxVariable.Make (this.varname, env); },
-        //        delegate (StandardEnvironment env) { return ShadowableAuxVariable.Make (this.varname, env); },
-        //        delegate (StandardEnvironment env) { return FreeVariable.Make (this.varname, env); },
-        //        delegate (StandardEnvironment env) { return ShadowableFreeVariable.Make (this.varname, env); },
-        //        delegate (GlobalEnvironment env, ValueCell cell) { return GlobalVariable.Make(this.varname, env, cell); },
-        //        delegate (GlobalEnvironment env, ValueCell cell) { return ShadowableGlobalVariable.Make (this.varname, env, cell); }
-        //    );
-        //}
-
-        public virtual Variable IncreaseLexicalDepth ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            throw new NotImplementedException ();
-        }
-
-        public override IList<Symbol> FreeVariables ()
-        {
-            IList<Symbol> answer = new List<Symbol>(1);
-            answer.Add(this.varname);
-            return answer;
+            return singletonFreeVariable (this.varname);
         }
 
         PartialResult makeArgument (int offset)
@@ -732,31 +706,33 @@ namespace Microcode
             return new PartialResult (Argument.Make (this.varname, offset));
         }
 
+        PartialResult makeStatic (int offset)
+        {
+            return new PartialResult (StaticVariable.Make (this.varname, offset));
+        }
+
         PartialResult makeGlobal (GlobalEnvironment env)
         {
             return new PartialResult (GlobalVariable.Make (this.varname, env, null));
         }
 
-        PartialResult makeLexical1 (int offset)
+        PartialResult makeFree (int skipDepth)
         {
-            return new PartialResult (LexicalVariable1.Make (this.varname, offset));
+            return new PartialResult (FreeVariable.Make (this.varname, skipDepth));
         }
 
-        PartialResult makeLexical (int depth, int offset)
+        internal override PartialResult PartialEval (Environment environment)
         {
-            return new PartialResult (LexicalVariable.Make (this.varname, depth, offset));
+            return environment.LocateVariable<PartialResult> (this.varname,
+                makeArgument,
+                makeStatic,
+                makeGlobal,
+                makeFree);
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        public override int LambdaCount ()
         {
-            return new PartialResult (this);
-            //return environment.LocateVariable<PartialResult> (this.varname,
-            //    delegate(ValueCell cell) { throw new NotImplementedException(); },
-            //    makeGlobal,
-            //    makeArgument,
-            //    makeLexical1,
-            //    makeLexical
-            //);
+            return 0;
         }
     }
 
@@ -781,7 +757,7 @@ namespace Microcode
     /// other than by using a deep search.
     /// </summary>
     [Serializable]
-    public abstract class BoundVariable : Variable
+    abstract class BoundVariable : Variable
     {
         protected BoundVariable (Symbol name)
             : base (name)
@@ -789,133 +765,24 @@ namespace Microcode
         }
     }
 
-//    class NonArgument : BoundVariable
-//    {
-//        NonArgument (object lambdaName)
-//            : base (lambdaName)
-//        { }
-
-//        public static new NonArgument Make (object lambdaName)
-//        {
-//            return new NonArgument (lambdaName);
-//        }
-
-//        public override bool EvalStep (out object value, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ();
-//            Debug.WriteLineIf (Primitive.Noisy, this.Name);
-//            if (this.breakOnReference) {
-//                Debugger.Break ();
-//            }
-//#endif
-//            //if (closureEnvironment.DeepSearch (out value, this.Name))
-//                throw new NotImplementedException ("Error on lookup of " + this.Name);
-//            return false;
-//        }
-//    }
-
-    /// <summary>
-    /// A ShadowableLexicalVariable is one where we know where the binding cell will
-    /// be, and we know it cannot move, but it can be shadowed. 
-    /// </summary>
-    [Serializable]
-    class ShadowableLexicalVariable : BoundVariable
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly int depth;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly int offset;
-
-        protected ShadowableLexicalVariable (Symbol name, int depth, int offset)
-            : base (name)
-        {
-            this.depth = depth;
-            this.offset = offset;
-        }
-
-        public int Depth { get { return this.depth; } }
-        public int Offset { get { return this.offset; } }
-
-        public static ShadowableLexicalVariable Make (Symbol name, int depth, int offset)
-        {
-            return new ShadowableLexicalVariable (name, depth, offset);
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("ShadowableLexicalVariable.EvalStep");
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            if (environment.DeepSearch (out value, this.varname))
-                throw new NotImplementedException ("Error on lookup of " + this.Name);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// A LexicalVariable is one where we know where the binding cell will
-    /// be, and we know it cannot move.  We simply go fetch it.
-    /// </summary>
-    [Serializable]
-    class LexicalVariable : BoundVariable
-    {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly int depth;
-
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly int offset;
-
-        protected LexicalVariable (Symbol name, int depth, int offset)
-            : base (name)
-        {
-            if (offset < 0) throw new ArgumentOutOfRangeException ("offset", offset, "Should be non-negative.");
-            this.depth = depth;
-            this.offset = offset;
-        }
-
-        public int Depth { get { return this.depth; } }
-        public int Offset { get { return this.offset; } }
-
-        public static LexicalVariable Make (Symbol name, int depth, int offset)
-        {
-            return (depth == 0) ? Argument.Make (name, offset) :
-                   (depth == 1) ? LexicalVariable1.Make (name, offset) :
-                   new LexicalVariable (name, depth, offset);
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("LexicalVariable.EvalStep");
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            if (environment.LexicalRef (out value, this.varname, this.depth, this.offset))
-                throw new NotImplementedException ("Error on lookup of " + this.Name);
-            return false;
-        }
-    }
-
-
-
     /// <summary>
     /// An argument variable is bound in the immediately enclosing lambda.
     /// We can access it by simply grabbing it from the topmost frame
     /// in the closureEnvironment.
     /// </summary>
     [Serializable]
-    class Argument : LexicalVariable
+    class Argument : BoundVariable
     {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly int offset;
+
         protected Argument (Symbol name, int offset)
-            : base (name, 0, offset)
+            : base (name)
         {
+            this.offset = offset;
         }
+
+        public int Offset { get { return this.offset; } }
 
         static public Argument Make (Symbol name, int offset)
         {
@@ -937,6 +804,8 @@ namespace Microcode
             value = environment.ArgumentValue (this.offset);
             return false;
         }
+
+
     }
 
     /// <summary>
@@ -988,466 +857,75 @@ namespace Microcode
     }
 
 
-//    /// <summary>
-//    /// A DangerousLexicalVariable is one where we know where the binding cell
-//    /// is, but it could be shadowed.
-//    /// </summary>
-//    [Serializable]
-//    class DangerousLexicalVariable : BoundVariable
-//    {
-//        readonly int shadowDepth;
-//        readonly int randDepth;
-//        readonly int randOffset;
-
-//        DangerousLexicalVariable (object lambdaName, int shadowDepth, int randDepth, int randOffset)
-//            : base (lambdaName)
-//        {
-//            this.shadowDepth = shadowDepth;
-//            this.randDepth = randDepth;
-//            this.randOffset = randOffset;
-//        }
-
-//        public static DangerousLexicalVariable Make (object lambdaName, int shadowDepth, int randDepth, int randOffset)
-//        {
-//            return new DangerousLexicalVariable (lambdaName, shadowDepth, randDepth, randOffset);
-//        }
-
-//        public override bool EvalStep (out object value, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ();
-//            Debug.WriteLineIf (Primitive.Noisy, this.Name);
-//            if (this.breakOnReference) {
-//                Debugger.Break ();
-//            }
-//#endif
-//            if (closureEnvironment.DangerousLexicalRef (out value, this.ratorName, this.shadowDepth, this.randDepth, this.randOffset))
-//                throw new NotImplementedException ("Error on lookup of " + this.ratorName);
-//            return false;
-//        }
-//    }
-
     /// <summary>
-    /// A LexicalVariable1 is one where we know where the binding cell will
-    /// be in the parent closureEnvironment.  Just grab it.
+    /// A static variable is bound in the static block of a closure.
     /// </summary>
     [Serializable]
-    sealed class LexicalVariable1 : LexicalVariable
+    class StaticVariable : BoundVariable
     {
-        LexicalVariable1 (Symbol name, int offset)
-            : base (name, 1, offset)
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly int offset;
+#if DEBUG
+        static Histogram<int> staticOffsets = new Histogram<int> ();
+#endif
+        protected StaticVariable (Symbol name, int offset)
+            : base (name)
         {
+            this.offset = offset;
         }
 
-        public static LexicalVariable1 Make (Symbol name, int offset)
+        public int Offset { get { return this.offset; } }
+
+        static public StaticVariable Make (Symbol name, int offset)
         {
-            return new LexicalVariable1 (name, offset);
+            return new StaticVariable (name, offset);
         }
 
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("LexicalVariable1.EvalStep");
+            Warm ("-");
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
+            staticOffsets.Note (this.offset);
+            SCode.location = "StaticVariable.EvalStep";
 #endif
-            if (environment.LexicalRef1 (out value, this.varname, this.offset))
-                throw new NotImplementedException ("Error on lookup of " + this.Name);
+            if (environment.StaticValue (out answer, this.varname, this.offset)) {
+                throw new NotImplementedException ();
+            }
             return false;
         }
     }
 
     /// <summary>
-    /// A FreeVariable is one that we know is not lexically visible at
-    /// binding time.  This means that we must deep search for it, but we
-    /// can skip the lexical frames.  We cannot cache the value cell unless
-    /// it becomes an incremental in the bindingEnvironment.
-    /// </summary>
-    [Serializable]
-    sealed class FreeVariable : BoundVariable
-    {
-        StandardEnvironment env;
-        FreeVariable (Symbol name, StandardEnvironment env)
-            : base (name)
-        {
-            this.env = env;
-        }
-
-        public static FreeVariable Make (Symbol name, StandardEnvironment env)
-        {
-            return new FreeVariable (name, env);
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("FreeVariable.EvalStep");
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            // Don't know where it is.
-            if (this.env.FreeRef (out value, this.varname)) throw new NotImplementedException ();
-            else return false;
-        }
-
-
-        public override Variable IncreaseLexicalDepth ()
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    sealed class ShadowableFreeVariable : BoundVariable
-    {
-        StandardEnvironment env;
-        ShadowableFreeVariable (Symbol name, StandardEnvironment env)
-            : base (name)
-        {
-            this.env = env;
-        }
-
-        public static ShadowableFreeVariable Make (Symbol name, StandardEnvironment env)
-        {
-            return new ShadowableFreeVariable (name, env);
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("FreeVariable.EvalStep");
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            // Don't know where it is.
-            if (environment.DeepSearch (out value, this.varname)) throw new NotImplementedException ();
-            else return false;
-        }
-
-
-        public override Variable IncreaseLexicalDepth ()
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    sealed class AuxVariable : BoundVariable
-    {
-        StandardEnvironment env;
-        AuxVariable (Symbol name, StandardEnvironment env)
-            : base (name)
-        {
-            this.env = env;
-        }
-
-        public static AuxVariable Make (Symbol name, StandardEnvironment env)
-        {
-            return new AuxVariable (name, env);
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("AuxVariable.EvalStep");
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            // Don't know where it is.
-            if (environment.DeepSearch (out value, this.varname)) throw new NotImplementedException ();
-            else return false;
-        }
-
-
-        public override Variable IncreaseLexicalDepth ()
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    sealed class ShadowableAuxVariable : BoundVariable
-    {
-        StandardEnvironment env;
-        ShadowableAuxVariable (Symbol name, StandardEnvironment env)
-            : base (name)
-        {
-            this.env = env;
-        }
-
-        public static ShadowableAuxVariable Make (Symbol name, StandardEnvironment env)
-        {
-            return new ShadowableAuxVariable (name, env);
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("ShadowableAuxVariable.EvalStep");
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            // Don't know where it is.
-            if (environment.DeepSearch (out value, this.varname)) throw new NotImplementedException ();
-            else return false;
-        }
-
-
-        public override Variable IncreaseLexicalDepth ()
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-
-    /// <summary>
-    /// A DeepVariable is one that we know is not lexically visible at
-    /// binding time.  This means that we must deep search for it, but we
-    /// can skip the lexical frames.  We cannot cache the value cell unless
-    /// it becomes an incremental in the bindingEnvironment.
-    /// </summary>
-//    [Serializable]
-//    sealed class DeepVariable : BoundVariable
-//    {
-//#if DEBUG
-//        static Histogram<Symbol> variableNameHistogram = new Histogram<Symbol> ();
-//#endif
-//        readonly int staticDepth;
-//        //Environment baseEnvironment;
-//        //Environment [] environmentChain;
-//        //ValueCell cachedValueCell;
-//        //int cachedValueCellDepth;
-
-//         DeepVariable (Symbol name, int staticDepth)
-//            : base (name, null)
-//        {
-//            this.staticDepth = staticDepth;
-//            //this.baseEnvironment = baseEnvironment;
-//            //this.environmentChain = new Environment [baseEnvironment.GetDepth ()];
-//            //if (environmentChain.Length > 4)
-//            //    Debugger.Break ();
-//            //for (int i = environmentChain.Length - 1; i > 0; i--) {
-//            //    environmentChain [i] = baseEnvironment.GetAncestorEnvironment (i);
-//            //}
-//            //environmentChain [0] = baseEnvironment;
-//        }
-
-//        public static DeepVariable Make (Symbol name, int staticDepth)
-//        {
-//            return new DeepVariable (name, staticDepth);
-//        }
-
-//        public override SCode BindVariables (LexicalMap lexicalMap)
-//        {
-//            throw new NotImplementedException ();
-//            //Debugger.Break ();
-//            //LexicalBinding binding = lexicalMap.LookupVariableUncached (this);
-//            //if (binding == null) {
-//            //    int staticDepth = lexicalMap.StaticDepth;
-//            //    if (staticDepth == 0)
-//            //        return this;
-//            //    else
-//            //        return DeepVariable.Make (this.varname, staticDepth);
-//            //}
-//            //else
-//            //    return LexicalVariable.Make (this.varname, binding.Binder, binding.Address);
-//        }
-
-//        public override bool EvalStep (out object value, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            variableNameHistogram.Note (this.varname);
-//            if (this.breakOnReference) {
-//                Debugger.Break ();
-//            }
-//            SCode.location = "DeepVariable.EvalStep";
-//#endif
-//            if (closureEnvironment.DeepSearchSkip (out value, this.varname, this.staticDepth))
-//                throw new NotImplementedException ("Variable DeepSeach failed for " + this.varname.ToString ());
-//            else return false;
-
-//            //if (this.cachedValueCell == null) {
-//            //    // First time through, 
-//            //    // search the closureEnvironment chain to find the nearest
-//            //    // place the value cell exists.
-//            //    for (int i = 0; i < environmentChain.Length; i++) {
-//            //        Environment env = environmentChain [i];
-//            //        ValueCell vc = env.SearchFixed (this.varname);
-//            //        if (vc != null) {
-//            //            this.cachedValueCell = vc;
-//            //            this.cachedValueCellDepth = i;
-//            //            break;
-//            //        }
-//            //        vc = env.SearchIncrementals (this.varname);
-//            //        if (vc != null) {
-//            //            this.cachedValueCell = vc;
-//            //            this.cachedValueCellDepth = i;
-//            //            break;
-//            //        }
-//            //    }
-//            //}
-//            //else {
-//            //    // On the subsequent passes, we might shadow the variable
-//            //    // with incrementals, but we cannot add fixed bindings.
-//            //    for (int i = 0; i < this.cachedValueCellDepth; i++) {
-//            //        Environment env = environmentChain [i];
-//            //        ValueCell vc = env.SearchIncrementals (this.varname);
-//            //        if (vc != null) {
-//            //            // Someone shadowed it.
-//            //            throw new NotImplementedException ();
-//            //        }
-//            //    }
-//            //    // if we fall through, no one shadowed us and we can
-//            //    // simply drop into the case where we fetch from the cell.
-//            //}
-
-//            //if (this.cachedValueCell.GetValue (out value))
-//            //    throw new NotImplementedException ();
-//            //return false;
-//        }
-//    }
-
-
-//    /// <summary>
-//    /// A DangerousFreeVariable is one that we know is not lexically visible at
-//    /// binding time, and could be shadowed.
-//    /// </summary>
-//    [Serializable]
-//    sealed class DangerousFreeVariable : BoundVariable
-//    {
-//        readonly Environment env;
-//        readonly int randDepth;
-
-//        DangerousFreeVariable (object lambdaName, Environment env, int randDepth)
-//            : base (lambdaName)
-//        {
-//            this.env = env;
-//            this.randDepth = randDepth;
-//        }
-
-//        public static DangerousFreeVariable Make (object lambdaName, Environment env, int randDepth)
-//        {
-//            return new DangerousFreeVariable (lambdaName, env, randDepth);
-//        }
-
-//        public override bool EvalStep (out object value, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ();
-//            Debug.WriteLineIf (Primitive.Noisy, this.ratorName);
-//            if (this.breakOnReference) {
-//                Debugger.Break ();
-//            }
-
-//#endif
-//            throw new NotImplementedException ();
-//        }
-//    }
-
-    /// <summary>
-    /// A TopLevelVariable is one that we find in the binding-time closureEnvironment.
-    /// It cannot be shadowed (except by us), so we can cache the value cell.
-    /// </summary>
-//    [Serializable]
-//    sealed class TopLevelVariable : BoundVariable
-//    {
-//#if DEBUG
-//        static Histogram<object> nameHistogram = new Histogram<object>();
-//#endif
-//        public readonly ValueCell cell;
-
-//        public TopLevelVariable (Symbol name, ValueCell cell)
-//            : base (name, null)
-//        {
-//            this.cell = cell;
-//        }
-
-//        public override bool EvalStep (out object value, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            nameHistogram.Note (this.varname);
-//            if (this.breakOnReference) {
-//                Debugger.Break ();
-//            }
-//            SCode.location = "TopLevelVariable.EvalStep";
-//#endif
-//            if (this.cell.GetValue (out value))
-//                throw new NotImplementedException ();
-//            return false;
-//        }
-
-//        public override Variable IncreaseLexicalDepth ()
-//        {
-//            return this;
-//        }
-//    }
-
-//    /// <summary>
-//    /// A TopLevelVariable is one that we find in the binding-time closureEnvironment.
-//    /// It cannot be shadowed (except by us), so we can cache the value cell.
-//    /// </summary>
-//    [Serializable]
-//    sealed class DangerousTopLevelVariable : BoundVariable
-//    {
-//        readonly ValueCell cell;
-//        int safeDepth;
-
-//        DangerousTopLevelVariable (object lambdaName, ValueCell cell, int safeDepth)
-//            : base (lambdaName)
-//        {
-//            this.cell = cell;
-//            this.safeDepth = safeDepth;
-//        }
-
-//        static public DangerousTopLevelVariable Make (object lambdaName, ValueCell cell, int safeDepth)
-//        {
-//            return new DangerousTopLevelVariable (lambdaName, cell, safeDepth);
-//        }
-
-//        public override bool EvalStep (out object value, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ();
-//            Debug.WriteLineIf (Primitive.Noisy, this.ratorName);
-//            if (this.breakOnReference) {
-//                Debugger.Break ();
-//            }
-//#endif
-//            throw new NotImplementedException ();
-//        }
-//    }
-
-
-    /// <summary>
     /// A global variable is one we know is bound in the global closureEnvironment
     /// and cannot be shadowed.  If we have a binding cell, we can just fetch
-    /// the value from there.
+    /// the value from there.  There are surprisingly few of these.
     /// </summary>
     [Serializable]
     sealed class GlobalVariable : BoundVariable
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly Environment environment;
-
+        readonly GlobalEnvironment environment;
+        static Dictionary<Symbol, GlobalVariable> cache = new Dictionary<Symbol, GlobalVariable> ();
         ValueCell cell;
 
-        GlobalVariable (Symbol name, Environment environment, ValueCell cell)
+        GlobalVariable (Symbol name, GlobalEnvironment environment, ValueCell cell)
             : base (name)
         {
             this.environment = environment;
             this.cell = cell;
         }
 
-        public static GlobalVariable Make (Symbol name, Environment env, ValueCell cell)
+        public static GlobalVariable Make (Symbol name, GlobalEnvironment env, ValueCell cell)
         {
-            return new GlobalVariable (name, env, cell);
+            GlobalVariable cached;
+            if (!cache.TryGetValue (name, out cached)) {
+                cached = new GlobalVariable (name, env, cell);
+                cache.Add (name, cached);
+            }
+            return cached;
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1459,54 +937,55 @@ namespace Microcode
             }
 
 #endif
-            if (environment.DeepSearch (out answer, this.varname))
-                throw new NotImplementedException ("Variable DeepSeach failed for " + this.varname.ToString ());
-            else return false;
-        }
-
-        public override Variable IncreaseLexicalDepth ()
-        {
-            // Global variables are just fetched from the value cell,
-            // so we need do nothing.
-            return this;
+            if (cell != null) {
+                return cell.GetValue (out answer);
+            }
+            else {
+                cell = this.environment.GetValueCell (this.Name);
+                if (cell != null) { return cell.GetValue (out answer); }
+                throw new NotImplementedException ("Broken global variable.");
+            }
         }
     }
 
-    /// <summary>
-    /// A shadowable global variable is one we know is bound in the global closureEnvironment
-    /// but could be shadowed.  If we have a binding cell, we can just fetch
-    /// the value from there once we test the incrementals in the outer environments.
-    /// </summary>
     [Serializable]
-    sealed class ShadowableGlobalVariable : BoundVariable
+    sealed class FreeVariable : Variable
     {
-        Environment env;
-        ValueCell cell;
+        readonly int depth;
 
-        ShadowableGlobalVariable (Symbol name, Environment env, ValueCell cell)
+        FreeVariable (Symbol name, int depth)
             : base (name)
         {
-            this.env = env;
-            this.cell = cell;
+            this.depth = depth;
         }
 
-        public static ShadowableGlobalVariable Make (Symbol name, Environment env, ValueCell cell)
+        public static FreeVariable Make (Symbol name, int depth)
         {
-            return new ShadowableGlobalVariable (name, env, cell);
+            return new FreeVariable (name, depth);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("ShadowableGlobalVariable");
+            Warm ("FreeVariable.EvalStep");
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
 #endif
-            if (environment.DeepSearch (out answer, this.varname))
-                throw new NotImplementedException ("Variable DeepSeach failed for " + this.varname.ToString ());
-            else return false;
+            //if (Configuration.EnableVariableOptimization && Configuration.EnableLexicalAddressing)
+            //    throw new NotImplementedException ("Should not happen, variables should all be bound.");
+            //Environment start = environment;
+            //for (int i = 0; i < this.depth; i++)
+            //    start = start.Closure.Environment;
+            //if (start.DeepSearch (out answer, this.varname)) {
+            //    throw new NotImplementedException ();
+            //}
+
+            Environment baseEnvironment = environment.GetBaseEnvironment ();
+            if (baseEnvironment.FreeReference (out answer, this.varname)) {
+                throw new NotImplementedException ();
+            }
+            return false;
         }
     }
-
 }
