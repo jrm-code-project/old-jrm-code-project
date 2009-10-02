@@ -322,7 +322,7 @@ namespace Microcode
             TC newType = (TC) (int) arg0;
             // kludge!!!!
             if ((int) arg0 == 0 && (int) arg1 == 1)
-                answer = new NullEnvironment (null);
+                answer = new NullEnvironment ();
             else
             switch (newType)
             {
@@ -349,7 +349,7 @@ namespace Microcode
 
                 case TC.ENVIRONMENT:
                     object [] args = (object[]) arg1;
-                    ClosureBase closure = (ClosureBase) args [0];
+                    StandardClosure closure = (StandardClosure) args [0];
                     object [] actualArgs = new object [args.Length - 1];
                     for (int i = 0; i < actualArgs.Length; i++)
                         actualArgs [i] = args [i + 1];

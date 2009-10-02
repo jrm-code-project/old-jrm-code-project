@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Microcode
 {
-    public interface IApplicable
+    interface IApplicable
     {
         bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args);
         // Why so many variations?  Because these are markedly more popular

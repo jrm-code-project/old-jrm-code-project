@@ -30,7 +30,7 @@ namespace Microcode
         /// <summary>
         /// If true, allow analysis of PrimitiveCombination1.
         /// </summary>
-        public const bool EnablePrimitiveCombination1Optimization = true;
+        public const bool EnablePrimitiveCombination1Optimization = false;
         /// <summary>
         /// If true, allow analysis of PrimitiveCombination2.
         /// </summary>
@@ -48,8 +48,6 @@ namespace Microcode
 
         public const bool EnableArgumentBinding = true;
         public const bool EnableGlobalBinding = true;
-        public const bool EnableLexicalAddressing = false;
-        public const bool EnableLexical1 = true;
         public const bool EnableSimpleLambda = true;
         public const bool EnableStaticBinding = true;
 
@@ -66,8 +64,11 @@ namespace Microcode
         public const bool EnableCombination3Specialization = false;
         public const bool EnableConditionalSpecialization = false;
         public const bool EnableDisjunctionSpecialization = false;
-        public const bool EnablePrimitive1Specialization = false;
-        public const bool EnablePrimitive2Specialization = false;
+        /// <summary>
+        /// Allow Primitive1Combinations to specialize on the type of argument.
+        /// </summary>
+        public const bool EnablePrimitive1Specialization = true;
+        public const bool EnablePrimitive2Specialization = true;
         /// <summary>
         /// If true, certain primitive predicates are handled directly
         /// by the conditional.
@@ -76,7 +77,7 @@ namespace Microcode
         public const bool EnablePrimitiveConditional2 = false;
         public const bool EnableSequenceSpecialization = false;
 
-        public const bool EnableInlinePrimitive1 = false;
+        public const bool EnableInlinePrimitive1 = true;
         public const bool EnableInlinePrimitive2 = false;
 
         /// <summary>

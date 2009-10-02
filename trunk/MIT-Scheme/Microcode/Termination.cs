@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Microcode
 {
-    public class Termination
+    class Termination
     {
         string message;
 

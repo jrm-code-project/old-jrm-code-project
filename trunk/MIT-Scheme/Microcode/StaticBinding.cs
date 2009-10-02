@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -8,16 +9,17 @@ namespace Microcode
     /// <summary>
     /// Represents the formal parameter of a lambda expression.
     /// </summary>
-    class StaticBinding
+    sealed class StaticBinding
     {
         // Name is an object because it might
         // be a gensym.
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         object name;
-        LambdaBase lambda; // the lambda expression that binds it
+        ValueCell cell; // the lambda expression that binds it
 
-        public StaticBinding (LambdaBase lambda, object name, int offset)
+        public StaticBinding (object name, ValueCell cell)
         {
-            this.lambda = lambda;
+            this.cell = cell;
             this.name = name;
         }
 
@@ -26,6 +28,13 @@ namespace Microcode
             get
             {
                 return this.name;
+            }
+        }
+        public ValueCell Cell
+        {
+            get
+            {
+                return this.cell;
             }
         }
     }

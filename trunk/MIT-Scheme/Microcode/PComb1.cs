@@ -9,6 +9,11 @@ namespace Microcode
     [Serializable]
     class PrimitiveCombination1 : SCode, ISerializable, ISystemPair
     {
+#if DEBUG
+        static Histogram<Primitive1> ratorHistogram = new Histogram<Primitive1> ();
+        static Histogram<Type> randTypeHistogram = new Histogram<Type> ();
+        Type randType;
+#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.PCOMB1; } }
 
@@ -28,6 +33,9 @@ namespace Microcode
             this.procedure = procedure;
             this.method = procedure.Method;
             this.arg0 = arg0;
+#if DEBUG
+            this.randType = arg0.GetType();
+#endif
         }
 
         [OnDeserialized ()]
@@ -49,7 +57,8 @@ namespace Microcode
         static SCode RewriteLetN (Primitive1 rator, Combination rand) { throw new NotImplementedException (); }
         static SCode RewriteLet1 (Primitive1 rator, Lambda lambda, SCode operand) 
         {
-            return Combination1.Make (Lambda.Make (lambda.Name, lambda.Formals, lambda.FreeVariables(),PrimitiveCombination1.Make (rator, lambda.Body)), operand);
+            throw new NotImplementedException ();
+            //return Combination1.Make (Lambda.Make (lambda.Name, lambda.Formals, lambda.Body, lambda.ComputeFreeVariables()), operand);
         }
         static SCode RewriteLet2 (Primitive1 rator, Combination2 rand) { throw new NotImplementedException (); }
         //static SCode RewriteLet3 (Primitive1 rator, Combination3 rand) { throw new NotImplementedException (); }
@@ -97,9 +106,9 @@ namespace Microcode
         {
             return
                 //(rator == Primitive.Add1) ? PrimitiveAdd1.Make (rator, rand) :
-                //(rator == Primitive.Car) ? PrimitiveCar.Make (rator, rand) :
+                (rator == Primitive.Car) ? PrimitiveCar.Make (rator, rand) :
                 //(rator == Primitive.Caar) ? PrimitiveCaar.Make (rator, rand) :
-                //(rator == Primitive.Cdr) ? PrimitiveCdr.Make (rator, rand) :
+                (rator == Primitive.Cdr) ? PrimitiveCdr.Make (rator, rand) :
                 //(rator == Primitive.CharToInteger) ? PrimitiveCharToInteger.Make (rator, rand) :
                 //(rator == Primitive.FixnumAdd1) ? PrimitiveFixnumAdd1.Make (rator, rand) :
                 //(rator == Primitive.IsBigFixnum) ? PrimitiveIsBigFixnum.Make (rator, rand) :
@@ -109,9 +118,9 @@ namespace Microcode
                 //(rator == Primitive.IsFixnum) ? PrimitiveIsFixnum.Make (rator, rand) :
                 //(rator == Primitive.IsNegative) ? PrimitiveIsNegative.Make (rator, rand) :
                 //(rator == Primitive.IsNull) ? PrimitiveIsNull.Make (rator, rand) :
-                //(rator == Primitive.IsPair) ? PrimitiveIsPair.Make (rator, rand) :
+                (rator == Primitive.IsPair) ? PrimitiveIsPair.Make (rator, rand) :
                 //(rator == Primitive.IsRatnum) ? PrimitiveIsRatnum.Make (rator, rand) :
-                //(rator == Primitive.IsRecord) ? PrimitiveIsRecord.Make (rator, rand) :
+                (rator == Primitive.IsRecord) ? PrimitiveIsRecord.Make (rator, rand) :
                 //(rator == Primitive.IsSharpT) ? PrimitiveIsSharpT.Make (rator, rand) :
                 //(rator == Primitive.IsSymbol) ? PrimitiveIsSymbol.Make (rator, rand) :
                 //(rator == Primitive.IsVector) ? PrimitiveIsVector.Make (rator, rand) :
@@ -131,7 +140,8 @@ namespace Microcode
         {
             return
                 (!Configuration.EnablePrimitive1Specialization) ? new PrimitiveCombination1 (rator, rand) :
-                (rand is LexicalVariable) ? PrimitiveCombination1L.Make (rator, (LexicalVariable) rand) :
+                (rand is Argument) ? PrimitiveCombination1A.Make (rator, (Argument) rand) :
+                (rand is StaticVariable) ? PrimitiveCombination1S.Make (rator, (StaticVariable) rand) :
                 (rand is Quotation) ? PrimitiveCombination1Q.Make (rator, (Quotation) rand) :
                 new PrimitiveCombination1 (rator, rand);
         }
@@ -144,7 +154,8 @@ namespace Microcode
                 throw new ArgumentNullException ("rand");
             return
                 (!Configuration.EnablePrimitiveCombination1Optimization) ? new PrimitiveCombination1 (rator, rand) :
-                SpecializedMake (rator, rand);
+                (!Configuration.EnableInlinePrimitive1) ? SpecializedMake (rator, rand) :
+                InlineMake (rator, rand);
         }
 
         public static SCode Make (Primitive1 rator, object rand)
@@ -189,6 +200,8 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             NoteCalls (this.arg0);
+            ratorHistogram.Note (this.procedure);
+            randTypeHistogram.Note (this.randType);
             SCode.location = "PrimitiveCombination1.EvalStep";
 #endif
             Control unev0 = this.arg0;
@@ -207,10 +220,6 @@ namespace Microcode
 
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString();
-#endif
             if (this.method (out answer, ev0)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
@@ -273,15 +282,20 @@ namespace Microcode
 
         #endregion
 
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return this.arg0.FreeVariables ();
+            return this.arg0.ComputeFreeVariables ();
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult rand0 = this.arg0.PartialEval (environment);
             return new PartialResult (rand0.Residual == this.arg0 ? this : PrimitiveCombination1.Make (this.procedure, rand0.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            return this.arg0.LambdaCount ();
         }
     }
 
@@ -337,77 +351,21 @@ namespace Microcode
 
     }
 
-    [Serializable]
-    class PrimitiveCombination1L : PrimitiveCombination1
-    {
-#if DEBUG
-        static Histogram<Primitive1> ratorHistogram = new Histogram<Primitive1> ();
-#endif
-        protected readonly object argName;
-        protected readonly int argDepth;
-        protected readonly int argOffset;
-
-        protected PrimitiveCombination1L (Primitive1 procedure, LexicalVariable arg0)
-            : base (procedure, arg0)
-        {
-            this.argName = arg0.Name;
-            this.argDepth = arg0.Depth;
-            this.argOffset = arg0.Offset;
-        }
-
-        public static SCode Make (Primitive1 rator, LexicalVariable rand)
-        {
-            return
-                (rand is Argument) ? PrimitiveCombination1A.Make (rator, (Argument) rand) :
-                (rand is LexicalVariable1) ? PrimitiveCombination1L1.Make (rator, (LexicalVariable1) rand) :
-                new PrimitiveCombination1L (rator, rand);
-        }
-
-        public object OperandName { get { return this.argName; } }
-        public int OperandDepth { get { return this.argDepth; } }
-        public int OperandOffset { get { return this.argOffset; } }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            Primitive.hotPrimitives.Note (this.procedure);
-#endif
-            object ev;
-            if (environment.LexicalRef (out ev, this.argName, this.argDepth, this.argOffset))
-                throw new NotImplementedException ();
-#if DEBUG
-            SCode.location = this.procedure.Name.ToString();
-#endif
-            if (this.method (out answer, ev)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    answer = null; // dispose of the evidence
-                    // set up the interpreter for a tail call
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    return true;
-                }
-                else
-                    throw new NotImplementedException ();
-            }
-            else return false;
-        }
-    }
-
     /// <summary>
-    /// A call to a primitive with argument as the argument.
+    /// A call to a primitive with an argument.
     /// </summary>
     [Serializable]
-    class PrimitiveCombination1A : PrimitiveCombination1L
+    class PrimitiveCombination1A : PrimitiveCombination1
     {
 #if DEBUG
         static Histogram<Primitive1> ratorHistogram = new Histogram<Primitive1> ();
 #endif
+        readonly int offset;
+
         protected PrimitiveCombination1A (Primitive1 procedure, Argument arg0)
             : base (procedure, arg0)
         {
+            this.offset = arg0.Offset;
         }
 
         public static SCode Make (Primitive1 rator, Argument rand)
@@ -422,11 +380,12 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            Primitive.hotPrimitives.Note (this.procedure);
             ratorHistogram.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString();
+            Primitive.hotPrimitives.Note (this.procedure);
+            //SCode.location = this.procedure.Name.ToString ();
+            SCode.location = "PrimitiveCombination1";
 #endif
-            if (this.method (out answer, environment.ArgumentValue (this.argOffset))) {
+            if (this.method (out answer, environment.ArgumentValue(this.offset))) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     answer = null; // dispose of the evidence
@@ -443,13 +402,13 @@ namespace Microcode
     }
 
     /// <summary>
-    /// A call to a primitive with argument0 as the argument.
+    /// A call to a primitive with an argument.
     /// </summary>
     [Serializable]
     sealed class PrimitiveCombination1A0 : PrimitiveCombination1A
     {
 #if DEBUG
-        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
+        static Histogram<Primitive1> ratorHistogram = new Histogram<Primitive1> ();
 #endif
         PrimitiveCombination1A0 (Primitive1 procedure, Argument0 arg0)
             : base (procedure, arg0)
@@ -458,16 +417,18 @@ namespace Microcode
 
         public static SCode Make (Primitive1 rator, Argument0 rand)
         {
-            return new PrimitiveCombination1A0 (rator, rand);
+            return
+                new PrimitiveCombination1A0 (rator, rand);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            procedureHistogram.Note (this.procedure);
+            ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString();
+            //SCode.location = this.procedure.Name.ToString ();
+            SCode.location = "PrimitiveCombination1";
 #endif
             if (this.method (out answer, environment.Argument0Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -486,13 +447,13 @@ namespace Microcode
     }
 
     /// <summary>
-    /// A call to a primitive with argument1 as the argument.
+    /// A call to a primitive with an argument.
     /// </summary>
     [Serializable]
     sealed class PrimitiveCombination1A1 : PrimitiveCombination1A
     {
 #if DEBUG
-        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
+        static Histogram<Primitive1> ratorHistogram = new Histogram<Primitive1> ();
 #endif
         PrimitiveCombination1A1 (Primitive1 procedure, Argument1 arg0)
             : base (procedure, arg0)
@@ -501,16 +462,18 @@ namespace Microcode
 
         public static SCode Make (Primitive1 rator, Argument1 rand)
         {
-            return new PrimitiveCombination1A1 (rator, rand);
+            return
+                new PrimitiveCombination1A1 (rator, rand);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            PrimitiveCombination1A1.procedureHistogram.Note (this.procedure);
+            ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString();
+            //SCode.location = this.procedure.Name.ToString ();
+            SCode.location = "PrimitiveCombination1";
 #endif
             if (this.method (out answer, environment.Argument1Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -527,24 +490,31 @@ namespace Microcode
             else return false;
         }
     }
-
+ 
     /// <summary>
-    /// A call to a primitive with a lexical1 as the argument.
+    /// A call to a primitive with a static variable.
     /// </summary>
     [Serializable]
-    sealed class PrimitiveCombination1L1 : PrimitiveCombination1L
+    sealed class PrimitiveCombination1S : PrimitiveCombination1
     {
 #if DEBUG
         static Histogram<Primitive1> ratorHistogram = new Histogram<Primitive1> ();
 #endif
-        PrimitiveCombination1L1 (Primitive1 procedure, LexicalVariable1 arg0)
+        //public readonly object randValue;
+        readonly Symbol varname;
+        readonly int offset;
+
+        PrimitiveCombination1S (Primitive1 procedure, StaticVariable arg0)
             : base (procedure, arg0)
         {
+            this.varname = arg0.Name;
+            this.offset = arg0.Offset;
         }
 
-        public static PrimitiveCombination1L1 Make (Primitive1 rator, LexicalVariable1 rand)
+        public static SCode Make (Primitive1 rator, StaticVariable rand)
         {
-            return new PrimitiveCombination1L1 (rator, rand);
+            return
+                new PrimitiveCombination1S (rator, rand);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -553,17 +523,15 @@ namespace Microcode
             Warm ("-");
             ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = "PrimitiveCombination1L1.EvalStep";
+            //SCode.location = this.procedure.Name.ToString ();
+            SCode.location = "PrimitiveCombination1";
 #endif
-            // It is expensive to bounce down to invoke the procedure
-            // we invoke it directly and pass along the ref args.
-            object ev;
-            if (environment.LexicalRef (out ev, this.argName, this.argDepth, this.argOffset))
+            object randValue;
+            if (environment.StaticValue (out randValue, this.varname, this.offset)) {
                 throw new NotImplementedException ();
-#if DEBUG
-            SCode.location = this.procedure.Name.ToString();
-#endif
-            if (this.method (out answer, ev)) {
+            }
+
+            if (this.method (out answer, randValue)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     answer = null; // dispose of the evidence
@@ -608,7 +576,8 @@ namespace Microcode
             Warm ("-");
             ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString();
+            //SCode.location = this.procedure.Name.ToString();
+            SCode.location = "PrimitiveCombination1";
 #endif
             if (this.method (out answer, this.randValue)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -626,7 +595,830 @@ namespace Microcode
         }
     }
 
-//    #region Car
+    #region Car
+
+    [Serializable]
+    class PrimitiveCar : PrimitiveCombination1
+    {
+        protected PrimitiveCar (Primitive1 rator, SCode rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static new SCode Make (Primitive1 rator, SCode rand)
+        {
+            return
+                (rand is Argument) ? PrimitiveCarA.Make (rator, (Argument) rand) :
+                (rand is StaticVariable) ? PrimitiveCarS.Make (rator, (StaticVariable) rand) :
+                (rand is Quotation) ? PrimitiveCarQ.Make (rator, (Quotation) rand) :
+                new PrimitiveCar (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg0);
+            SCode.location = "PrimitiveCombination1.EvalStep";
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination1.EvalStep";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            answer = ((Cons) ev0).Car;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to CAR with an argument.
+    /// </summary>
+    [Serializable]
+    class PrimitiveCarA : PrimitiveCar
+    {
+        readonly int offset;
+
+        protected PrimitiveCarA (Primitive1 procedure, Argument arg0)
+            : base (procedure, arg0)
+        {
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, Argument rand)
+        {
+            return
+                (rand is Argument0) ? PrimitiveCarA0.Make (rator, (Argument0) rand) :
+                (rand is Argument1) ? PrimitiveCarA1.Make (rator, (Argument1) rand) :
+                new PrimitiveCarA (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = ((Cons) environment.ArgumentValue(this.offset)).Car;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to CAR with argument0.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveCarA0 : PrimitiveCarA
+    {
+        PrimitiveCarA0 (Primitive1 procedure, Argument0 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument0 rand)
+        {
+            return
+                new PrimitiveCarA0 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = ((Cons) environment.Argument0Value).Car;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to CAR with an argument1.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveCarA1 : PrimitiveCarA
+    {
+        PrimitiveCarA1 (Primitive1 procedure, Argument1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument1 rand)
+        {
+            return
+                new PrimitiveCarA1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = ((Cons) environment.Argument1Value).Car;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to CAR with a static variable.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveCarS : PrimitiveCar
+    {
+        //public readonly object randValue;
+        readonly Symbol varname;
+        readonly int offset;
+
+        PrimitiveCarS (Primitive1 procedure, StaticVariable arg0)
+            : base (procedure, arg0)
+        {
+            this.varname = arg0.Name;
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, StaticVariable rand)
+        {
+            return
+                new PrimitiveCarS (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            object randValue;
+            if (environment.StaticValue (out randValue, this.varname, this.offset)) {
+                throw new NotImplementedException ();
+            }
+            answer = ((Cons) randValue).Car;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to CAR with a quoted argument.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveCarQ : PrimitiveCar
+    {
+        public readonly object randValue;
+
+        PrimitiveCarQ (Primitive1 procedure, Quotation arg0)
+            : base (procedure, arg0)
+        {
+            this.randValue = arg0.Quoted;
+        }
+
+        public static SCode Make (Primitive1 rator, Quotation rand)
+        {
+            return
+                new PrimitiveCarQ (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            throw new NotImplementedException();
+        }
+    }
+
+    #endregion
+
+    #region Cdr
+
+    [Serializable]
+    class PrimitiveCdr : PrimitiveCombination1
+    {
+        protected PrimitiveCdr (Primitive1 rator, SCode rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static new SCode Make (Primitive1 rator, SCode rand)
+        {
+            return
+                (rand is Argument) ? PrimitiveCdrA.Make (rator, (Argument) rand) :
+                (rand is StaticVariable) ? PrimitiveCdrS.Make (rator, (StaticVariable) rand) :
+                (rand is Quotation) ? PrimitiveCdrQ.Make (rator, (Quotation) rand) :
+                new PrimitiveCdr (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg0);
+            SCode.location = "PrimitiveCombination1.EvalStep";
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination1.EvalStep";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            answer = ((Cons) ev0).Cdr;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to Cdr with an argument.
+    /// </summary>
+    [Serializable]
+    class PrimitiveCdrA : PrimitiveCdr
+    {
+        readonly int offset;
+
+        protected PrimitiveCdrA (Primitive1 procedure, Argument arg0)
+            : base (procedure, arg0)
+        {
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, Argument rand)
+        {
+            return
+                (rand is Argument0) ? PrimitiveCdrA0.Make (rator, (Argument0) rand) :
+                (rand is Argument1) ? PrimitiveCdrA1.Make (rator, (Argument1) rand) :
+                new PrimitiveCdrA (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = ((Cons) environment.ArgumentValue (this.offset)).Cdr;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to Cdr with argument0.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveCdrA0 : PrimitiveCdrA
+    {
+        PrimitiveCdrA0 (Primitive1 procedure, Argument0 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument0 rand)
+        {
+            return
+                new PrimitiveCdrA0 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = ((Cons) environment.Argument0Value).Cdr;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to Cdr with an argument1.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveCdrA1 : PrimitiveCdrA
+    {
+        PrimitiveCdrA1 (Primitive1 procedure, Argument1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument1 rand)
+        {
+            return
+                new PrimitiveCdrA1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = ((Cons) environment.Argument1Value).Cdr;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to Cdr with a static variable.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveCdrS : PrimitiveCdr
+    {
+        //public readonly object randValue;
+        readonly Symbol varname;
+        readonly int offset;
+
+        PrimitiveCdrS (Primitive1 procedure, StaticVariable arg0)
+            : base (procedure, arg0)
+        {
+            this.varname = arg0.Name;
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, StaticVariable rand)
+        {
+            return
+                new PrimitiveCdrS (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "StaticValue";
+#endif
+            object randValue;
+            if (environment.StaticValue (out randValue, this.varname, this.offset)) {
+                throw new NotImplementedException ();
+            }
+#if DEBUG
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = ((Cons) randValue).Cdr;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to Cdr with a quoted argument.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveCdrQ : PrimitiveCdr
+    {
+        public readonly object randValue;
+
+        PrimitiveCdrQ (Primitive1 procedure, Quotation arg0)
+            : base (procedure, arg0)
+        {
+            this.randValue = arg0.Quoted;
+        }
+
+        public static SCode Make (Primitive1 rator, Quotation rand)
+        {
+            return
+                new PrimitiveCdrQ (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+    #endregion
+
+    #region IsPair
+
+    [Serializable]
+    class PrimitiveIsPair : PrimitiveCombination1
+    {
+        protected PrimitiveIsPair (Primitive1 rator, SCode rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static new SCode Make (Primitive1 rator, SCode rand)
+        {
+            return
+                (rand is Argument) ? PrimitiveIsPairA.Make (rator, (Argument) rand) :
+                (rand is StaticVariable) ? PrimitiveIsPairS.Make (rator, (StaticVariable) rand) :
+                (rand is Quotation) ? PrimitiveIsPairQ.Make (rator, (Quotation) rand) :
+                new PrimitiveIsPair (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg0);
+            SCode.location = "PrimitiveCombination1";
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination1";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            answer = ev0 is Cons ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsPair with an argument.
+    /// </summary>
+    [Serializable]
+    class PrimitiveIsPairA : PrimitiveIsPair
+    {
+        readonly int offset;
+
+        protected PrimitiveIsPairA (Primitive1 procedure, Argument arg0)
+            : base (procedure, arg0)
+        {
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, Argument rand)
+        {
+            return
+                (rand is Argument0) ? PrimitiveIsPairA0.Make (rator, (Argument0) rand) :
+                (rand is Argument1) ? PrimitiveIsPairA1.Make (rator, (Argument1) rand) :
+                new PrimitiveIsPairA (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = environment.ArgumentValue (this.offset) is Cons ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsPair with argument0.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsPairA0 : PrimitiveIsPairA
+    {
+        PrimitiveIsPairA0 (Primitive1 procedure, Argument0 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument0 rand)
+        {
+            return
+                new PrimitiveIsPairA0 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = environment.Argument0Value is Cons ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsPair with an argument1.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsPairA1 : PrimitiveIsPairA
+    {
+        PrimitiveIsPairA1 (Primitive1 procedure, Argument1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument1 rand)
+        {
+            return
+                new PrimitiveIsPairA1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = environment.Argument1Value is Cons ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsPair with a static variable.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsPairS : PrimitiveIsPair
+    {
+        //public readonly object randValue;
+        readonly Symbol varname;
+        readonly int offset;
+
+        PrimitiveIsPairS (Primitive1 procedure, StaticVariable arg0)
+            : base (procedure, arg0)
+        {
+            this.varname = arg0.Name;
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, StaticVariable rand)
+        {
+            return
+                new PrimitiveIsPairS (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "StaticValue";
+#endif
+            object randValue;
+            if (environment.StaticValue (out randValue, this.varname, this.offset)) {
+                throw new NotImplementedException ();
+            }
+#if DEBUG
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = randValue is Cons ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsPair with a quoted argument.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsPairQ : PrimitiveIsPair
+    {
+        readonly object randValue;
+
+        PrimitiveIsPairQ (Primitive1 procedure, Quotation arg0)
+            : base (procedure, arg0)
+        {
+            this.randValue = arg0.Quoted;
+        }
+
+        public static SCode Make (Primitive1 rator, Quotation rand)
+        {
+            return
+                new PrimitiveIsPairQ (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+    #endregion
+
+    #region IsRecord
+
+    [Serializable]
+    class PrimitiveIsRecord : PrimitiveCombination1
+    {
+        protected PrimitiveIsRecord (Primitive1 rator, SCode rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static new SCode Make (Primitive1 rator, SCode rand)
+        {
+            return
+                (rand is Argument) ? PrimitiveIsRecordA.Make (rator, (Argument) rand) :
+                (rand is StaticVariable) ? PrimitiveIsRecordS.Make (rator, (StaticVariable) rand) :
+                (rand is Quotation) ? PrimitiveIsRecordQ.Make (rator, (Quotation) rand) :
+                new PrimitiveIsRecord (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg0);
+            SCode.location = "PrimitiveCombination1";
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination1";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            answer = ev0 is Record ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsRecord with an argument.
+    /// </summary>
+    [Serializable]
+    class PrimitiveIsRecordA : PrimitiveIsRecord
+    {
+        readonly int offset;
+
+        protected PrimitiveIsRecordA (Primitive1 procedure, Argument arg0)
+            : base (procedure, arg0)
+        {
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, Argument rand)
+        {
+            return
+                (rand is Argument0) ? PrimitiveIsRecordA0.Make (rator, (Argument0) rand) :
+                (rand is Argument1) ? PrimitiveIsRecordA1.Make (rator, (Argument1) rand) :
+                new PrimitiveIsRecordA (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = environment.ArgumentValue (this.offset) is Record ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsRecord with argument0.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsRecordA0 : PrimitiveIsRecordA
+    {
+        PrimitiveIsRecordA0 (Primitive1 procedure, Argument0 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument0 rand)
+        {
+            return
+                new PrimitiveIsRecordA0 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = environment.Argument0Value is Record ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsRecord with an argument1.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsRecordA1 : PrimitiveIsRecordA
+    {
+        PrimitiveIsRecordA1 (Primitive1 procedure, Argument1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument1 rand)
+        {
+            return
+                new PrimitiveIsRecordA1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = environment.Argument1Value is Record ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsRecord with a static variable.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsRecordS : PrimitiveIsRecord
+    {
+        //public readonly object randValue;
+        readonly Symbol varname;
+        readonly int offset;
+
+        PrimitiveIsRecordS (Primitive1 procedure, StaticVariable arg0)
+            : base (procedure, arg0)
+        {
+            this.varname = arg0.Name;
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, StaticVariable rand)
+        {
+            return
+                new PrimitiveIsRecordS (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "StaticValue";
+#endif
+            object randValue;
+            if (environment.StaticValue (out randValue, this.varname, this.offset)) {
+                throw new NotImplementedException ();
+            }
+#if DEBUG
+            SCode.location = "PrimitiveCombination1";
+#endif
+            answer = randValue is Record ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsRecord with a quoted argument.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsRecordQ : PrimitiveIsRecord
+    {
+        readonly object randValue;
+
+        PrimitiveIsRecordQ (Primitive1 procedure, Quotation arg0)
+            : base (procedure, arg0)
+        {
+            this.randValue = arg0.Quoted;
+        }
+
+        public static SCode Make (Primitive1 rator, Quotation rand)
+        {
+            return
+                new PrimitiveIsRecordQ (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "PrimitiveCombination1";
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+    #endregion
 
 //    [Serializable]
 //    class PrimitiveCar : PrimitiveCombination1

@@ -70,7 +70,7 @@ namespace Microcode
                     object [] formals = new object [names.Length - 1];
                     Array.Copy (names, 1, formals, 0, formals.Length);
                     SCode body = SCode.EnsureSCode (car);
-                    answer = UnanalyzedLambda.Make (names[0], formals, car);
+                    answer = Lambda.Make (names[0], formals, car);
                     break;
 
                 case TC.PCOMB1:
@@ -80,16 +80,12 @@ namespace Microcode
                 case TC.PROCEDURE:
                     // Lambda had better be a `StandardLambda' because we are
                     // constructing an closureEnvironment that needs to be first-class.
+
                     Environment env = Environment.ToEnvironment (cdr);
-                    UnanalyzedLambda ulam = (UnanalyzedLambda) car;
-                    PartialResult plam = ulam.PartialEval (env);
-                    answer = ((Lambda) (plam.Residual)).Close (env);
-                    //StandardLambda slam = StandardLambda.Make (ulam.Name,
-                    //ulam.Formals,
-                    //ulam.FreeVariables (),
-                    //ulam.Body.BindVariables (LexicalMap.Make (env).Extend (ulam))
-                    //);
-                    //answer = slam.Close (env);
+                    Lambda ulam = (Lambda) car;
+                    Lambda plam = (Lambda) ulam.PartialEval (env).Residual;
+                    StandardLambda slam = (StandardLambda) new StandardLambda (plam.Name, plam.Formals, plam.Body);
+                    answer = env.CloseOver (slam);
                     break;
 
                 case TC.RATNUM:

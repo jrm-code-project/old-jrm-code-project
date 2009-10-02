@@ -251,24 +251,12 @@ namespace Microcode
             info.AddValue ("rand1", this.rand1);
         }
 
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    SCode boundRator = this.rator.BindVariables (lexicalMap);
-        //    SCode boundRand0 = this.rand0.BindVariables (lexicalMap);
-        //    SCode boundRand1 = this.rand1.BindVariables (lexicalMap);
-        //    return (boundRator == this.rator &&
-        //        boundRand0 == this.rand0 &&
-        //        boundRand1 == this.rand1) ?
-        //        this :
-        //        Combination2.Make (boundRator, boundRand0, boundRand1);
-        //}
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return new List<Symbol>(this.rator.FreeVariables().Union (new List<Symbol> (this.rand0.FreeVariables().Union (this.rand1.FreeVariables()))));
+            return new List<Symbol>(this.rator.ComputeFreeVariables().Union (new List<Symbol> (this.rand0.ComputeFreeVariables().Union (this.rand1.ComputeFreeVariables()))));
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult rator = this.rator.PartialEval (environment);
             PartialResult rand0 = this.rand0.PartialEval (environment);
@@ -276,6 +264,14 @@ namespace Microcode
             return new PartialResult (rator.Residual == this.rator &&
                 rand0.Residual == this.rand0 &&
                 rand1.Residual == this.rand1 ? this : Combination2.Make (rator.Residual, rand0.Residual, rand1.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            return
+                this.rator.LambdaCount () +
+                this.rand0.LambdaCount () +
+                this.rand1.LambdaCount ();
         }
     }
 

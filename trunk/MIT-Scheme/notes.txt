@@ -6346,3 +6346,318 @@ So let's look at ASSQ:
              loop) #!unassigned)) alist))
        (lambda () (error:not-alist alist caller)))))
 
+================================================================
+(current-time-string)"Mon Sep 07 19:43:52 2009"
+
+found at depth
+		[0]	2202338826	long
+		[1]	 667696098	long
+		[2]	  65038110	long
+		[3]	  93113386	long
+		[4]	 247200318	long
+		[5]	  47428393	long
+		[6]	  10345378	long
+		[7]	   2975534	long
+		[8]	   1548022	long
+		[9]	    217137	long
+		[10]	    532407	long
+		[11]	       634	long
+
+Environment extensions
+		[0]	94983085	long
+		[1]	749647311	long
+		[2]	202770485	long
+		[3]	42525768	long
+		[4]	6128117	long
+		[5]	2553373	long
+		[6]	690145	long
+		[7]	444368	long
+		[8]	2602	long
+
+Top 50 primitives
++		[0]	{[#<PRIMITIVE CAR 1>, 513575440]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[1]	{[#<PRIMITIVE PAIR? 1>, 388831952]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[2]	{[#<PRIMITIVE EQ? 2>, 324996246]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[3]	{[#<PRIMITIVE %RECORD-REF 2>, 273574530]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[4]	{[#<PRIMITIVE CDR 1>, 199932692]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[5]	{[#<PRIMITIVE OBJECT-TYPE? 2>, 88085440]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[6]	{[#<PRIMITIVE %RECORD? 1>, 64631391]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[7]	{[#<PRIMITIVE PLUS-FIXNUM 2>, 50291847]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[8]	{[#<PRIMITIVE LESS-THAN-FIXNUM? 2>, 48392031]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[9]	{[#<PRIMITIVE VECTOR-REF 2>, 41729273]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[10]	{[#<PRIMITIVE %RECORD-SET! 3>, 34248760]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[11]	{[#<PRIMITIVE NULL? 1>, 27571753]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[12]	{[#<PRIMITIVE VECTOR-8B-REF 2>, 26114511]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[13]	{[#<PRIMITIVE CHAR->INTEGER 1>, 16632469]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[14]	{[#<PRIMITIVE NOT 1>, 14133042]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[15]	{[#<PRIMITIVE CHAR? 1>, 12030912]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[16]	{[#<PRIMITIVE CONS 2>, 11754495]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[17]	{[#<PRIMITIVE VECTOR-LENGTH 1>, 11645239]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[18]	{[#<PRIMITIVE SYSTEM-PAIR-CAR 1>, 10290794]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[19]	{[#<PRIMITIVE GREATER-THAN-FIXNUM? 2>, 9217900]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[20]	{[#<PRIMITIVE STRING-REF 2>, 6866852]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[21]	{[#<PRIMITIVE MINUS-FIXNUM 2>, 6832404]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[22]	{[#<PRIMITIVE GENERAL-CAR-CDR 2>, 6697950]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[23]	{[#<PRIMITIVE STRING-SET! 3>, 6602411]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[24]	{[#<PRIMITIVE STRING-LENGTH 1>, 5942455]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[25]	{[#<PRIMITIVE OBJECT-SET-TYPE 2>, 5848699]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[26]	{[#<PRIMITIVE INTEGER->CHAR 1>, 5602867]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[27]	{[#<PRIMITIVE PRIMITIVE-OBJECT-SET-TYPE 2>, 5256968]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[28]	{[#<PRIMITIVE FIXNUM-REMAINDER 2>, 5000642]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[29]	{[#<PRIMITIVE %RECORD -1>, 4645829]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[30]	{[#<PRIMITIVE VECTOR? 1>, 4547751]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[31]	{[#<PRIMITIVE FIXNUM-NOT 1>, 4410946]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[32]	{[#<PRIMITIVE INTEGER-LESS? 2>, 3727578]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[33]	{[#<PRIMITIVE FIXNUM-AND 2>, 3243586]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[34]	{[#<PRIMITIVE SYSTEM-PAIR-CDR 1>, 3215835]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[35]	{[#<PRIMITIVE FIXNUM-LSH 2>, 2974836]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[36]	{[#<PRIMITIVE SET-CDR! 2>, 2875199]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[37]	{[#<PRIMITIVE PRIMITIVE-OBJECT-TYPE? 2>, 2269060]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[38]	{[#<PRIMITIVE &< 2>, 1750700]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[39]	{[#<PRIMITIVE STRING? 1>, 1735482]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[40]	{[#<PRIMITIVE INTEGER-ZERO? 1>, 1694110]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[41]	{[#<PRIMITIVE VECTOR-8B-SET! 3>, 1684345]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[42]	{[#<PRIMITIVE &+ 2>, 1676536]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[43]	{[#<PRIMITIVE ZERO? 1>, 1612559]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[44]	{[#<PRIMITIVE FIXNUM-OR 2>, 1487476]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[45]	{[#<PRIMITIVE OBJECT-TYPE 1>, 1486793]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[46]	{[#<PRIMITIVE STRING-ALLOCATE 1>, 1261447]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[47]	{[#<PRIMITIVE NEGATIVE? 1>, 1192868]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[48]	{[#<PRIMITIVE INDEX-FIXNUM? 1>, 1192126]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[49]	{[#<PRIMITIVE SYSTEM-HUNK3-CXR0 1>, 1001528]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[50]	{[#<PRIMITIVE VECTOR -1>, 957200]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
+
+
+Top 50 SCode objects
++		[0]	{[#<VARIABLE alist>, 660057958]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[1]	{[#<SCODE-QUOTE #!Unspecific>, 284942153]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[2]	{[#<VARIABLE port>, 282385035]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[3]	{[#<VARIABLE loop>, 268942667]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[4]	{[#<VARIABLE object>, 238566583]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[5]	{[#<VARIABLE key>, 178298997]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[6]	{[Microcode.Conditional, 168768387]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[7]	{[Microcode.PrimitiveCombination1, 168768387]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[8]	{[Microcode.Sequence2, 151465343]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[9]	{[Microcode.Conditional, 151465343]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[10]	{[Microcode.PrimitiveCombination1, 151465343]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[11]	{[Microcode.PrimitiveCombination1, 151465343]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[12]	{[Microcode.Conditional, 151465342]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[13]	{[Microcode.PrimitiveCombination2, 151465342]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[14]	{[Microcode.PrimitiveCombination1, 151465342]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[15]	{[Microcode.PrimitiveCombination1, 151465342]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[16]	{[Microcode.Combination1, 149583922]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[17]	{[Microcode.PrimitiveCombination1, 149583922]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[18]	{[#<SCODE-QUOTE 1>, 105349948]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[19]	{[#<VARIABLE char>, 98284428]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[20]	{[#<SCODE-QUOTE 0>, 91871229]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[21]	{[#<VARIABLE i>, 81166887]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[22]	{[#<SCODE-QUOTE False>, 77274713]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[23]	{[#<VARIABLE items>, 71815299]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[24]	{[#<VARIABLE ib>, 68797640]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[25]	{[#<SCODE-QUOTE Microcode.ReferenceTrap>, 67635120]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[26]	{[#<VARIABLE name>, 67263900]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[27]	{[#<VARIABLE tag>, 66482047]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[28]	{[#<SCODE-QUOTE 4>, 63580776]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[29]	{[#<VARIABLE n>, 55137593]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[30]	{[#<VARIABLE x>, 45043466]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[31]	{[#<VARIABLE port?>, 38399266]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[32]	{[Microcode.Conditional, 38399266]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[33]	{[Microcode.PrimitiveCombination1, 38399266]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[34]	{[Microcode.PrimitiveCombination2, 38399266]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[35]	{[Microcode.PrimitiveCombination2, 38399266]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[36]	{[#<SCODE-QUOTE 6>, 37486387]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[37]	{[#<SCODE-QUOTE 2>, 36395833]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[38]	{[#<VARIABLE table>, 36156382]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[39]	{[#<VARIABLE y>, 34355360]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[40]	{[#<VARIABLE item>, 31501976]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[41]	{[#<VARIABLE p>, 31396507]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[42]	{[#<SCODE-QUOTE 3>, 31029635]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[43]	{[#<VARIABLE ob>, 29671484]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[44]	{[#<VARIABLE names>, 23568019]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[45]	{[Microcode.Conditional, 23062468]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[46]	{[Microcode.PrimitiveCombination1, 23062468]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[47]	{[#<SCODE-QUOTE 5>, 22417909]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[48]	{[#<VARIABLE l>, 21945615]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[49]	{[Microcode.Conditional, 21755647]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
++		[50]	{[Microcode.PrimitiveCombination2, 21755647]}	System.Collections.Generic.KeyValuePair<Microcode.SCode,long>
+
+
+SCode Histogram
++		[0]	{[Microcode.Variable, 3467549153]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[1]	{[Microcode.PrimitiveCombination1, 1297433915]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[2]	{[Microcode.Quotation, 1109665728]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[3]	{[Microcode.Conditional, 1059779310]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[4]	{[Microcode.PrimitiveCombination2, 934802682]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[5]	{[Microcode.Combination1, 747943105]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[6]	{[Microcode.StandardLambda, 445873955]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[7]	{[Microcode.Sequence2, 341382335]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[8]	{[Microcode.Combination2, 201649305]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[9]	{[Microcode.Combination, 152903302]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[10]	{[Microcode.Assignment, 68527823]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[11]	{[Microcode.Disjunction, 63490634]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[12]	{[Microcode.Sequence3, 59087120]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[13]	{[Microcode.PrimitiveCombination3, 44383290]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[14]	{[Microcode.Access, 5348198]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[15]	{[Microcode.PrimitiveCombination0, 135779]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[16]	{[Microcode.Delay, 33191]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[17]	{[Microcode.Definition, 8796]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[18]	{[Microcode.StandardExtendedLambda, 2173]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[19]	{[Microcode.Comment, 166]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[20]	{[Microcode.TheEnvironment, 39]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+
+Top 50 top of stack entries
++		[0]	{[Variable.EvalStep, 82519]}	System.Collections.Generic.KeyValuePair<string,long>
++		[1]	{[CHANNEL-READ, 70778]}	System.Collections.Generic.KeyValuePair<string,long>
++		[2]	{[PrimitiveCombination1.EvalStep, 48464]}	System.Collections.Generic.KeyValuePair<string,long>
++		[3]	{[StandardClosure.Apply, 37690]}	System.Collections.Generic.KeyValuePair<string,long>
++		[4]	{[PrimitiveCombination2.EvalStep, 37007]}	System.Collections.Generic.KeyValuePair<string,long>
++		[5]	{[FILE-EXISTS?, 14716]}	System.Collections.Generic.KeyValuePair<string,long>
++		[6]	{[Conditional.EvalStep, 8333]}	System.Collections.Generic.KeyValuePair<string,long>
++		[7]	{[Sequence2.EvalStep, 6660]}	System.Collections.Generic.KeyValuePair<string,long>
++		[8]	{[Interpreter.Call.1, 6372]}	System.Collections.Generic.KeyValuePair<string,long>
++		[9]	{[FILE-TYPE-INDIRECT, 5685]}	System.Collections.Generic.KeyValuePair<string,long>
++		[10]	{[Combination1.EvalStep, 4990]}	System.Collections.Generic.KeyValuePair<string,long>
++		[11]	{[StandardLambda.EvalStep, 3874]}	System.Collections.Generic.KeyValuePair<string,long>
++		[12]	{[Combination.EvalStep, 3060]}	System.Collections.Generic.KeyValuePair<string,long>
++		[13]	{[StandardExtendedClosure.Apply, 2802]}	System.Collections.Generic.KeyValuePair<string,long>
++		[14]	{[CAR, 2354]}	System.Collections.Generic.KeyValuePair<string,long>
++		[15]	{[Interpreter.Call.2, 2228]}	System.Collections.Generic.KeyValuePair<string,long>
++		[16]	{[OBJECT-TYPE?, 2200]}	System.Collections.Generic.KeyValuePair<string,long>
++		[17]	{[EQ?, 2077]}	System.Collections.Generic.KeyValuePair<string,long>
++		[18]	{[Combination2.EvalStep, 2054]}	System.Collections.Generic.KeyValuePair<string,long>
++		[19]	{[%RECORD-REF, 1992]}	System.Collections.Generic.KeyValuePair<string,long>
++		[20]	{[Assignment.EvalStep.1, 1823]}	System.Collections.Generic.KeyValuePair<string,long>
++		[21]	{[PAIR?, 1808]}	System.Collections.Generic.KeyValuePair<string,long>
++		[22]	{[PrimitiveCombination3.EvalStep.3, 1587]}	System.Collections.Generic.KeyValuePair<string,long>
++		[23]	{[Quotation.EvalStep, 1545]}	System.Collections.Generic.KeyValuePair<string,long>
++		[24]	{[Disjunction.EvalStep, 1278]}	System.Collections.Generic.KeyValuePair<string,long>
++		[25]	{[CDR, 1091]}	System.Collections.Generic.KeyValuePair<string,long>
++		[26]	{[Interpreter.Call.3, 617]}	System.Collections.Generic.KeyValuePair<string,long>
++		[27]	{[Interpreter.Call.0, 522]}	System.Collections.Generic.KeyValuePair<string,long>
++		[28]	{[Sequence3.EvalStep, 495]}	System.Collections.Generic.KeyValuePair<string,long>
++		[29]	{[%RECORD?, 472]}	System.Collections.Generic.KeyValuePair<string,long>
++		[30]	{[%RECORD-SET!, 408]}	System.Collections.Generic.KeyValuePair<string,long>
++		[31]	{[VECTOR-REF, 383]}	System.Collections.Generic.KeyValuePair<string,long>
++		[32]	{[PrimitiveCombination3.EvalStep, 366]}	System.Collections.Generic.KeyValuePair<string,long>
++		[33]	{[LESS-THAN-FIXNUM?, 298]}	System.Collections.Generic.KeyValuePair<string,long>
++		[34]	{[OBJECT-SET-TYPE, 295]}	System.Collections.Generic.KeyValuePair<string,long>
++		[35]	{[NEW-FILE-OPEN-INPUT-CHANNEL, 286]}	System.Collections.Generic.KeyValuePair<string,long>
++		[36]	{[PLUS-FIXNUM, 277]}	System.Collections.Generic.KeyValuePair<string,long>
++		[37]	{[VECTOR-8B-REF, 241]}	System.Collections.Generic.KeyValuePair<string,long>
++		[38]	{[BINARY-FASLOAD, 235]}	System.Collections.Generic.KeyValuePair<string,long>
++		[39]	{[Access.EvalStep, 211]}	System.Collections.Generic.KeyValuePair<string,long>
++		[40]	{[GENERAL-CAR-CDR, 205]}	System.Collections.Generic.KeyValuePair<string,long>
++		[41]	{[PRIMITIVE-FASDUMP, 205]}	System.Collections.Generic.KeyValuePair<string,long>
++		[42]	{[Interpreter.Call.4, 202]}	System.Collections.Generic.KeyValuePair<string,long>
++		[43]	{[Assignment.EvalStep, 168]}	System.Collections.Generic.KeyValuePair<string,long>
++		[44]	{[SYSTEM-PAIR-CONS, 166]}	System.Collections.Generic.KeyValuePair<string,long>
++		[45]	{[NULL?, 150]}	System.Collections.Generic.KeyValuePair<string,long>
++		[46]	{[VECTOR-LENGTH, 148]}	System.Collections.Generic.KeyValuePair<string,long>
++		[47]	{[Interpreter.Apply, 139]}	System.Collections.Generic.KeyValuePair<string,long>
++		[48]	{[SYSTEM-PAIR-CAR, 125]}	System.Collections.Generic.KeyValuePair<string,long>
++		[49]	{[CHAR?, 100]}	System.Collections.Generic.KeyValuePair<string,long>
++		[50]	{[CHANNEL-WRITE, 97]}	System.Collections.Generic.KeyValuePair<string,long>
+
+
+Top 100 closures
++		[0]	{[#<PROCEDURE port?>, 76798]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[1]	{[#<PROCEDURE port/type>, 42238]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[2]	{[#<PROCEDURE assq>, 38368]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[3]	{[#<PROCEDURE symbol?>, 30030]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[4]	{[#<EXTENDED-PROCEDURE guarantee-symbol>, 29945]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[5]	{[#<PROCEDURE port/state>, 24365]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[6]	{[#<PROCEDURE port/transcript>, 21635]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[7]	{[#<PROCEDURE port/get-property>, 21635]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[8]	{[#<PROCEDURE transcribe-char>, 14807]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[9]	{[#<PROCEDURE transcribe-input-char>, 11723]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[10]	{[#<PROCEDURE eof-object?>, 10271]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[11]	{[#<EXTENDED-PROCEDURE guarantee-hash-table>, 9896]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[12]	{[#<PROCEDURE hash-table?>, 9896]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[13]	{[#<PROCEDURE hash-table/get>, 9698]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[14]	{[#<PROCEDURE #[unnamed-procedure]>, 9638]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[15]	{[#<EXTENDED-PROCEDURE guarantee-char>, 9334]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[16]	{[#<PROCEDURE skip-entities>, 9092]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[17]	{[#<PROCEDURE record-type-field-index>, 8808]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[18]	{[#<PROCEDURE record-type-default-value>, 8808]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[19]	{[#<PROCEDURE input-port/read-char>, 8756]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[20]	{[#<PROCEDURE port/operation/read-char>, 8756]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[21]	{[#<PROCEDURE procedure?>, 8426]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[22]	{[#<PROCEDURE guarantee-port-type>, 8230]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[23]	{[#<PROCEDURE port-type?>, 8230]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[24]	{[#<PROCEDURE decode-char>, 8186]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[25]	{[#<PROCEDURE #[unnamed-procedure]>, 8149]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[26]	{[#<PROCEDURE reset-prev-char>, 8028]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[27]	{[#<PROCEDURE read-next-char>, 8005]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[28]	{[#<PROCEDURE generic-io/read-char>, 7999]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[29]	{[#<PROCEDURE #[unnamed-procedure]>, 7969]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[30]	{[#<PROCEDURE complex:<>, 7383]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[31]	{[#<PROCEDURE port/operation>, 7050]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[32]	{[#<PROCEDURE port-type/operation>, 7050]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[33]	{[#<PROCEDURE port/operation/write-char>, 6441]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[34]	{[#<PROCEDURE output-port/write-char>, 6439]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[35]	{[#<PROCEDURE output-port/discretionary-flush>, 6422]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[36]	{[#<PROCEDURE port/operation/discretionary-flush-output>, 6422]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[37]	{[#<PROCEDURE discretionary-flush-transcript>, 6422]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[38]	{[#<PROCEDURE optional-output-port>, 6421]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[39]	{[#<PROCEDURE output-port?>, 6421]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[40]	{[#<PROCEDURE guarantee-output-port>, 6421]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[41]	{[#<PROCEDURE no-flush>, 6416]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[42]	{[#<EXTENDED-PROCEDURE write-char>, 6415]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[43]	{[#<PROCEDURE char-set?>, 6402]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[44]	{[#<PROCEDURE %char-set-member?>, 6357]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[45]	{[#<PROCEDURE char-set-member?>, 6317]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[46]	{[#<PROCEDURE syntax-match?>, 5982]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[47]	{[#<PROCEDURE #[unnamed-procedure]>, 5626]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[48]	{[#<PROCEDURE reference-trap?>, 5166]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[49]	{[#<PROCEDURE read-char>, 5001]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[50]	{[#<PROCEDURE #[unnamed-procedure]>, 5001]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[51]	{[#<PROCEDURE map-reference-trap>, 4538]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[52]	{[#<PROCEDURE input-port?>, 3773]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[53]	{[#<PROCEDURE optional-input-port>, 3773]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[54]	{[#<PROCEDURE guarantee-input-port>, 3773]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[55]	{[#<EXTENDED-PROCEDURE read-char>, 3754]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[56]	{[#<PROCEDURE #[unnamed-procedure]>, 3702]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[57]	{[#<PROCEDURE narrow-in/read-char>, 3702]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[58]	{[#<PROCEDURE wide-string?>, 3360]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[59]	{[#<PROCEDURE reduce-comparator>, 3338]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[60]	{[#<PROCEDURE encode-char>, 3338]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[61]	{[#<EXTENDED-PROCEDURE <=>, 3337]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[62]	{[#<PROCEDURE write-next-char>, 3337]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[63]	{[#<PROCEDURE generic-io/write-char>, 3323]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[64]	{[#<PROCEDURE memq>, 3314]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[65]	{[#<PROCEDURE #[unnamed-procedure]>, 3301]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[66]	{[#<PROCEDURE #[unnamed-procedure]>, 3301]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[67]	{[#<PROCEDURE #[unnamed-procedure]>, 3301]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[68]	{[#<PROCEDURE #[unnamed-procedure]>, 3301]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[69]	{[#<PROCEDURE symbol<?>, 3230]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[70]	{[#<PROCEDURE complex:zero?>, 3225]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[71]	{[#<PROCEDURE new-column>, 3115]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[72]	{[#<PROCEDURE maybe-grow-buffer>, 3114]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[73]	{[#<PROCEDURE #[unnamed-procedure]>, 3095]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[74]	{[#<PROCEDURE #[unnamed-procedure]>, 3095]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[75]	{[#<PROCEDURE narrow-out/write-char>, 3095]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[76]	{[#<PROCEDURE char-downcase>, 2971]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[77]	{[#<PROCEDURE %char-downcase>, 2971]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[78]	{[#<PROCEDURE guarantee-constituent>, 2971]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[79]	{[#<PROCEDURE peek-char>, 2966]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[80]	{[#<PROCEDURE input-port/peek-char>, 2966]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[81]	{[#<PROCEDURE port/operation/peek-char>, 2966]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[82]	{[#<PROCEDURE generic-io/peek-char>, 2966]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[83]	{[#<PROCEDURE #[unnamed-procedure]>, 2966]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[84]	{[#<PROCEDURE unmap-reference-trap>, 2471]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[85]	{[#<PROCEDURE #[unnamed-procedure]>, 2220]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[86]	{[#<PROCEDURE identifier?>, 1901]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[87]	{[#<EXTENDED-PROCEDURE map>, 1769]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[88]	{[#<PROCEDURE #[unnamed-procedure]>, 1703]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[89]	{[#<PROCEDURE complex:real-arg>, 1688]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[90]	{[#<PROCEDURE get-handler>, 1641]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[91]	{[#<EXTENDED-PROCEDURE apply-entity-procedure>, 1624]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[92]	{[#<PROCEDURE apply-2>, 1624]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[93]	{[#<PROCEDURE interpreter-environment?>, 1557]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[94]	{[#<PROCEDURE eqv?>, 1505]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[95]	{[#<PROCEDURE scode-walk>, 1505]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[96]	{[#<PROCEDURE macro-reference-trap?>, 1481]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[97]	{[#<EXTENDED-PROCEDURE guarantee-string>, 1429]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[98]	{[#<PROCEDURE %substring-move!>, 1378]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
++		[99]	{[#<PROCEDURE #[unnamed-procedure]>, 1368]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>

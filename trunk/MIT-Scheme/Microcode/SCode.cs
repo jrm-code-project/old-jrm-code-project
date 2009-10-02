@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Microcode
 {
-    public class TypePair
+    class TypePair
     {
         static Dictionary <Type, Dictionary <Type, TypePair>> pairTable = new Dictionary<Type, Dictionary<Type, TypePair>> ();
 
@@ -38,6 +38,9 @@ namespace Microcode
         }
     }
 
+    /// <summary>
+    /// Represent a Scheme program.  Must be public.
+    /// </summary>
     [Serializable]
     public abstract class SCode: Control
     {
@@ -116,9 +119,10 @@ namespace Microcode
         // Utility for make.
         public static SCode Unimplemented () { throw new NotImplementedException (); }
 
-	// Abstract functions that define the SCode API
+	    // Abstract functions that define the SCode API
         public abstract bool CallsTheEnvironment ();
-        public abstract IList<Symbol> FreeVariables ();
+        public abstract ICollection<Symbol> ComputeFreeVariables ();
+        public abstract int LambdaCount ();
         public abstract bool MutatesAny (Symbol [] formals);
 
         /// <summary>
@@ -126,9 +130,16 @@ namespace Microcode
         /// </summary>
         /// <param name="closureEnvironment"></param>
         /// <returns></returns>
-        public abstract PartialResult PartialEval (Environment environment);
+        internal abstract PartialResult PartialEval (Environment environment);
 
-        protected static IList<Symbol> noFreeVariables = new List<Symbol> (0);
+        // Helpers for computing free variables.
+        protected static ICollection<Symbol> noFreeVariables = new List<Symbol> (0);
+        protected static ICollection<Symbol> singletonFreeVariable (Symbol variable)
+        {
+            List<Symbol> singleton = new List<Symbol> (1);
+            singleton.Add (variable);
+            return singleton;
+        }
 #if DEBUG
         // for hash consing
         public virtual string Key ()
@@ -273,15 +284,20 @@ namespace Microcode
 
         #endregion
 
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return this.code.FreeVariables ();
+            return this.code.ComputeFreeVariables ();
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult result = this.code.PartialEval (environment);
             return new PartialResult (result.Residual == this.code ? this : Comment.Make (result.Residual, this.text));
+        }
+
+        public override int LambdaCount ()
+        {
+            throw new NotImplementedException ();
         }
     }
 
@@ -394,15 +410,20 @@ namespace Microcode
 
         #endregion
 
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
             throw new NotImplementedException ();
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult pvalue = this.value.PartialEval (environment);
             return new PartialResult (pvalue.Residual == this.value ? this : Definition.Make (this.name, pvalue.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            throw new NotImplementedException ();
         }
     }
 
@@ -486,23 +507,21 @@ namespace Microcode
 
         #endregion
 
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    SCode boundBody = this.body.BindVariables (lexicalMap);
-        //    return (boundBody == this.body) ?
-        //        this :
-        //        Delay.Make (boundBody);
-        //}
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return this.body.FreeVariables ();
+            return this.body.ComputeFreeVariables ();
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult partialBody = this.body.PartialEval (environment);
             return new PartialResult (partialBody.Residual == this.body ? this : Delay.Make (partialBody.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            // Pretend this is a lambda expression.
+            return 1;
         }
     }
 
@@ -663,14 +682,19 @@ namespace Microcode
         }
         #endregion
 
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
             return noFreeVariables;
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             return new PartialResult (this);
+        }
+
+        public override int LambdaCount ()
+        {
+            return 0;
         }
     }
 
@@ -888,28 +912,24 @@ namespace Microcode
 
         #endregion
 
-
-        //public override SCode BindVariables (LexicalMap lexicalMap)
-        //{
-        //    SCode boundFirst = this.first.BindVariables (lexicalMap);
-        //    SCode boundSecond = this.second.BindVariables (lexicalMap);
-        //    return (boundFirst == this.first &&
-        //        boundSecond == this.second) ?
-        //        this :
-        //        Sequence2.Make (boundFirst, boundSecond);
-        //}
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return new List<Symbol> (this.first.FreeVariables ().Union (this.second.FreeVariables ()));
+            return new List<Symbol> (this.first.ComputeFreeVariables ().Union (this.second.ComputeFreeVariables ()));
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult r0 = this.first.PartialEval (environment);
             PartialResult r1 = this.second.PartialEval (environment);
             return new PartialResult (r0.Residual == this.first &&
                 r1.Residual == this.second ? this : Sequence2.Make (r0.Residual, r1.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            return 
+                this.first.LambdaCount () +
+                this.second.LambdaCount ();
         }
     }
 
@@ -1554,7 +1574,6 @@ namespace Microcode
             NoteCalls (this.second);
             NoteCalls (this.third);
 #endif
-
             object ev;
             Control expr = this.first;
             Environment env = environment;
@@ -1666,13 +1685,12 @@ namespace Microcode
 
         #endregion
 
-
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
-            return new List<Symbol> (this.first.FreeVariables ().Union (new List<Symbol> (this.second.FreeVariables ().Union (this.third.FreeVariables ()))));
+            return new List<Symbol> (this.first.ComputeFreeVariables ().Union (new List<Symbol> (this.second.ComputeFreeVariables ().Union (this.third.ComputeFreeVariables ()))));
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             PartialResult r0 = this.first.PartialEval (environment);
             PartialResult r1 = this.second.PartialEval (environment);
@@ -1680,6 +1698,14 @@ namespace Microcode
             return new PartialResult (r0.Residual == this.first &&
                 r1.Residual == this.second &&
                 r2.Residual == this.third ? this : Sequence3.Make (r0.Residual, r1.Residual, r2.Residual));
+        }
+
+        public override int LambdaCount ()
+        {
+            return
+                this.first.LambdaCount () +
+                this.second.LambdaCount () +
+                this.third.LambdaCount ();
         }
     }
 
@@ -1852,14 +1878,19 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override IList<Symbol> FreeVariables ()
+        public override ICollection<Symbol> ComputeFreeVariables ()
         {
             throw new NotImplementedException ();
         }
 
-        public override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (Environment environment)
         {
             return new PartialResult (this);
+        }
+
+        public override int LambdaCount ()
+        {
+            throw new NotImplementedException ();
         }
     }
 }

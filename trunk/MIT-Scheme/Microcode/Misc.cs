@@ -277,7 +277,7 @@ namespace Microcode
                 '\n',
                 53,
                 Double.Epsilon,
-            "NT".ToCharArray(),
+            "nt".ToCharArray(),
             "MS Windows".ToCharArray(),
             "standard".ToCharArray(),
             "IA-32".ToCharArray(),

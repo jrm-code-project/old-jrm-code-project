@@ -6,7 +6,10 @@ using System.Text;
 
 namespace Microcode
 {
-    public abstract class Channel
+    /// <summary>
+    /// Input/output channel.  Must be public.
+    /// </summary>
+    abstract public class Channel
     {
         static int input_channel = 0;
         static int output_channel = 1;
@@ -171,12 +174,17 @@ namespace Microcode
             set { isBlocking = value; }
         }
 
+        byte [] inputBuffer = new byte [1024];
+
         public override int Read (char [] buffer, int start, int end)
         {
-            byte [] myBuffer = new byte [(end - start)];
-            int count = this.stream.Read (myBuffer, 0, (end - start));
+            int length = end - start;
+            while (length > this.inputBuffer.Length) {
+                inputBuffer = new byte [this.inputBuffer.Length * 2];
+            }
+            int count = this.stream.Read (this.inputBuffer, 0, length);
             for (int i = 0; i < count; i++)
-                buffer[start+i] = (char) myBuffer[i];
+                buffer[start+i] = (char) this.inputBuffer[i];
             return count;
         }
 
@@ -188,6 +196,9 @@ namespace Microcode
         }
     }
 
+    /// <summary>
+    /// I/O to the tty.
+    /// </summary>
     public class ScreenChannel : Channel
     {
         TextReader input;

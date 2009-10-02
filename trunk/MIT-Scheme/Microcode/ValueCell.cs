@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace Microcode
 {
     [Serializable]
-    sealed public class ValueCell
+    public sealed class ValueCell
     {
         //static object unassigned = Constant.Unassigned;
 #if DEBUG
@@ -90,10 +90,17 @@ namespace Microcode
             if (!ValidValue(initialValue)) throw new ArgumentException ("Illegal value cell contents.", "initialValue");
 #endif
             this.val = (initialValue == Constant.ExternalUnassigned)
-    ? ReferenceTrap.Unassigned
-    : initialValue; 
+                        ? ReferenceTrap.Unassigned
+                        : initialValue; 
             this.trapOnReference = this.val is ReferenceTrap;
         }
+
+#if DEBUG
+        public override String ToString ()
+        {
+            return "{ValueCell for " + this.name + "}";
+        }
+#endif
 
         public bool Unreferenceable ()
         {

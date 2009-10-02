@@ -6,7 +6,7 @@ using System.Text;
 namespace Microcode
 {
     [Serializable]
-    public class ContinuationFrameList : ISystemVector
+    class ContinuationFrameList : ISystemVector
     {
 
         const int ExtraFakeSlots = 2;
