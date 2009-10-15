@@ -265,7 +265,7 @@ namespace Microcode
             //    ? new CompileTimeEnvironment (((StandardEnvironment) env).Closure.Lambda.Formals)
             //    : new CompileTimeEnvironment (null);
             SCode sarg0 = SCode.EnsureSCode (arg0);
-            answer = new TailCallInterpreter (sarg0.PartialEval(env).Residual, env);
+            answer = new TailCallInterpreter (sarg0.PartialEval(PartialEnvironment.Make((ITopLevelEnvironment) env)).Residual, env);
             return true;
         }
 

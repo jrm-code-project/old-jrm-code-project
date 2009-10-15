@@ -9,7 +9,7 @@ namespace Microcode
     sealed class Histogram<T>
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        private object l = new Object ();
+        private object lockObject = new Object ();
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Dictionary<T, long> entries = new Dictionary<T, long> ();
@@ -17,11 +17,18 @@ namespace Microcode
         [DebuggerStepThrough]
         public void Note (T item)
         {
-            lock (this.l) {
+            lock (this.lockObject) {
                 if (entries.ContainsKey (item))
                     entries [item] += 1;
                 else
                     entries [item] = 1;
+            }
+        }
+
+        public void Clear ()
+        {
+            lock (this.lockObject) {
+                entries.Clear ();
             }
         }
 

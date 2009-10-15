@@ -176,16 +176,6 @@ namespace Microcode
                      || ((arg0 is bool && arg1 is bool) && ((bool) arg0 == (bool) arg1))))
                      ? Constant.sharpT
                      : Constant.sharpF;
-
-
-            //answer =
-            //    (arg0 == null) ? (arg1 == null)
-            //    : (arg1 == null) ? false
-            //    : (arg0 == arg1) ? true
-            //    : 
-            //    : 
-            //    : (arg0 is bool && arg1 is bool) ? ((bool) arg0 == (bool) arg1)
-            //    : false;
             return false;
         }
 
@@ -353,7 +343,7 @@ namespace Microcode
                     object [] actualArgs = new object [args.Length - 1];
                     for (int i = 0; i < actualArgs.Length; i++)
                         actualArgs [i] = args [i + 1];
-                    answer = new StandardEnvironment (closure, actualArgs);
+                    answer = new StandardEnvironment<StandardLambda,StandardClosure> (closure, actualArgs);
                     break;
 
                      // throw new NotImplementedException ();
@@ -547,7 +537,7 @@ namespace Microcode
                     break;
 
                 case TC.EXTENDED_PROCEDURE:
-                    banswer = arg1 is ExtendedClosure;
+                    banswer = arg1 is StandardExtendedClosure;
                     break;
 
                 case TC.FIXNUM:
@@ -607,7 +597,9 @@ namespace Microcode
                     break;
 
                 case TC.PROCEDURE:
-                    banswer = arg1 is Closure;
+                    banswer = arg1 is StandardClosure ||
+                        arg1 is StaticClosure ||
+                        arg1 is SimpleClosure;
                     break;
 
                 case TC.RATNUM:
@@ -823,13 +815,13 @@ namespace Microcode
                     break;
 
                 case TC.ENVIRONMENT:
-                    ClosureBase closure = (ClosureBase) ((Cons) arg1).Car;
+                    StandardClosure closure = (StandardClosure) ((Cons) arg1).Car;
                     object tail = ((Cons) arg1).Cdr;
                     object [] initialValues = 
                         tail == null 
                         ? new object [0]
                         : ((Cons) tail).ToVector ();
-                    answer = new StandardEnvironment (closure, initialValues);
+                    answer = new StandardEnvironment<StandardLambda, StandardClosure> (closure, initialValues);
                     break;
 
                 case TC.PCOMB3:

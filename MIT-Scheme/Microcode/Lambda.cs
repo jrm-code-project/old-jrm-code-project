@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics; 
-using System.Linq;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
@@ -12,7 +10,7 @@ namespace Microcode
     /// Base class for lambda expressions.
     /// </summary>
     [Serializable]
-    abstract class LambdaBase : SCode
+    abstract public class LambdaBase : SCode
     {
         static public readonly Symbol InternalLambda = Symbol.Make ("#[internal-lambda]");
         static public readonly Symbol Unnamed = Symbol.Make ("#[unnamed-procedure]");
@@ -26,29 +24,25 @@ namespace Microcode
         protected readonly Symbol [] lambdaFormals;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected ICollection<Symbol> freeVariables;
+        protected ICollection<Symbol> lambdaFreeVariables;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected SCode lambdaBody;
 
-        protected object [] lambdaStatics;
-        protected int [] staticMapping;
-
-        public readonly int internalLambdaCount;
+        protected StaticMapping [] staticMapping;
 
         // Count of times this lambda is closed over.
         internal long closeCount = 0;
         // Count of times this lambda body is evaluated.
         internal long evaluationCount = 0;
 
-        protected LambdaBase (Symbol name, Symbol [] formals, SCode body)
+        protected LambdaBase (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
         {
             this.lambdaName = name;
             this.lambdaFormals = formals;
             this.lambdaBody = body;
-            this.freeVariables = new List<Symbol> (body.ComputeFreeVariables ().Except<Symbol> (formals));
-            this.internalLambdaCount = body.LambdaCount ();
-
+            this.lambdaFreeVariables = freeVariables;
+            this.staticMapping = staticMapping;
 #if DEBUG
             // Paranoia:  check for duplicate names
             if (name != Dummy)
@@ -92,9 +86,42 @@ namespace Microcode
 #endif   
         }
 
+        protected LambdaBase (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables)
+            : this (name, formals, body, freeVariables, null)
+        {
+        }
+
+        static protected ICollection<Symbol> ConstructFreeVariables (SCode body, Symbol [] formals)
+        {
+            HashSet<Symbol> freeVariableSet = new HashSet<Symbol> ();
+            body.CollectFreeVariables (freeVariableSet);
+            foreach (Symbol formal in formals)
+                freeVariableSet.Remove (formal);
+            freeVariableSet.TrimExcess ();
+            return freeVariableSet;
+        }
+
+        protected LambdaBase (Symbol name, Symbol [] formals, SCode body)
+            : this (name, formals, body, 
+            ConstructFreeVariables (body, formals),
+            null)
+        {        
+        }
+
         public Symbol Name { [DebuggerStepThrough] get { return this.lambdaName; } }
         public Symbol [] Formals { [DebuggerStepThrough] get { return this.lambdaFormals; } }
         public SCode Body { [DebuggerStepThrough] get { return this.lambdaBody; } }
+
+        public ICollection<Symbol> FreeVariables { [DebuggerStepThrough] get { return this.lambdaFreeVariables; } }
+
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
+        {
+            // bug in library, if no lambdaFreeVariables, null ptr exception
+            if (this.lambdaFreeVariables.Count > 0) {
+                foreach (Symbol variable in this.lambdaFreeVariables)
+                    freeVariableSet.Add (variable);
+            }
+        }
 
         public int LexicalOffset (object name)
         {
@@ -106,21 +133,27 @@ namespace Microcode
             // return Array.IndexOf (this.lambdaFormals, ratorName);
         }
 
-
         public int StaticOffset (object name, Environment environment)
         {
-            if (this.lambdaStatics == null)
-                this.lambdaStatics = environment.GetStaticMappingNames (this.freeVariables);
-            for (int i = 0; i < this.lambdaStatics.Length; i++)
-                if (name == this.lambdaStatics [i])
+            if (this.staticMapping == null) {
+                throw new NotImplementedException ("Static mapping should be set by now");
+                //Debugger.Break ();
+                //this.staticMapping = environment.GetStaticMapping (this.lambdaFreeVariables);
+                //StaticMapping.ValidateStaticMapping (this.staticMapping);
+            }
+            for (int i = 0; i < this.staticMapping.Length; i++)
+                if (name == this.staticMapping [i].name)
                     return i;
             return -1;
         }
 
-        public int [] GetStaticMapping (Environment environment)
+        public StaticMapping [] GetStaticMapping (Environment environment)
         {
-            if (this.staticMapping == null)
-                this.staticMapping = environment.GetStaticMapping (this.freeVariables);
+            if (this.staticMapping == null) {
+                throw new NotImplementedException ();
+                //this.staticMapping = environment.GetStaticMapping (this.lambdaFreeVariables);
+                //StaticMapping.ValidateStaticMapping (this.staticMapping);
+            }
             return this.staticMapping;
         }
 
@@ -128,24 +161,6 @@ namespace Microcode
         {
             // Should check for shadowing.
             return this.lambdaBody.MutatesAny (formals);
-        }
-
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return this.freeVariables;
-        }
-
-        public PartialClosure PartialClose (Environment environment, int [] mapping)
-        {
-            if (this.staticMapping != null)
-                throw new NotImplementedException ();
-            this.staticMapping = mapping;
-            return new PartialClosure (this, environment);
-        }
-
-        public override int LambdaCount ()
-        {
-            return 1;
         }
     }
 
@@ -164,6 +179,16 @@ namespace Microcode
         {
         }
 
+        protected Lambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables)
+            : base (name, formals, body, freeVariables)
+        {
+        }
+
+        protected Lambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+            : base (name, formals, body, freeVariables, staticMapping)
+        {
+        }
+
         public static Lambda Make (Symbol name, Symbol [] formals, SCode body)
         {
             if (body == null)
@@ -173,11 +198,31 @@ namespace Microcode
             if (name == null)
                 throw new ArgumentNullException ("name");
             return
-                new StandardLambda (name, formals, body);
-                //body.CallsTheEnvironment () ? (Lambda) new StandardLambda (name, formals, body) :
-                //(Lambda) new StaticLambda (name, formals, body);
-                //body.MutatesAny (formals) ? (Lambda) new StaticLambda (name, formals, body) :
-                //(Lambda) new SimpleLambda (name, formals, body);
+                ((! Configuration.EnableLambdaOptimization) ||
+                 (! Configuration.EnableStaticLambda) ||
+                 (! Configuration.EnableVariableOptimization) ||
+                 (! Configuration.EnableStaticBinding) ||
+                  body.CallsTheEnvironment ()) ? (Lambda) new StandardLambda (name, formals, body) :
+                body.MutatesAny (formals) ? (Lambda) new StaticLambda (name, formals, body) :
+                (Lambda) new SimpleLambda (name, formals, body);
+        }
+
+        internal static Lambda Make (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+        {
+            if (body == null)
+                throw new ArgumentNullException ("body");
+            if (formals == null)
+                throw new ArgumentNullException ("formals");
+            if (name == null)
+                throw new ArgumentNullException ("name");
+            return
+                ((! Configuration.EnableLambdaOptimization) ||
+                 (! Configuration.EnableStaticLambda) ||
+                (! Configuration.EnableVariableOptimization) ||
+                (! Configuration.EnableStaticBinding) ||
+                body.CallsTheEnvironment ()) ? (Lambda) new StandardLambda (name, formals, body, freeVariables, staticMapping) :
+                body.MutatesAny (formals) ? (Lambda) new StaticLambda (name, formals, body, freeVariables, staticMapping) :
+                (Lambda) new SimpleLambda (name, formals, body, freeVariables, staticMapping);
         }
 
         public static SCode Make (object name, object formals, object body)
@@ -222,7 +267,8 @@ namespace Microcode
             {
                 // ugh!  but the advice mechanism uses it.
                 this.lambdaBody = EnsureSCode (value);
-                this.freeVariables = new List<Symbol> (this.lambdaBody.ComputeFreeVariables ().Except<Symbol> (this.lambdaFormals));
+                //this.lambdaFreeVariables = new List<Symbol> (this.lambdaBody.ComputeFreeVariables ().Except<Symbol> (this.lambdaFormals));
+                this.lambdaFreeVariables = ConstructFreeVariables (this.lambdaBody, this.lambdaFormals);
             }
         }
 
@@ -274,6 +320,24 @@ namespace Microcode
             this.rest = rest;
         }
 
+        protected ExtendedLambda (Symbol name, Symbol [] formals,
+    SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVariables)
+            : base (name, formals, body, freeVariables)
+        {
+            this.required = required;
+            this.optional = optional;
+            this.rest = rest;
+        }
+
+        protected ExtendedLambda (Symbol name, Symbol [] formals,
+SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVariables, StaticMapping [] mapping)
+            : base (name, formals, body, freeVariables, mapping)
+        {
+            this.required = required;
+            this.optional = optional;
+            this.rest = rest;
+        }
+
         public static LambdaBase Make (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
@@ -311,12 +375,6 @@ namespace Microcode
         {
             answer = arg is ExtendedLambda;
             return false;
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
-        {
-            PartialResult pbody = this.lambdaBody.PartialEval (environment.PartialExtend (this));
-            return new PartialResult (ExtendedLambda.Make (this.lambdaName, this.lambdaFormals, pbody.Residual, this.required, this.optional, this.rest));
         }
 
         #region ISystemHunk3 Members
@@ -384,6 +442,15 @@ namespace Microcode
         {
         }
 
+        internal StandardExtendedLambda (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVariables)
+            : base (name, formals, body, required, optional, rest, freeVariables)
+        {
+        }
+
+        internal StandardExtendedLambda (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVariables, StaticMapping []  staticMapping)
+            : base (name, formals, body, required, optional, rest, freeVariables, staticMapping)
+        {
+        }
         internal static new StandardExtendedLambda Make (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest)
         {
             if (body == null)
@@ -401,19 +468,25 @@ namespace Microcode
             return true;
         }
 
-        internal StandardExtendedClosure Close (Environment environment)
-        {
-            this.closeCount += 1;
-            return new StandardExtendedClosure (this, environment);
-        }
-
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("StandardExtendedLambda.EvalStep");
 #endif
-            answer = environment.CloseOver (this);
+            this.closeCount += 1;
+            answer = new StandardExtendedClosure (this, environment);
             return false;
+        }
+
+        internal override PartialResult PartialEval (PartialEnvironment environment)
+        {
+            PartialClosure<StandardExtendedLambda> closure = new PartialClosure<StandardExtendedLambda> (this, environment);
+
+            SCode pbody = this.lambdaBody.PartialEval (new PartialStandardExtendedEnvironment (closure)).Residual;
+
+            return new PartialResult (new StandardExtendedLambda (this.lambdaName, this.lambdaFormals, pbody,
+                this.required, this.optional, this.rest,
+                this.lambdaFreeVariables, closure.StaticMapping));
         }
 
         #region ISerializable Members
@@ -447,6 +520,21 @@ namespace Microcode
             info.AddValue ("required", this.required);
             info.AddValue ("optional", this.optional);
             info.AddValue ("rest", this.rest);
+            info.AddValue ("freeVariableCount", this.lambdaFreeVariables.Count);
+            int index = 0;
+            if (this.lambdaFreeVariables.Count > 0) {
+                foreach (Symbol freeVariable in this.lambdaFreeVariables) {
+                    if (freeVariable.IsInterned ()) {
+                        info.AddValue ("fv_" + index + "_interned", true);
+                        info.AddValue ("fv_" + index + "_name", freeVariable.ToString ());
+                    }
+                    else {
+                        info.AddValue ("fv_" + index + "_interned", false);
+                        info.AddValue ("fv_" + index, freeVariable);
+                    }
+                    index += 1;
+                }
+            }
             info.AddValue ("body", this.Body);
         }
 
@@ -461,6 +549,9 @@ namespace Microcode
 
         [NonSerialized]
         Symbol [] formals;
+
+        [NonSerialized]
+        HashSet<Symbol> freeVariables;
 
         [NonSerialized]
         SCode body;
@@ -490,6 +581,13 @@ namespace Microcode
             this.required = info.GetUInt32 ("required");
             this.optional = info.GetUInt32 ("optional");
             this.rest = info.GetBoolean ("rest");
+            uint freeVariableCount = info.GetUInt32 ("freeVariableCount");
+            this.freeVariables = new HashSet<Symbol> ();
+            for (int i = 0; i < freeVariableCount; i++) {
+                freeVariables.Add (info.GetBoolean ("fv_" + i + "_interned") ?
+                    Symbol.Make (info.GetString ("fv_" + i + "_name")) :
+                    (Symbol) info.GetValue ("fv_" + i, typeof (Symbol)));
+            }
             this.body = (SCode) info.GetValue ("body", typeof (SCode));
         }
 
@@ -507,8 +605,8 @@ namespace Microcode
         public object GetRealObject (StreamingContext context)
         {
             if (this.realObject == null)
-                this.realObject = StandardExtendedLambda.Make (this.name, this.formals,
-                    this.body, this.required, this.optional, this.rest);
+                this.realObject = new StandardExtendedLambda (this.name, this.formals,
+                    this.body, this.required, this.optional, this.rest, this.freeVariables);
             return this.realObject;
         }
         #endregion
@@ -521,15 +619,19 @@ namespace Microcode
     [Serializable]
     sealed class StandardLambda : Lambda, ISerializable
     {
-        internal StandardLambda (Symbol name, Symbol [] formals, SCode body)
+        public StandardLambda (Symbol name, Symbol [] formals, SCode body)
             : base (name, formals, body)
         {
         }
 
-        internal StandardClosure Close (Environment environment)
+        public StandardLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables)
+            : base (name, formals, body, freeVariables)
         {
-            this.closeCount += 1;
-            return new StandardClosure (this, environment);
+        }
+
+        public StandardLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+            : base (name, formals, body, freeVariables, staticMapping)
+        {
         }
 
         public override bool CallsTheEnvironment ()
@@ -542,8 +644,18 @@ namespace Microcode
 #if DEBUG
             Warm ("StandardLambda.EvalStep");
 #endif
-            answer = environment.CloseOver(this);
+            this.closeCount += 1;
+            answer = new StandardClosure (this, environment);
             return false;
+        }
+
+        internal override PartialResult PartialEval (PartialEnvironment environment)
+        {
+            PartialClosure<StandardLambda> closure = new PartialClosure<StandardLambda> (this, environment);
+
+            SCode pbody = this.lambdaBody.PartialEval (new PartialStandardEnvironment (closure)).Residual;
+
+            return new PartialResult (StandardLambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMapping));
         }
 
         #region ISerializable Members
@@ -574,17 +686,25 @@ namespace Microcode
                     info.AddValue ("arg_" + i, this.Formals [i]);
                 }
             }
+            info.AddValue ("freeVariableCount", this.lambdaFreeVariables.Count);
+            int index = 0;
+            if (this.lambdaFreeVariables.Count > 0) {
+                foreach (Symbol freeVariable in this.lambdaFreeVariables) {
+                    if (freeVariable.IsInterned ()) {
+                        info.AddValue ("fv_" + index + "_interned", true);
+                        info.AddValue ("fv_" + index + "_name", freeVariable.ToString ());
+                    }
+                    else {
+                        info.AddValue ("fv_" + index + "_interned", false);
+                        info.AddValue ("fv_" + index, freeVariable);
+                    }
+                    index += 1;
+                }
+            }
             info.AddValue ("body", this.Body);
         }
 
         #endregion
-
-        internal override PartialResult PartialEval (Environment environment)
-        {
-            Environment extendedEnvironment = environment.PartialExtend (this);
-            SCode pbody = this.lambdaBody.PartialEval (extendedEnvironment).Residual;
-            return new PartialResult (StandardLambda.Make (this.lambdaName, this.lambdaFormals, pbody));
-        }
     }
 
     [Serializable]
@@ -600,6 +720,9 @@ namespace Microcode
         SCode body;
 
         [NonSerialized]
+        HashSet<Symbol> freeVariables;
+
+        [NonSerialized]
         StandardLambda realObject;
 
         StandardLambdaDeserializer (SerializationInfo info, StreamingContext context)
@@ -613,6 +736,13 @@ namespace Microcode
                 formals [i] = info.GetBoolean ("arg_" + i + "_interned") ?
                     Symbol.Make (info.GetString ("arg_" + i + "_name")) :
                     (Symbol) info.GetValue ("arg_" + i, typeof (Symbol));
+            }
+            uint freeVariableCount = info.GetUInt32 ("freeVariableCount");
+            this.freeVariables = new HashSet<Symbol> ();
+            for (int i = 0; i < freeVariableCount; i++) {
+                freeVariables.Add (info.GetBoolean ("fv_" + i + "_interned") ?
+                    Symbol.Make (info.GetString ("fv_" + i + "_name")) :
+                    (Symbol) info.GetValue ("fv_" + i, typeof (Symbol)));
             }
             this.body = (SCode) info.GetValue ("body", typeof (SCode));
         }
@@ -631,8 +761,338 @@ namespace Microcode
         public object GetRealObject (StreamingContext context)
         {
             if (this.realObject == null)
-                this.realObject = (StandardLambda) Lambda.Make (this.name, this.formals,
-                    this.body);
+                this.realObject = new StandardLambda (this.name, this.formals,
+                    this.body, this.freeVariables);
+            return this.realObject;
+        }
+        #endregion
+    }
+
+    // Base class for lambdas that do not support incremental variables.
+    abstract class StaticLambdaBase : Lambda
+    {
+        protected StaticLambdaBase (Symbol name, Symbol [] formals, SCode body)
+            : base (name, formals, body)
+        {
+        }
+
+        protected StaticLambdaBase (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables)
+            : base (name, formals, body, freeVariables)
+        {
+        }
+
+        protected StaticLambdaBase (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+            : base (name, formals, body, freeVariables, staticMapping)
+        {
+        }
+
+        public override bool CallsTheEnvironment ()
+        {
+            return false;
+        }
+
+    }
+
+    /// <summary>
+    /// A StaticLambda creates StaticClosures.  These support first-class
+    /// environments that allow incremental definition and variable sharing.
+    /// </summary>
+    [Serializable]
+    sealed class StaticLambda : StaticLambdaBase, ISerializable
+    {
+        public StaticLambda (Symbol name, Symbol [] formals, SCode body)
+            : base (name, formals, body)
+        {
+        }
+
+        public StaticLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables)
+            : base (name, formals, body, freeVariables)
+        {
+        }
+
+        public StaticLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+            : base (name, formals, body, freeVariables, staticMapping)
+        {
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("StaticLambda.EvalStep");
+#endif
+            this.closeCount += 1;
+            answer = new StaticClosure (this, environment.BaseEnvironment, environment.GetValueCells (this.staticMapping));
+            return false;
+        }
+
+        internal override PartialResult PartialEval (PartialEnvironment environment)
+        {
+            PartialClosure<StaticLambda> closure = new PartialClosure<StaticLambda> (this, environment);
+
+            SCode pbody = this.lambdaBody.PartialEval (new PartialStaticEnvironment (closure)).Residual;
+
+            return new PartialResult (StaticLambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMapping));
+        }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (StaticLambdaDeserializer));
+            // We specially handle the names and formals
+            // in order to ensure that they are available when
+            // we deserialize the lambda.
+            if (this.Name.IsInterned ()) {
+                info.AddValue ("name_interned", true);
+                info.AddValue ("name", this.Name.ToString ());
+            }
+            else {
+                info.AddValue ("name_interned", false);
+                info.AddValue ("name", this.Name);
+            }
+            info.AddValue ("formalCount", this.Formals.Length);
+            for (int i = 0; i < this.Formals.Length; i++) {
+                if (this.Formals [i].IsInterned ()) {
+                    info.AddValue ("arg_" + i + "_interned", true);
+                    info.AddValue ("arg_" + i + "_name", this.Formals [i].ToString ());
+                }
+                else {
+                    info.AddValue ("arg_" + i + "_interned", false);
+                    info.AddValue ("arg_" + i, this.Formals [i]);
+                }
+            }
+            info.AddValue ("freeVariableCount", this.lambdaFreeVariables.Count);
+            int index = 0;
+            if (this.lambdaFreeVariables.Count > 0) {
+                foreach (Symbol freeVariable in this.lambdaFreeVariables) {
+                    if (freeVariable.IsInterned ()) {
+                        info.AddValue ("fv_" + index + "_interned", true);
+                        info.AddValue ("fv_" + index + "_name", freeVariable.ToString ());
+                    }
+                    else {
+                        info.AddValue ("fv_" + index + "_interned", false);
+                        info.AddValue ("fv_" + index, freeVariable);
+                    }
+                    index += 1;
+                }
+            }
+            info.AddValue ("body", this.Body);
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    sealed class StaticLambdaDeserializer : ISerializable, IObjectReference
+    {
+        [NonSerialized]
+        Symbol name;
+
+        [NonSerialized]
+        Symbol [] formals;
+
+        [NonSerialized]
+        SCode body;
+
+        [NonSerialized]
+        HashSet<Symbol> freeVariables;
+
+        [NonSerialized]
+        StaticLambda realObject;
+
+        StaticLambdaDeserializer (SerializationInfo info, StreamingContext context)
+        {
+            this.name = info.GetBoolean ("name_interned") ?
+                Symbol.Make (info.GetString ("name")) :
+                (Symbol) info.GetValue ("name", typeof (Symbol));
+            uint formalCount = info.GetUInt32 ("formalCount");
+            this.formals = new Symbol [formalCount];
+            for (int i = 0; i < formalCount; i++) {
+                formals [i] = info.GetBoolean ("arg_" + i + "_interned") ?
+                    Symbol.Make (info.GetString ("arg_" + i + "_name")) :
+                    (Symbol) info.GetValue ("arg_" + i, typeof (Symbol));
+            }
+            uint freeVariableCount = info.GetUInt32 ("freeVariableCount");
+            this.freeVariables = new HashSet<Symbol> ();
+            for (int i = 0; i < freeVariableCount; i++) {
+                freeVariables.Add (info.GetBoolean ("fv_" + i + "_interned") ?
+                    Symbol.Make (info.GetString ("fv_" + i + "_name")) :
+                    (Symbol) info.GetValue ("fv_" + i, typeof (Symbol)));
+            }
+            this.body = (SCode) info.GetValue ("body", typeof (SCode));
+        }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            throw new NotImplementedException ();
+        }
+        #endregion
+
+        #region IObjectReference Members
+
+        public object GetRealObject (StreamingContext context)
+        {
+            if (this.realObject == null)
+                this.realObject = new StaticLambda (this.name, this.formals,
+                    this.body, this.freeVariables);
+            return this.realObject;
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// A SimpleLambda creates SimpleClosures.  These are the lightest weight
+    /// closures.
+    /// </summary>
+    [Serializable]
+    sealed class SimpleLambda : StaticLambdaBase, ISerializable
+    {
+        public SimpleLambda (Symbol name, Symbol [] formals, SCode body)
+            : base (name, formals, body)
+        {
+        }
+
+        public SimpleLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables)
+            : base (name, formals, body, freeVariables)
+        {
+        }
+
+        public SimpleLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+            : base (name, formals, body, freeVariables, staticMapping)
+        {
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("SimpleLambda.EvalStep");
+            if (this.staticMapping == null)
+                throw new NotImplementedException("Static mapping should not be null.");
+#endif
+            this.closeCount += 1;
+            // Use the base environment for lookup.
+            answer = new SimpleClosure (this, environment.BaseEnvironment, environment.GetValueCells (this.staticMapping));
+            return false;
+        }
+
+        internal override PartialResult PartialEval (PartialEnvironment environment)
+        {
+            PartialClosure<SimpleLambda> closure = new PartialClosure<SimpleLambda> (this, environment);
+
+            SCode pbody = this.lambdaBody.PartialEval (new PartialSimpleEnvironment (closure)).Residual;
+
+            return new PartialResult (Lambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMapping));
+        }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (SimpleLambdaDeserializer));
+            // We specially handle the names and formals
+            // in order to ensure that they are available when
+            // we deserialize the lambda.
+            if (this.Name.IsInterned ()) {
+                info.AddValue ("name_interned", true);
+                info.AddValue ("name", this.Name.ToString ());
+            }
+            else {
+                info.AddValue ("name_interned", false);
+                info.AddValue ("name", this.Name);
+            }
+            info.AddValue ("formalCount", this.Formals.Length);
+            for (int i = 0; i < this.Formals.Length; i++) {
+                if (this.Formals [i].IsInterned ()) {
+                    info.AddValue ("arg_" + i + "_interned", true);
+                    info.AddValue ("arg_" + i + "_name", this.Formals [i].ToString ());
+                }
+                else {
+                    info.AddValue ("arg_" + i + "_interned", false);
+                    info.AddValue ("arg_" + i, this.Formals [i]);
+                }
+            }
+            info.AddValue ("freeVariableCount", this.lambdaFreeVariables.Count);
+            int index = 0;
+            if (this.lambdaFreeVariables.Count > 0) {
+                foreach (Symbol freeVariable in this.lambdaFreeVariables) {
+                    if (freeVariable.IsInterned ()) {
+                        info.AddValue ("fv_" + index + "_interned", true);
+                        info.AddValue ("fv_" + index + "_name", freeVariable.ToString ());
+                    }
+                    else {
+                        info.AddValue ("fv_" + index + "_interned", false);
+                        info.AddValue ("fv_" + index, freeVariable);
+                    }
+                    index += 1;
+                }
+            }
+            info.AddValue ("body", this.Body);
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    sealed class SimpleLambdaDeserializer : ISerializable, IObjectReference
+    {
+        [NonSerialized]
+        Symbol name;
+
+        [NonSerialized]
+        Symbol [] formals;
+
+        [NonSerialized]
+        SCode body;
+
+        [NonSerialized]
+        HashSet <Symbol> freeVariables;
+
+        [NonSerialized]
+        SimpleLambda realObject;
+
+        SimpleLambdaDeserializer (SerializationInfo info, StreamingContext context)
+        {
+            this.name = info.GetBoolean ("name_interned") ?
+                Symbol.Make (info.GetString ("name")) :
+                (Symbol) info.GetValue ("name", typeof (Symbol));
+            uint formalCount = info.GetUInt32 ("formalCount");
+            this.formals = new Symbol [formalCount];
+            for (int i = 0; i < formalCount; i++) {
+                formals [i] = info.GetBoolean ("arg_" + i + "_interned") ?
+                    Symbol.Make (info.GetString ("arg_" + i + "_name")) :
+                    (Symbol) info.GetValue ("arg_" + i, typeof (Symbol));
+            }
+            uint freeVariableCount = info.GetUInt32 ("freeVariableCount");
+            this.freeVariables = new HashSet<Symbol> ();
+            for (int i = 0; i < freeVariableCount; i++) {
+                freeVariables.Add (info.GetBoolean ("fv_" + i + "_interned") ?
+                    Symbol.Make (info.GetString ("fv_" + i + "_name")) :
+                    (Symbol) info.GetValue ("fv_" + i, typeof (Symbol)));
+            }
+            this.body = (SCode) info.GetValue ("body", typeof (SCode));
+        }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            throw new NotImplementedException ();
+        }
+        #endregion
+
+        #region IObjectReference Members
+
+        public object GetRealObject (StreamingContext context)
+        {
+            if (this.realObject == null)
+                this.realObject = new SimpleLambda (this.name, this.formals,
+                    this.body, this.freeVariables);
             return this.realObject;
         }
         #endregion

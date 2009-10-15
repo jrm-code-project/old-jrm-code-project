@@ -88,7 +88,7 @@ namespace Microcode
 
             Environment accessenv = Environment.ToEnvironment (ev);
 #if DEBUG
-            //if (this.breakOnReference) Debugger.Break ();
+            if (this.breakOnReference) Debugger.Break ();
 #endif
             if (accessenv.DeepSearch (out answer, this.var)) throw new NotImplementedException ();
             return false;
@@ -142,20 +142,15 @@ namespace Microcode
             info.AddValue ("env", this.env);
         }
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return this.env.ComputeFreeVariables ();
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult penv = this.env.PartialEval (environment);
             return new PartialResult (penv.Residual == this.env ? this : Access.Make (penv.Residual, this.var));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return this.env.LambdaCount ();
+            this.env.CollectFreeVariables (freeVariableSet);
         }
     }
 
@@ -295,6 +290,15 @@ namespace Microcode
             }
         }
 
+        public Variable Target
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.target;
+            }
+        }
+
         public SCode Value
         {
             [DebuggerStepThrough]
@@ -371,6 +375,11 @@ namespace Microcode
                 environment = env;
                 return false;
             }
+#if DEBUG
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
 
             if (environment.Assign (out answer, this.target.Name, newValue)) throw new NotImplementedException ();
             return false;
@@ -390,23 +399,16 @@ namespace Microcode
             info.AddValue ("value", this.value);
         }
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            SCode v = this.value;
-            ICollection<Symbol> fv = v.ComputeFreeVariables ();
-            List<Symbol> x = new List<Symbol> (fv.Union<Symbol> (singletonFreeVariable (this.target.Name)));
-            return x;
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult val = this.value.PartialEval (environment);
             return new PartialResult (this.value == val.Residual ? this : Assignment.Make (this.target, val.Residual));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return this.value.LambdaCount ();
+            freeVariableSet.Add (this.target.Name);
+            this.value.CollectFreeVariables (freeVariableSet);
         }
     }
 
@@ -437,6 +439,11 @@ namespace Microcode
 
         public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
         {
+#if DEBUG
+            if (this.expression.Target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
             if (environment.Assign (out answer, this.expression.Name, value)) throw new NotImplementedException ();
             return false;
         }
@@ -572,6 +579,7 @@ namespace Microcode
                (
                ((name.ToString()) == "no symbol has this name") ||
                ((name.ToString()) == "%record?") ||
+               //((name.ToString()) == "the-console-port") ||
                //((name.ToString()) == "fixed-objects") ||
                //((name.ToString()) == "grow-table!") ||
                //(((string) name) == "cgen/expression") ||
@@ -696,19 +704,21 @@ namespace Microcode
             info.AddValue ("name", this.varname);
         }
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return singletonFreeVariable (this.varname);
-        }
-
         PartialResult makeArgument (int offset)
         {
-            return new PartialResult (Argument.Make (this.varname, offset));
+            return new PartialResult (Configuration.EnableArgumentBinding ? Argument.Make (this.varname, offset) : this);
         }
 
         PartialResult makeStatic (int offset)
         {
-            return new PartialResult (StaticVariable.Make (this.varname, offset));
+            return new PartialResult (Configuration.EnableStaticBinding ? StaticVariable.Make (this.varname, offset) :
+                                      Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) :
+                                      this);
+        }
+
+        PartialResult makeTopLevel (ValueCell cell)
+        {
+            return new PartialResult (TopLevelVariable.Make (this.varname, cell));
         }
 
         PartialResult makeGlobal (GlobalEnvironment env)
@@ -716,23 +726,27 @@ namespace Microcode
             return new PartialResult (GlobalVariable.Make (this.varname, env, null));
         }
 
-        PartialResult makeFree (int skipDepth)
+        PartialResult makeFree ()
         {
-            return new PartialResult (FreeVariable.Make (this.varname, skipDepth));
+            return new PartialResult (Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) : this);
         }
 
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
-            return environment.LocateVariable<PartialResult> (this.varname,
-                makeArgument,
-                makeStatic,
-                makeGlobal,
-                makeFree);
+            return
+                Configuration.EnableVariableOptimization ?
+                environment.LocateVariable<PartialResult> (this.varname,
+                                                            makeArgument,
+                                                            makeStatic,
+                                                            makeTopLevel,
+                                                            makeGlobal,
+                                                            makeFree) :
+                new PartialResult (this);
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return 0;
+            freeVariableSet.Add (this.varname);
         }
     }
 
@@ -856,7 +870,6 @@ namespace Microcode
         }
     }
 
-
     /// <summary>
     /// A static variable is bound in the static block of a closure.
     /// </summary>
@@ -866,7 +879,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly int offset;
 #if DEBUG
-        static Histogram<int> staticOffsets = new Histogram<int> ();
+        static protected Histogram<int> staticOffsets = new Histogram<int> ();
 #endif
         protected StaticVariable (Symbol name, int offset)
             : base (name)
@@ -949,19 +962,44 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class FreeVariable : Variable
+    sealed class TopLevelVariable : Variable
     {
-        readonly int depth;
+        readonly ValueCell cell;
 
-        FreeVariable (Symbol name, int depth)
+        TopLevelVariable (Symbol name, ValueCell cell)
             : base (name)
         {
-            this.depth = depth;
+            this.cell = cell;
         }
 
-        public static FreeVariable Make (Symbol name, int depth)
+        public static TopLevelVariable Make (Symbol name, ValueCell cell)
         {
-            return new FreeVariable (name, depth);
+            return new TopLevelVariable (name, cell);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("TopLevelVariable.EvalStep");
+            if (this.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            return cell.GetValue (out answer);
+        }
+    }
+
+    [Serializable]
+    sealed class FreeVariable : Variable
+    {
+        FreeVariable (Symbol name)
+            : base (name)
+        {
+        }
+
+        public static new FreeVariable Make (Symbol name)
+        {
+            return new FreeVariable (name);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -980,12 +1018,28 @@ namespace Microcode
             //if (start.DeepSearch (out answer, this.varname)) {
             //    throw new NotImplementedException ();
             //}
+            //if (this.lastCell != null) {
+            //    if (this.lastCell.GetValue (out answer)) {
+            //        throw new NotImplementedException ();
+            //    }
+            //    return false;
+            //}
+            Environment baseEnvironment = environment.BaseEnvironment;
+            ValueCell cell;
+            if (baseEnvironment.FreeReference (out cell, this.varname))
+                throw new NotImplementedException ("Error with free variable " + this.varname);
+            return cell.GetValue (out answer);
+            
+            //if (this.lastCell == null)
+            //    this.lastCell = cell;
 
-            Environment baseEnvironment = environment.GetBaseEnvironment ();
-            if (baseEnvironment.FreeReference (out answer, this.varname)) {
-                throw new NotImplementedException ();
-            }
-            return false;
+            //if (this.lastCell != null && this.lastCell != cell) {
+            //    Debugger.Break ();
+            //}
+            //if (this.lastCell.GetValue (out answer)) {
+            //    throw new NotImplementedException ();
+            //}
+            //return false;
         }
     }
 }

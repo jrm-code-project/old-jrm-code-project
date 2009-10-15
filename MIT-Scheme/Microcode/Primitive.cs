@@ -573,6 +573,7 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
 #if DEBUG
+            SCode.location = "-";
             hotPrimitives.Note (this);
             SCode.location = this.Name.ToString();
 #endif
@@ -650,6 +651,7 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG
+            SCode.location = "-";
             hotPrimitives.Note (this);
             SCode.location = this.Name.ToString();
 #endif
@@ -857,6 +859,7 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
 #if DEBUG
+            SCode.location = "-";
             hotPrimitives.Note (this);
             SCode.location = this.Name.ToString();
 #endif
@@ -869,6 +872,7 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG
+            SCode.location = "-";
             hotPrimitives.Note (this);
             SCode.location = this.Name.ToString();
 #endif

@@ -53,6 +53,9 @@
   <ItemGroup>
     <Compile Include="BigInteger.cs" />
     <Compile Include="Error.cs" />
+    <Compile Include="ITopLevelEnvironment.cs" />
+    <Compile Include="PartialClosure.cs" />
+    <Compile Include="PartialEnvironment.cs" />
     <Compile Include="PartialResult.cs" />
     <Compile Include="PCond1.cs" />
     <Compile Include="BitString.cs" />
@@ -108,6 +111,8 @@
     <Compile Include="SComb.cs" />
     <Compile Include="SComb1.cs" />
     <Compile Include="SComb2.cs" />
+    <Compile Include="StaticMapping.cs" />
+    <Compile Include="Statistics.cs" />
     <Compile Include="Symbol.cs" />
     <Compile Include="Termination.cs" />
     <Compile Include="ValueCell.cs" />

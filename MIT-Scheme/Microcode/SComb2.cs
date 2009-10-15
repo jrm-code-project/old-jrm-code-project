@@ -55,7 +55,7 @@ namespace Microcode
         public static SCode Make (SCode rator, SCode rand0, SCode rand1)
         {
             return
-                //(! Configuration.EnableCombination2Optimization) ? new Combination2(rator, rand0, rand1):
+                (! Configuration.EnableCombination2Optimization) ? new Combination2(rator, rand0, rand1):
                 ////(Configuration.EnableSuperOperators && rator is Lambda) ? Let2.Make ((Lambda) rator, rand0, rand1)
                 //(Configuration.EnableSuperOperators &&
                 // Configuration.EnableCombination2Specialization &&
@@ -65,18 +65,12 @@ namespace Microcode
                 // rator is TopLevelVariable) ? Combination2T.Make ((TopLevelVariable) rator, rand0, rand1) :
                 // (rator is Quotation &&
                 // ! (((Quotation) rator).Quoted is PrimitiveN)) ? Unimplemented():
-                //(Configuration.EnableSuperOperators &&
-                // Configuration.EnableCombination2Specialization &&
-                // rand0 is LexicalVariable) ? Combination2SL.Make (rator, (LexicalVariable) rand0, rand1) :
-                //(Configuration.EnableSuperOperators &&
-                // Configuration.EnableCombination2Specialization &&
-                // rand0 is Quotation) ? Combination2SQ.Make (rator, (Quotation) rand0, rand1) :
-                //(Configuration.EnableSuperOperators &&
-                // Configuration.EnableCombination2Specialization &&
-                // rand1 is LexicalVariable) ? Combination2SSL.Make (rator, rand0, (LexicalVariable) rand1) :
-                //(Configuration.EnableSuperOperators &&
-                // Configuration.EnableCombination2Specialization &&
-                // rand1 is Quotation) ? Combination2SSQ.Make (rator, rand0, (Quotation) rand1) :
+
+                (! Configuration.EnableCombination2Specialization) ? new Combination2 (rator, rand0, rand1) :
+                (rand0 is Argument) ? Combination2XA.Make (rator, (Argument) rand0, rand1) :
+                (rand0 is Quotation) ? Combination2XQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand1 is Argument) ? Combination2XXA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Quotation) ? Combination2XXQ.Make (rator, rand0, (Quotation) rand1) :
                  new Combination2 (rator, rand0, rand1);
         }
 
@@ -251,12 +245,7 @@ namespace Microcode
             info.AddValue ("rand1", this.rand1);
         }
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return new List<Symbol>(this.rator.ComputeFreeVariables().Union (new List<Symbol> (this.rand0.ComputeFreeVariables().Union (this.rand1.ComputeFreeVariables()))));
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult rator = this.rator.PartialEval (environment);
             PartialResult rand0 = this.rand0.PartialEval (environment);
@@ -266,12 +255,11 @@ namespace Microcode
                 rand1.Residual == this.rand1 ? this : Combination2.Make (rator.Residual, rand0.Residual, rand1.Residual));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return
-                this.rator.LambdaCount () +
-                this.rand0.LambdaCount () +
-                this.rand1.LambdaCount ();
+            this.rator.CollectFreeVariables (freeVariableSet);
+            this.rand0.CollectFreeVariables (freeVariableSet);
+            this.rand1.CollectFreeVariables (freeVariableSet);
         }
     }
 
@@ -464,7 +452,7 @@ namespace Microcode
 //                new Combination2L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L.EvalStep");
@@ -474,7 +462,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -482,7 +470,7 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
@@ -490,10 +478,10 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -520,7 +508,7 @@ namespace Microcode
 //                new Combination2A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A.EvalStep");
@@ -530,7 +518,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -538,15 +526,15 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.ArgumentValue (this.ratorOffset), ev0, ev1);
 //        }
 //    }
 
@@ -571,7 +559,7 @@ namespace Microcode
 //                new Combination2A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0.EvalStep");
@@ -581,7 +569,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -589,15 +577,15 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument0Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument0Value, ev0, ev1);
 //        }
 //    }
 
@@ -628,7 +616,7 @@ namespace Microcode
 //                new Combination2A0L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0L.EvalStep");
@@ -636,7 +624,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -644,11 +632,11 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument0Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument0Value, ev0, ev1);
 //        }
 //    }
 
@@ -672,7 +660,7 @@ namespace Microcode
 //                new Combination2A0A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0A.EvalStep");
@@ -680,15 +668,15 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument0Value, closureEnvironment.ArgumentValue (this.rand0Offset), ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument0Value, environment.ArgumentValue (this.rand0Offset), ev1);
 //        }
 //    }
 
@@ -724,7 +712,7 @@ namespace Microcode
 //                new Combination2A0A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0A1.EvalStep");
@@ -732,15 +720,15 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument0Value, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument0Value, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -766,17 +754,17 @@ namespace Microcode
 //                new Combination2A0A1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0A1L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument0Value, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument0Value, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -799,17 +787,17 @@ namespace Microcode
 //                new Combination2A0A1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0A1L1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument0Value, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument0Value, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -861,7 +849,7 @@ namespace Microcode
 //                new Combination2A0L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0L1.EvalStep");
@@ -869,7 +857,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -877,11 +865,11 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument0Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument0Value, ev0, ev1);
 //        }
 //    }
 
@@ -907,21 +895,21 @@ namespace Microcode
 //                new Combination2A0L1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0L1L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument0Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument0Value, ev0, ev1);
 //            throw new NotImplementedException ();
 //        }
 //    }
@@ -945,21 +933,21 @@ namespace Microcode
 //                new Combination2A0L1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0L1L1.EvalStep");
 //#endif
 //            if (this.rand1Offset == this.rand0Offset) Debugger.Break ();
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, closureEnvironment.Argument0Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument0Value, ev0, ev1);
 //        }
 //    }
 
@@ -976,7 +964,7 @@ namespace Microcode
 //                new Combination2A0L1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0L1Q.EvalStep");
@@ -1010,20 +998,20 @@ namespace Microcode
 //                new Combination2A0LL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0LL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, closureEnvironment.Argument0Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument0Value, ev0, ev1);
 //        }
 //    }
 
@@ -1046,21 +1034,21 @@ namespace Microcode
 //                new Combination2A0LL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0LL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument0Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument0Value, ev0, ev1);
 //        }
 //    }
 
@@ -1079,17 +1067,17 @@ namespace Microcode
 //                new Combination2A0LQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0LQ.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument0Value, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument0Value, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -1114,7 +1102,7 @@ namespace Microcode
 //                new Combination2A0Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -1123,14 +1111,14 @@ namespace Microcode
 //            SCode.location = "Combination2A0Q.EvalStep";
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, closureEnvironment.Argument0Value, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument0Value, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -1156,20 +1144,20 @@ namespace Microcode
 //                new Combination2A0QL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0QL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0 = this.rand0Value;
 
-//            object evop = closureEnvironment.Argument0Value;
+//            object evop = environment.Argument0Value;
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -1192,20 +1180,20 @@ namespace Microcode
 //                new Combination2A0QL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0QL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0 = this.rand0Value;
 
-//            object evop = closureEnvironment.Argument0Value;
+//            object evop = environment.Argument0Value;
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -1225,13 +1213,13 @@ namespace Microcode
 //                new Combination2A0QQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0QQ.EvalStep");
 //#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument0Value, this.rand0Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument0Value, this.rand0Value, this.rand1Value);
 //        }
 //    }
 
@@ -1261,7 +1249,7 @@ namespace Microcode
 //                new Combination2A0SL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0SL.EvalStep");
@@ -1269,19 +1257,19 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument0Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument0Value, ev0, ev1);
 //        }
 //    }
 
@@ -1303,7 +1291,7 @@ namespace Microcode
 //                new Combination2A0SA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -1330,7 +1318,7 @@ namespace Microcode
 //                new Combination2A0SA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -1355,7 +1343,7 @@ namespace Microcode
 //                new Combination2A0SL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0SL1.EvalStep");
@@ -1363,19 +1351,19 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument0Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument0Value, ev0, ev1);
 //        }
 //    }
 
@@ -1398,7 +1386,7 @@ namespace Microcode
 //               new Combination2A0SQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A0SQ.EvalStep");
@@ -1406,15 +1394,15 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument0Value, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument0Value, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -1439,7 +1427,7 @@ namespace Microcode
 //                new Combination2A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1.EvalStep");
@@ -1449,7 +1437,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -1457,15 +1445,15 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, ev0, ev1);
 //        }
 //    }
 
@@ -1496,7 +1484,7 @@ namespace Microcode
 //                new Combination2A1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1L.EvalStep");
@@ -1504,7 +1492,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -1512,11 +1500,11 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument1Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument1Value, ev0, ev1);
 //        }
 //    }
 
@@ -1540,7 +1528,7 @@ namespace Microcode
 //                new Combination2A1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1A.EvalStep");
@@ -1548,15 +1536,15 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument1Value, closureEnvironment.ArgumentValue (this.rand0Offset), ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument1Value, environment.ArgumentValue (this.rand0Offset), ev1);
 //        }
 //    }
 
@@ -1578,7 +1566,7 @@ namespace Microcode
 //                new Combination2A1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1A0.EvalStep");
@@ -1586,15 +1574,15 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, environment.Argument0Value, ev1);
 //        }
 //    }
 
@@ -1620,17 +1608,17 @@ namespace Microcode
 //                new Combination2A1A0L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1A0L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, environment.Argument0Value, ev1);
 //        }
 //    }
 
@@ -1653,17 +1641,17 @@ namespace Microcode
 //                new Combination2A1A0L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1A0L1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, environment.Argument0Value, ev1);
 //        }
 //    }
 
@@ -1687,7 +1675,7 @@ namespace Microcode
 //                new Combination2A1A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1A1.EvalStep");
@@ -1695,15 +1683,15 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument1Value, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument1Value, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -1729,17 +1717,17 @@ namespace Microcode
 //                new Combination2A1A1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1A1L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument1Value, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument1Value, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -1762,17 +1750,17 @@ namespace Microcode
 //                new Combination2A1A1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1A1L1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument1Value, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument1Value, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -1824,7 +1812,7 @@ namespace Microcode
 //                new Combination2A1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1L1.EvalStep");
@@ -1832,7 +1820,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -1840,11 +1828,11 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, ev0, ev1);
 //        }
 //    }
 
@@ -1870,21 +1858,21 @@ namespace Microcode
 //                new Combination2A1L1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1L1L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, ev0, ev1);
 //            throw new NotImplementedException ();
 //        }
 //    }
@@ -1908,21 +1896,21 @@ namespace Microcode
 //                new Combination2A1L1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1L1L1.EvalStep");
 //#endif
 //            if (this.rand1Offset == this.rand0Offset) Debugger.Break ();
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, closureEnvironment.Argument1Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, ev0, ev1);
 //        }
 //    }
 
@@ -1939,7 +1927,7 @@ namespace Microcode
 //                new Combination2A1L1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1L1Q.EvalStep");
@@ -1973,20 +1961,20 @@ namespace Microcode
 //                new Combination2A1LL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1LL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, closureEnvironment.Argument1Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, ev0, ev1);
 //        }
 //    }
 
@@ -2009,21 +1997,21 @@ namespace Microcode
 //                new Combination2A1LL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1LL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.Argument1Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.Argument1Value, ev0, ev1);
 //        }
 //    }
 
@@ -2042,17 +2030,17 @@ namespace Microcode
 //                new Combination2A1LQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1LQ.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -2077,7 +2065,7 @@ namespace Microcode
 //                new Combination2A1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -2086,14 +2074,14 @@ namespace Microcode
 //            SCode.location = "Combination2A1Q.EvalStep";
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, closureEnvironment.Argument1Value, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -2119,20 +2107,20 @@ namespace Microcode
 //                new Combination2A1QL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1QL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0 = this.rand0Value;
 
-//            object evop = closureEnvironment.Argument1Value;
+//            object evop = environment.Argument1Value;
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -2155,20 +2143,20 @@ namespace Microcode
 //                new Combination2A1QL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1QL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0 = this.rand0Value;
 
-//            object evop = closureEnvironment.Argument1Value;
+//            object evop = environment.Argument1Value;
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -2188,13 +2176,13 @@ namespace Microcode
 //                new Combination2A1QQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1QQ.EvalStep");
 //#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, this.rand0Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, this.rand0Value, this.rand1Value);
 //        }
 //    }
 
@@ -2224,7 +2212,7 @@ namespace Microcode
 //                new Combination2A1SL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1SL.EvalStep");
@@ -2232,19 +2220,19 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, ev0, ev1);
 //        }
 //    }
 
@@ -2266,7 +2254,7 @@ namespace Microcode
 //                new Combination2A1SA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -2293,7 +2281,7 @@ namespace Microcode
 //                new Combination2A1SA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -2318,7 +2306,7 @@ namespace Microcode
 //                new Combination2A1SL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1SL1.EvalStep");
@@ -2326,19 +2314,19 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, ev0, ev1);
 //        }
 //    }
 
@@ -2361,7 +2349,7 @@ namespace Microcode
 //               new Combination2A1SQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2A1SQ.EvalStep");
@@ -2369,15 +2357,15 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.Argument1Value, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.Argument1Value, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -2409,7 +2397,7 @@ namespace Microcode
 //                new Combination2AL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AL.EvalStep");
@@ -2417,7 +2405,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -2425,11 +2413,11 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, ev1);
 //        }
 //    }
 
@@ -2453,7 +2441,7 @@ namespace Microcode
 //                new Combination2AA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AA.EvalStep");
@@ -2462,15 +2450,15 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                closureEnvironment.ArgumentValue(this.ratorOffset),
-//                closureEnvironment.ArgumentValue (this.rand0Offset),
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                environment.ArgumentValue(this.ratorOffset),
+//                environment.ArgumentValue (this.rand0Offset),
 //                ev1);
 //        }
 //    }
@@ -2497,18 +2485,18 @@ namespace Microcode
 //                new Combination2AAL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AAL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset),
-//                closureEnvironment.ArgumentValue (this.rand0Offset),
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset),
+//                environment.ArgumentValue (this.rand0Offset),
 //                ev1);
 //        }
 //    }
@@ -2528,16 +2516,16 @@ namespace Microcode
 //                new Combination2AAA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AAA.EvalStep");
 //#endif
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset),
-//                closureEnvironment.ArgumentValue (this.rand0Offset),
-//                closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset),
+//                environment.ArgumentValue (this.rand0Offset),
+//                environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -2556,15 +2544,15 @@ namespace Microcode
 //                new Combination2AAA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AAA1.EvalStep");
 //#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset),
-//                closureEnvironment.ArgumentValue (this.rand0Offset),
-//                closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset),
+//                environment.ArgumentValue (this.rand0Offset),
+//                environment.Argument1Value);
 //        }
 //    }
 
@@ -2581,18 +2569,18 @@ namespace Microcode
 //                new Combination2AAL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AAL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset),
-//                closureEnvironment.ArgumentValue (this.rand0Offset),
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset),
+//                environment.ArgumentValue (this.rand0Offset),
 //                ev1);
 //        }
 //    }
@@ -2612,14 +2600,14 @@ namespace Microcode
 //                new Combination2AAQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AAQ.EvalStep");
 //#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset),
-//                closureEnvironment.ArgumentValue (this.rand0Offset),
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset),
+//                environment.ArgumentValue (this.rand0Offset),
 //                this.rand1Value);
 //        }
 //    }
@@ -2642,7 +2630,7 @@ namespace Microcode
 //                new Combination2AL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AL1.EvalStep");
@@ -2650,7 +2638,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -2658,11 +2646,11 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, ev1);
 //        }
 //    }
 
@@ -2688,21 +2676,21 @@ namespace Microcode
 //                new Combination2AL1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AL1L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, ev1);
 //        }
 //    }
 
@@ -2719,21 +2707,21 @@ namespace Microcode
 //               new Combination2AL1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AL1L1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, ev1);
 //        }
 //    }
 
@@ -2753,18 +2741,18 @@ namespace Microcode
 //               new Combination2AL1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AL1Q.EvalStep");
 //#endif
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, this.rand1Value);
 //        }
 //    }
 
@@ -2790,21 +2778,21 @@ namespace Microcode
 //                new Combination2ALL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2ALL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, ev1);
 //        }
 //    }
 
@@ -2823,17 +2811,17 @@ namespace Microcode
 //                new Combination2ALA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2ALA.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -2850,17 +2838,17 @@ namespace Microcode
 //                new Combination2ALA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2ALA0.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -2877,17 +2865,17 @@ namespace Microcode
 //                new Combination2ALA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2ALA1.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -2904,21 +2892,21 @@ namespace Microcode
 //                new Combination2ALL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2ALL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, ev1);
 //        }
 //    }
 
@@ -2937,17 +2925,17 @@ namespace Microcode
 //                new Combination2ALQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2ALQ.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, this.rand1Value);
 //        }
 //    }
 
@@ -2972,7 +2960,7 @@ namespace Microcode
 //                new Combination2AQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -2981,15 +2969,15 @@ namespace Microcode
 //            SCode.location = "Combination2AQ.EvalStep";
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset),
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset),
 //                this.rand0Value,
 //                ev1);
 //        }
@@ -3017,17 +3005,17 @@ namespace Microcode
 //                new Combination2AQL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AQL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), this.rand0Value, ev1);
 //        }
 //    }
 
@@ -3050,18 +3038,18 @@ namespace Microcode
 //                new Combination2AQA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AQA.EvalStep");
 //#endif
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
 //            object ev0 = this.rand0Value;
 
-//            object evop = closureEnvironment.ArgumentValue (this.ratorOffset);
+//            object evop = environment.ArgumentValue (this.ratorOffset);
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3078,13 +3066,13 @@ namespace Microcode
 //                new Combination2AQA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AQA0.EvalStep");
 //#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), this.rand0Value, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), this.rand0Value, environment.Argument0Value);
 //        }
 //    }
 
@@ -3101,13 +3089,13 @@ namespace Microcode
 //                new Combination2AQA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AQA1.EvalStep");
 //#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), this.rand0Value, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), this.rand0Value, environment.Argument1Value);
 //        }
 //    }
 
@@ -3124,17 +3112,17 @@ namespace Microcode
 //                new Combination2AQL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AQL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), this.rand0Value, ev1);
 //        }
 //    }
 
@@ -3154,13 +3142,13 @@ namespace Microcode
 //                new Combination2AQQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2AQQ.EvalStep");
 //#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), this.rand0Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), this.rand0Value, this.rand1Value);
 //        }
 //    }
 
@@ -3189,7 +3177,7 @@ namespace Microcode
 //                new Combination2ASL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2ASL.EvalStep");
@@ -3198,19 +3186,19 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (ratorOffset), ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (ratorOffset), ev0, ev1);
 //        }
 //    }
 
@@ -3233,7 +3221,7 @@ namespace Microcode
 //                new Combination2ASA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            Unimplemented ();
 //#if DEBUG
@@ -3242,23 +3230,23 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            object evop = closureEnvironment.ArgumentValue (this.ratorOffset);
+//            object evop = environment.ArgumentValue (this.ratorOffset);
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3278,7 +3266,7 @@ namespace Microcode
 //                new Combination2ASA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -3287,20 +3275,20 @@ namespace Microcode
 //            SCode.location = "Combination2ASA0.EvalStep";
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            object evop = closureEnvironment.ArgumentValue (this.ratorOffset);
+//            object evop = environment.ArgumentValue (this.ratorOffset);
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -3320,7 +3308,7 @@ namespace Microcode
 //                new Combination2ASA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -3329,20 +3317,20 @@ namespace Microcode
 //            SCode.location = "Combination2ASA1.EvalStep";
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            object evop = closureEnvironment.ArgumentValue (this.ratorOffset);
+//            object evop = environment.ArgumentValue (this.ratorOffset);
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -3362,7 +3350,7 @@ namespace Microcode
 //                 new Combination2ASL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -3371,11 +3359,11 @@ namespace Microcode
 //            SCode.location = "Combination2ASL1.EvalStep";
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //#if DEBUG
@@ -3385,9 +3373,9 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            object evop = closureEnvironment.ArgumentValue (this.ratorOffset);
+//            object evop = environment.ArgumentValue (this.ratorOffset);
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3409,7 +3397,7 @@ namespace Microcode
 //                new Combination2ASQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2ASQ.EvalStep");
@@ -3417,15 +3405,15 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                closureEnvironment.ArgumentValue (this.ratorOffset), ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                environment.ArgumentValue (this.ratorOffset), ev0, this.rand1Value);
 //        }
 //    }
 //    class Combination2L1 : Combination2L
@@ -3452,7 +3440,7 @@ namespace Microcode
 //                new Combination2L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -3464,7 +3452,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -3475,7 +3463,7 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //#if DEBUG
@@ -3486,10 +3474,10 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3519,7 +3507,7 @@ namespace Microcode
 //                new Combination2L1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -3530,7 +3518,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -3541,14 +3529,14 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3571,7 +3559,7 @@ namespace Microcode
 //                new Combination2L1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -3581,7 +3569,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -3591,13 +3579,13 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3620,7 +3608,7 @@ namespace Microcode
 //                new Combination2L1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -3630,7 +3618,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -3640,13 +3628,13 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3672,20 +3660,20 @@ namespace Microcode
 //                new Combination2L1A0L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1A0L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, ev1);
 //        }
 //    }
 
@@ -3704,7 +3692,7 @@ namespace Microcode
 //                new Combination2L1A0A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            Unimplemented ();
 //#if DEBUG
@@ -3716,13 +3704,13 @@ namespace Microcode
 //            object ev1 = null;
 
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3739,17 +3727,17 @@ namespace Microcode
 //                new Combination2L1A0A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1A0A1.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop,
-//                closureEnvironment.Argument0Value, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop,
+//                environment.Argument0Value, environment.Argument1Value);
 //        }
 //    }
 
@@ -3766,7 +3754,7 @@ namespace Microcode
 //                new Combination2L1A0L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            Unimplemented ();
 //#if DEBUG
@@ -3778,13 +3766,13 @@ namespace Microcode
 //            object ev1 = null;
 
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3803,17 +3791,17 @@ namespace Microcode
 //                new Combination2L1A0Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1A0Q.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop,
-//                closureEnvironment.Argument0Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop,
+//                environment.Argument0Value, this.rand1Value);
 //        }
 //    }
 
@@ -3836,7 +3824,7 @@ namespace Microcode
 //                new Combination2L1A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -3846,7 +3834,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -3856,13 +3844,13 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3885,7 +3873,7 @@ namespace Microcode
 //                new Combination2L1A1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            Unimplemented ();
 //#if DEBUG
@@ -3896,7 +3884,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -3906,13 +3894,13 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3931,7 +3919,7 @@ namespace Microcode
 //                new Combination2L1A1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            Unimplemented ();
 //#if DEBUG
@@ -3941,7 +3929,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -3951,13 +3939,13 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -3974,7 +3962,7 @@ namespace Microcode
 //                new Combination2L1A1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            Unimplemented ();
 //#if DEBUG
@@ -3984,7 +3972,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -3994,13 +3982,13 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4023,7 +4011,7 @@ namespace Microcode
 //                new Combination2L1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -4034,7 +4022,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -4045,14 +4033,14 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4078,7 +4066,7 @@ namespace Microcode
 //                new Combination2L1L1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -4087,7 +4075,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -4098,14 +4086,14 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4125,7 +4113,7 @@ namespace Microcode
 //                new Combination2L1L1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -4134,7 +4122,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -4145,14 +4133,14 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4169,22 +4157,22 @@ namespace Microcode
 //                new Combination2L1L1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1L1A0.EvalStep");
 //#endif
-//            object ev1 = closureEnvironment.Argument0Value;
+//            object ev1 = environment.Argument0Value;
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4201,7 +4189,7 @@ namespace Microcode
 //                new Combination2L1L1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -4210,7 +4198,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -4221,14 +4209,14 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4253,7 +4241,7 @@ namespace Microcode
 //                new Combination2L1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -4263,7 +4251,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -4274,10 +4262,10 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -4303,20 +4291,20 @@ namespace Microcode
 //                new Combination2L1QL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1QL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -4340,16 +4328,16 @@ namespace Microcode
 //                new Combination2L1QA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1QA.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -4366,16 +4354,16 @@ namespace Microcode
 //                new Combination2L1QA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1QA0.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument0Value);
 //        }
 //    }
 
@@ -4392,16 +4380,16 @@ namespace Microcode
 //                new Combination2L1QA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1QA1.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument1Value);
 //        }
 //    }
 
@@ -4418,20 +4406,20 @@ namespace Microcode
 //                new Combination2L1QL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1QL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -4453,7 +4441,7 @@ namespace Microcode
 //                new Combination2L1QQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -4466,7 +4454,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //#if DEBUG
@@ -4477,7 +4465,7 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //#if DEBUG
@@ -4488,10 +4476,10 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4520,7 +4508,7 @@ namespace Microcode
 //                new Combination2L1SL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -4530,11 +4518,11 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //#if DEBUG
@@ -4545,10 +4533,10 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4572,7 +4560,7 @@ namespace Microcode
 //                new Combination2L1SA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -4582,7 +4570,7 @@ namespace Microcode
 //#endif
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //#if DEBUG
@@ -4593,10 +4581,10 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -4617,7 +4605,7 @@ namespace Microcode
 //                new Combination2L1SA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -4626,7 +4614,7 @@ namespace Microcode
 //            SCode.location = "Combination2L1SA0.EvalStep";
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //#if DEBUG
@@ -4637,10 +4625,10 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -4661,7 +4649,7 @@ namespace Microcode
 //                new Combination2L1SA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -4670,7 +4658,7 @@ namespace Microcode
 //            SCode.location = "Combination2L1SA1.EvalStep";
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //#if DEBUG
@@ -4681,10 +4669,10 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -4704,7 +4692,7 @@ namespace Microcode
 //            return new Combination2L1SL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2L1SL1.EvalStep");
@@ -4712,24 +4700,24 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            object evop; if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset)) throw new NotImplementedException ();
+//            object evop; if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset)) throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4752,7 +4740,7 @@ namespace Microcode
 //                new Combination2L1SQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -4761,7 +4749,7 @@ namespace Microcode
 //            SCode.location = "Combination2L1SQ.EvalStep";
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //#if DEBUG
@@ -4772,10 +4760,10 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
+//            if (environment.FastLexicalRef1 (out evop, this.ratorName, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -4806,7 +4794,7 @@ namespace Microcode
 //                new Combination2LL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -4815,25 +4803,25 @@ namespace Microcode
 //            SCode.location = "Combination2LL.EvalStep";
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4857,7 +4845,7 @@ namespace Microcode
 //                new Combination2LA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            rand1TypeHistogram.Note (this.rand1Type);
@@ -4865,23 +4853,23 @@ namespace Microcode
 //            NoteCalls (this.rand1);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4903,7 +4891,7 @@ namespace Microcode
 //                new Combination2LA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            rand1TypeHistogram.Note (this.rand1Type);
@@ -4911,23 +4899,23 @@ namespace Microcode
 //            NoteCalls (this.rand1);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4952,21 +4940,21 @@ namespace Microcode
 //                new Combination2LA0L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA0L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -4985,19 +4973,19 @@ namespace Microcode
 //                new Combination2LA0A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA0A.EvalStep");
 //#endif
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5014,17 +5002,17 @@ namespace Microcode
 //                new Combination2LA0A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA0A0.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -5041,17 +5029,17 @@ namespace Microcode
 //                new Combination2LA0A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA0A1.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -5068,21 +5056,21 @@ namespace Microcode
 //                new Combination2LA0L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA0L1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5101,16 +5089,16 @@ namespace Microcode
 //                new Combination2LA0Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA0Q.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                evop, closureEnvironment.Argument0Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                evop, environment.Argument0Value, this.rand1Value);
 //        }
 //    }
 
@@ -5133,7 +5121,7 @@ namespace Microcode
 //                new Combination2LA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            rand1TypeHistogram.Note (this.rand1Type);
@@ -5141,23 +5129,23 @@ namespace Microcode
 //            NoteCalls (this.rand1);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5182,21 +5170,21 @@ namespace Microcode
 //                new Combination2LA1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA1L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5215,19 +5203,19 @@ namespace Microcode
 //                new Combination2LA1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA1A.EvalStep");
 //#endif
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5244,17 +5232,17 @@ namespace Microcode
 //                new Combination2LA1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA1A0.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -5271,17 +5259,17 @@ namespace Microcode
 //                new Combination2LA1A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA1A1.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -5298,21 +5286,21 @@ namespace Microcode
 //                new Combination2LA1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA1L1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5331,16 +5319,16 @@ namespace Microcode
 //                new Combination2LA1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LA1Q.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                evop, closureEnvironment.Argument1Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                evop, environment.Argument1Value, this.rand1Value);
 //        }
 //    }
 
@@ -5365,21 +5353,21 @@ namespace Microcode
 //                new Combination2LAL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LAL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5398,19 +5386,19 @@ namespace Microcode
 //                new Combination2LAA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LAA.EvalStep");
 //#endif
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5427,17 +5415,17 @@ namespace Microcode
 //                new Combination2LAA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LAA0.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -5454,17 +5442,17 @@ namespace Microcode
 //                new Combination2LAA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LAA1.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -5481,21 +5469,21 @@ namespace Microcode
 //                new Combination2LAL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LAL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5514,16 +5502,16 @@ namespace Microcode
 //                new Combination2LAQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LAQ.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, 
-//                evop, closureEnvironment.ArgumentValue (this.rand0Offset), this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, 
+//                evop, environment.ArgumentValue (this.rand0Offset), this.rand1Value);
 //        }
 //    }
 
@@ -5545,7 +5533,7 @@ namespace Microcode
 //                new Combination2LL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -5554,25 +5542,25 @@ namespace Microcode
 //            SCode.location = "Combination2LL1.EvalStep";
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5598,23 +5586,23 @@ namespace Microcode
 //                new Combination2LL1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LL1L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5633,7 +5621,7 @@ namespace Microcode
 //                new Combination2LL1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            throw new NotImplementedException ();
 //#if DEBUG
@@ -5641,25 +5629,25 @@ namespace Microcode
 //            NoteCalls (this.rand1);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5676,20 +5664,20 @@ namespace Microcode
 //                 new Combination2LL1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LL1A0.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -5706,21 +5694,21 @@ namespace Microcode
 //                 new Combination2LL1A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LL1A1.EvalStep");
 //#endif
-//            object ev1 = closureEnvironment.Argument1Value;
+//            object ev1 = environment.Argument1Value;
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5738,23 +5726,23 @@ namespace Microcode
 //                new Combination2LL1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LL1L1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5774,7 +5762,7 @@ namespace Microcode
 //                 new Combination2LL1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LL1Q.EvalStep");
@@ -5782,13 +5770,13 @@ namespace Microcode
 //            object ev1 = this.rand1Value;
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5814,24 +5802,24 @@ namespace Microcode
 //                new Combination2LLL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LLL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5851,25 +5839,25 @@ namespace Microcode
 //                new Combination2LLA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            Unimplemented ();
 //#if DEBUG
 //            Warm ("Combination2LLL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5887,25 +5875,25 @@ namespace Microcode
 //                new Combination2LLA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            Unimplemented ();
 //#if DEBUG
 //            Warm ("Combination2LLL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5922,25 +5910,25 @@ namespace Microcode
 //                new Combination2LLA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //            Unimplemented ();
 //#if DEBUG
 //            Warm ("Combination2LLL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5957,24 +5945,24 @@ namespace Microcode
 //                new Combination2LLL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LLL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -5993,7 +5981,7 @@ namespace Microcode
 //            return new Combination2LLQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LLQ.EvalStep");
@@ -6001,14 +5989,14 @@ namespace Microcode
 //            object ev1 = this.rand1Value;
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6030,7 +6018,7 @@ namespace Microcode
 //                new Combination2LQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LQ.EvalStep");
@@ -6038,13 +6026,13 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
@@ -6052,10 +6040,10 @@ namespace Microcode
 //            object ev0 = this.rand0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6081,23 +6069,23 @@ namespace Microcode
 //                new Combination2LQL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LQL.EvalStep");
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0 = this.rand0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6116,16 +6104,16 @@ namespace Microcode
 //                new Combination2LQA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LQA.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -6142,17 +6130,17 @@ namespace Microcode
 //                new Combination2LQA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LQA0.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                evop, this.rand0Value, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                evop, this.rand0Value, environment.Argument0Value);
 //        }
 //    }
 
@@ -6169,16 +6157,16 @@ namespace Microcode
 //                new Combination2LQA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LQA1.EvalStep");
 //#endif
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument1Value);
 //        }
 //    }
 
@@ -6195,20 +6183,20 @@ namespace Microcode
 //                new Combination2LQL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LQL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -6227,7 +6215,7 @@ namespace Microcode
 //            return new Combination2LQQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LQQ.EvalStep");
@@ -6237,10 +6225,10 @@ namespace Microcode
 //            object ev0 = this.rand0Value;
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6266,32 +6254,32 @@ namespace Microcode
 //                new Combination2LSL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LSL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6310,30 +6298,30 @@ namespace Microcode
 //                new Combination2LSA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LSA.EvalStep");
 //#endif
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6350,28 +6338,28 @@ namespace Microcode
 //                new Combination2LSA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LSA0.EvalStep");
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -6388,28 +6376,28 @@ namespace Microcode
 //                new Combination2LSA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LSA1.EvalStep");
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -6426,32 +6414,32 @@ namespace Microcode
 //                new Combination2LSL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LSLL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6470,29 +6458,29 @@ namespace Microcode
 //            return new Combination2LSQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2LSQ.EvalStep");
 //            NoteCalls (this.rand0);
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object evop;
-//            if (closureEnvironment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
+//            if (environment.FastLexicalRef (out evop, this.ratorName, this.ratorDepth, this.ratorOffset))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
 //        }
 //    }
  
@@ -6515,7 +6503,7 @@ namespace Microcode
 //                 new Combination2T (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2T.EvalStep");
@@ -6523,25 +6511,25 @@ namespace Microcode
 //            NoteCalls (this.rand1);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
 //            object ev0;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
@@ -6550,7 +6538,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6581,7 +6569,7 @@ namespace Microcode
 //                new Combination2TL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TL.EvalStep");
@@ -6589,18 +6577,18 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
-//                ((UnwinderState) env).AddFrame (new Combination2TLFrame0 (this, closureEnvironment));
-//                closureEnvironment = env;
+//                ((UnwinderState) env).AddFrame (new Combination2TLFrame0 (this, environment));
+//                environment = env;
 //                answer = Interpreter.Unwind;
 //                return false;
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -6608,15 +6596,15 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
 //    class Combination2TLFrame0 : SubproblemContinuation<Combination2TL>, ISystemVector
 //    {
 
-//        public Combination2TLFrame0 (Combination2TL combination2, Environment closureEnvironment)
-//            : base (combination2, closureEnvironment)
+//        public Combination2TLFrame0 (Combination2TL combination2, Environment environment)
+//            : base (combination2, environment)
 //        {
 //        }
 
@@ -6639,10 +6627,10 @@ namespace Microcode
 
 //        #endregion
 
-//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object ev1)
+//        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev1)
 //        {
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.expression.rand0Name, this.expression.rand0Depth, this.expression.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.expression.rand0Name, this.expression.rand0Depth, this.expression.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -6650,7 +6638,7 @@ namespace Microcode
 //            if (this.expression.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6674,7 +6662,7 @@ namespace Microcode
 //                new Combination2TA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA.EvalStep");
@@ -6682,31 +6670,31 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
-//                ((UnwinderState) env).AddFrame (new Combination2TAFrame0 (this, closureEnvironment));
-//                closureEnvironment = env;
+//                ((UnwinderState) env).AddFrame (new Combination2TAFrame0 (this, environment));
+//                environment = env;
 //                answer = Interpreter.Unwind;
 //                return false;
 //            }
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
 //    sealed class Combination2TAFrame0 : SubproblemContinuation<Combination2TA>, ISystemVector
 //    {
-//        public Combination2TAFrame0 (Combination2TA combination2, Environment closureEnvironment)
-//            : base (combination2, closureEnvironment)
+//        public Combination2TAFrame0 (Combination2TA combination2, Environment environment)
+//            : base (combination2, environment)
 //        {
 //        }
 
@@ -6729,14 +6717,14 @@ namespace Microcode
 
 //        #endregion
 
-//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object ev1)
+//        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev1)
 //        {
 //            // Evaluate operator
 //            object evop;
 //            if (this.expression.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.ArgumentValue (this.expression.rand0Offset), ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue (this.expression.rand0Offset), ev1);
 //        }
 //    }
 
@@ -6758,7 +6746,7 @@ namespace Microcode
 //                new Combination2TA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA0.EvalStep");
@@ -6766,12 +6754,12 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
-//                ((UnwinderState) env).AddFrame (new Combination2TA0Frame0 (this, closureEnvironment));
-//                closureEnvironment = env;
+//                ((UnwinderState) env).AddFrame (new Combination2TA0Frame0 (this, environment));
+//                environment = env;
 //                answer = Interpreter.Unwind;
 //                return false;
 //            }
@@ -6781,14 +6769,14 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, ev1);
 //        }
 //    }
 
 //    sealed class Combination2TA0Frame0 : SubproblemContinuation<Combination2TA0>, ISystemVector
 //    {
-//        public Combination2TA0Frame0 (Combination2TA0 combination2, Environment closureEnvironment)
-//            : base (combination2, closureEnvironment)
+//        public Combination2TA0Frame0 (Combination2TA0 combination2, Environment environment)
+//            : base (combination2, environment)
 //        {
 //        }
 
@@ -6811,14 +6799,14 @@ namespace Microcode
 
 //        #endregion
 
-//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object ev1)
+//        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev1)
 //        {
 //            // Evaluate operator
 //            object evop;
 //            if (this.expression.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, ev1);
 //        }
 //    }
 
@@ -6844,23 +6832,23 @@ namespace Microcode
 //                new Combination2TA0L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA0L.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -6879,20 +6867,20 @@ namespace Microcode
 //                new Combination2TA0A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA0A.EvalStep");
 //#endif
 
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, ev1);
 //        }
 //    }
 
@@ -6909,19 +6897,19 @@ namespace Microcode
 //                new Combination2TA0A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA0A0.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev0);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev0);
 //        }
 //    }
 
@@ -6938,7 +6926,7 @@ namespace Microcode
 //                new Combination2TA0A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -6949,7 +6937,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, environment.Argument1Value);
 //        }
 //    }
 
@@ -6966,23 +6954,23 @@ namespace Microcode
 //                new Combination2TA0L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA0L1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7002,7 +6990,7 @@ namespace Microcode
 //                new Combination2TA0Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA0Q.EvalStep");
@@ -7012,7 +7000,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, this.rand1Value);
 //        }
 //    }
 
@@ -7034,7 +7022,7 @@ namespace Microcode
 //                new Combination2TA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA1.EvalStep");
@@ -7043,21 +7031,21 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7086,24 +7074,24 @@ namespace Microcode
 //                new Combination2TA1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA1L.EvalStep");
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -7122,22 +7110,22 @@ namespace Microcode
 //                new Combination2TA1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA1A.EvalStep");
 //#endif
 
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7154,7 +7142,7 @@ namespace Microcode
 //                new Combination2TA1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA1A0.EvalStep");
@@ -7164,7 +7152,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument1Value, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, environment.Argument0Value);
 //        }
 //    }
 
@@ -7181,19 +7169,19 @@ namespace Microcode
 //                new Combination2TA1A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA1A1.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev0);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev0);
 //        }
 //    }
 
@@ -7210,13 +7198,13 @@ namespace Microcode
 //                new Combination2TA1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA1L1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7224,7 +7212,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -7244,7 +7232,7 @@ namespace Microcode
 //                new Combination2TA1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TA1Q.EvalStep");
@@ -7254,7 +7242,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument1Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, this.rand1Value);
 //        }
 //    }
 
@@ -7280,23 +7268,23 @@ namespace Microcode
 //                new Combination2TAL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TAL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7318,22 +7306,22 @@ namespace Microcode
 //                new Combination2TAA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
 //            SCode.location = "Combination2TAA.EvalStep";
 //#endif
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7353,7 +7341,7 @@ namespace Microcode
 //                new Combination2TAA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -7364,8 +7352,8 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                evop, closureEnvironment.ArgumentValue (this.rand0Offset), closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                evop, environment.ArgumentValue (this.rand0Offset), environment.Argument0Value);
 //        }
 //    }
 
@@ -7385,19 +7373,19 @@ namespace Microcode
 //                new Combination2TAA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TAA1.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -7414,23 +7402,23 @@ namespace Microcode
 //                new Combination2TAL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TAL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7453,19 +7441,19 @@ namespace Microcode
 //                new Combination2TAQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TAQ.EvalStep");
 //#endif
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            // Evaluate operator
 //            object evop;
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -7487,7 +7475,7 @@ namespace Microcode
 //                new Combination2TL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TL1.EvalStep");
@@ -7496,7 +7484,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -7504,7 +7492,7 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7512,7 +7500,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7538,13 +7526,13 @@ namespace Microcode
 //                new Combination2TL1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TL1.EvalStep");
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -7552,7 +7540,7 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7560,7 +7548,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7583,13 +7571,13 @@ namespace Microcode
 //                new Combination2TL1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TL1A.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7597,7 +7585,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -7614,13 +7602,13 @@ namespace Microcode
 //                new Combination2TL1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TL1A0.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7628,7 +7616,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -7645,13 +7633,13 @@ namespace Microcode
 //                new Combination2TL1A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TL1A1.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7659,7 +7647,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -7679,18 +7667,18 @@ namespace Microcode
 //            return new Combination2TL1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TL1L1.EvalStep");
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7698,7 +7686,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 
 //    }
@@ -7719,13 +7707,13 @@ namespace Microcode
 //                new Combination2TL1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TL1Q.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7733,7 +7721,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -7760,18 +7748,18 @@ namespace Microcode
 //                new Combination2TLL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
 //            SCode.location = "Combination2TLL.EvalStep";
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7779,7 +7767,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7798,14 +7786,14 @@ namespace Microcode
 //                new Combination2TLA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
 //            SCode.location = "Combination2TLA.EvalStep";
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7813,7 +7801,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -7830,14 +7818,14 @@ namespace Microcode
 //                new Combination2TLA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
 //            SCode.location = "Combination2TLA0.EvalStep";
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7845,7 +7833,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -7862,14 +7850,14 @@ namespace Microcode
 //                new Combination2TLA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
 //            SCode.location = "Combination2TLA1.EvalStep";
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7877,7 +7865,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -7894,7 +7882,7 @@ namespace Microcode
 //                new Combination2TLL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -7902,11 +7890,11 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7914,7 +7902,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -7933,13 +7921,13 @@ namespace Microcode
 //            return new Combination2TLQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TLQ.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -7947,7 +7935,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -7972,7 +7960,7 @@ namespace Microcode
 //                new Combination2TQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TQ.EvalStep");
@@ -7980,7 +7968,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -7992,7 +7980,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -8018,13 +8006,13 @@ namespace Microcode
 //                new Combination2TQL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TQL.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -8032,7 +8020,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -8051,7 +8039,7 @@ namespace Microcode
 //                new Combination2TQA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TQA.EvalStep");
@@ -8061,7 +8049,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -8078,7 +8066,7 @@ namespace Microcode
 //                new Combination2TQA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TQA0.EvalStep");
@@ -8088,7 +8076,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument0Value);
 //        }
 //    }
 
@@ -8105,7 +8093,7 @@ namespace Microcode
 //                new Combination2TQA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -8116,7 +8104,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument1Value);
 //        }
 //    }
 
@@ -8133,14 +8121,14 @@ namespace Microcode
 //                new Combination2TQL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 
 //#if DEBUG
 //            Warm ("Combination2TQL1.EvalStep");
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            // Evaluate operator
@@ -8148,7 +8136,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -8167,7 +8155,7 @@ namespace Microcode
 //            return new Combination2TQQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TQQ.EvalStep");
@@ -8177,7 +8165,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, this.rand1Value);
 //        }
 //    }
 
@@ -8206,7 +8194,7 @@ namespace Microcode
 //                new Combination2TSL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2TSL.EvalStep");
@@ -8214,11 +8202,11 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -8230,7 +8218,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -8252,7 +8240,7 @@ namespace Microcode
 //                new Combination2TSA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -8260,16 +8248,16 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //            SCode.location = "Combination2TSA.EvalStep";
 //#endif
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
@@ -8279,7 +8267,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -8299,7 +8287,7 @@ namespace Microcode
 //                new Combination2TSA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -8308,7 +8296,7 @@ namespace Microcode
 //            SCode.location = "Combination2TSA0.EvalStep";
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //#if DEBUG
@@ -8316,8 +8304,8 @@ namespace Microcode
 //#endif
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
@@ -8327,7 +8315,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -8347,7 +8335,7 @@ namespace Microcode
 //                new Combination2TSA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -8356,13 +8344,13 @@ namespace Microcode
 //            SCode.location = "Combination2TSA1.EvalStep";
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
@@ -8372,7 +8360,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -8391,7 +8379,7 @@ namespace Microcode
 //            return new Combination2TSL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -8401,17 +8389,17 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
@@ -8421,7 +8409,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -8443,7 +8431,7 @@ namespace Microcode
 //            return new Combination2TSQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -8452,7 +8440,7 @@ namespace Microcode
 //            SCode.location = "Combination2TSQ.EvalStep";
 //#endif
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev0 == Interpreter.Unwind) {
@@ -8464,7 +8452,7 @@ namespace Microcode
 //            if (this.ratorVar.cell.GetValue (out evop))
 //                throw new NotImplementedException ();
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -8496,7 +8484,7 @@ namespace Microcode
 //                new Combination2SL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SL.EvalStep");
@@ -8506,36 +8494,36 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
-//                ((UnwinderState) env).AddFrame (new Combination2SLFrame0 (this, closureEnvironment));
-//                closureEnvironment = env;
+//                ((UnwinderState) env).AddFrame (new Combination2SLFrame0 (this, environment));
+//                environment = env;
 //                answer = Interpreter.Unwind;
 //                return false;
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
 //    class Combination2SLFrame0 : SubproblemContinuation<Combination2SL>, ISystemVector
 //    {
-//        public Combination2SLFrame0 (Combination2SL combination2, Environment closureEnvironment)
-//            : base (combination2, closureEnvironment)
+//        public Combination2SLFrame0 (Combination2SL combination2, Environment environment)
+//            : base (combination2, environment)
 //        {
 //        }
 
@@ -8558,21 +8546,21 @@ namespace Microcode
 
 //        #endregion
 
-//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object ev1)
+//        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev1)
 //        {
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.expression.rand0Name, this.expression.rand0Depth, this.expression.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.expression.rand0Name, this.expression.rand0Depth, this.expression.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unevop = this.expression.Operator;
 //            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -8597,7 +8585,7 @@ namespace Microcode
 //                new Combination2SA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA.EvalStep");
@@ -8607,34 +8595,34 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
-//                ((UnwinderState) env).AddFrame (new Combination2SAFrame0 (this, closureEnvironment));
-//                closureEnvironment = env;
+//                ((UnwinderState) env).AddFrame (new Combination2SAFrame0 (this, environment));
+//                environment = env;
 //                answer = Interpreter.Unwind;
 //                return false;
 //            }
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
 //    sealed class Combination2SAFrame0 : SubproblemContinuation<Combination2SA>, ISystemVector
 //    {
-//        public Combination2SAFrame0 (Combination2SA combination2, Environment closureEnvironment)
-//            : base (combination2, closureEnvironment)
+//        public Combination2SAFrame0 (Combination2SA combination2, Environment environment)
+//            : base (combination2, environment)
 //        {
 //        }
 
@@ -8657,17 +8645,17 @@ namespace Microcode
 
 //        #endregion
 
-//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object ev1)
+//        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev1)
 //        {
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unevop = this.expression.Operator;
 //            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.ArgumentValue (this.expression.rand0Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue (this.expression.rand0Offset));
 //        }
 //    }
 
@@ -8690,7 +8678,7 @@ namespace Microcode
 //                new Combination2SA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA0.EvalStep");
@@ -8700,32 +8688,32 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
-//                ((UnwinderState) env).AddFrame (new Combination2SA0Frame0 (this, closureEnvironment));
-//                closureEnvironment = env;
+//                ((UnwinderState) env).AddFrame (new Combination2SA0Frame0 (this, environment));
+//                environment = env;
 //                answer = Interpreter.Unwind;
 //                return false;
 //            }
 
 //            object evop;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, ev1);
 //        }
 //    }
 
 //    sealed class Combination2SA0Frame0 : SubproblemContinuation<Combination2SA0>, ISystemVector
 //    {
-//        public Combination2SA0Frame0 (Combination2SA0 combination2, Environment closureEnvironment)
-//            : base (combination2, closureEnvironment)
+//        public Combination2SA0Frame0 (Combination2SA0 combination2, Environment environment)
+//            : base (combination2, environment)
 //        {
 //        }
 
@@ -8748,17 +8736,17 @@ namespace Microcode
 
 //        #endregion
 
-//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object ev1)
+//        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object ev1)
 //        {
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unevop = this.expression.Operator;
 //            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, ev1);
 //        }
 //    }
 
@@ -8787,7 +8775,7 @@ namespace Microcode
 //                new Combination2SA0L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA0L.EvalStep");
@@ -8795,20 +8783,20 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -8830,7 +8818,7 @@ namespace Microcode
 //                new Combination2SA0A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA0A.EvalStep");
@@ -8838,17 +8826,17 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, ev1);
 //        }
 //    }
 
@@ -8868,24 +8856,24 @@ namespace Microcode
 //                new Combination2SA0A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA0A0.EvalStep");
 //            NoteCalls (this.rator);
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev0);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev0);
 //        }
 //    }
 
@@ -8905,7 +8893,7 @@ namespace Microcode
 //                new Combination2SA0A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -8914,14 +8902,14 @@ namespace Microcode
 //            SCode.location = "Combination2SA0A1.EvalStep";
 //#endif
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, environment.Argument1Value);
 //        }
 //    }
 
@@ -8941,7 +8929,7 @@ namespace Microcode
 //                new Combination2SA0L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA0L1.EvalStep");
@@ -8949,20 +8937,20 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument0Value;
+//            object ev0 = environment.Argument0Value;
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -8985,7 +8973,7 @@ namespace Microcode
 //                new Combination2SA0Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA0Q.EvalStep");
@@ -8993,14 +8981,14 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument0Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, this.rand1Value);
 //        }
 //    }
 
@@ -9023,7 +9011,7 @@ namespace Microcode
 //                new Combination2SA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA1.EvalStep");
@@ -9034,24 +9022,24 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -9081,7 +9069,7 @@ namespace Microcode
 //                new Combination2SA1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA1L.EvalStep");
@@ -9090,20 +9078,20 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -9126,7 +9114,7 @@ namespace Microcode
 //                new Combination2SA1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA1A.EvalStep");
@@ -9134,19 +9122,19 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -9166,7 +9154,7 @@ namespace Microcode
 //                new Combination2SA1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA1A0.EvalStep");
@@ -9174,14 +9162,14 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument1Value, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, environment.Argument0Value);
 //        }
 //    }
 
@@ -9201,24 +9189,24 @@ namespace Microcode
 //                new Combination2SA1A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA1A1.EvalStep");
 //            NoteCalls (this.rator);
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
-//            object ev0 = closureEnvironment.Argument1Value;
+//            object ev0 = environment.Argument1Value;
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev0);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev0);
 //        }
 //    }
 
@@ -9238,7 +9226,7 @@ namespace Microcode
 //                new Combination2SA1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA1L1.EvalStep");
@@ -9246,18 +9234,18 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument1Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, ev1);
 //        }
 //    }
 
@@ -9280,7 +9268,7 @@ namespace Microcode
 //                new Combination2SA1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SA1Q.EvalStep");
@@ -9288,14 +9276,14 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, closureEnvironment.Argument1Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, this.rand1Value);
 //        }
 //    }
 
@@ -9324,7 +9312,7 @@ namespace Microcode
 //                new Combination2SAL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SAL.EvalStep");
@@ -9332,20 +9320,20 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -9367,7 +9355,7 @@ namespace Microcode
 //                new Combination2SAA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -9375,23 +9363,23 @@ namespace Microcode
 //            procedureTypeHistogram.Note (this.ratorType);
 //            SCode.location = "Combination2SAA.EvalStep";
 //#endif
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+//            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, closureEnvironment, ev0, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -9411,7 +9399,7 @@ namespace Microcode
 //                new Combination2SAA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -9420,18 +9408,18 @@ namespace Microcode
 //            SCode.location = "Combination2SAA0.EvalStep";
 //#endif
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, closureEnvironment, ev0, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment,
-//                evop, closureEnvironment.ArgumentValue (this.rand0Offset), closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment,
+//                evop, environment.ArgumentValue (this.rand0Offset), environment.Argument0Value);
 //        }
 //    }
 
@@ -9451,28 +9439,28 @@ namespace Microcode
 //                new Combination2SAA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SAA1.EvalStep");
 //            NoteCalls (this.rator);
 //            procedureTypeHistogram.Note (this.ratorType);
 //#endif
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, closureEnvironment, ev0, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -9492,7 +9480,7 @@ namespace Microcode
 //                new Combination2SAL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SAL1.EvalStep");
@@ -9500,20 +9488,20 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -9537,24 +9525,24 @@ namespace Microcode
 //                new Combination2SAQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SAQ.EvalStep");
 //            NoteCalls (this.rator);
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
-//            object ev0 = closureEnvironment.ArgumentValue (this.rand0Offset);
+//            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -9577,7 +9565,7 @@ namespace Microcode
 //                new Combination2SL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SL1.EvalStep");
@@ -9588,7 +9576,7 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -9596,18 +9584,18 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -9636,7 +9624,7 @@ namespace Microcode
 //                new Combination2SL1L (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -9645,7 +9633,7 @@ namespace Microcode
 //            SCode.location = "Combination2SL1L.EvalStep";
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -9653,18 +9641,18 @@ namespace Microcode
 //            }
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -9687,7 +9675,7 @@ namespace Microcode
 //                new Combination2SL1A (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SL1A.EvalStep");
@@ -9695,18 +9683,18 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -9726,7 +9714,7 @@ namespace Microcode
 //                new Combination2SL1A0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -9735,18 +9723,18 @@ namespace Microcode
 //            SCode.location = "Combination2SL1A0.EvalStep";
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -9763,24 +9751,24 @@ namespace Microcode
 //                new Combination2SL1A1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SL1A1.EvalStep");
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -9800,7 +9788,7 @@ namespace Microcode
 //            return new Combination2SL1L1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SL1L1.EvalStep");
@@ -9809,26 +9797,26 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, closureEnvironment, ev0, ev1));
-//                //closureEnvironment = env;
+//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+//                //environment = env;
 //                //answer = Interpreter.Unwind;
 //                //return false;
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 
 //    }
@@ -9852,7 +9840,7 @@ namespace Microcode
 //                new Combination2SL1Q (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SL1Q.EvalStep");
@@ -9860,18 +9848,18 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
+//            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -9901,7 +9889,7 @@ namespace Microcode
 //                new Combination2SLL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -9910,15 +9898,15 @@ namespace Microcode
 //            SCode.location = "Combination2SLL.EvalStep";
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //#if DEBUG
@@ -9928,7 +9916,7 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -9951,7 +9939,7 @@ namespace Microcode
 //                new Combination2SLA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -9960,11 +9948,11 @@ namespace Microcode
 //            SCode.location = "Combination2SLA.EvalStep";
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //#if DEBUG
@@ -9974,7 +9962,7 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -9995,7 +9983,7 @@ namespace Microcode
 //                new Combination2SLA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -10004,11 +9992,11 @@ namespace Microcode
 //            SCode.location = "Combination2SLA0.EvalStep";
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //#if DEBUG
@@ -10018,7 +10006,7 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
 //        }
 //    }
 
@@ -10039,7 +10027,7 @@ namespace Microcode
 //                new Combination2SLA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -10048,11 +10036,11 @@ namespace Microcode
 //            SCode.location = "Combination2SLA1.EvalStep";
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //#if DEBUG
@@ -10062,7 +10050,7 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
 //        }
 //    }
 
@@ -10082,7 +10070,7 @@ namespace Microcode
 //                new Combination2SLL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -10092,15 +10080,15 @@ namespace Microcode
 //#endif
 
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //#if DEBUG
@@ -10110,7 +10098,7 @@ namespace Microcode
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
@@ -10132,7 +10120,7 @@ namespace Microcode
 //            return new Combination2SLQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SLQ.EvalStep");
@@ -10140,18 +10128,18 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
+//            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
 //        }
 //    }
 
@@ -10178,7 +10166,7 @@ namespace Microcode
 //                new Combination2SQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SQ.EvalStep");
@@ -10188,7 +10176,7 @@ namespace Microcode
 //            rand1TypeHistogram.Note (this.rand1Type);
 //#endif
 //            object ev1;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand1;
 //            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -10196,14 +10184,14 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -10232,7 +10220,7 @@ namespace Microcode
 //                new Combination2SQL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SQL.EvalStep");
@@ -10241,18 +10229,18 @@ namespace Microcode
 
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -10274,7 +10262,7 @@ namespace Microcode
 //                new Combination2SQA (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SQA.EvalStep");
@@ -10282,14 +10270,14 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.ArgumentValue (this.rand1Offset));
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.ArgumentValue (this.rand1Offset));
 //        }
 //    }
 
@@ -10309,7 +10297,7 @@ namespace Microcode
 //                new Combination2SQA0 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -10318,14 +10306,14 @@ namespace Microcode
 //            SCode.location = "Combination2SQA0.EvalStep";
 //#endif
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.Argument0Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument0Value);
 //        }
 //    }
 
@@ -10345,7 +10333,7 @@ namespace Microcode
 //                new Combination2SQA1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("-");
@@ -10354,14 +10342,14 @@ namespace Microcode
 //            SCode.location = "Combination2SQA1.EvalStep";
 //#endif
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, closureEnvironment.Argument1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument1Value);
 //        }
 //    }
 
@@ -10381,7 +10369,7 @@ namespace Microcode
 //                new Combination2SQL1 (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 
 //#if DEBUG
@@ -10390,18 +10378,18 @@ namespace Microcode
 //            ratorTypeHistogram.Note (this.ratorType);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
+//            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
 //        }
 //    }
 
@@ -10421,21 +10409,21 @@ namespace Microcode
 //            return new Combination2SQQ (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SQQ.EvalStep");
 //            NoteCalls (this.rator);
 //#endif
 //            object evop;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, this.rand0Value, this.rand1Value);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, this.rand1Value);
 //        }
 //    }
 
@@ -10465,7 +10453,7 @@ namespace Microcode
 //                new Combination2SSL (rator, rand0, rand1);
 //        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
 //            Warm ("Combination2SSL.EvalStep");
@@ -10475,11 +10463,11 @@ namespace Microcode
 //            rand0TypeHistogram.Note (this.rand0Type);
 //#endif
 //            object ev1;
-//            if (closureEnvironment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+//            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
 //                throw new NotImplementedException ();
 
 //            object ev0;
-//            Environment env = closureEnvironment;
+//            Environment env = environment;
 //            Control unev = this.rand0;
 //            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 //            if (ev1 == Interpreter.Unwind) {
@@ -10487,297 +10475,1468 @@ namespace Microcode
 //            }
 
 //            object evop;
-//            env = closureEnvironment;
+//            env = environment;
 //            unev = this.rator;
 //            while (unev.EvalStep (out evop, ref unev, ref env)) { };
 //            if (evop == Interpreter.Unwind) {
 //                throw new NotImplementedException ();
 //            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
+//            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
 //        }
 //    }
 
-//    class Combination2SSA : Combination2SSL
-//    {
-//#if DEBUG
-//        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
-//        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-//#endif
-//        protected Combination2SSA (SCode rator, SCode rand0, Argument rand1)
-//            : base (rator, rand0, rand1)
-//        {
-//        }
+    [Serializable]
+    class Combination2XA : Combination2
+    {
+        protected readonly int rand0Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        protected Combination2XA (SCode rator, Argument rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Offset = rand0.Offset;
+        }
 
-//        public static SCode Make (SCode rator, SCode rand0, Argument rand1)
-//        {
-//            return
-//                (rand1 is Argument0) ? Combination2SSA0.Make (rator, rand0, (Argument0) rand1) :
-//                (rand1 is Argument1) ? Combination2SSA1.Make (rator, rand0, (Argument1) rand1) :
-//                new Combination2SSA (rator, rand0, rand1);
-//        }
+        public static SCode Make (SCode rator, Argument rand0, SCode rand1)
+        {
+            return
+                (rand0 is Argument0) ? Combination2XA0.Make (rator, (Argument0) rand0, rand1) :
+                (rand0 is Argument1) ? Combination2XA1.Make (rator, (Argument1) rand0, rand1) :
+                (rand1 is Argument) ? Combination2XAA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is StaticVariable) ? Combination2XAS.Make (rator, rand0, (StaticVariable) rand1) :
+                (rand1 is Quotation) ? Combination2XAQ.Make (rator, rand0, (Quotation) rand1) :
+                new Combination2XA (rator, rand0, rand1);
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.rator);
-//            NoteCalls (this.rand0);
-//            ratorTypeHistogram.Note (this.ratorType);
-//            rand0TypeHistogram.Note (this.rand0Type);
-//            SCode.location = "Combination2SSA.EvalStep";
-//#endif
-//            object ev1 = closureEnvironment.ArgumentValue (this.rand1Offset);
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand1);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2XA.EvalStep";
+#endif
 
-//            object ev0;
-//            Environment env = closureEnvironment;
-//            Control unev = this.rand0;
-//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-//            if (ev0 == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
 
-//            object evop;
-//            env = closureEnvironment;
-//            unev = this.rator;
-//            while (unev.EvalStep (out evop, ref unev, ref env)) { };
-//            if (evop == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, closureEnvironment, ev0, ev1));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
-//        }
-//    }
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue(this.rand0Offset), ev1);
+        }
+    }
 
-//    sealed class Combination2SSA0 : Combination2SSA
-//    {
-//#if DEBUG
-//        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
-//        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-//#endif
-//        Combination2SSA0 (SCode rator, SCode rand0, Argument0 rand1)
-//            : base (rator, rand0, rand1)
-//        {
-//        }
+    [Serializable]
+    class Combination2XAA : Combination2XA
+    {
+        protected readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+        protected Combination2XAA (SCode rator, Argument rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
 
-//        public static SCode Make (SCode rator, SCode rand0, Argument0 rand1)
-//        {
-//            return
-//                new Combination2SSA0 (rator, rand0, rand1);
-//        }
+        public static SCode Make (SCode rator, Argument rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2XAA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2XAA1.Make (rator, rand0, (Argument1) rand1) :
+                new Combination2XAA (rator, rand0, rand1);
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.rator);
-//            NoteCalls (this.rand0);
-//            ratorTypeHistogram.Note (this.ratorType);
-//            rand0TypeHistogram.Note (this.rand0Type);
-//            SCode.location = "Combination2SSA0.EvalStep";
-//#endif
-//            object ev0;
-//            Environment env = closureEnvironment;
-//            Control unev = this.rand0;
-//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-//#if DEBUG
-//            SCode.location = "Combination2SSA0.EvalStep.1";
-//#endif
-//            if (ev0 == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand0);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "Combination2XAA.EvalStep";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
-//            object evop;
-//            env = closureEnvironment;
-//            unev = this.rator;
-//            while (unev.EvalStep (out evop, ref unev, ref env)) { };
-//#if DEBUG
-//            SCode.location = "Combination2SSA0.EvalStep.2";
-//#endif
-//            if (evop == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, closureEnvironment, ev0, ev1));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+            object ev0;
+            Environment env = environment;
+            Control unev = this.rand0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument0Value);
-//        }
-//    }
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
 
-//    sealed class Combination2SSA1 : Combination2SSA
-//    {
-//#if DEBUG
-//        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
-//        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-//#endif
-//        Combination2SSA1 (SCode rator, SCode rand0, Argument1 rand1)
-//            : base (rator, rand0, rand1)
-//        {
-//        }
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
 
-//        public static SCode Make (SCode rator, SCode rand0, Argument1 rand1)
-//        {
-//            return
-//                new Combination2SSA1 (rator, rand0, rand1);
-//        }
+    [Serializable]
+    sealed class Combination2XAA0 : Combination2XAA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XAA0 (SCode rator, Argument rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.rator);
-//            NoteCalls (this.rand0);
-//            ratorTypeHistogram.Note (this.ratorType);
-//            rand0TypeHistogram.Note (this.rand0Type);
-//            SCode.location = "Combination2SSA1.EvalStep";
-//#endif
-//            object ev0;
-//            Environment env = closureEnvironment;
-//            Control unev = this.rand0;
-//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-//            if (ev0 == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+        public static SCode Make (SCode rator, Argument rand0, Argument0 rand1)
+        {
+            return
+                new Combination2XAA0 (rator, rand0, rand1);
+        }
 
-//            object evop;
-//            env = closureEnvironment;
-//            unev = this.rator;
-//            while (unev.EvalStep (out evop, ref unev, ref env)) { };
-//            if (evop == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, closureEnvironment, ev0, ev1));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XAA0.EvalStep";
+#endif
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2XAA0.EvalStep";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, closureEnvironment.Argument1Value);
-//        }
-//    }
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue(this.rand0Offset), environment.Argument0Value);
+        }
+    }
 
-//    sealed class Combination2SSL1 : Combination2SSL
-//    {
-//#if DEBUG
-//        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
-//        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-//#endif
-//        Combination2SSL1 (SCode rator, SCode rand0, LexicalVariable1 rand1)
-//            : base (rator, rand0, rand1)
-//        {
-//        }
+    [Serializable]
+    sealed class Combination2XAA1 : Combination2XAA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XAA1 (SCode rator, Argument rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
 
-//        public static SCode Make (SCode rator, SCode rand0, LexicalVariable1 rand1)
-//        {
-//            return new Combination2SSL1 (rator, rand0, rand1);
-//        }
+        public static SCode Make (SCode rator, Argument rand0, Argument1 rand1)
+        {
+            return
+                new Combination2XAA1 (rator, rand0, rand1);
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.rator);
-//            NoteCalls (this.rand0);
-//            ratorTypeHistogram.Note (this.ratorType);
-//            rand0TypeHistogram.Note (this.rand0Type);
-//            SCode.location = "Combination2SSL1.EvalStep";
-//#endif
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XAA1.EvalStep";
+#endif
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
 
-//            object ev1;
-//            if (closureEnvironment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-//                throw new NotImplementedException ();
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue(this.rand0Offset), environment.Argument1Value);
+        }
+    }
 
-//            object ev0;
-//            Environment env = closureEnvironment;
-//            Control unev = this.rand0;
-//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-//            if (ev0 == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, closureEnvironment, ev1));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+    [Serializable]
+    sealed class Combination2XAS : Combination2XA
+    {
+        readonly object rand1Name;
+        readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XAS (SCode rator, Argument rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
 
-//            object evop;
-//            env = closureEnvironment;
-//            unev = this.rator;
-//            while (unev.EvalStep (out evop, ref unev, ref env)) { };
-//            if (evop == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, closureEnvironment, ev0, ev1));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, ev1);
-//        }
-//    }
+        public static SCode Make (SCode rator, Argument rand0, StaticVariable rand1)
+        {
+            return
+                new Combination2XAS (rator, rand0, rand1);
+        }
 
-//    [Serializable]
-//    sealed class Combination2SSQ : Combination2
-//    {
-//#if DEBUG
-//        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
-//        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-//#endif
-//        public readonly object rand1Value;
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XAS.EvalStep";
+#endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset)) {
+                throw new NotImplementedException ();
+            }
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
 
-//        Combination2SSQ (SCode rator, SCode rand0, Quotation rand1)
-//            : base (rator, rand0, rand1)
-//        {
-//            this.rand1Value = rand1.Quoted;
-//        }
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue(this.rand0Offset), ev1);
+        }
+    }
 
-//        public static SCode Make (SCode rator, SCode rand0, Quotation rand1)
-//        {
-//            return new Combination2SSQ (rator, rand0, rand1);
-//        }
+    [Serializable]
+    sealed class Combination2XAQ : Combination2XA
+    {
+        public readonly object rand1Value;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.rator);
-//            NoteCalls (this.rand0);
-//            ratorTypeHistogram.Note (this.ratorType);
-//            rand0TypeHistogram.Note (this.rand0Type);
-//            SCode.location = "Combination2SSQ.EvalStep";
-//#endif
-//            object ev0;
-//            Environment env = closureEnvironment;
-//            Control unev = this.rand0;
-//            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-//            if (ev0 == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//            }
+        Combination2XAQ (SCode rator, Argument rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
 
-//            object evop;
-//            env = closureEnvironment;
-//            unev = this.rator;
-//            while (unev.EvalStep (out evop, ref unev, ref env)) { };
-//            if (evop == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//            }
+        public static SCode Make (SCode rator, Argument rand0, Quotation rand1)
+        {
+            return new Combination2XAQ (rator, rand0, rand1);
+        }
 
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, evop, ev0, this.rand1Value);
-//        }
-//    }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XAQ.EvalStep";
+#endif
+
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue(this.rand0Offset), this.rand1Value);
+        }
+    }
+
+    [Serializable]
+    class Combination2XA0 : Combination2XA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        protected Combination2XA0 (SCode rator, Argument0 rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, Argument0 rand0, SCode rand1)
+        {
+            return
+                (rand1 is Argument) ? Combination2XA0A.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is StaticVariable) ? Combination2XA0S.Make (rator, rand0, (StaticVariable) rand1) :
+                (rand1 is Quotation) ? Combination2XA0Q.Make (rator, rand0, (Quotation) rand1) :
+                new Combination2XA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand1);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2XA0.EvalStep";
+#endif
+
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, environment.Argument0Value, ev1));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2XA0A : Combination2XA
+    {
+        protected readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        protected Combination2XA0A (SCode rator, Argument0 rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (SCode rator, Argument0 rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2XA0A0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2XA0A1.Make (rator, rand0, (Argument1) rand1) :
+                new Combination2XA0A (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA0A.EvalStep";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0 = environment.Argument0Value;
+
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XA0A0 : Combination2XAA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XA0A0 (SCode rator, Argument0 rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, Argument0 rand0, Argument0 rand1)
+        {
+            return
+                new Combination2XA0A0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA0A0.EvalStep";
+#endif
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2XA0A0.EvalStep";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XA0A1 : Combination2XAA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XA0A1 (SCode rator, Argument0 rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, Argument0 rand0, Argument1 rand1)
+        {
+            return
+                new Combination2XA0A1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA0A1.EvalStep";
+#endif
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, environment.Argument1Value);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XA0S : Combination2XA
+    {
+        readonly object rand1Name;
+        readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XA0S (SCode rator, Argument0 rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (SCode rator, Argument0 rand0, StaticVariable rand1)
+        {
+            return
+                new Combination2XA0S (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA0S.EvalStep";
+#endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset)) {
+                throw new NotImplementedException ();
+            }
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XA0Q : Combination2XA
+    {
+        public readonly object rand1Value;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+
+        Combination2XA0Q (SCode rator, Argument0 rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (SCode rator, Argument0 rand0, Quotation rand1)
+        {
+            return new Combination2XA0Q (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA0Q.EvalStep";
+#endif
+
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value, this.rand1Value);
+        }
+    }
+
+    [Serializable]
+    class Combination2XA1 : Combination2XA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        protected Combination2XA1 (SCode rator, Argument1 rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, Argument1 rand0, SCode rand1)
+        {
+            return
+                (rand1 is Argument) ? Combination2XA1A.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is StaticVariable) ? Combination2XA1S.Make (rator, rand0, (StaticVariable) rand1) :
+                (rand1 is Quotation) ? Combination2XA1Q.Make (rator, rand0, (Quotation) rand1) :
+                new Combination2XA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand1);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2XA1.EvalStep";
+#endif
+
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2XA1A : Combination2XA
+    {
+        protected readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        protected Combination2XA1A (SCode rator, Argument1 rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (SCode rator, Argument1 rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2XA1A0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2XA1A1.Make (rator, rand0, (Argument1) rand1) :
+                new Combination2XA1A (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA1A.EvalStep";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0 = environment.Argument1Value;
+
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XA1A0 : Combination2XAA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XA1A0 (SCode rator, Argument1 rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, Argument1 rand0, Argument0 rand1)
+        {
+            return
+                new Combination2XA1A0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA1A0.EvalStep";
+#endif
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2XA1A0.EvalStep";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XA1A1 : Combination2XAA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XA1A1 (SCode rator, Argument1 rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, Argument1 rand0, Argument1 rand1)
+        {
+            return
+                new Combination2XA1A1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA1A1.EvalStep";
+#endif
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, environment.Argument1Value);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XA1S : Combination2XA
+    {
+        readonly object rand1Name;
+        readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XA1S (SCode rator, Argument1 rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (SCode rator, Argument1 rand0, StaticVariable rand1)
+        {
+            return
+                new Combination2XA1S (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA1S.EvalStep";
+#endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset)) {
+                throw new NotImplementedException ();
+            }
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XA1Q : Combination2XA
+    {
+        public readonly object rand1Value;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+
+        Combination2XA1Q (SCode rator, Argument1 rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (SCode rator, Argument1 rand0, Quotation rand1)
+        {
+            return new Combination2XA1Q (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XA1Q.EvalStep";
+#endif
+
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value, this.rand1Value);
+        }
+    }
+
+    [Serializable]
+    class Combination2XQ : Combination2
+    {
+        protected readonly object rand0Value;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        protected Combination2XQ (SCode rator, Quotation rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Value = rand0.Quoted; ;
+        }
+
+        public static SCode Make (SCode rator, Quotation rand0, SCode rand1)
+        {
+            return
+                (rand1 is Argument) ? Combination2XQA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is StaticVariable) ? Combination2XQS.Make (rator, rand0, (StaticVariable) rand1) :
+                (rand1 is Quotation) ? Combination2XQQ.Make (rator, rand0, (Quotation) rand1) :
+                new Combination2XQ (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand1);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2XQ.EvalStep";
+#endif
+
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2XQA : Combination2XQ
+    {
+        protected readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+        protected Combination2XQA (SCode rator, Quotation rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (SCode rator, Quotation rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2XQA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2XQA1.Make (rator, rand0, (Argument1) rand1) :
+                new Combination2XQA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand0);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "Combination2XQA.EvalStep";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0;
+            Environment env = environment;
+            Control unev = this.rand0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XQA0 : Combination2XQA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XQA0 (SCode rator, Quotation rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, Quotation rand0, Argument0 rand1)
+        {
+            return
+                new Combination2XQA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XQA0.EvalStep";
+#endif
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2XQA0.EvalStep";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XQA1 : Combination2XQA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XQA1 (SCode rator, Quotation rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, Quotation rand0, Argument1 rand1)
+        {
+            return
+                new Combination2XQA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XQA1.EvalStep";
+#endif
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument1Value);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XQS : Combination2XQ
+    {
+        readonly object rand1Name;
+        readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XQS (SCode rator, Quotation rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (SCode rator, Quotation rand0, StaticVariable rand1)
+        {
+            return
+                new Combination2XQS (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XQS.EvalStep";
+#endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset)) {
+                throw new NotImplementedException ();
+            }
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XQQ : Combination2XQ
+    {
+        public readonly object rand1Value;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+
+        Combination2XQQ (SCode rator, Quotation rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (SCode rator, Quotation rand0, Quotation rand1)
+        {
+            return new Combination2XQQ (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XQQ.EvalStep";
+#endif
+
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, this.rand1Value);
+        }
+    }
+
+    [Serializable]
+    class Combination2XXA : Combination2
+    {
+        protected readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+        protected Combination2XXA (SCode rator, SCode rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (SCode rator, SCode rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2XXA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2XXA1.Make (rator, rand0, (Argument1) rand1) :
+                new Combination2XXA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand0);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "Combination2XXA.EvalStep";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0;
+            Environment env = environment;
+            Control unev = this.rand0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XXA0 : Combination2XXA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XXA0 (SCode rator, SCode rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, SCode rand0, Argument0 rand1)
+        {
+            return
+                new Combination2XXA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand0);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "Combination2XXA0.EvalStep";
+#endif
+            object ev0;
+            Environment env = environment;
+            Control unev = this.rand0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2XXA0.EvalStep.1";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2XXA0.EvalStep.2";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XXA1 : Combination2XXA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XXA1 (SCode rator, SCode rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (SCode rator, SCode rand0, Argument1 rand1)
+        {
+            return
+                new Combination2XXA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand0);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "Combination2XXA1.EvalStep";
+#endif
+            object ev0;
+            Environment env = environment;
+            Control unev = this.rand0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XXS : Combination2
+    {
+        object rand1Name;
+        readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+        Combination2XXS (SCode rator, SCode rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (SCode rator, SCode rand0, StaticVariable rand1)
+        {
+            return
+                new Combination2XXS (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand0);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "Combination2XXS.EvalStep";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0;
+            Environment env = environment;
+            Control unev = this.rand0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2XXQ : Combination2
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object rand1Value;
+
+        Combination2XXQ (SCode rator, SCode rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (SCode rator, SCode rand0, Quotation rand1)
+        {
+            return new Combination2XXQ (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand0);
+            ratorTypeHistogram.Note (this.ratorType);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "Combination2XXQ.EvalStep";
+#endif
+            object ev0;
+            Environment env = environment;
+            Control unev = this.rand0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            object evop;
+            env = environment;
+            unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
+        }
+    }
 }

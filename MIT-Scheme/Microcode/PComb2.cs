@@ -540,6 +540,10 @@ namespace Microcode
                 environment = env;
                 return false;
             }
+#if DEBUG
+            SCode.location = this.rator.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.rator);
+#endif
 
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -612,12 +616,7 @@ namespace Microcode
             info.AddValue ("rand1", this.rand1);
         }
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return new List<Symbol> (this.rand0.ComputeFreeVariables ().Union (this.rand1.ComputeFreeVariables ()));
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult r0 = this.rand0.PartialEval (environment);
             PartialResult r1 = this.rand1.PartialEval (environment);
@@ -625,11 +624,10 @@ namespace Microcode
                 r1.Residual == this.rand1 ? this : PrimitiveCombination2.Make (this.rator, r0.Residual, r1.Residual));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return
-                this.rand0.LambdaCount () +
-                this.rand1.LambdaCount ();
+            this.Operand0.CollectFreeVariables (freeVariableSet);
+            this.Operand1.CollectFreeVariables (freeVariableSet);
         }
     }
 
@@ -2517,13 +2515,11 @@ namespace Microcode
     sealed class PrimitiveCombination2XQ : PrimitiveCombination2
     {
         readonly object rand1Value;
-
 #if DEBUG
         [NonSerialized]
         static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
         static Histogram<Primitive2> ratorHistogram = new Histogram<Primitive2> ();
 #endif
-
         PrimitiveCombination2XQ (Primitive2 rator, SCode rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
@@ -2575,8 +2571,6 @@ namespace Microcode
             else return false;
         }
     }
-
-
 
 ////    [Serializable]
 ////    class PrimitiveCombination2Car : PrimitiveCombination2

@@ -183,6 +183,8 @@ namespace Microcode
                 inputBuffer = new byte [this.inputBuffer.Length * 2];
             }
             int count = this.stream.Read (this.inputBuffer, 0, length);
+            //System.Text.Encoding.ASCII.GetChars (this.inputBuffer, 0, count, buffer, start);
+
             for (int i = 0; i < count; i++)
                 buffer[start+i] = (char) this.inputBuffer[i];
             return count;
@@ -239,6 +241,8 @@ namespace Microcode
             if (firstTime) {
                 Misc.SystemClock (out promptTime);
                 Console.WriteLine ("Cold load time: {0}", promptTime);
+                object ignore;
+                Statistics.Reset (out ignore);
                 Console.WriteLine (";; Hack:  invoking finish-cold-load.");
                 for (int i = 0; i < cannedString.Length; i++)
                     buffer [start + i] = cannedString [i];
@@ -277,7 +281,6 @@ namespace Microcode
         {
             get { throw new NotImplementedException (); }
             set { throw new NotImplementedException (); }
-
         }
 
         public override int Read (char [] buffer, int start, int end)
@@ -307,7 +310,6 @@ namespace Microcode
         {
             get { throw new NotImplementedException (); }
             set { throw new NotImplementedException (); }
-
         }
 
         public override int Read (char [] buffer, int start, int end)

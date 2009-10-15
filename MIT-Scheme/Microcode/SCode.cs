@@ -45,16 +45,16 @@ namespace Microcode
     public abstract class SCode: Control
     {
 #if DEBUG
-        static long evaluations;
+        internal static long evaluations;
 
-        static Histogram<Type> scodeHistogram = new Histogram<Type>();
+        internal static Histogram<Type> scodeHistogram = new Histogram<Type>();
 
-        static Histogram<SCode> hotSCode = new Histogram<SCode>();
-        static Histogram<String> topOfStack = new Histogram<String> ();
+        internal static Histogram<SCode> hotSCode = new Histogram<SCode>();
+        internal static Histogram<String> topOfStack = new Histogram<String> ();
         internal static String location;
-        static Dictionary<Type,Histogram<Type>> callerTable = new Dictionary<Type, Histogram<Type>> ();
+        internal static Dictionary<Type,Histogram<Type>> callerTable = new Dictionary<Type, Histogram<Type>> ();
 
-        static Histogram<TypePair> callTable = new Histogram<TypePair> ();
+        internal static Histogram<TypePair> callTable = new Histogram<TypePair> ();
         static public Timer topOfStackTimer;
         static Random random = new Random ();
         public static void TopOfStackProbe (object ignore)
@@ -94,7 +94,7 @@ namespace Microcode
             SCode.location = oldLocation;
         }
 
-        static long warm_break = 1000000000;
+        static long warm_break = 100000000;
 
         [DebuggerStepThrough]
         protected void Warm (String location)
@@ -121,8 +121,13 @@ namespace Microcode
 
 	    // Abstract functions that define the SCode API
         public abstract bool CallsTheEnvironment ();
-        public abstract ICollection<Symbol> ComputeFreeVariables ();
-        public abstract int LambdaCount ();
+        /// <summary>
+        /// Collect the free variables by mutating the set that is passed in.
+        /// </summary>
+        /// <param name="freeVariableSet"></param>
+        public abstract void CollectFreeVariables (HashSet<Symbol> freeVariableSet);
+        // Nicer functional version doesn't perform as well.
+        //public abstract ICollection<Symbol> ComputeFreeVariables ();
         public abstract bool MutatesAny (Symbol [] formals);
 
         /// <summary>
@@ -130,16 +135,8 @@ namespace Microcode
         /// </summary>
         /// <param name="closureEnvironment"></param>
         /// <returns></returns>
-        internal abstract PartialResult PartialEval (Environment environment);
+        internal abstract PartialResult PartialEval (PartialEnvironment environment);
 
-        // Helpers for computing free variables.
-        protected static ICollection<Symbol> noFreeVariables = new List<Symbol> (0);
-        protected static ICollection<Symbol> singletonFreeVariable (Symbol variable)
-        {
-            List<Symbol> singleton = new List<Symbol> (1);
-            singleton.Add (variable);
-            return singleton;
-        }
 #if DEBUG
         // for hash consing
         public virtual string Key ()
@@ -284,20 +281,15 @@ namespace Microcode
 
         #endregion
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return this.code.ComputeFreeVariables ();
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult result = this.code.PartialEval (environment);
             return new PartialResult (result.Residual == this.code ? this : Comment.Make (result.Residual, this.text));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            throw new NotImplementedException ();
+            this.code.CollectFreeVariables (freeVariableSet);
         }
     }
 
@@ -410,18 +402,13 @@ namespace Microcode
 
         #endregion
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            throw new NotImplementedException ();
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult pvalue = this.value.PartialEval (environment);
             return new PartialResult (pvalue.Residual == this.value ? this : Definition.Make (this.name, pvalue.Residual));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
             throw new NotImplementedException ();
         }
@@ -507,21 +494,15 @@ namespace Microcode
 
         #endregion
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return this.body.ComputeFreeVariables ();
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult partialBody = this.body.PartialEval (environment);
             return new PartialResult (partialBody.Residual == this.body ? this : Delay.Make (partialBody.Residual));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            // Pretend this is a lambda expression.
-            return 1;
+            this.body.CollectFreeVariables (freeVariableSet);
         }
     }
 
@@ -682,19 +663,14 @@ namespace Microcode
         }
         #endregion
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return noFreeVariables;
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             return new PartialResult (this);
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return 0;
+            return;
         }
     }
 
@@ -912,12 +888,7 @@ namespace Microcode
 
         #endregion
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return new List<Symbol> (this.first.ComputeFreeVariables ().Union (this.second.ComputeFreeVariables ()));
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult r0 = this.first.PartialEval (environment);
             PartialResult r1 = this.second.PartialEval (environment);
@@ -925,11 +896,10 @@ namespace Microcode
                 r1.Residual == this.second ? this : Sequence2.Make (r0.Residual, r1.Residual));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return 
-                this.first.LambdaCount () +
-                this.second.LambdaCount ();
+            this.first.CollectFreeVariables (freeVariableSet);
+            this.second.CollectFreeVariables (freeVariableSet);
         }
     }
 
@@ -1685,12 +1655,7 @@ namespace Microcode
 
         #endregion
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return new List<Symbol> (this.first.ComputeFreeVariables ().Union (new List<Symbol> (this.second.ComputeFreeVariables ().Union (this.third.ComputeFreeVariables ()))));
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult r0 = this.first.PartialEval (environment);
             PartialResult r1 = this.second.PartialEval (environment);
@@ -1700,12 +1665,11 @@ namespace Microcode
                 r2.Residual == this.third ? this : Sequence3.Make (r0.Residual, r1.Residual, r2.Residual));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return
-                this.first.LambdaCount () +
-                this.second.LambdaCount () +
-                this.third.LambdaCount ();
+            this.first.CollectFreeVariables (freeVariableSet);
+            this.second.CollectFreeVariables (freeVariableSet);
+            this.third.CollectFreeVariables (freeVariableSet);
         }
     }
 
@@ -1878,17 +1842,12 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            throw new NotImplementedException ();
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             return new PartialResult (this);
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
             throw new NotImplementedException ();
         }
