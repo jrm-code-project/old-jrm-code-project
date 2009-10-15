@@ -76,15 +76,15 @@ namespace Microcode
         static public object Initial (SCode expression, Environment environment)
         {
             object answer;
-            bool bounce;
+
+            Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
 #if DEBUG
             Timer tosProbe = new Timer (SCode.TopOfStackProbe, null, 5, 3);
             SCode.topOfStackTimer = tosProbe;
 #endif
-            Control residual = expression.PartialEval (environment).Residual;
-            do {
+            Control residual = expression.PartialEval (PartialEnvironment.Make((ITopLevelEnvironment) environment)).Residual;
+            while (true) {
                 answer = null;
-                bounce = false;
                 while (residual.EvalStep (out answer, ref residual, ref environment)) { };
                 if (answer == Interpreter.UnwindStack) {
                     // What are we doing here?  Someone unwound the stack!
@@ -99,22 +99,26 @@ namespace Microcode
                     //
                     //  3) The stack was unwound in order to exit the interpreter.
                     //     In this case, we return from the initial continuation.
-                    if (((UnwinderState) environment).IsExit)
-                        return ((UnwinderState) environment).ExitValue;
-                    ControlPoint stateToRestore = ((UnwinderState) environment).ToControlPoint ();
+                    if (((UnwinderState) environment).IsExit) {
+                        answer = ((UnwinderState) environment).ExitValue;
+                        break;
+                    }
+                    else {
+                        ControlPoint stateToRestore = ((UnwinderState) environment).ToControlPoint ();
 
-                    // the receiver gets control when the stack is put back.
-                    Control receiver = ((UnwinderState) environment).Receiver;
+                        // the receiver gets control when the stack is put back.
+                        Control receiver = ((UnwinderState) environment).Receiver;
 
-                    // the rewind state goes in the closureEnvironment
-                    environment = new RewindState (stateToRestore, receiver);
+                        // the rewind state goes in the closureEnvironment
+                        environment = new RewindState (stateToRestore, receiver);
 
-                    // Start reloading by returning control to the lowest
-                    // frame.
-                    residual = ((RewindState) environment).PopFrame ();
-                    bounce = true;
+                        // Start reloading by returning control to the lowest
+                        // frame.
+                        residual = ((RewindState) environment).PopFrame ();
+                    }
                 }
-            } while (bounce);
+            }
+            Debug.WriteLine ("Interpreter exited with value " + answer.ToString ());
             return answer;
         }
     }

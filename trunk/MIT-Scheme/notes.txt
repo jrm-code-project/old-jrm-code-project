@@ -6661,3 +6661,886 @@ Top 100 closures
 +		[97]	{[#<EXTENDED-PROCEDURE guarantee-string>, 1429]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
 +		[98]	{[#<PROCEDURE %substring-move!>, 1378]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
 +		[99]	{[#<PROCEDURE #[unnamed-procedure]>, 1368]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase,long>
+----------------------------------------------------------------
+(current-time-string)"Tue Oct 06 17:09:31 2009"
+
+		SCode.evaluations	1433260873	long
+
+Top of stack
++		[0]	{[CAR, 3456]}	System.Collections.Generic.KeyValuePair<string,long>
++		[1]	{[PAIR?, 2392]}	System.Collections.Generic.KeyValuePair<string,long>
++		[2]	{[EQ?, 2012]}	System.Collections.Generic.KeyValuePair<string,long>
++		[3]	{[CHANNEL-READ, 1937]}	System.Collections.Generic.KeyValuePair<string,long>
++		[4]	{[Conditional.EvalStep, 1726]}	System.Collections.Generic.KeyValuePair<string,long>
++		[5]	{[%RECORD-REF, 1620]}	System.Collections.Generic.KeyValuePair<string,long>
++		[6]	{[SimpleClosure.Call1, 1513]}	System.Collections.Generic.KeyValuePair<string,long>
++		[7]	{[FreeVariable.EvalStep, 1492]}	System.Collections.Generic.KeyValuePair<string,long>
++		[8]	{[StaticVariable.EvalStep, 1463]}	System.Collections.Generic.KeyValuePair<string,long>
++		[9]	{[CDR, 1409]}	System.Collections.Generic.KeyValuePair<string,long>
++		[10]	{[PrimitiveCombination2.EvalStep, 1394]}	System.Collections.Generic.KeyValuePair<string,long>
++		[11]	{[PrimitiveCombination1.EvalStep, 1267]}	System.Collections.Generic.KeyValuePair<string,long>
++		[12]	{[Argument0.EvalStep, 1059]}	System.Collections.Generic.KeyValuePair<string,long>
++		[13]	{[Combination1.EvalStep, 958]}	System.Collections.Generic.KeyValuePair<string,long>
++		[14]	{[SmallEnvironment1.GetValueCells, 905]}	System.Collections.Generic.KeyValuePair<string,long>
++		[15]	{[SmallEnvironment2.GetValueCells, 904]}	System.Collections.Generic.KeyValuePair<string,long>
++		[16]	{[OBJECT-TYPE?, 868]}	System.Collections.Generic.KeyValuePair<string,long>
++		[17]	{[Combination.EvalStep, 558]}	System.Collections.Generic.KeyValuePair<string,long>
++		[18]	{[SYSTEM-PAIR-CDR, 518]}	System.Collections.Generic.KeyValuePair<string,long>
++		[19]	{[Interpreter.Call.1, 476]}	System.Collections.Generic.KeyValuePair<string,long>
++		[20]	{[StaticClosure.Apply, 465]}	System.Collections.Generic.KeyValuePair<string,long>
++		[21]	{[StandardExtendedClosure.Apply, 419]}	System.Collections.Generic.KeyValuePair<string,long>
++		[22]	{[Sequence2.EvalStep, 413]}	System.Collections.Generic.KeyValuePair<string,long>
++		[23]	{[%RECORD?, 388]}	System.Collections.Generic.KeyValuePair<string,long>
++		[24]	{[SimpleClosure.Call2, 379]}	System.Collections.Generic.KeyValuePair<string,long>
++		[25]	{[Assignment.EvalStep.1, 359]}	System.Collections.Generic.KeyValuePair<string,long>
++		[26]	{[Combination2.EvalStep, 357]}	System.Collections.Generic.KeyValuePair<string,long>
++		[27]	{[SimpleLambda.EvalStep, 350]}	System.Collections.Generic.KeyValuePair<string,long>
++		[28]	{[BINARY-FASLOAD, 313]}	System.Collections.Generic.KeyValuePair<string,long>
++		[29]	{[PLUS-FIXNUM, 310]}	System.Collections.Generic.KeyValuePair<string,long>
++		[30]	{[LESS-THAN-FIXNUM?, 301]}	System.Collections.Generic.KeyValuePair<string,long>
++		[31]	{[PrimitiveCombination3.EvalStep.3, 291]}	System.Collections.Generic.KeyValuePair<string,long>
++		[32]	{[VECTOR-REF, 279]}	System.Collections.Generic.KeyValuePair<string,long>
++		[33]	{[Quotation.EvalStep, 275]}	System.Collections.Generic.KeyValuePair<string,long>
++		[34]	{[Simple.GetValueCells, 274]}	System.Collections.Generic.KeyValuePair<string,long>
++		[35]	{[StaticEnvironment.GetValueCells, 256]}	System.Collections.Generic.KeyValuePair<string,long>
++		[36]	{[SmallEnvironment0.GetValueCells, 251]}	System.Collections.Generic.KeyValuePair<string,long>
++		[37]	{[Disjunction.EvalStep, 237]}	System.Collections.Generic.KeyValuePair<string,long>
++		[38]	{[Interpreter.Call.0, 200]}	System.Collections.Generic.KeyValuePair<string,long>
++		[39]	{[FILE-TYPE-INDIRECT, 190]}	System.Collections.Generic.KeyValuePair<string,long>
++		[40]	{[Interpreter.Call.2, 188]}	System.Collections.Generic.KeyValuePair<string,long>
+
+
+Top Primitives
++		[0]	{[#<PRIMITIVE CAR 1>, 82975586]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[1]	{[#<PRIMITIVE PAIR? 1>, 61550582]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[2]	{[#<PRIMITIVE EQ? 2>, 50032059]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[3]	{[#<PRIMITIVE %RECORD-REF 2>, 38387156]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[4]	{[#<PRIMITIVE CDR 1>, 32723773]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[5]	{[#<PRIMITIVE OBJECT-TYPE? 2>, 14007286]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[6]	{[#<PRIMITIVE %RECORD? 1>, 9222447]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[7]	{[#<PRIMITIVE PLUS-FIXNUM 2>, 7022675]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[8]	{[#<PRIMITIVE LESS-THAN-FIXNUM? 2>, 6960389]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[9]	{[#<PRIMITIVE VECTOR-REF 2>, 6104296]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[10]	{[#<PRIMITIVE %RECORD-SET! 3>, 4894091]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[11]	{[#<PRIMITIVE NULL? 1>, 2629296]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[12]	{[#<PRIMITIVE CHAR->INTEGER 1>, 2561481]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[13]	{[#<PRIMITIVE NOT 1>, 2130170]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[14]	{[#<PRIMITIVE CHAR? 1>, 1818412]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[15]	{[#<PRIMITIVE VECTOR-LENGTH 1>, 1623388]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[16]	{[#<PRIMITIVE CONS 2>, 1479820]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[17]	{[#<PRIMITIVE GREATER-THAN-FIXNUM? 2>, 1449817]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[18]	{[#<PRIMITIVE GENERAL-CAR-CDR 2>, 1439644]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[19]	{[#<PRIMITIVE VECTOR-8B-REF 2>, 1409788]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[20]	{[#<PRIMITIVE SYSTEM-PAIR-CAR 1>, 1124736]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[21]	{[#<PRIMITIVE STRING-REF 2>, 1124166]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[22]	{[#<PRIMITIVE STRING-SET! 3>, 1083013]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[23]	{[#<PRIMITIVE MINUS-FIXNUM 2>, 1012833]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[24]	{[#<PRIMITIVE INTEGER->CHAR 1>, 877654]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[25]	{[#<PRIMITIVE OBJECT-SET-TYPE 2>, 875369]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[26]	{[#<PRIMITIVE PRIMITIVE-OBJECT-SET-TYPE 2>, 726755]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[27]	{[#<PRIMITIVE VECTOR? 1>, 699598]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[28]	{[#<PRIMITIVE FIXNUM-REMAINDER 2>, 690981]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[29]	{[#<PRIMITIVE FIXNUM-NOT 1>, 602419]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[30]	{[#<PRIMITIVE STRING-LENGTH 1>, 547910]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[31]	{[#<PRIMITIVE INTEGER-LESS? 2>, 537681]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
+
+
+Top SCode
++		[0]	{[Microcode.Argument0, 281453316]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[1]	{[Microcode.PrimitiveCombination1, 203951842]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[2]	{[Microcode.StaticVariable, 159451151]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[3]	{[Microcode.Conditional, 158951107]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[4]	{[Microcode.Quotation, 152926526]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[5]	{[Microcode.PrimitiveCombination2, 136493593]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[6]	{[Microcode.Combination1, 104846783]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[7]	{[Microcode.SimpleLambda, 49895281]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[8]	{[Microcode.Sequence2, 45758151]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[9]	{[Microcode.Argument1, 28631169]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[10]	{[Microcode.Combination2, 25706832]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[11]	{[Microcode.FreeVariable, 20103450]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[12]	{[Microcode.Combination, 18377959]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[13]	{[Microcode.Disjunction, 9508630]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[14]	{[Microcode.Sequence3, 8653538]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[15]	{[Microcode.Assignment, 8544827]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[16]	{[Microcode.StaticLambda, 7373821]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[17]	{[Microcode.PrimitiveCombination3, 6557153]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[18]	{[Microcode.Argument, 5375628]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[19]	{[Microcode.Access, 661506]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[20]	{[Microcode.PrimitiveCombination0, 23661]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[21]	{[Microcode.Definition, 8858]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[22]	{[Microcode.Delay, 4601]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[23]	{[Microcode.StandardExtendedLambda, 870]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[24]	{[Microcode.StandardLambda, 381]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[25]	{[Microcode.Comment, 174]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[26]	{[Microcode.TheEnvironment, 57]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[27]	{[Microcode.GlobalVariable, 8]}	System.Collections.Generic.KeyValuePair<System.Type,long>
+
+
+-		SCode.callTable.Entries	{System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>[212]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>[]
+-		[0]	{[Microcode.TypePair, 138856063]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Argument0" FullName = "Microcode.Argument0"}	System.Type {System.RuntimeType}
++		caller	{Name = "PrimitiveCombination1" FullName = "Microcode.PrimitiveCombination1"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	138856063	long
++		Non-Public members		
+-		[1]	{[Microcode.TypePair, 81360572]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "PrimitiveCombination1" FullName = "Microcode.PrimitiveCombination1"}	System.Type {System.RuntimeType}
++		caller	{Name = "Conditional" FullName = "Microcode.Conditional"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	81360572	long
++		Non-Public members		
+-		[2]	{[Microcode.TypePair, 77277271]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Quotation" FullName = "Microcode.Quotation"}	System.Type {System.RuntimeType}
++		caller	{Name = "PrimitiveCombination2" FullName = "Microcode.PrimitiveCombination2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	77277271	long
++		Non-Public members		
+-		[3]	{[Microcode.TypePair, 67680582]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "PrimitiveCombination2" FullName = "Microcode.PrimitiveCombination2"}	System.Type {System.RuntimeType}
++		caller	{Name = "Conditional" FullName = "Microcode.Conditional"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	67680582	long
++		Non-Public members		
+-		[4]	{[Microcode.TypePair, 64963452]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Argument0" FullName = "Microcode.Argument0"}	System.Type {System.RuntimeType}
++		caller	{Name = "PrimitiveCombination2" FullName = "Microcode.PrimitiveCombination2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	64963452	long
++		Non-Public members		
+-		[5]	{[Microcode.TypePair, 62417373]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "StaticVariable" FullName = "Microcode.StaticVariable"}	System.Type {System.RuntimeType}
++		caller	{Name = "Combination1" FullName = "Microcode.Combination1"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	62417373	long
++		Non-Public members		
+-		[6]	{[Microcode.TypePair, 58497081]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "StaticVariable" FullName = "Microcode.StaticVariable"}	System.Type {System.RuntimeType}
++		caller	{Name = "PrimitiveCombination2" FullName = "Microcode.PrimitiveCombination2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	58497081	long
++		Non-Public members		
+-		[7]	{[Microcode.TypePair, 54355612]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Conditional" FullName = "Microcode.Conditional"}	System.Type {System.RuntimeType}
++		caller	{Name = "Sequence2" FullName = "Microcode.Sequence2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	54355612	long
++		Non-Public members		
+-		[8]	{[Microcode.TypePair, 51142126]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Combination1" FullName = "Microcode.Combination1"}	System.Type {System.RuntimeType}
++		caller	{Name = "Conditional" FullName = "Microcode.Conditional"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	51142126	long
++		Non-Public members		
+-		[9]	{[Microcode.TypePair, 50581835]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "PrimitiveCombination1" FullName = "Microcode.PrimitiveCombination1"}	System.Type {System.RuntimeType}
++		caller	{Name = "PrimitiveCombination1" FullName = "Microcode.PrimitiveCombination1"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	50581835	long
++		Non-Public members		
+-		[10]	{[Microcode.TypePair, 45474821]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Quotation" FullName = "Microcode.Quotation"}	System.Type {System.RuntimeType}
++		caller	{Name = "Conditional" FullName = "Microcode.Conditional"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	45474821	long
++		Non-Public members		
+-		[11]	{[Microcode.TypePair, 33237291]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "PrimitiveCombination1" FullName = "Microcode.PrimitiveCombination1"}	System.Type {System.RuntimeType}
++		caller	{Name = "PrimitiveCombination2" FullName = "Microcode.PrimitiveCombination2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	33237291	long
++		Non-Public members		
+-		[12]	{[Microcode.TypePair, 32585425]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "PrimitiveCombination1" FullName = "Microcode.PrimitiveCombination1"}	System.Type {System.RuntimeType}
++		caller	{Name = "Combination1" FullName = "Microcode.Combination1"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	32585425	long
++		Non-Public members		
+-		[13]	{[Microcode.TypePair, 30117767]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "SimpleLambda" FullName = "Microcode.SimpleLambda"}	System.Type {System.RuntimeType}
++		caller	{Name = "Combination1" FullName = "Microcode.Combination1"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	30117767	long
++		Non-Public members		
+-		[14]	{[Microcode.TypePair, 29928634]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Argument0" FullName = "Microcode.Argument0"}	System.Type {System.RuntimeType}
++		caller	{Name = "Combination1" FullName = "Microcode.Combination1"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	29928634	long
++		Non-Public members		
+-		[15]	{[Microcode.TypePair, 28032254]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Sequence2" FullName = "Microcode.Sequence2"}	System.Type {System.RuntimeType}
++		caller	{Name = "Conditional" FullName = "Microcode.Conditional"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	28032254	long
++		Non-Public members		
+-		[16]	{[Microcode.TypePair, 23904354]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "PrimitiveCombination2" FullName = "Microcode.PrimitiveCombination2"}	System.Type {System.RuntimeType}
++		caller	{Name = "PrimitiveCombination2" FullName = "Microcode.PrimitiveCombination2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	23904354	long
++		Non-Public members		
+-		[17]	{[Microcode.TypePair, 23088807]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Conditional" FullName = "Microcode.Conditional"}	System.Type {System.RuntimeType}
++		caller	{Name = "Conditional" FullName = "Microcode.Conditional"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	23088807	long
++		Non-Public members		
+-		[18]	{[Microcode.TypePair, 19485695]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "StaticVariable" FullName = "Microcode.StaticVariable"}	System.Type {System.RuntimeType}
++		caller	{Name = "Combination2" FullName = "Microcode.Combination2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	19485695	long
++		Non-Public members		
+-		[19]	{[Microcode.TypePair, 15114172]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Argument0" FullName = "Microcode.Argument0"}	System.Type {System.RuntimeType}
++		caller	{Name = "Combination2" FullName = "Microcode.Combination2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	15114172	long
++		Non-Public members		
+-		[20]	{[Microcode.TypePair, 12754466]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "PrimitiveCombination2" FullName = "Microcode.PrimitiveCombination2"}	System.Type {System.RuntimeType}
++		caller	{Name = "Combination1" FullName = "Microcode.Combination1"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	12754466	long
++		Non-Public members		
+-		[21]	{[Microcode.TypePair, 10922260]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Argument0" FullName = "Microcode.Argument0"}	System.Type {System.RuntimeType}
++		caller	{Name = "Sequence2" FullName = "Microcode.Sequence2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	10922260	long
++		Non-Public members		
+-		[22]	{[Microcode.TypePair, 10727819]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "Argument1" FullName = "Microcode.Argument1"}	System.Type {System.RuntimeType}
++		caller	{Name = "Combination2" FullName = "Microcode.Combination2"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	10727819	long
++		Non-Public members		
+-		[23]	{[Microcode.TypePair, 10405307]}	System.Collections.Generic.KeyValuePair<Microcode.TypePair,long>
+-		Key	{Microcode.TypePair}	Microcode.TypePair
++		callee	{Name = "FreeVariable" FullName = "Microcode.FreeVariable"}	System.Type {System.RuntimeType}
++		caller	{Name = "Combination1" FullName = "Microcode.Combination1"}	System.Type {System.RuntimeType}
++		Static members		
+		Value	10405307	long
++		Non-Public members		
+
+
+car                (/ 3456.0 82975586.0)   4.165080557550989e-005
+pair?              (/ 2392.0  61550582.0   3.88623457695331e-005
+eq?                (/ 2012.0 50032059.0)   4.021421544933819e-005
+channel-read       (/ 1937 190.0)        10.19473684210526
+record ref         (/ 1620.0 38387156.0)   4.22016155612049e-005
+cdr                (/ 1409.0 32723773.0)   4.305738216678132e-005
+object-type?       (/ 868.0 14007286.0)    6.196775021228238e-005
+system-pair-cdr    (/ 518.0 475902.0)      0.001088459388697673
+%record?           (/ 388.0 9222447.0)     4.207126373293335e-005
+binary-fasload     (/ 313.0 177.0)         1.768361581920904
+plus-fixnum        (/ 310.0 7022675.0)     4.414272339243949e-005
+less-than-fixnum?  (/ 301.0 6960389.0)     4.324470945517556e-005
+vector-ref         (/ 279.0 6104296.0)     4.570551624626329e-005
+file-type-indirect (/ 188.0 275.0)         0.6836363636363636
+
+
+conditional                    (/ 1726.0 158951107.0) 1.085868499173145e-005
+SimpleClosure.call1            (/ 1513.0
+FreeVariable.EvalStep          (/ 1492.0  20103450.0) 7.421611713412374e-005
+StaticVariable.EvalStep        (/ 1463.0 159451151.0) 9.175223827641107e-006
+PrimitiveCombination2.EvalStep (/ 1394.0 136493593.0) 1.021293358436245e-005
+PrimitiveCombination1.EvalStep (/ 1267.0 203951842.0) 6.212250831252605e-006
+Argument0.EvalStep             (/ 1059.0 281453316.0) 3.762613335136546e-006
+Combination1.EvalStep          (/  958.0 104846783.0) 9.137142529208549e-006
+Combination.EvalStep           (/  558.0  18377959.0) 3.036245755037325e-005
+Sequence2.EvalStep             (/  359.0  45758151.0) 7.845596733137229e-006
+Combination2.EvalStep          (/  357.0  25706832.0) 1.388735881574206e-005
+SimpleLambda.EvalStep          (/  350.0  49895281.0) 7.014691429435982e-006
+Quotation.EvalStep             (/  275.0 152926526.0) 1.798249180132425e-006
+
+
+PrimitiveCarA0  (/ 214.0 46818572.0)   4.570835693151855e-006
+PrimitiveIsPairA0 (/ 99.0 27394861.0)  3.613816474557035e-006
+
+Argument0 (/ 460.0 107085023.0)        4.295652063314213e-006
+----------------------------------------------------------------
+(current-time-string)"Thu Oct 08 08:08:01 2009"
+
+(nboyer 1)
+(lb3) = (count-maps l2 l2)
+	(count-maps l3 l3)
+	(count-maps l2 l3)
+	(count-maps l3 l2)
+	(count-maps l3 l4)
+	(count-maps l4 l3)
+
+Debug, power save
+Load sboyer = 1.456     (1.529)
+              1.831     (2.5)
+Load lattice = 1.126     (.398)
+               1.141     (.457)
+
+Run sboyer = 716.128    (28.5497)
+             656.986    (28.175)
+Run lattice = 26.753    (14.266)
+              22.519    (13.52)
+
+		SCode.evaluations	106052994	long
++		[0]	{[Variable.EvalStep, 1755]}	System.Collections.Generic.KeyValuePair<string,long>
++		[1]	{[StandardClosure.Apply, 1217]}	System.Collections.Generic.KeyValuePair<string,long>
++		[2]	{[CAR, 808]}	System.Collections.Generic.KeyValuePair<string,long>
++		[3]	{[CDR, 480]}	System.Collections.Generic.KeyValuePair<string,long>
++		[4]	{[NULL?, 423]}	System.Collections.Generic.KeyValuePair<string,long>
++		[5]	{[EQ?, 406]}	System.Collections.Generic.KeyValuePair<string,long>
++		[6]	{[PrimitiveCombination1.EvalStep, 349]}	System.Collections.Generic.KeyValuePair<string,long>
++		[7]	{[PAIR?, 338]}	System.Collections.Generic.KeyValuePair<string,long>
++		[8]	{[Conditional.EvalStep, 310]}	System.Collections.Generic.KeyValuePair<string,long>
++		[9]	{[OBJECT-TYPE?, 203]}	System.Collections.Generic.KeyValuePair<string,long>
++		[10]	{[StandardClosure.Call2, 166]}	System.Collections.Generic.KeyValuePair<string,long>
+
+		[0]	29954471	long
+		[1]	8522237	long
+		[2]	736351	long
+		[3]	311098	long
+		[4]	360802	long
+		[5]	2589	long
+		[6]	1646	long
+		[7]	402	long
+		[8]	256	long
+		[9]	97	long
+		[10]	103	long
+
+Run, power save
+
+Load sboyer = .083  (-11.024)
+Load lattice = .067 (-11.87)
+
+Run sboyer = 15.411 (11.8777)
+Run lattice = .562  (-2.51)
+
+(- 28.5497 11.8777) 16.672
+(- 14.266 -2.51)    16.776
+--------
+1 ]=> Cold load time: 4656
+;; Hack:  invoking finish-cold-load.
+\BootstrapLib\runtime\site
+;Loading "sboyer.bin"... done
+; Load sboyer took 4.9000000000000155e-2 (-13.372421683184253).
+;Loading "lattice.bin"... done
+; Load lattice took 3.9000000000000146e-2 (-14.202164033831892).
+591777 rewrites
+; Run Sboyer took 17.143 (12.340614907663864).
+; Run lattice took .48900000000000077 (-3.1247103878536713).
+
+1 ]=> Cold load time: 5022
+;; Hack:  invoking finish-cold-load.
+\BootstrapLib\runtime\site
+;Loading "sboyer.bin"... done
+; Load sboyer took .05500000000000005 (-12.839966563652013).
+;Loading "lattice.bin"... done
+; Load lattice took 3.8000000000000034e-2 (-14.317982759330057).
+591777 rewrites
+; Run Sboyer took 18.817 (12.745273043960443).
+; Run lattice took .7880000000000003 (-1.0402526764093596).
+
+1 ]=> Cold load time: 5147
+;; Hack:  invoking finish-cold-load.
+\BootstrapLib\runtime\site
+;Loading "sboyer.bin"... done
+; Load sboyer took .04899999999999993 (-13.372421683184275).
+;Loading "lattice.bin"... done
+; Load lattice took 4.0000000000000036e-2 (-14.202164033831892).
+591777 rewrites
+; Run Sboyer took 14.032 (11.470886246281664).
+; Run lattice took .5709999999999997 (-2.4488773360492813).
+
+1 ]=> Cold load time: 4910
+;; Hack:  invoking finish-cold-load.
+\BootstrapLib\runtime\site
+;Loading "sboyer.bin"... done
+; Load sboyer took 5.1000000000000045e-2 (-13.187587626244131).
+;Loading "lattice.bin"... done
+; Load lattice took 4.0999999999999925e-2 (-13.97940008672037).
+591777 rewrites
+; Run Sboyer took 17.145 (12.340868251389708).
+; Run lattice took .6579999999999977 (-1.8309616062434049).
+
+1 ]=> Cold load time: 6217
+;; Hack:  invoking finish-cold-load.
+\BootstrapLib\runtime\site
+;Loading "sboyer.bin"... done
+; Load sboyer took .07399999999999984 (-11.549019599857425).
+;Loading "lattice.bin"... done
+; Load lattice took 6.1000000000000165e-2 (-12.291479883578544).
+591777 rewrites
+; Run Sboyer took 17.477999999999998 (12.424420360375306).
+; Run lattice took .7600000000000016 (-1.203307943679449).
+
+1 ]=> Cold load time: 4951
+;; Hack:  invoking finish-cold-load.
+\BootstrapLib\runtime\site
+;Loading "sboyer.bin"... done
+; Load sboyer took .04899999999999993 (-13.372421683184275).
+;Loading "lattice.bin"... done
+; Load lattice took .03699999999999992 (-14.436974992327121).
+591777 rewrites
+; Run Sboyer took 14.891 (11.728946977521758).
+; Run lattice took .6490000000000009 (-1.8909571933130063).
+
+1 ]=> Cold load time: 5359
+;; Hack:  invoking finish-cold-load.
+\BootstrapLib\runtime\site
+;Loading "sboyer.bin"... done
+; Load sboyer took .04899999999999993 (-13.279021420642831).
+;Loading "lattice.bin"... done
+; Load lattice took 5.2999999999999936e-2 (-12.839966563652021).
+591777 rewrites
+; Run Sboyer took 16.364 (12.13862930386819).
+; Run lattice took .5710000000000015 (-2.448877336049268).
+
+
+---- full power
+1 ]=> Cold load time: 2240
+;; Hack:  invoking finish-cold-load.
+\BootstrapLib\runtime\site
+;Loading "sboyer.bin"... done
+; Load sboyer took 2.9000000000000026e-2 (-15.68636235841012).
+;Loading "lattice.bin"... done
+; Load lattice took .02100000000000002 (-16.98970004336018).
+591777 rewrites
+; Run Sboyer took 6.771 (8.305886686851442).
+591777 rewrites
+; Run Sboyer took 6.710999999999999 (8.26787238816292).
+591777 rewrites
+; Run Sboyer took 6.697999999999999 (8.259451432038478).
+591777 rewrites
+; Run Sboyer took 6.773000000000003 (8.307169494368976).
+591777 rewrites
+; Run Sboyer took 6.6910000000000025 (8.254261177678229).
+591777 rewrites
+; Run Sboyer took 6.720000000000006 (8.273046410897349).
+591777 rewrites
+; Run Sboyer took 6.787999999999997 (8.31741833645638).
+591777 rewrites
+; Run Sboyer took 6.799999999999997 (8.32508912706236).
+591777 rewrites
+; Run Sboyer took 6.825000000000003 (8.340390181594664).
+591777 rewrites
+; Run Sboyer took 6.864000000000004 (8.365139988906712).
+591777 rewrites
+; Run Sboyer took 6.872 (8.370199485409088).
+; Run lattice took .26300000000000523 (-5.816987086802537).
+; Run lattice took .2680000000000007 (-5.734887386354083).
+; Run lattice took .2669999999999959 (-5.7511836336894735).
+; Run lattice took .27000000000001023 (-5.7024771999758315).
+; Run lattice took .27300000000001035 (-5.6543109596579235).
+; Run lattice took .2680000000000007 (-5.734887386354083).
+; Run lattice took .2680000000000007 (-5.7348873863543135).
+; Run lattice took .2639999999999958 (-5.800442515102569).
+; Run lattice took .25900000000000034 (-5.883802940367772).
+; Run lattice took .2609999999999957 (-5.833594926617261).
+; Run lattice took .26500000000000057 (-5.783960731301757).
+; Run lattice took .26900000000000546 (-5.7186520597121).
+; Run lattice took .26899999999999125 (-5.7186520597121).
+; Run lattice took .2680000000000007 (-5.7348873863543135).
+; Run lattice took .269999999999996 (-5.68636235841019).
+; Run lattice took .27200000000000557 (-5.670307091255928).
+; Run lattice took .26900000000000546 (-5.7186520597121).
+; Run lattice took .2669999999999959 (-5.7511836336894735).
+; Run lattice took .27199999999999136 (-5.670307091255928).
+; Run lattice took .26899999999999125 (-5.7186520597121).
+; Run lattice took .26300000000000523 (-5.816987086802537).
+; Run lattice took .2609999999999957 (-5.833594926617261).
+; Run lattice took .26200000000000045 (-5.833594926617261).
+; Run lattice took .257000000000005 (-5.917600346881499).
+; Run lattice took .2560000000000002 (-5.917600346881499).
+; Run lattice took .2530000000000001 (-5.985994592184394).
+; Run lattice took .2569999999999908 (-5.917600346881499).
+; Run lattice took .25 (-6.038006529042718).
+; Run lattice took .2530000000000001 (-5.985994592184639).
+; Run lattice took .25799999999999557 (-5.883802940367772).
+; Run lattice took .24899999999999523 (-6.038006529042718).
+; Run lattice took .24900000000000944 (-6.0380065290424705).
+; Run lattice took .2600000000000051 (-5.850266520291734).
+; Run lattice took .2639999999999958 (-5.8004425151023336).
+; Run lattice took .25799999999999557 (-5.883802940367772).
+; Run lattice took .2530000000000001 (-5.968794788241818).
+; Run lattice took .2540000000000049 (-5.968794788241818).
+; Run lattice took .25499999999999545 (-5.951662833800534).
+; Run lattice took .25499999999999545 (-5.9516628338007775).
+; Run lattice took .2600000000000051 (-5.867002359187475).
+; Run lattice took .25799999999999557 (-5.900668766687209).
+; Run lattice took .26500000000000057 (-5.767541260631911).
+
+; Run Sboyer took 5.776 (7.615519885641818).
+591777 rewrites
+; Run Sboyer took 5.678999999999999 (7.542718686834591).
+591777 rewrites
+; Run Sboyer took 5.818000000000001 (7.647737169110403).
+591777 rewrites
+; Run Sboyer took 5.73 (7.580788222496126).
+591777 rewrites
+; Run Sboyer took 5.670000000000002 (7.535064569909699).
+591777 rewrites
+; Run Sboyer took 5.717000000000002 (7.570922201189329).
+591777 rewrites
+; Run Sboyer took 5.710000000000001 (7.56636108245848).
+591777 rewrites
+; Run Sboyer took 5.725000000000001 (7.5769962508773885).
+591777 rewrites
+; Run Sboyer took 5.674999999999997 (7.539658658651599).
+591777 rewrites
+; Run Sboyer took 5.728999999999999 (7.580788222496124).
+591777 rewrites
+; Run Sboyer took 5.7010000000000005 (7.5587485567249155).
+; Run lattice took .2430000000000021 (-6.1618463401956065).
+; Run lattice took .2430000000000021 (-6.14393726401684).
+; Run lattice took .23499999999999943 (-6.30784142589867).
+; Run lattice took .2459999999999951 (-6.090648928966294).
+; Run lattice took .242999999999995 (-6.143937264016967).
+; Run lattice took .2430000000000092 (-6.1618463401956065).
+; Run lattice took .242999999999995 (-6.143937264016967).
+; Run lattice took .25 (-6.0380065290424705).
+; Run lattice took .2459999999999951 (-6.108339156354593).
+; Run lattice took .24200000000000443 (-6.1618463401956065).
+; Run lattice took .2459999999999951 (-6.090648928966294).
+; Run lattice took .24899999999999523 (-6.055483191738004).
+; Run lattice took .24500000000000455 (-6.126101736612709).
+; Run lattice took .24399999999999977 (-6.143937264016967).
+; Run lattice took .2459999999999951 (-6.108339156354593).
+; Run lattice took .24899999999999523 (-6.038006529042718).
+; Run lattice took .24099999999999966 (-6.179829574251321).
+; Run lattice took .242999999999995 (-6.143937264016967).
+; Run lattice took .2459999999999951 (-6.1083391563548455).
+; Run lattice took .24800000000000466 (-6.055483191737755).
+; Run lattice took .2430000000000092 (-6.143937264016712).
+; Run lattice took .2459999999999951 (-6.108339156354593).
+; Run lattice took .24500000000000455 (-6.126101736612709).
+; Run lattice took .24500000000000455 (-6.108339156354593).
+; Run lattice took .24399999999999977 (-6.126101736612709).
+; Run lattice took .2430000000000092 (-6.143937264016712).
+; Run lattice took .23799999999999955 (-6.252516539899056).
+; Run lattice took .23799999999999955 (-6.252516539898796).
+; Run lattice took .24499999999999034 (-6.1083391563548455).
+; Run lattice took .24199999999999022 (-6.161846340195862).
+; Run lattice took .24399999999999977 (-6.126101736612709).
+; Run lattice took .23799999999999955 (-6.252516539899056).
+; Run lattice took .24200000000000443 (-6.179829574251321).
+; Run lattice took .24399999999999977 (-6.143937264016967).
+; Run lattice took .24200000000000443 (-6.179829574251321).
+; Run lattice took .24099999999999966 (-6.197887582884031).
+; Run lattice took .23099999999999454 (-6.363880201078659).
+; Run lattice took .22500000000000853 (-6.478174818886209).
+; Run lattice took .2259999999999991 (-6.4589156085260075).
+; Run lattice took .22799999999999443 (-6.420651529995567).
+; Run lattice took .2360000000000042 (-6.289321377282647).
+; Run lattice took .23099999999999454 (-6.382721639824263).
+; Run lattice took .23199999999999932 (-6.345120151091015).
+; Run lattice took .23399999999999466 (-6.326440789739998).
+; Run lattice took .23699999999999477 (-6.270879970299117).
+; Run lattice took .2330000000000041 (-6.345120151091015).
+; Run lattice took .23499999999999943 (-6.30784142589867).
+; Run lattice took .22699999999998965 (-6.4589156085260075).
+; Run lattice took .23499999999999943 (-6.30784142589867).
+; Run lattice took .22400000000000375 (-6.516951369518412).
+
+; Run Sboyer took 6.029 (7.801732436425943).
+591777 rewrites
+; Run Sboyer took 5.943999999999999 (7.740057302582095).
+591777 rewrites
+; Run Sboyer took 5.823 (7.650722011027917).
+591777 rewrites
+; Run Sboyer took 5.925999999999998 (7.727616471440321).
+591777 rewrites
+; Run Sboyer took 5.846999999999994 (7.668588110214172).
+591777 rewrites
+; Run Sboyer took 5.833999999999996 (7.659664247857134).
+591777 rewrites
+; Run Sboyer took 5.903999999999996 (7.711463488149847).
+591777 rewrites
+; Run Sboyer took 5.902000000000001 (7.7092561463899925).
+591777 rewrites
+; Run Sboyer took 5.929999999999993 (7.73054693364262).
+; Run lattice took .2569999999999908 (-5.900668766687209).
+; Run lattice took .25499999999999545 (-5.951662833800534).
+; Run lattice took .25199999999999534 (-5.985994592184639).
+; Run lattice took .2609999999999957 (-5.850266520291971).
+; Run lattice took .2560000000000002 (-5.9345981956605245).
+; Run lattice took .26300000000000523 (-5.816987086802537).
+; Run lattice took .25900000000000034 (-5.883802940367772).
+; Run lattice took .25799999999999557 (-5.883802940367772).
+; Run lattice took .2539999999999907 (-5.968794788241818).
+; Run lattice took .2540000000000049 (-5.951662833800534).
+; Run lattice took .24900000000000944 (-6.0380065290424705).
+; Run lattice took .25499999999999545 (-5.9345981956605245).
+; Run lattice took .2539999999999907 (-5.968794788241818).
+; Run lattice took .25900000000000034 (-5.883802940367772).
+; Run lattice took .2610000000000099 (-5.850266520291734).
+; Run lattice took .2560000000000002 (-5.917600346881499).
+; Run lattice took .25499999999999545 (-5.9516628338007775).
+; Run lattice took .2560000000000002 (-5.917600346881499).
+; Run lattice took .25500000000000966 (-5.934598195660283).
+; Run lattice took .2540000000000049 (-5.951662833800534).
+; Run lattice took .2580000000000098 (-5.9006687666869695).
+; Run lattice took .2530000000000001 (-5.968794788241818).
+; Run lattice took .2639999999999958 (-5.783960731301757).
+; Run lattice took .25500000000000966 (-5.951662833800534).
+; Run lattice took .2530000000000001 (-5.968794788241818).
+; Run lattice took .25199999999999534 (-6.003262785189781).
+; Run lattice took .25 (-6.038006529042718).
+; Run lattice took .23199999999999932 (-6.345120151091015).
+; Run lattice took .2330000000000041 (-6.345120151091015).
+; Run lattice took .2330000000000041 (-6.326440789739733).
+; Run lattice took .22999999999998977 (-6.401645176601134).
+; Run lattice took .2289999999999992 (-6.420651529995567).
+; Run lattice took .23099999999999454 (-6.363880201078659).
+; Run lattice took .23399999999999466 (-6.30784142589867).
+; Run lattice took .2330000000000041 (-6.326440789739733).
+; Run lattice took .23799999999999955 (-6.234230429434888).
+; Run lattice took .23399999999999466 (-6.30784142589867).
+; Run lattice took .23399999999999466 (-6.326440789739733).
+; Run lattice took .2330000000000041 (-6.345120151091015).
+; Run lattice took .23799999999999955 (-6.252516539898796).
+; Run lattice took .23399999999999466 (-6.326440789739733).
+; Run lattice took .23199999999999932 (-6.363880201078659).
+; Run lattice took .23299999999998988 (-6.345120151091015).
+; Run lattice took .2360000000000042 (-6.289321377282647).
+; Run lattice took .23299999999998988 (-6.326440789739998).
+; Run lattice took .22800000000000864 (-6.439741428068698).
+; Run lattice took .23799999999999955 (-6.252516539898796).
+; Run lattice took .23499999999999943 (-6.289321377282647).
+; Run lattice took .23599999999999 (-6.289321377282647).
+; Run lattice took .2330000000000041 (-6.326440789739733).
+; Run lattice took .2330000000000041 (-6.326440789739733).
+
+Now without variable optimization....
+
+; Run Sboyer took 6.874999999999998 (8.372727025023).
+591777 rewrites
+; Run Sboyer took 6.987000000000002 (8.442285813016278).
+591777 rewrites
+; Run Sboyer took 6.747000000000003 (8.291107101552946).
+591777 rewrites
+; Run Sboyer took 6.704000000000001 (8.262692193937262).
+591777 rewrites
+; Run Sboyer took 6.804000000000002 (8.327004709605676).
+591777 rewrites
+; Run Sboyer took 6.745999999999995 (8.289819540079227).
+591777 rewrites
+; Run Sboyer took 6.6669999999999945 (8.239304551255634).
+591777 rewrites
+; Run Sboyer took 6.679000000000002 (8.247114434647342).
+591777 rewrites
+; Run Sboyer took 6.715999999999994 (8.271106874660106).
+; Run lattice took .2749999999999915 (-5.622494371796105).
+; Run lattice took .2680000000000007 (-5.7186520597121).
+; Run lattice took .27300000000001035 (-5.638373529592274).
+; Run lattice took .2839999999999918 (-5.4821356447570775).
+; Run lattice took .2809999999999917 (-5.528419686577789).
+; Run lattice took .277000000000001 (-5.5909091793478805).
+; Run lattice took .27899999999999636 (-5.54395796726408).
+; Run lattice took .27899999999999636 (-5.559552040819368).
+; Run lattice took .27299999999999613 (-5.6383735295925).
+; Run lattice took .2710000000000008 (-5.686362358409962).
+; Run lattice took .277000000000001 (-5.5909091793478805).
+; Run lattice took .2779999999999916 (-5.559552040819368).
+; Run lattice took .27199999999999136 (-5.670307091255928).
+; Run lattice took .2740000000000009 (-5.6383735295925).
+; Run lattice took .2810000000000059 (-5.512936800949109).
+; Run lattice took .2819999999999965 (-5.512936800949328).
+; Run lattice took .2839999999999918 (-5.466816599529747).
+; Run lattice took .262999999999991 (-5.816987086802537).
+; Run lattice took .2639999999999958 (-5.783960731301757).
+; Run lattice took .25799999999999557 (-5.9006687666869695).
+; Run lattice took .2560000000000002 (-5.917600346881499).
+; Run lattice took .2609999999999957 (-5.850266520291734).
+; Run lattice took .26200000000000045 (-5.833594926617261).
+; Run lattice took .25900000000000034 (-5.883802940367772).
+; Run lattice took .2510000000000048 (-6.020599913279622).
+; Run lattice took .2609999999999957 (-5.833594926617261).
+; Run lattice took .2600000000000051 (-5.867002359187475).
+; Run lattice took .26200000000000045 (-5.833594926617025).
+; Run lattice took .2560000000000002 (-5.934598195660283).
+; Run lattice took .26500000000000057 (-5.767541260631911).
+; Run lattice took .2639999999999958 (-5.8004425151023336).
+; Run lattice took .262999999999991 (-5.800442515102569).
+; Run lattice took .2639999999999958 (-5.800442515102569).
+; Run lattice took .26600000000000534 (-5.751183633689242).
+; Run lattice took .26200000000000045 (-5.833594926617261).
+; Run lattice took .2670000000000101 (-5.751183633689242).
+; Run lattice took .26600000000000534 (-5.751183633689242).
+; Run lattice took .26600000000000534 (-5.767541260631911).
+; Run lattice took .26500000000000057 (-5.783960731301757).
+; Run lattice took .26300000000000523 (-5.816987086802537).
+; Run lattice took .26500000000000057 (-5.767541260631911).
+; Run lattice took .26300000000000523 (-5.816987086802537).
+; Run lattice took .26300000000000523 (-5.816987086802537).
+; Run lattice took .26300000000000523 (-5.8004425151023336).
+; Run lattice took .26500000000000057 (-5.783960731301757).
+; Run lattice took .26300000000000523 (-5.816987086802537).
+; Run lattice took .26400000000001 (-5.783960731301524).
+; Run lattice took .2639999999999958 (-5.8004425151023336).
+; Run lattice took .26500000000000057 (-5.783960731301757).
+; Run lattice took .26200000000000045 (-5.833594926617261).
+; Run lattice took .26500000000000057 (-5.783960731301757).
+;Value: #t
+
+591777 rewrites
+; Run Sboyer took 6.732999999999999 (8.281441073037861).
+591777 rewrites
+; Run Sboyer took 6.8629999999999995 (8.364507137201542).
+591777 rewrites
+; Run Sboyer took 6.721 (8.274338954007792).
+591777 rewrites
+; Run Sboyer took 6.704000000000001 (8.262692193937259).
+591777 rewrites
+; Run Sboyer took 6.743000000000002 (8.2885315967664).
+591777 rewrites
+; Run Sboyer took 6.859000000000002 (8.36260802858487).
+591777 rewrites
+; Run Sboyer took 6.850000000000001 (8.356271662098978).
+591777 rewrites
+; Run Sboyer took 6.704000000000001 (8.2633400562222).
+591777 rewrites
+; Run Sboyer took 6.648999999999987 (8.227563329513897).
+; Run lattice took .29399999999999693 (-5.316526695878471).
+; Run lattice took .284000000000006 (-5.46681659952953).
+; Run lattice took .27600000000001046 (-5.606673061697283).
+; Run lattice took .27899999999999636 (-5.5595520408191454).
+; Run lattice took .28300000000000125 (-5.497508916806442).
+; Run lattice took .27599999999999625 (-5.5909091793478805).
+; Run lattice took .269999999999996 (-5.7024771999758315).
+; Run lattice took .2839999999999918 (-5.4821356447570775).
+; Run lattice took .277000000000001 (-5.575202309355498).
+; Run lattice took .2680000000000007 (-5.7186520597121).
+; Run lattice took .269999999999996 (-5.7024771999758315).
+; Run lattice took .2779999999999916 (-5.559552040819368).
+; Run lattice took .28300000000000125 (-5.497508916806442).
+; Run lattice took .28300000000000125 (-5.497508916806224).
+; Run lattice took .28300000000000125 (-5.497508916806442).
+; Run lattice took .2810000000000059 (-5.528419686577789).
+; Run lattice took .27599999999999625 (-5.5909091793478805).
+; Run lattice took .2780000000000058 (-5.575202309355498).
+; Run lattice took .2680000000000007 (-5.7186520597121).
+; Run lattice took .27599999999999625 (-5.6066730616975065).
+; Run lattice took .25 (-6.038006529042718).
+; Run lattice took .26200000000000045 (-5.833594926617261).
+; Run lattice took .26200000000000045 (-5.833594926617261).
+; Run lattice took .26200000000000045 (-5.816987086802537).
+; Run lattice took .262999999999991 (-5.800442515102569).
+; Run lattice took .2569999999999908 (-5.917600346881499).
+; Run lattice took .25899999999998613 (-5.883802940367772).
+; Run lattice took .2569999999999908 (-5.917600346881499).
+; Run lattice took .262999999999991 (-5.800442515102569).
+; Run lattice took .25900000000000034 (-5.867002359187475).
+; Run lattice took .2560000000000002 (-5.9345981956605245).
+; Run lattice took .2600000000000051 (-5.867002359187475).
+; Run lattice took .24899999999999523 (-6.055483191737755).
+; Run lattice took .25 (-6.038006529042718).
+; Run lattice took .24900000000000944 (-6.0380065290424705).
+; Run lattice took .25099999999999056 (-6.020599913279622).
+; Run lattice took .2569999999999908 (-5.917600346881499).
+; Run lattice took .2569999999999908 (-5.900668766687209).
+; Run lattice took .2510000000000048 (-6.020599913279622).
+; Run lattice took .2540000000000049 (-5.968794788241818).
+; Run lattice took .2609999999999957 (-5.833594926617261).
+; Run lattice took .25499999999999545 (-5.9345981956605245).
+; Run lattice took .25900000000000034 (-5.8838029403675325).
+; Run lattice took .2569999999999908 (-5.900668766687209).
+; Run lattice took .2560000000000002 (-5.9345981956605245).
+; Run lattice took .2609999999999957 (-5.850266520291734).
+; Run lattice took .2609999999999957 (-5.850266520291734).
+; Run lattice took .25799999999999557 (-5.900668766687209).
+; Run lattice took .2540000000000049 (-5.968794788241818).
+; Run lattice took .25 (-6.020599913279622).
+; Run lattice took .2580000000000098 (-5.8838029403675325).
+;Value: #t
+
+---  and with argument optimization again
+; Run Sboyer took 5.704999999999998 (7.562556487542332).
+591777 rewrites
+; Run Sboyer took 5.684999999999999 (7.546540692554321).
+591777 rewrites
+; Run Sboyer took 5.703999999999997 (7.561033715851054).
+591777 rewrites
+; Run Sboyer took 5.716000000000001 (7.5701623473130075).
+591777 rewrites
+; Run Sboyer took 5.707999999999998 (7.564839644426091).
+591777 rewrites
+; Run Sboyer took 5.722999999999999 (7.576237459083888).
+591777 rewrites
+; Run Sboyer took 5.533999999999999 (7.43039154804933).
+591777 rewrites
+; Run Sboyer took 5.514000000000003 (7.41466761769755).
+591777 rewrites
+; Run Sboyer took 5.6810000000000045 (7.544247892772588).
+; Run lattice took .24199999999999733 (-6.179829574251321).
+; Run lattice took .23700000000000188 (-6.252516539898926).
+; Run lattice took .2360000000000042 (-6.289321377282647).
+; Run lattice took .23799999999999955 (-6.234230429434888).
+; Run lattice took .23699999999999477 (-6.270879970298856).
+; Run lattice took .23999999999999488 (-6.197887582884031).
+; Run lattice took .23799999999999955 (-6.252516539899056).
+; Run lattice took .2400000000000091 (-6.216020990518543).
+; Run lattice took .23700000000000898 (-6.252516539898796).
+; Run lattice took .23900000000000432 (-6.216020990518543).
+; Run lattice took .23699999999999477 (-6.252516539899056).
+; Run lattice took .23900000000000432 (-6.234230429434888).
+; Run lattice took .23700000000000898 (-6.270879970298856).
+; Run lattice took .24200000000000443 (-6.1618463401956065).
+; Run lattice took .23699999999999477 (-6.270879970298856).
+; Run lattice took .23599999999999 (-6.270879970299117).
+; Run lattice took .2389999999999901 (-6.2160209905188015).
+; Run lattice took .23999999999999488 (-6.197887582884031).
+; Run lattice took .23199999999999932 (-6.363880201078659).
+; Run lattice took .23499999999999943 (-6.289321377282647).
+; Run lattice took .2389999999999901 (-6.234230429434888).
+; Run lattice took .23999999999999488 (-6.216020990518543).
+; Run lattice took .23799999999999955 (-6.252516539899056).
+; Run lattice took .23700000000000898 (-6.252516539898796).
+; Run lattice took .23999999999999488 (-6.216020990518543).
+; Run lattice took .23499999999999943 (-6.289321377282647).
+; Run lattice took .23900000000000432 (-6.216020990518543).
+; Run lattice took .23900000000000432 (-6.234230429434888).
+; Run lattice took .23700000000000898 (-6.252516539898796).
+; Run lattice took .23700000000000898 (-6.270879970298856).
+; Run lattice took .23900000000000432 (-6.234230429434888).
+; Run lattice took .23799999999999955 (-6.252516539899056).
+; Run lattice took .24099999999999966 (-6.197887582884031).
+; Run lattice took .24099999999999966 (-6.197887582884031).
+; Run lattice took .23700000000000898 (-6.252516539898796).
+; Run lattice took .23699999999999477 (-6.252516539899056).
+; Run lattice took .23799999999999955 (-6.252516539899056).
+; Run lattice took .2360000000000042 (-6.270879970298856).
+; Run lattice took .23099999999999454 (-6.382721639823995).
+; Run lattice took .22499999999999432 (-6.478174818886484).
+; Run lattice took .23199999999999932 (-6.363880201078391).
+; Run lattice took .2330000000000041 (-6.345120151091015).
+; Run lattice took .2360000000000042 (-6.289321377282384).
+; Run lattice took .23299999999998988 (-6.326440789739998).
+; Run lattice took .23299999999998988 (-6.345120151091015).
+; Run lattice took .23299999999998988 (-6.326440789739998).
+; Run lattice took .23799999999999955 (-6.252516539899056).
+; Run lattice took .23499999999999943 (-6.307841425898406).
+; Run lattice took .23199999999999932 (-6.363880201078659).
+; Run lattice took .2360000000000042 (-6.289321377282647).
+; Run lattice took .22399999999998954 (-6.497519816658573).

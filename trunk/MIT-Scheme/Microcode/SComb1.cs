@@ -192,12 +192,7 @@ namespace Microcode
 
         #endregion
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return new List<Symbol> (this.rator.ComputeFreeVariables ().Union (this.rand.ComputeFreeVariables ()));
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult rator = this.rator.PartialEval (environment);
             PartialResult rand = this.rand.PartialEval (environment);
@@ -207,11 +202,10 @@ namespace Microcode
                     Combination1.Make(rator.Residual, rand.Residual));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return
-                this.rator.LambdaCount () +
-                this.rand.LambdaCount ();
+            this.rator.CollectFreeVariables (freeVariableSet);
+            this.rand.CollectFreeVariables (freeVariableSet);
         }
     }
 

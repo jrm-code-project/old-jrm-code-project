@@ -83,9 +83,14 @@ namespace Microcode
 
                     Environment env = Environment.ToEnvironment (cdr);
                     Lambda ulam = (Lambda) car;
-                    Lambda plam = (Lambda) ulam.PartialEval (env).Residual;
-                    StandardLambda slam = (StandardLambda) new StandardLambda (plam.Name, plam.Formals, plam.Body);
-                    answer = env.CloseOver (slam);
+                    Lambda plam = (Lambda) ulam.PartialEval (PartialEnvironment.Make((ITopLevelEnvironment) env)).Residual;
+                    StandardLambda slam = (StandardLambda) new StandardLambda (plam.Name, 
+                        plam.Formals, 
+                        plam.Body,
+                        ulam.FreeVariables,
+                        plam.GetStaticMapping(env)
+                        );
+                    answer = new StandardClosure (slam, env);
                     break;
 
                 case TC.RATNUM:

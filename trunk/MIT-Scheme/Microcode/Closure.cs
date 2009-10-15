@@ -6,17 +6,18 @@ using System.Security.Permissions;
 
 namespace Microcode
 {
-    // Recapitulate the lambda hierarchy (to some extent)
     [Serializable]
-    public abstract class ClosureBase : SchemeObject, IApplicable, ISystemPair
+    public abstract class ClosureBase<LType> : SchemeObject, ISystemPair where LType : LambdaBase
     {
 #if DEBUG
-        static Histogram<ClosureBase> hotClosures = new Histogram<ClosureBase>();
+        static Histogram<ClosureBase<LType>> hotClosures = new Histogram<ClosureBase<LType>>();
         static long closureCount;
-        static long leafClosureCallCount;
         static long staticClosureCallCount;
 #endif
         protected long callCount;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        protected readonly LType closureLambda;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly Environment closureEnvironment;
@@ -24,22 +25,68 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly ValueCell [] staticBindings;
 
-        protected ClosureBase (Environment environment, ValueCell [] staticBindings)
+        protected ClosureBase (LType lambda, Environment environment)
+            : base ()
         {
+            this.closureLambda = lambda;
+            this.closureEnvironment = environment;
+            this.staticBindings = environment.GetValueCells (lambda.GetStaticMapping (environment));
+        }
+
+        protected ClosureBase (LType lambda, Environment environment, ValueCell [] staticBindings)
+            : base ()
+        {
+            this.closureLambda = lambda;
             this.closureEnvironment = environment;
             this.staticBindings = staticBindings;
         }
 
-        internal abstract LambdaBase Lambda { get; }
+        internal LType Lambda
+        {
+            get { return this.closureLambda; }
+        }
+
+        /// <summary>
+        /// Returns the array of symbols bound when applying this closure.
+        /// </summary>
+        public Symbol [] BoundVariables
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.closureLambda.Formals;
+            }
+        }
+
+        /// <summary>
+        /// Returns the collection of variables used by this closure.
+        /// The bound variables are not in the collection.
+        /// </summary>
+        public ICollection<Symbol> FreeVariables
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.closureLambda.FreeVariables;
+            }
+        }
 
         public int FormalOffset (object name)
         {
-            return this.Lambda.LexicalOffset (name);
+            return this.closureLambda.LexicalOffset (name);
         }
 
         public int StaticOffset (object name)
         {
-            return this.Lambda.StaticOffset (name, this.closureEnvironment);
+            return this.closureLambda.StaticOffset (name, this.closureEnvironment);
+        }
+
+        public StaticMapping [] StaticNames (ICollection<Symbol> freeVariables)
+        {
+            throw new NotImplementedException ();
+            //StaticMapping [] answer = this.Environment.GetStaticMapping (freeVariables);
+            //StaticMapping.ValidateStaticMapping (answer);
+            //return answer;
         }
 
         public bool StaticValue (out object value, object name, int staticOffset)
@@ -47,34 +94,25 @@ namespace Microcode
             return this.staticBindings [staticOffset].GetValue (out value);
         }
 
+        internal bool SetStaticValue (out object oldValue, object name, object newValue, int staticOffset)
+        {
+            return this.staticBindings [staticOffset].Assign (out oldValue, newValue);
+        }
+
+        public ValueCell StaticCell (int staticOffset)
+        {
+            return this.staticBindings [staticOffset];
+        }
+
         public Symbol Name
         {
             [DebuggerStepThrough]
             get
             {
-                return this.Lambda.Name;
+                return this.closureLambda.Name;
             }
         }
 
-        public string LongName
-        {
-            get
-            {
-                Symbol name = this.Lambda.Name;
-                if (name == LambdaBase.InternalLambda ||
-                    name == LambdaBase.Let || 
-                    name == LambdaBase.Unnamed) {
-                    LexicalEnvironment lenv = this.Environment as LexicalEnvironment;
-                    if (lenv != null &&
-                        lenv.Closure != null)
-                        return lenv.Closure.LongName + " " + name;
-                    else
-                        return name.ToString ();
-                }
-                else
-                    return name.ToString ();
-            }
-        }
 
         public Environment Environment
         {
@@ -89,21 +127,19 @@ namespace Microcode
             callCount+= 1;
             if ((callCount % 500) == 499)
                 hotClosures.Note (this);
-            if (this.Lambda.internalLambdaCount == 0)
-                leafClosureCallCount += 1;
-            if (!this.Lambda.CallsTheEnvironment())
+            if (!this.closureLambda.CallsTheEnvironment())
                 staticClosureCallCount += 1;
         }
 #endif
 
-        public abstract bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args);
-        public abstract bool Call (out object answer, ref Control expression, ref Environment environment);
-        public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0);
-        public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1);
-        public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2);
-        public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3);
-        public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4);
-        public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5);
+        //public abstract bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args);
+        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment);
+        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0);
+        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1);
+        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2);
+        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3);
+        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4);
+        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5);
 
         #region ISystemPair Members
 
@@ -113,7 +149,7 @@ namespace Microcode
             [DebuggerStepThrough]
             get
             {
-                return this.Lambda;
+                return this.closureLambda;
             }
 
             set
@@ -141,23 +177,24 @@ namespace Microcode
         }
 
         #endregion
+
     }
 
     [Serializable]
-    abstract class ExtendedClosure : ClosureBase
+    abstract class ExtendedClosure<LType> : ClosureBase<LType> where LType:ExtendedLambda
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.EXTENDED_PROCEDURE; } }
 
-        protected ExtendedClosure (Environment environment, ValueCell [] staticBindings)
-            : base (environment, staticBindings)
+        protected ExtendedClosure (LType lambda, Environment environment)
+            : base (lambda, environment)
         {
         }
 
         [SchemePrimitive ("EXTENDED-PROCEDURE?", 1, true)]
         public static bool IsExtendedProcedure (out object answer, object arg)
         {
-            answer = arg is ExtendedClosure;
+            answer = arg is StandardExtendedClosure;
             return false;
         }
 
@@ -168,62 +205,62 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class StandardExtendedClosure : ExtendedClosure
+    class StandardExtendedClosure : ExtendedClosure<StandardExtendedLambda>, IApplicable
     {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly StandardExtendedLambda lambda;
+        //[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        //readonly StandardExtendedLambda lambda;
 
         public StandardExtendedClosure (StandardExtendedLambda lambda, Environment environment)
-            : base (environment, environment.GetValueCells (lambda.GetStaticMapping (environment)))
+            : base (lambda, environment)
         {
-            this.lambda = lambda;
-        }
-
-        internal override LambdaBase Lambda
-        {
-            [DebuggerStepThrough]
-            get { return this.lambda; }
+            //this.lambda = lambda;
         }
 
         #region IApplicable Members
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment)
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
             return Apply (out answer, ref expression, ref environment, new object [] { });
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
+#if DEBUG
+            SCode.location = "StaticExtendedClosure.Call1";
+#endif
             return Apply (out answer, ref expression, ref environment, new object [] { arg0 });
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
+#if DEBUG
+            SCode.location = "StaticExtendedClosure.Call2";
+#endif
             return Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1 });
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
             return Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2 });
 
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
         {
             return Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2, arg3 });
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
         {
             return Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2, arg3, arg4 });
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
         {
             return Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2, arg3, arg4, arg5 });
         }
 
-        public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
 #if DEBUG
             SCode.location = "StandardExtendedClosure.Apply";
@@ -231,10 +268,10 @@ namespace Microcode
 #endif
             //object [] rands = closureEnvironment.FrameVector;
             int nargs = args.Length;
-            int nparams = this.lambda.Formals.Length; // param 0 is self
-            int formals = (int) this.lambda.required;
-            int parms = (int) this.lambda.optional + formals;
-            bool rest_flag = this.lambda.rest;
+            int nparams = this.closureLambda.Formals.Length; // param 0 is self
+            int formals = (int) this.closureLambda.required;
+            int parms = (int) this.closureLambda.optional + formals;
+            bool rest_flag = this.closureLambda.rest;
             int auxes = nparams - (parms + (rest_flag ? 1 : 0));
 
             if (nargs < formals) {
@@ -277,100 +314,45 @@ namespace Microcode
                 for (i = (nargs - parms); --i >= 0; )
                     framevector [listloc] = new Cons (args [--argptr], framevector [listloc]);
             }
-            expression = this.lambda.Body;
-            environment = new StandardEnvironment (this, framevector);
+            expression = this.closureLambda.Body;
+            environment = new StandardEnvironment<StandardExtendedLambda, StandardExtendedClosure> (this, framevector);
             answer = null;
             return true;
         }
 
         #endregion
-
-    }
-
-    abstract class PartialClosureBase<LType> : ClosureBase where LType : LambdaBase
-    {
-        LType closureLambda;
-
-        public PartialClosureBase (LType lambda, Environment environment)
-            : base (environment, null)
-        {
-            this.closureLambda = lambda;
-        }
-
-        internal override LambdaBase Lambda
-        {
-            get { return this.closureLambda; }
-        }
-
-        public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool Call (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
-        {
-            throw new NotImplementedException ();
-        }
-    }
-
-    class PartialClosure : PartialClosureBase<LambdaBase>
-    {
-        public PartialClosure (LambdaBase lambda, Environment environment)
-            : base (lambda, environment)
-        {
-        }
-
-        public override TC TypeCode
-        {
-            get { throw new NotImplementedException (); }
-        }
     }
 
     [Serializable]
-    abstract class Closure : ClosureBase
+    abstract class Closure<LType> : ClosureBase<LType> where LType:LambdaBase
     {
+        public readonly int arity;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.PROCEDURE; } }
 
-        protected Closure (Environment environment, ValueCell [] staticBindings)
-            : base (environment, staticBindings)
+        protected Closure (LType lambda, Environment environment)
+            : base (lambda, environment)
         {
+            this.arity = lambda.Formals.Length;
         }
+
+        protected Closure (LType lambda, Environment environment, ValueCell [] staticBindings)
+            : base (lambda, environment, staticBindings)
+        {
+            this.arity = lambda.Formals.Length;
+        }
+
+        // Used in subclasses when they want to invoke the closure
+        // on zero arguments.
+        static protected object [] noArguments =  new object [] { };
 
         [SchemePrimitive ("PROCEDURE?", 1, true)]
         public static bool IsProcedure (out object answer, object arg0)
         {
-            answer = arg0 is Closure;
+            answer = arg0 is StandardClosure ||
+                arg0 is StaticClosure ||
+                arg0 is SimpleClosure;
             return false;
         }
 
@@ -381,74 +363,140 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class StandardClosure : Closure
+    sealed class StandardClosure : Closure<StandardLambda>, IApplicable
     {
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly StandardLambda lambda;
-
-        public readonly int argumentCount;
-
         internal StandardClosure (StandardLambda lambda, Environment environment)
-            : base (environment, environment.GetValueCells (lambda.GetStaticMapping(environment)))
+            : base (lambda, environment)
         {
-            this.lambda = lambda;
-            this.argumentCount = lambda.Formals.Length;
-        }
-
-        internal override LambdaBase Lambda
-        {
-            [DebuggerStepThrough]
-            get { return this.lambda; }
         }
 
         #region IApplicable Members
 
-        public override bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
 #if DEBUG
             this.BumpCallCount ();
             SCode.location = "StandardClosure.Apply";
 #endif
-            if (args.Length != this.argumentCount)
+            if (args.Length != this.arity)
                 throw new NotImplementedException ();
-            expression = this.lambda.Body;
-            environment = new StandardEnvironment (this, args);
+            expression = this.closureLambda.Body;
+            environment = new StandardEnvironment<StandardLambda, StandardClosure> (this, args);
             answer = null; // keep the compiler happy
             return true;
         }
 
-        static object [] noArguments =  new object [] { };
-        public override bool Call (out object answer, ref Control expression, ref Environment environment)
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
             return this.Apply (out answer, ref expression, ref environment, noArguments);
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
+#if DEBUG
+            SCode.location = "StandardClosure.Call1";
+#endif
             return this.Apply (out answer, ref expression, ref environment, new object [] { arg0 });
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
+#if DEBUG
+            SCode.location = "StandardClosure.Call2";
+#endif
             return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1 });
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
             return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2 });
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
         {
             return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2, arg3 });
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
         {
             throw new NotImplementedException ();
         }
 
-        public override bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+    }
+
+    abstract class StaticClosureBase<LType> : Closure<LType> where LType : StaticLambdaBase
+    {
+        protected StaticClosureBase (LType lambda, Environment environment, ValueCell [] staticBindings)
+            : base (lambda, environment, staticBindings)
+        { }
+    }
+
+    sealed class StaticClosure : StaticClosureBase<StaticLambda>, IApplicable
+    {
+        internal StaticClosure (StaticLambda lambda, Environment environment, ValueCell [] staticBindings)
+            : base (lambda, environment, staticBindings)
+        {
+        }
+
+        #region IApplicable Members
+
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
+        {
+#if DEBUG
+            this.BumpCallCount ();
+            SCode.location = "StaticClosure.Apply";
+#endif
+            if (args.Length != this.arity)
+                throw new NotImplementedException ();
+            expression = this.closureLambda.Body;
+            environment = new StaticEnvironment (this, args);
+            answer = null; // keep the compiler happy
+            return true;
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
+        {
+            return this.Apply (out answer, ref expression, ref environment, noArguments);
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
+        {
+#if DEBUG
+            SCode.location = "StaticClosure.Call1";
+#endif
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0 });
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        {
+#if DEBUG
+            SCode.location = "StaticClosure.Call2";
+#endif
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1 });
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2 });
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2, arg3 });
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
         {
             throw new NotImplementedException ();
         }
@@ -456,4 +504,95 @@ namespace Microcode
         #endregion
 
     }
+
+    sealed class SimpleClosure : StaticClosureBase<SimpleLambda>, IApplicable
+    {
+        internal SimpleClosure (SimpleLambda lambda, Environment environment, ValueCell [] staticBindings)
+            : base (lambda, environment, staticBindings)
+        {
+        }
+
+        #region IApplicable Members
+
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
+        {
+            switch (args.Length) {
+                case 0: return this.Call (out answer, ref expression, ref environment);
+                case 1: return this.Call (out answer, ref expression, ref environment, args [0]);
+                case 2: return this.Call (out answer, ref expression, ref environment, args [0], args [1]);
+                default:
+#if DEBUG
+                    this.BumpCallCount ();
+                    SCode.location = "SimpleClosure.Apply";
+#endif
+                    if (args.Length != this.arity)
+                        throw new NotImplementedException ();
+                    expression = this.closureLambda.Body;
+                    environment = new SimpleEnvironment (this, args);
+                    answer = null; // keep the compiler happy
+                    return true;
+            }
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call0";
+#endif
+            expression = this.closureLambda.Body;
+            environment = new SmallEnvironment0 (this);
+            answer = null; // keep the compiler happy
+            return true;
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
+        {
+#if DEBUG
+            SCode.location = "-";
+            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call1";
+#endif
+            expression = this.closureLambda.Body;
+            environment = new SmallEnvironment1 (this, arg0);
+            answer = null; // keep the compiler happy
+            return true;
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        {
+#if DEBUG
+            SCode.location = "-";
+            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call2";
+#endif
+            expression = this.closureLambda.Body;
+            environment = new SmallEnvironment2 (this, arg0, arg1);
+            answer = null; // keep the compiler happy
+            return true;
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2 });
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2, arg3 });
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+    }
+
 }

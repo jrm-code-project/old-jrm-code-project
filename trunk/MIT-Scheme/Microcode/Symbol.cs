@@ -18,7 +18,7 @@ namespace Microcode
             }
         }
 
-        static Dictionary<string,Symbol> symbolTable = new Dictionary<string, Symbol> ();
+        static Dictionary<string,Symbol> symbolTable = new Dictionary<string, Symbol> (25000);
         readonly string name;
         readonly int hashCode;
         static object [] obarray = new object [1];

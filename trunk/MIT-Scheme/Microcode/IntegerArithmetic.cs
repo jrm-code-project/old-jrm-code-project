@@ -325,6 +325,18 @@ namespace Microcode
         public static bool Divide (out object answer, object left, object right)
         {
             if (left is Bignum) {
+                if (right is int) {
+                    Bignum remainder;
+                    Bignum q = Bignum.DivRem ((Bignum) left, (Bignum) (long) (int) right, out remainder);
+                    answer = new Cons (Bignum.ToInteger (q), Bignum.ToInteger (remainder));
+                    return false;
+                }
+                else if (right is long) {
+                    Bignum remainder;
+                    Bignum q = Bignum.DivRem ((Bignum) left, (Bignum) (long) right, out remainder);
+                    answer = new Cons (Bignum.ToInteger (q), Bignum.ToInteger (remainder));
+                    return false;
+                }
                 if (right is Bignum) {
                     Bignum remainder;
                     Bignum q = Bignum.DivRem ((Bignum) left, (Bignum) right, out remainder);
@@ -332,7 +344,7 @@ namespace Microcode
                     return false;
                 }
                 else
-                    throw new NotImplementedException ();
+                    throw new NotImplementedException ("Divide bignum by non-bignum.");
             }
             else {
                 long w0 = Widen (left);

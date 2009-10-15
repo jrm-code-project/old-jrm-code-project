@@ -113,7 +113,7 @@ namespace Microcode
                 //(rator == Primitive.FixnumAdd1) ? PrimitiveFixnumAdd1.Make (rator, rand) :
                 //(rator == Primitive.IsBigFixnum) ? PrimitiveIsBigFixnum.Make (rator, rand) :
                 //(rator == Primitive.IsBigFlonum) ? PrimitiveIsBigFlonum.Make (rator, rand) :
-                //(rator == Primitive.IsChar) ? PrimitiveIsChar.Make (rator, rand) :
+                (rator == Primitive.IsChar) ? PrimitiveIsChar.Make (rator, rand) :
                 //(rator == Primitive.IsComplex) ? PrimitiveIsComplex.Make (rator, rand) :
                 //(rator == Primitive.IsFixnum) ? PrimitiveIsFixnum.Make (rator, rand) :
                 //(rator == Primitive.IsNegative) ? PrimitiveIsNegative.Make (rator, rand) :
@@ -217,7 +217,10 @@ namespace Microcode
                 environment = env;
                 return false;
             }
-
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString();
+            Primitive.hotPrimitives.Note(this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0)) {
@@ -282,20 +285,15 @@ namespace Microcode
 
         #endregion
 
-        public override ICollection<Symbol> ComputeFreeVariables ()
-        {
-            return this.arg0.ComputeFreeVariables ();
-        }
-
-        internal override PartialResult PartialEval (Environment environment)
+        internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult rand0 = this.arg0.PartialEval (environment);
             return new PartialResult (rand0.Residual == this.arg0 ? this : PrimitiveCombination1.Make (this.procedure, rand0.Residual));
         }
 
-        public override int LambdaCount ()
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
-            return this.arg0.LambdaCount ();
+            this.arg0.CollectFreeVariables (freeVariableSet);
         }
     }
 
@@ -383,7 +381,7 @@ namespace Microcode
             ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
             //SCode.location = this.procedure.Name.ToString ();
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveCombination1A";
 #endif
             if (this.method (out answer, environment.ArgumentValue(this.offset))) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -428,7 +426,7 @@ namespace Microcode
             ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
             //SCode.location = this.procedure.Name.ToString ();
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveCombination1A0";
 #endif
             if (this.method (out answer, environment.Argument0Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -473,7 +471,7 @@ namespace Microcode
             ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
             //SCode.location = this.procedure.Name.ToString ();
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveCombination1A1";
 #endif
             if (this.method (out answer, environment.Argument1Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -524,7 +522,7 @@ namespace Microcode
             ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
             //SCode.location = this.procedure.Name.ToString ();
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveCombination1S";
 #endif
             object randValue;
             if (environment.StaticValue (out randValue, this.varname, this.offset)) {
@@ -577,7 +575,7 @@ namespace Microcode
             ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
             //SCode.location = this.procedure.Name.ToString();
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveCombination1Q";
 #endif
             if (this.method (out answer, this.randValue)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
@@ -619,14 +617,14 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             NoteCalls (this.arg0);
-            SCode.location = "PrimitiveCombination1.EvalStep";
+            SCode.location = "PrimitiveCar.EvalStep";
 #endif
             Control unev0 = this.arg0;
             Environment env = environment;
             object ev0;
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination1.EvalStep";
+            SCode.location = "PrimitiveCar.EvalStep";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
@@ -665,8 +663,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveCarA.EvalStep");
 #endif
             answer = ((Cons) environment.ArgumentValue(this.offset)).Car;
             return false;
@@ -693,8 +690,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveCarA0.EvalStep");
 #endif
             answer = ((Cons) environment.Argument0Value).Car;
             return false;
@@ -721,8 +717,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveCarA1.EvalStep");
 #endif
             answer = ((Cons) environment.Argument1Value).Car;
             return false;
@@ -755,8 +750,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveCarS.EvalStep");
 #endif
             object randValue;
             if (environment.StaticValue (out randValue, this.varname, this.offset)) {
@@ -790,8 +784,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveCarQ.EvalStep");
 #endif
             throw new NotImplementedException();
         }
@@ -823,14 +816,14 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             NoteCalls (this.arg0);
-            SCode.location = "PrimitiveCombination1.EvalStep";
+            SCode.location = "PrimitiveCdr.EvalStep";
 #endif
             Control unev0 = this.arg0;
             Environment env = environment;
             object ev0;
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination1.EvalStep";
+            SCode.location = "PrimitiveCdr.EvalStep";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
@@ -869,8 +862,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveCdrA");
 #endif
             answer = ((Cons) environment.ArgumentValue (this.offset)).Cdr;
             return false;
@@ -897,8 +889,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveCdrA0");
 #endif
             answer = ((Cons) environment.Argument0Value).Cdr;
             return false;
@@ -925,8 +916,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveCdrA1");
 #endif
             answer = ((Cons) environment.Argument1Value).Cdr;
             return false;
@@ -959,16 +949,12 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "StaticValue";
+            Warm ("PrimitiveCdrS");
 #endif
             object randValue;
             if (environment.StaticValue (out randValue, this.varname, this.offset)) {
                 throw new NotImplementedException ();
             }
-#if DEBUG
-            SCode.location = "PrimitiveCombination1";
-#endif
             answer = ((Cons) randValue).Cdr;
             return false;
         }
@@ -997,14 +983,213 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveCdrQ");
 #endif
             throw new NotImplementedException ();
         }
     }
 
     #endregion
+
+    #region IsChar
+
+    [Serializable]
+    class PrimitiveIsChar : PrimitiveCombination1
+    {
+        protected PrimitiveIsChar (Primitive1 rator, SCode rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static new SCode Make (Primitive1 rator, SCode rand)
+        {
+            return
+                (rand is Argument) ? PrimitiveIsCharA.Make (rator, (Argument) rand) :
+                (rand is StaticVariable) ? PrimitiveIsCharS.Make (rator, (StaticVariable) rand) :
+                (rand is Quotation) ? PrimitiveIsCharQ.Make (rator, (Quotation) rand) :
+                new PrimitiveIsChar (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg0);
+            SCode.location = "PrimitiveIsChar";
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsChar";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            answer = ev0 is char ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsChar with an argument.
+    /// </summary>
+    [Serializable]
+    class PrimitiveIsCharA : PrimitiveIsChar
+    {
+        readonly int offset;
+
+        protected PrimitiveIsCharA (Primitive1 procedure, Argument arg0)
+            : base (procedure, arg0)
+        {
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, Argument rand)
+        {
+            return
+                (rand is Argument0) ? PrimitiveIsCharA0.Make (rator, (Argument0) rand) :
+                (rand is Argument1) ? PrimitiveIsCharA1.Make (rator, (Argument1) rand) :
+                new PrimitiveIsCharA (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsCharA");
+#endif
+            answer = environment.ArgumentValue (this.offset) is char ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsChar with argument0.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsCharA0 : PrimitiveIsCharA
+    {
+        PrimitiveIsCharA0 (Primitive1 procedure, Argument0 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument0 rand)
+        {
+            return
+                new PrimitiveIsCharA0 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsCharA0");
+#endif
+            answer = environment.Argument0Value is char ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsChar with an argument1.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsCharA1 : PrimitiveIsCharA
+    {
+        PrimitiveIsCharA1 (Primitive1 procedure, Argument1 arg0)
+            : base (procedure, arg0)
+        {
+        }
+
+        public static SCode Make (Primitive1 rator, Argument1 rand)
+        {
+            return
+                new PrimitiveIsCharA1 (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsCharA1");
+#endif
+            answer = environment.Argument1Value is char ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsChar with a static variable.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsCharS : PrimitiveIsChar
+    {
+        //public readonly object randValue;
+        readonly Symbol varname;
+        readonly int offset;
+
+        PrimitiveIsCharS (Primitive1 procedure, StaticVariable arg0)
+            : base (procedure, arg0)
+        {
+            this.varname = arg0.Name;
+            this.offset = arg0.Offset;
+        }
+
+        public static SCode Make (Primitive1 rator, StaticVariable rand)
+        {
+            return
+                new PrimitiveIsCharS (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsCharS");
+#endif
+            object randValue;
+            if (environment.StaticValue (out randValue, this.varname, this.offset)) {
+                throw new NotImplementedException ();
+            }
+            answer = randValue is char ? Constant.sharpT : Constant.sharpF;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// A call to IsChar with a quoted argument.
+    /// </summary>
+    [Serializable]
+    sealed class PrimitiveIsCharQ : PrimitiveIsChar
+    {
+        readonly object randValue;
+
+        PrimitiveIsCharQ (Primitive1 procedure, Quotation arg0)
+            : base (procedure, arg0)
+        {
+            this.randValue = arg0.Quoted;
+        }
+
+        public static SCode Make (Primitive1 rator, Quotation rand)
+        {
+            return
+                new PrimitiveIsCharQ (rator, rand);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsCharQ");
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+    #endregion
+
 
     #region IsPair
 
@@ -1030,14 +1215,14 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             NoteCalls (this.arg0);
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveIsPair";
 #endif
             Control unev0 = this.arg0;
             Environment env = environment;
             object ev0;
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveIsPair";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
@@ -1076,8 +1261,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveIsPairA");
 #endif
             answer = environment.ArgumentValue (this.offset) is Cons ? Constant.sharpT : Constant.sharpF;
             return false;
@@ -1104,8 +1288,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveIsPairA0");
 #endif
             answer = environment.Argument0Value is Cons ? Constant.sharpT : Constant.sharpF;
             return false;
@@ -1133,7 +1316,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveIsPairA1";
 #endif
             answer = environment.Argument1Value is Cons ? Constant.sharpT : Constant.sharpF;
             return false;
@@ -1166,16 +1349,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "StaticValue";
+            Warm ("PrimitiveIsPairS");
 #endif
             object randValue;
             if (environment.StaticValue (out randValue, this.varname, this.offset)) {
                 throw new NotImplementedException ();
             }
-#if DEBUG
-            SCode.location = "PrimitiveCombination1";
-#endif
+
             answer = randValue is Cons ? Constant.sharpT : Constant.sharpF;
             return false;
         }
@@ -1204,7 +1384,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
+            Warm ("PrimitiveIsPairQ");
             SCode.location = "PrimitiveCombination1";
 #endif
             throw new NotImplementedException ();
@@ -1237,14 +1417,14 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             NoteCalls (this.arg0);
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveIsRecord";
 #endif
             Control unev0 = this.arg0;
             Environment env = environment;
             object ev0;
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveIsRecord";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
@@ -1283,8 +1463,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveIsRecordA");
 #endif
             answer = environment.ArgumentValue (this.offset) is Record ? Constant.sharpT : Constant.sharpF;
             return false;
@@ -1311,8 +1490,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveIsRecordA0");
 #endif
             answer = environment.Argument0Value is Record ? Constant.sharpT : Constant.sharpF;
             return false;
@@ -1339,8 +1517,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            Warm ("PrimitiveIsRecordA1");
 #endif
             answer = environment.Argument1Value is Record ? Constant.sharpT : Constant.sharpF;
             return false;
@@ -1373,16 +1550,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            SCode.location = "StaticValue";
+            Warm ("PrimitiveIsRecordS");
 #endif
             object randValue;
             if (environment.StaticValue (out randValue, this.varname, this.offset)) {
                 throw new NotImplementedException ();
             }
-#if DEBUG
-            SCode.location = "PrimitiveCombination1";
-#endif
+
             answer = randValue is Record ? Constant.sharpT : Constant.sharpF;
             return false;
         }
@@ -1412,7 +1586,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            SCode.location = "PrimitiveCombination1";
+            SCode.location = "PrimitiveIsRecordQ";
 #endif
             throw new NotImplementedException ();
         }

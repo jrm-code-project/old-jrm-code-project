@@ -15,60 +15,81 @@ namespace Microcode
         public const bool EnableCombinationOptimization = false;
         public const bool EnableCombination0Optimization = false;
         public const bool EnableCombination1Optimization = false;
+
         public const bool EnableCombination2Optimization = false;
+        public const bool EnableCombination2Specialization = false;
+
         public const bool EnableCommentOptimization = false;
+
+        #region Conditional
         public const bool EnableConditionalOptimization = false;
+        public const bool EnableConditionalSpecialization = false;
+        #endregion
+
         public const bool EnableDefinitionOptimization = false;
         public const bool EnableDelayOptimization = false;
         public const bool EnableDisjunctionOptimization = false;
+
+        #region Lambda
         /// <summary>
         /// If true, allow analysis of Lambdas.
-        /// No effect, currently.
         /// </summary>
-        public const bool EnableLambdaOptimization = false;
+        public const bool EnableLambdaOptimization = true;
+        public const bool EnableStaticLambda = true;
+        #endregion
+
         public const bool EnablePrimitiveCombination0Optimization = false;
+
+        #region PrimitiveCombination1
+
         /// <summary>
         /// If true, allow analysis of PrimitiveCombination1.
         /// </summary>
         public const bool EnablePrimitiveCombination1Optimization = false;
         /// <summary>
+        /// Allow Primitive1Combinations to specialize on the type of argument.
+        /// </summary>
+        public const bool EnablePrimitive1Specialization = true;
+
+        public const bool EnableInlinePrimitive1 = false;
+
+        #endregion
+
+        #region PrimitiveCombination2
+
+        /// <summary>
         /// If true, allow analysis of PrimitiveCombination2.
         /// </summary>
         public const bool EnablePrimitiveCombination2Optimization = false;
+        public const bool EnablePrimitive2Specialization = true;
+
+        public const bool EnableInlinePrimitive2 = false;
+
+        #endregion
+
         public const bool EnablePrimitiveCombination3Optimization = false;
         public const bool EnableQuotationOptimization = false;
         public const bool EnableSequence2Optimization = false;
         public const bool EnableSequence3Optimization = false;
         public const bool EnableTheEnvironmentOptimization = false;
+
+        #region Variable
         /// <summary>
         /// If true, allow the interpreter to figure out where the variable
         /// lives prior to interpretation.
         /// </summary>
-        public const bool EnableVariableOptimization = false;
-
+        public const bool EnableVariableOptimization = true;
         public const bool EnableArgumentBinding = true;
-        public const bool EnableGlobalBinding = true;
-        public const bool EnableSimpleLambda = true;
         public const bool EnableStaticBinding = true;
-
-        /// <summary>
-        /// Cache the parent frames in a vector in the lexical frame.
-        /// </summary>
-        public const bool EnableLexicalCache = false;
-
-        public const bool EnableSuperOperators = false;
+        #endregion
 
         public const bool EnableCombination1Specialization = false;
-        public const bool EnableCombination2Specialization = false;
+
         public const bool EnableCombination3 = false;
         public const bool EnableCombination3Specialization = false;
-        public const bool EnableConditionalSpecialization = false;
+
         public const bool EnableDisjunctionSpecialization = false;
-        /// <summary>
-        /// Allow Primitive1Combinations to specialize on the type of argument.
-        /// </summary>
-        public const bool EnablePrimitive1Specialization = true;
-        public const bool EnablePrimitive2Specialization = true;
+
         /// <summary>
         /// If true, certain primitive predicates are handled directly
         /// by the conditional.
@@ -77,8 +98,6 @@ namespace Microcode
         public const bool EnablePrimitiveConditional2 = false;
         public const bool EnableSequenceSpecialization = false;
 
-        public const bool EnableInlinePrimitive1 = true;
-        public const bool EnableInlinePrimitive2 = false;
 
         /// <summary>
         /// Special case combination1.
