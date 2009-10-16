@@ -25,6 +25,9 @@ namespace Microcode
             }
         }
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        protected static readonly IDictionary<Symbol, ValueCell> noExportedTopLevelVariables = new Dictionary<Symbol, ValueCell> (0);
+
         // This is to capture stupid calls to `ToEnvironment' when we
         // already know it is an environmnet.
         static public Environment ToEnvironment (Environment env)
@@ -84,9 +87,6 @@ namespace Microcode
         internal abstract bool DeepSearch (out object value, object name, uint depth);
         internal abstract bool DeepSearchType (out object value, object name);
 
-
-        /// internal abstract IList<Symbol> ExportedStatics { get; }
-
         // Similar to deep search, but returns a ValueCell.
         public abstract bool FreeReference (out ValueCell value, object name);
         internal abstract bool FreeReference (out ValueCell value, object name, int depth);
@@ -98,9 +98,6 @@ namespace Microcode
         internal abstract bool StaticValue (out object value, object name, int staticOffset);
 
         internal abstract ValueCell [] GetValueCells (StaticMapping [] mapping);
-
-
-        //internal abstract Dictionary<Symbol, ValueCell> TopLevelVariables { get; }
 
         //internal abstract StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables);
 
@@ -346,14 +343,14 @@ namespace Microcode
 
         #region ITopLevelEnvironment Members
 
-        public Dictionary<Symbol, ValueCell> TopLevelVariables
+        public IDictionary<Symbol, ValueCell> ExportedTopLevelVariables
         {
-            get { throw new NotImplementedException (); }
+            get { return noExportedTopLevelVariables; }
         }
 
-        public TRet LocateVariable<TRet> (object name, Func<GlobalEnvironment, TRet> ifGlobal, Func<TRet> ifNotFound)
+        public SCode SpecializeVariable (Variable variable)
         {
-            return ifNotFound ();
+            return variable.MakeFree ();
         }
 
         #endregion
@@ -557,15 +554,14 @@ namespace Microcode
 
         #region ITopLevelEnvironment Members
 
-        static Dictionary<Symbol,ValueCell> noTopLevelVariables = new Dictionary<Symbol, ValueCell> ();
-        public Dictionary<Symbol, ValueCell> TopLevelVariables
+        public IDictionary<Symbol, ValueCell> ExportedTopLevelVariables
         {
-            get { return noTopLevelVariables; }
+            get { return noExportedTopLevelVariables; }
         }
 
-        public TRet LocateVariable<TRet> (object name, Func<GlobalEnvironment, TRet> ifGlobal, Func<TRet> ifNotFound)
+        public SCode SpecializeVariable (Variable variable)
         {
-            return ifGlobal (this);
+            return variable.MakeGlobal (this);
         }
 
         #endregion
@@ -649,16 +645,6 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
-
-        //internal override TRet LocateVariable<TRet> (object name, Func<int, TRet> ifArgument, Func<int, TRet> ifStatic, Func<ValueCell, TRet> ifTopLevel, Func<GlobalEnvironment, TRet> ifGlobal, Func<TRet> ifNotFound)
-        //{
-        //    throw new NotImplementedException ();
-        //}
-
-        //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    throw new NotImplementedException ();
-        //}
 
         internal override bool SafeDeepSearch (out object value, object name)
         {
@@ -973,7 +959,7 @@ namespace Microcode
         //    //return mapping;
         //}
 
-        //internal override TRet LocateVariable<TRet> (object name,
+        //internal override TRet SpecializeVariable<TRet> (object name,
         //    Func<int, TRet> ifArgument,
         //    Func<int, TRet> ifStatic,
         //    Func<ValueCell, TRet> ifTopLevel,
@@ -1070,31 +1056,34 @@ namespace Microcode
 
         #region ITopLevelEnvironment Members
 
-
-
         // We'll need these if we ever try to load or eval
         // in this environment, and if we try once, we'll
         // probably try again.
-        Dictionary<Symbol, ValueCell> topLevelVariables;
+        IDictionary<Symbol, ValueCell> exportedTopLevelVariables;
 
-        public Dictionary<Symbol, ValueCell> TopLevelVariables
+        IDictionary<Symbol, ValueCell> ComputeExportedTopLevelVariables ()
+        {
+            Symbol [] names = this.envClosure.BoundVariables;
+            Dictionary<Symbol, ValueCell> answer = new Dictionary<Symbol, ValueCell> (names.Length);
+            for (int i = 0; i < names.Length; i++) {
+                answer.Add (names [i], this.bindings [i]);
+            }
+            return answer;
+        }
+
+        public IDictionary<Symbol, ValueCell> ExportedTopLevelVariables
         {
             get {
-                if (this.topLevelVariables == null) {
-                    Symbol [] names = envClosure.BoundVariables;
-                    Dictionary<Symbol, ValueCell> answer = new Dictionary<Symbol,ValueCell>(names.Length);
-                    for (int i = 0; i < names.Length; i++) {
-                        answer.Add (names [i], this.bindings [i]);
-                    }
-                    this.topLevelVariables = answer;
+                if (this.exportedTopLevelVariables == null) {
+                    this.exportedTopLevelVariables = ComputeExportedTopLevelVariables();
                 }
-                return this.topLevelVariables;
+                return this.exportedTopLevelVariables;
             }
         }
 
-        public TRet LocateVariable<TRet> (object name, Func<GlobalEnvironment, TRet> ifGlobal, Func<TRet> ifNotFound)
+        public SCode SpecializeVariable (Variable variable)
         {
-            return ifNotFound ();
+            return variable.MakeFree();
         }
 
         #endregion
@@ -1306,7 +1295,7 @@ namespace Microcode
         //    return mapping;
         //}
 
-        //internal override TRet LocateVariable<TRet> (object name,
+        //internal override TRet SpecializeVariable<TRet> (object name,
         //    Func<int, TRet> ifArgument,
         //    Func<int, TRet> ifStatic,
         //    Func<ValueCell, TRet> ifTopLevel,
@@ -1371,20 +1360,6 @@ namespace Microcode
             }
 
         }
-
-        //internal override Dictionary<Symbol, ValueCell> TopLevelVariables
-        //{
-        //    get
-        //    {
-        //        Dictionary<Symbol, ValueCell> answer = new Dictionary<Symbol, ValueCell> ();
-        //        Symbol [] names = envClosure.Lambda.Formals;
-        //        for (int i = 0; i < names.Length; i++) {
-        //            answer.Add (names [i], this.bindings [i]);
-        //        }
-        //        return answer;
-        //    }
-        //}
-
     }
 
     /// <summary>
@@ -1565,7 +1540,7 @@ namespace Microcode
         //    return mapping;
         //}
 
-        //internal override TRet LocateVariable<TRet> (object name,
+        //internal override TRet SpecializeVariable<TRet> (object name,
         //    Func<int, TRet> ifArgument,
         //    Func<int, TRet> ifStatic,
         //    Func<ValueCell, TRet> ifTopLevel,
@@ -1750,7 +1725,7 @@ namespace Microcode
         //    return mapping;
         //}
 
-        //internal override TRet LocateVariable<TRet> (object name,
+        //internal override TRet SpecializeVariable<TRet> (object name,
         //    Func<int, TRet> ifArgument,
         //    Func<int, TRet> ifStatic,
         //    Func<ValueCell, TRet> ifTopLevel,
@@ -1970,7 +1945,7 @@ namespace Microcode
         //    return mapping;
         //}
 
-        //internal override TRet LocateVariable<TRet> (object name,
+        //internal override TRet SpecializeVariable<TRet> (object name,
         //    Func<int, TRet> ifArgument,
         //    Func<int, TRet> ifStatic,
         //    Func<ValueCell, TRet> ifTopLevel,
@@ -2211,7 +2186,7 @@ namespace Microcode
         //    return mapping;
         //}
 
-        //internal override TRet LocateVariable<TRet> (object name,
+        //internal override TRet SpecializeVariable<TRet> (object name,
         //    Func<int, TRet> ifArgument,
         //    Func<int, TRet> ifStatic,
         //    Func<ValueCell, TRet> ifTopLevel,
@@ -2359,11 +2334,6 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
-
-        //internal override TRet LocateVariable<TRet> (object name, Func<int, TRet> ifArgument, Func<int, TRet> ifStatic, Func<ValueCell, TRet> ifTopLevel, Func<GlobalEnvironment, TRet> ifGlobal, Func<TRet> ifNotFound)
-        //{
-        //    throw new NotImplementedException ();
-        //}
 
         //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
         //{

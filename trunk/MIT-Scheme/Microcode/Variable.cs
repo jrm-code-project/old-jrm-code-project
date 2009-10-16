@@ -554,7 +554,7 @@ namespace Microcode
 //    }
 
     [Serializable]
-    class Variable : SCode, ISerializable, ISystemHunk3
+    public class Variable : SCode, ISerializable, ISystemHunk3
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.VARIABLE; } }
@@ -606,7 +606,7 @@ namespace Microcode
             return answer;
         }
 
-        static public Variable Make (Hunk3 init)
+        static internal Variable Make (Hunk3 init)
         {
             return Variable.Make ((Symbol) init.Cxr0);
         }
@@ -704,50 +704,49 @@ namespace Microcode
             info.AddValue ("name", this.varname);
         }
 
-        PartialResult makeArgument (int offset)
+        internal SCode MakeArgument (int argOffset)
         {
-            return new PartialResult (Configuration.EnableArgumentBinding ? Argument.Make (this.varname, offset) : this);
+            return Configuration.EnableArgumentBinding ? Argument.Make (this.varname, argOffset) : this;
         }
 
-        PartialResult makeStatic (int offset)
+
+        internal SCode MakeStatic (int staticOffset)
         {
-            return new PartialResult (Configuration.EnableStaticBinding ? StaticVariable.Make (this.varname, offset) :
-                                      Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) :
-                                      this);
+            return Configuration.EnableStaticBinding ? StaticVariable.Make (this.varname, staticOffset) :
+                   Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) :
+                   this;
         }
 
-        PartialResult makeTopLevel (ValueCell cell)
+
+        internal SCode MakeTopLevel (ValueCell topLevelCell)
         {
-            return new PartialResult (TopLevelVariable.Make (this.varname, cell));
+            return TopLevelVariable.Make (this.varname, topLevelCell);
         }
 
-        PartialResult makeGlobal (GlobalEnvironment env)
+        internal SCode MakeGlobal (GlobalEnvironment env)
         {
-            return new PartialResult (GlobalVariable.Make (this.varname, env, null));
+            return GlobalVariable.Make (this.varname, env, null);
         }
 
-        PartialResult makeFree ()
+        internal SCode MakeFree ()
         {
-            return new PartialResult (Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) : this);
+            return Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) : this;
         }
 
         internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             return
-                Configuration.EnableVariableOptimization ?
-                environment.LocateVariable<PartialResult> (this.varname,
-                                                            makeArgument,
-                                                            makeStatic,
-                                                            makeTopLevel,
-                                                            makeGlobal,
-                                                            makeFree) :
-                new PartialResult (this);
+                new PartialResult (Configuration.EnableVariableOptimization 
+                    ? environment.LocateVariable (this) 
+                    : this);
         }
 
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
             freeVariableSet.Add (this.varname);
         }
+
+
     }
 
     [Serializable]
@@ -964,6 +963,9 @@ namespace Microcode
     [Serializable]
     sealed class TopLevelVariable : Variable
     {
+#if DEBUG
+        static Histogram<Symbol> hotTopLevelVariables = new Histogram<Symbol>();
+#endif
         readonly ValueCell cell;
 
         TopLevelVariable (Symbol name, ValueCell cell)
@@ -981,6 +983,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("TopLevelVariable.EvalStep");
+            hotTopLevelVariables.Note (this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
