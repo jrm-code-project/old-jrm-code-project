@@ -8,9 +8,20 @@ namespace Microcode
 {
     abstract class PartialEnvironment
     {
+        protected IDictionary<Symbol, ValueCell> importedTopLevelVariables;
+
         internal abstract StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables);
-        internal abstract Environment BaseEnvironment { get ;}
-        internal abstract Dictionary<Symbol, ValueCell> TopLevelVariables { get; }
+        internal IDictionary<Symbol, ValueCell> TopLevelVariables { get { return this.importedTopLevelVariables; } }
+
+        protected PartialEnvironment (IDictionary<Symbol, ValueCell> importedTopLevelVariables)
+        {
+            this.importedTopLevelVariables = importedTopLevelVariables;
+        }
+
+        internal static PartialEnvironment Make (ITopLevelEnvironment env)
+        {
+            return new PartialTopLevelEnvironment (env);
+        }
 
         /// <summary>
         /// The list of symbols that can be used in deeper lexical environments.
@@ -21,17 +32,7 @@ namespace Microcode
             get;
         }
 
-        internal static PartialEnvironment Make (ITopLevelEnvironment env)
-        {
-            return new PartialTopLevelEnvironment (env);
-        }
-
-        internal abstract TRet LocateVariable<TRet> (object name,
-            Func<int, TRet> ifArgument,
-            Func<int, TRet> ifStatic,
-            Func<ValueCell, TRet> ifTopLevel,
-            Func<GlobalEnvironment, TRet> ifGlobal,
-            Func<TRet> ifNotFound);
+        internal abstract SCode LocateVariable (Variable variable);
     }
 
     sealed class PartialTopLevelEnvironment : PartialEnvironment
@@ -39,11 +40,12 @@ namespace Microcode
         readonly ITopLevelEnvironment environment;
 
         public PartialTopLevelEnvironment (ITopLevelEnvironment environment)
+            : base (environment.ExportedTopLevelVariables)
         {
             this.environment = environment;
         }
 
-        // Top level environments export Top Level variables, so they don't
+        // Top level environments export their variables as ExportedTopLevelVariables, so they don't
         // have statics.
         static readonly StaticMapping [] noStaticMapping = new StaticMapping[0];
         internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
@@ -57,51 +59,13 @@ namespace Microcode
             get { return noExportedStatics; }
         }
 
-        internal override Environment BaseEnvironment
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        internal override Dictionary<Symbol, ValueCell> TopLevelVariables
-        {
-            get { return environment.TopLevelVariables; }
-        }
-
-        internal override TRet LocateVariable<TRet> (object name, Func<int, TRet> ifArgument, Func<int, TRet> ifStatic, Func<ValueCell, TRet> ifTopLevel, Func<GlobalEnvironment, TRet> ifGlobal, Func<TRet> ifNotFound)
+        internal override SCode LocateVariable (Variable variable)
         {
             ValueCell cell;
-            if (this.environment.TopLevelVariables.TryGetValue ((Symbol) name, out cell))
-                return ifTopLevel (cell);
+            if (this.importedTopLevelVariables.TryGetValue (variable.Name, out cell))
+                return variable.MakeTopLevel (cell);
             else
-                return this.environment.LocateVariable<TRet> (name, ifGlobal, ifNotFound);
-        }
-    }
-
-    sealed class PartialGlobalEnvironment : PartialEnvironment
-    {
-        internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        {
-            throw new NotImplementedException ();
-        }
-
-        internal override Environment BaseEnvironment
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        internal override Dictionary<Symbol, ValueCell> TopLevelVariables
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        internal override IList<Symbol> ExportedStatics
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        internal override TRet LocateVariable<TRet> (object name, Func<int, TRet> ifArgument, Func<int, TRet> ifStatic, Func<ValueCell, TRet> ifTopLevel, Func<GlobalEnvironment, TRet> ifGlobal, Func<TRet> ifNotFound)
-        {
-            throw new NotImplementedException ();
+                return this.environment.SpecializeVariable (variable);
         }
     }
 
@@ -109,68 +73,43 @@ namespace Microcode
     {
         protected PartialClosure<LType> envClosure;
 
-        protected Dictionary<Symbol, ValueCell> topLevelVariables;
         protected IList<Symbol> importedStaticVariables;
 
-        // This is the paranoid way of constructing these.
-        // If we always check the TopLevelVariables last, we
-        // shouldn't need to remove the bindings at each step.
-        static Dictionary<Symbol, ValueCell> ComputeTopLevelVariables (Dictionary<Symbol, ValueCell> incoming, Symbol [] formals)
-        {
-            for (int i = 0; i < formals.Length; i++)
-                if (incoming.ContainsKey (formals [i])) {
-                    // at least one formal is shadowed, make a new dictionary
-                    Dictionary<Symbol, ValueCell> answer = new Dictionary<Symbol, ValueCell> (incoming);
-                    // remove the shadowed entries.
-                    foreach (KeyValuePair<Symbol, ValueCell> kvp in incoming) {
-                        if (Array.IndexOf<Symbol> (formals, kvp.Key) != -1)
-                            answer.Remove (kvp.Key);
-                    }
-                    return answer;
-                }
-            // nothing was shadowed, just re-use the incoming
-            return incoming;
-        }
-
         protected PartialLexicalEnvironment (PartialClosure<LType> closure)
-            : base ()
+            : base (closure.ExportedTopLevelVariables)
         {
             this.envClosure = closure;
 
             Symbol [] boundVariables = closure.BoundVariables;
             ICollection<Symbol> freeVariables = closure.FreeVariables;
-            this.topLevelVariables = ComputeTopLevelVariables (closure.Environment.TopLevelVariables, boundVariables);
+
             this.importedStaticVariables = closure.ImportedStaticVariables;
 
         }
 
-        internal override TRet LocateVariable<TRet> (object name,
-            Func<int, TRet> ifArgument,
-            Func<int, TRet> ifStatic,
-            Func<ValueCell, TRet> ifTopLevel,
-            Func<GlobalEnvironment, TRet> ifGlobal,
-            Func<TRet> ifNotFound)
+        internal override SCode LocateVariable (Variable variable)
         {
-            int argOffset = this.envClosure.FormalOffset (name);
+            int argOffset = this.envClosure.FormalOffset (variable.Name);
             if (argOffset != -1) {
-                return ifArgument (argOffset);
+                return variable.MakeArgument (argOffset);
             }
 
-            int staticOffset = this.importedStaticVariables.IndexOf ((Symbol) name);
+            int staticOffset = this.importedStaticVariables.IndexOf (variable.Name);
             if (staticOffset != -1) {
-                return ifStatic (staticOffset);
+                return variable.MakeStatic (staticOffset);
             }
-            // Must be last so that bindings and statics will shadow!
+            //// Must be last so that bindings and statics will shadow!
             ValueCell topLevelCell;
-            if (this.topLevelVariables.TryGetValue ((Symbol) name, out topLevelCell))
-                return ifTopLevel (topLevelCell);
-            return ifNotFound ();
+            if (this.importedTopLevelVariables.TryGetValue (variable.Name, out topLevelCell))
+                return variable.MakeTopLevel (topLevelCell);
+            return variable.MakeFree ();
         }
 
    }
 
     class PartialStandardEnvironment : PartialLexicalEnvironment<StandardLambda>
     {
+
         public PartialStandardEnvironment (PartialClosure<StandardLambda> closure)
             : base (closure)
         {
@@ -214,21 +153,6 @@ namespace Microcode
             return names;
         }
 
-        //internal override PartialEnvironment BaseEnvironment
-        //{
-        //    get
-        //    {
-        //        return this;
-        //    }
-        //}
-
-        // A standard environment
-        static Dictionary<Symbol,ValueCell> noTopLevelVariables = new Dictionary<Symbol, ValueCell> ();
-        internal override Dictionary<Symbol, ValueCell> TopLevelVariables
-        {
-            get { return noTopLevelVariables; }
-        }
-
         internal override IList<Symbol> ExportedStatics
         {
             get
@@ -238,11 +162,6 @@ namespace Microcode
                     answer.Add (symbol);
                 return answer;
             }
-        }
-
-        internal override Environment BaseEnvironment
-        {
-            get { throw new NotImplementedException (); }
         }
     }
 
@@ -292,20 +211,6 @@ namespace Microcode
             return names;
         }
 
-        //internal override Environment BaseEnvironment
-        //{
-        //    get
-        //    {
-        //        return this;
-        //    }
-        //}
-
-        static Dictionary<Symbol,ValueCell> noTopLevelVariables = new Dictionary<Symbol, ValueCell> ();
-        internal override Dictionary<Symbol, ValueCell> TopLevelVariables
-        {
-            get { return noTopLevelVariables; }
-        }
-
         internal override IList<Symbol> ExportedStatics
         {
             get
@@ -315,11 +220,6 @@ namespace Microcode
                     answer.Add (symbol);
                 return answer;
             }
-        }
-
-        internal override Environment BaseEnvironment
-        {
-            get { throw new NotImplementedException (); }
         }
     }
 
@@ -328,17 +228,6 @@ namespace Microcode
         public PartialStaticEnvironment (PartialClosure<StaticLambda> closure)
             : base (closure)
         {
-            //this.topLevelVariables = new Dictionary<Symbol, ValueCell> ();
-            //Symbol [] formals = closure.Lambda.Formals;
-            //foreach (KeyValuePair<Symbol,ValueCell> kvp in closure.Environment.TopLevelVariables) {
-            //    bool found = false;
-            //    foreach (Symbol formal in formals) {
-            //        if (kvp.Key.Equals (formal))
-            //            found = true;
-            //    }
-            //    if (!found)
-            //        this.topLevelVariables.Add (kvp.Key, kvp.Value);
-            //}
         }
 
 
@@ -379,14 +268,6 @@ namespace Microcode
             return names;
         }
 
-        //internal override Environment BaseEnvironment
-        //{
-        //    get
-        //    {
-        //        return this.envClosure.Environment;
-        //    }
-        //}
-
         internal override IList<Symbol> ExportedStatics
         {
             get
@@ -399,36 +280,13 @@ namespace Microcode
                 return answer;
             }
         }
-
-        internal override Dictionary<Symbol, ValueCell> TopLevelVariables
-        {
-            [DebuggerStepThrough]
-            get { return this.topLevelVariables; }
-        }
-
-        internal override Environment BaseEnvironment
-        {
-            get { throw new NotImplementedException (); }
-        }
     }
 
-    class PartialSimpleEnvironment : PartialLexicalEnvironment<SimpleLambda>
+    sealed class PartialSimpleEnvironment : PartialLexicalEnvironment<SimpleLambda>
     {
-
         public PartialSimpleEnvironment (PartialClosure<SimpleLambda> closure)
             : base (closure)
         {
-            //this.topLevelVariables = new Dictionary<Symbol, ValueCell> ();
-            //Symbol [] formals = closure.Lambda.Formals;
-            //foreach (KeyValuePair<Symbol,ValueCell> kvp in closure.Environment.TopLevelVariables) {
-            //    bool found = false;
-            //    foreach (Symbol formal in formals) {
-            //        if (kvp.Key.Equals (formal))
-            //            found = true;
-            //    }
-            //    if (!found)
-            //        this.topLevelVariables.Add (kvp.Key, kvp.Value);
-            //}
         }
 
         internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
@@ -468,16 +326,6 @@ namespace Microcode
             return names;
         }
 
-
-        //internal override Environment BaseEnvironment
-        //{
-        //    get
-        //    {
-        //        return this.Closure.Environment;
-        //    }
-        //}
-
-
         internal override IList<Symbol> ExportedStatics
         {
             get
@@ -490,17 +338,5 @@ namespace Microcode
                 return answer;
             }
         }
-
-        internal override Dictionary<Symbol, ValueCell> TopLevelVariables
-        {
-            [DebuggerStepThrough]
-            get { return this.topLevelVariables; }
-        }
-
-        internal override Environment BaseEnvironment
-        {
-            get { throw new NotImplementedException (); }
-        }
     }
-
 }

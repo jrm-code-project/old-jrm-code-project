@@ -6,20 +6,43 @@ using System.Text;
 
 namespace Microcode
 {
-
     sealed class PartialClosure<LType> where LType : LambdaBase
-    //: ClosureBase<LType> 
     {
         readonly LType lambda;
         readonly PartialEnvironment environment;
+        readonly IDictionary<Symbol, ValueCell> exportedTopLevelVariables;
+
         StaticMapping [] staticMapping;
         IList<Symbol> importedStaticVariables;
 
+        static IDictionary<Symbol, ValueCell> ComputeUnshadowedTopLevelVariables (IDictionary<Symbol, ValueCell> topLevelVariables, Symbol [] shadowingSymbols)
+        {
+            for (int i = 0; i < shadowingSymbols.Length; i++)
+                if (topLevelVariables.ContainsKey (shadowingSymbols [i])) {
+                    // at least one formal is shadowed, make a new dictionary
+                    IDictionary<Symbol, ValueCell> answer = new Dictionary<Symbol, ValueCell> (topLevelVariables);
+                    // remove the shadowed entries.
+                    foreach (KeyValuePair<Symbol, ValueCell> kvp in topLevelVariables) {
+                        if (Array. IndexOf<Symbol> (shadowingSymbols, kvp.Key) != -1)
+                            answer.Remove (kvp.Key);
+                    }
+                    return answer;
+                }
+            // nothing was shadowed, just re-use the incoming
+            return topLevelVariables;
+        }
+
+        static readonly IDictionary<Symbol, ValueCell> noUnshadowedTopLevelVariables = new Dictionary<Symbol, ValueCell> (0);
+
         public PartialClosure (LType lambda, PartialEnvironment environment)
-        //: base (lambda, environment, null)
         {
             this.lambda = lambda;
             this.environment = environment;
+
+            this.exportedTopLevelVariables = lambda.CallsTheEnvironment()
+                ? noUnshadowedTopLevelVariables
+                : ComputeUnshadowedTopLevelVariables (environment.TopLevelVariables, lambda.Formals);
+
             this.staticMapping = environment.GetStaticMapping (lambda.FreeVariables);
             this.importedStaticVariables = new List<Symbol> ();
 
@@ -44,8 +67,8 @@ namespace Microcode
         }
 
         public LType Lambda { [DebuggerStepThrough] get { return this.lambda; } }
-
         public PartialEnvironment Environment { [DebuggerStepThrough] get { return this.environment; } }
+        public IDictionary<Symbol, ValueCell> ExportedTopLevelVariables { [DebuggerStepThrough] get { return this.exportedTopLevelVariables; } }
 
         /// <summary>
         /// Returns the array of symbols bound when applying this closure.
@@ -94,5 +117,4 @@ namespace Microcode
             return this.lambda.LexicalOffset (name);
         }
     }
-
 }
