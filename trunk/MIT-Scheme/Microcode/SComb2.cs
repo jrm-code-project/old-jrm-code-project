@@ -67,10 +67,11 @@ namespace Microcode
                 // ! (((Quotation) rator).Quoted is PrimitiveN)) ? Unimplemented():
 
                 (! Configuration.EnableCombination2Specialization) ? new Combination2 (rator, rand0, rand1) :
-                (rand0 is Argument) ? Combination2XA.Make (rator, (Argument) rand0, rand1) :
-                (rand0 is Quotation) ? Combination2XQ.Make (rator, (Quotation) rand0, rand1) :
-                (rand1 is Argument) ? Combination2XXA.Make (rator, rand0, (Argument) rand1) :
-                (rand1 is Quotation) ? Combination2XXQ.Make (rator, rand0, (Quotation) rand1) :
+                (rator is StaticVariable) ? Combination2S.Make((StaticVariable) rator, rand0, rand1) :
+                //(rand0 is Argument) ? Combination2XA.Make (rator, (Argument) rand0, rand1) :
+                //(rand0 is Quotation) ? Combination2XQ.Make (rator, (Quotation) rand0, rand1) :
+                //(rand1 is Argument) ? Combination2XXA.Make (rator, rand0, (Argument) rand1) :
+                //(rand1 is Quotation) ? Combination2XXQ.Make (rator, rand0, (Quotation) rand1) :
                  new Combination2 (rator, rand0, rand1);
         }
 

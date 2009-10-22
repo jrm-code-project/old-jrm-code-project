@@ -51,8 +51,6 @@ namespace Microcode
 
 #if DEBUG
         [NonSerialized]
-        static internal long [] foundAtDepth = new long [128];
-        [NonSerialized]
         static protected long [] foundInAuxes = new long [128];
         [NonSerialized]
         static protected long [] foundInGlobal = new long [128];
@@ -61,7 +59,7 @@ namespace Microcode
         [NonSerialized]
         static internal long [] valueCellsCopied = new long [128];
         [NonSerialized]
-        static internal Histogram<StaticMapping []> staticMappings = new Histogram<StaticMapping []> ();
+        static internal Histogram<int[]> staticMappings = new Histogram<int[]> ();
 #endif
 
         // Abstract functions on environments
@@ -73,7 +71,8 @@ namespace Microcode
 
         // Deep search for variable location and smash the value.
         public abstract bool Assign (out object oldValue, object name, object newValue);
-        //internal abstract bool AssignArg (out object oldValue, ushort offset, object newValue);
+        internal abstract bool AssignArgument (out object oldValue, int offset, object newValue);
+        internal abstract bool AssignStatic (out object oldValue, int offset, object newValue);
 
         // Define a variable in the topmost frame.  This will shadow
         // other definitions.  Returns false on success, true if there
@@ -97,9 +96,7 @@ namespace Microcode
 
         internal abstract bool StaticValue (out object value, object name, int staticOffset);
 
-        internal abstract ValueCell [] GetValueCells (StaticMapping [] mapping);
-
-        //internal abstract StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables);
+        internal abstract ValueCell [] GetValueCells (StaticMapping mapping);
 
         // Implementation of primitive.
         internal abstract bool SafeDeepSearch (out object value, object name);
@@ -241,6 +238,16 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
         public override bool DeepSearch (out object value, object name)
         {
             throw new NotImplementedException ();
@@ -321,15 +328,10 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
             throw new NotImplementedException ();
         }
-
-        //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    throw new NotImplementedException ();
-        //}
 
         public override bool FreeReference (out ValueCell value, object name)
         {
@@ -348,7 +350,7 @@ namespace Microcode
             get { return noExportedTopLevelVariables; }
         }
 
-        public SCode SpecializeVariable (Variable variable)
+        public SCode SpecializeVariable (IVariableSpecializer variable)
         {
             return variable.MakeFree ();
         }
@@ -369,6 +371,17 @@ namespace Microcode
         }
 
         public override object ArgumentValue (int offset)
+        {
+            throw new NotImplementedException ();
+        }
+
+
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
         {
             throw new NotImplementedException ();
         }
@@ -499,14 +512,6 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        //static StaticMapping [] noStaticMapping = new StaticMapping [0];
-
-        //public override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    return noStaticMapping;
-        //}
-
-
         internal override bool StaticValue (out object value, object name, int staticOffset)
         {
             throw new NotImplementedException ();
@@ -521,15 +526,14 @@ namespace Microcode
         }
 
         ValueCell [] noValueCells = new ValueCell [0];
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
-                        valueCellsCopied [0] += 1;
-                        staticMappings.Note (mapping);
+            valueCellsCopied [0] += 1;
 #endif
             if (mapping == null)
                 throw new ArgumentNullException ("mapping");
-            if (mapping.Length != 0)
+            if (mapping.Size != 0)
                 throw new NotImplementedException ();
             else return noValueCells;
         }
@@ -559,7 +563,7 @@ namespace Microcode
             get { return noExportedTopLevelVariables; }
         }
 
-        public SCode SpecializeVariable (Variable variable)
+        public SCode SpecializeVariable (IVariableSpecializer variable)
         {
             return variable.MakeGlobal (this);
         }
@@ -641,7 +645,7 @@ namespace Microcode
             return this.Closure.StaticValue (out value, name, staticOffset);
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
             throw new NotImplementedException ();
         }
@@ -717,6 +721,17 @@ namespace Microcode
             object answer;
             if (bindings [offset].GetValue (out answer)) throw new NotImplementedException ();
             return answer;
+        }
+
+
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            return bindings [offset].Assign (out oldValue, newValue);
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
+        {
+            return this.envClosure.SetStaticValue (out oldValue, null, newValue, offset);
         }
 
         public override object Argument0Value
@@ -800,10 +815,8 @@ namespace Microcode
                 else
                     return envClosure.Environment.DeepSearch (out value, name, depth + 1);
             }
-#if DEBUG
-            foundAtDepth [depth] += 1;
-#endif
-            return bindings [offset].GetValue (out value);
+            else
+                return bindings [offset].GetValue (out value);
         }
 
         internal override ValueCell GetValueCell (object name)
@@ -936,49 +949,6 @@ namespace Microcode
             throw new NotImplementedException ("Found in bindings.");
         }
 
-        //static StaticMapping [] noStaticMapping = new StaticMapping [0];
-        //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    // In theory, we don't need to copy the static mappings
-        //    // because they will be substituted as TopLevel variables.
-        //    return noStaticMapping;
-
-        //    //Symbol [] formals = this.Closure.Lambda.Formals;
-        //    //int count = 0;
-        //    //for (int index = 0; index < formals.Length; index++)
-        //    //    if (lambdaFreeVariables.Contains (formals [index])) {
-        //    //        count += 1;
-        //    //    }
-        //    //StaticMapping [] mapping = new StaticMapping [count];
-        //    //int mapptr = 0;
-        //    //for (int index = 0; index < formals.Length; index++)
-        //    //    if (lambdaFreeVariables.Contains (formals [index])) {
-        //    //        mapping [mapptr] = new StaticMapping (formals[index], -(index + 1));
-        //    //        mapptr += 1;
-        //    //    }
-        //    //return mapping;
-        //}
-
-        //internal override TRet SpecializeVariable<TRet> (object name,
-        //    Func<int, TRet> ifArgument,
-        //    Func<int, TRet> ifStatic,
-        //    Func<ValueCell, TRet> ifTopLevel,
-        //    Func<GlobalEnvironment, TRet> ifGlobal,
-        //    Func<TRet> ifNotFound)
-        //{
-        //    int offset = this.envClosure.FormalOffset (name);
-        //    if (offset != -1) {
-        //        return ifArgument (offset);
-        //    }
-        //    int soffset = this.envClosure.StaticOffset (name);
-        //    if (soffset != -1) {
-        //        return ifStatic (soffset);
-        //    }
-        //    else {
-        //        return ifNotFound ();
-        //    }
-        //}
-
         internal override bool StaticValue (out object value, object name, int staticOffset)
         {
             // We might have a local that shadows the binding.
@@ -998,17 +968,17 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "StandardEnvironment.GetValueCells";
-            valueCellsCopied [mapping.Length] += 1;
-            staticMappings.Note (mapping);
+            valueCellsCopied [mapping.Size] += 1;
+            //staticMappings.Note (mapping);
 #endif
-            int count = mapping.Length;
+            int count = mapping.Size;
             ValueCell [] cells = new ValueCell [count];
             for (int index = 0; index < count; index++) {
-                int o = mapping [index].offset;
+                int o = mapping.GetOffset (index);
                 cells [index] = this.bindings [(-o) - 1];
             }
             return cells;
@@ -1081,7 +1051,7 @@ namespace Microcode
             }
         }
 
-        public SCode SpecializeVariable (Variable variable)
+        public SCode SpecializeVariable (IVariableSpecializer variable)
         {
             return variable.MakeFree();
         }
@@ -1132,6 +1102,17 @@ namespace Microcode
             object answer;
             if (bindings [offset].GetValue (out answer)) throw new NotImplementedException ();
             return answer;
+        }
+
+
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            return bindings [offset].Assign (out oldValue, newValue);
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
+        {
+            return this.envClosure.SetStaticValue (out oldValue, null, newValue, offset);
         }
 
         public override object Argument0Value
@@ -1188,9 +1169,6 @@ namespace Microcode
             if (offset == -1) {
                return envClosure.Environment.DeepSearch (out value, name, depth + 1);
             }
-#if DEBUG
-            foundAtDepth [depth] += 1;
-#endif
             return bindings [offset].GetValue (out value);
         }
 
@@ -1219,7 +1197,7 @@ namespace Microcode
         {
             int offset = this.envClosure.FormalOffset (name);
             if (offset == -1) {
-                    return envClosure.Environment.SafeDeepSearch (out value, name);
+                return envClosure.Environment.SafeDeepSearch (out value, name);
             }
             return bindings [offset].SafeGetValue (out value);
         }
@@ -1272,50 +1250,6 @@ namespace Microcode
             throw new NotImplementedException ("Found in bindings.");
         }
 
-        //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    Symbol [] formals = this.Closure.Lambda.Formals;
-        //    int count = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            count += 1;
-        //        }
-        //    StaticMapping [] statics = this.Closure.StaticNames (freeVariables);
-        //    StaticMapping [] mapping = new StaticMapping [count + statics.Length];
-        //    int mapptr = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            mapping [mapptr] = new StaticMapping (formals[index], -(index + 1));
-        //            mapptr += 1;
-        //        }
-        //    foreach (StaticMapping stat in statics) {
-        //        mapping [mapptr] = new StaticMapping (stat.name, this.Closure.StaticOffset (stat.name)); 
-        //        mapptr += 1;
-        //    }
-        //    return mapping;
-        //}
-
-        //internal override TRet SpecializeVariable<TRet> (object name,
-        //    Func<int, TRet> ifArgument,
-        //    Func<int, TRet> ifStatic,
-        //    Func<ValueCell, TRet> ifTopLevel,
-        //    Func<GlobalEnvironment, TRet> ifGlobal,
-        //    Func<TRet> ifNotFound)
-        //{
-        //    int offset = this.envClosure.FormalOffset (name);
-        //    if (offset != -1) {
-        //        return ifArgument (offset);
-        //    }
-        //    int soffset = this.envClosure.StaticOffset (name);
-        //    if (soffset != -1) {
-        //        return ifStatic (soffset);
-        //    }
-        //    else {
-        //        return ifNotFound ();
-        //    }
-        //}
-
-
         internal override Environment BaseEnvironment
         {
             get
@@ -1324,17 +1258,17 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "StaticEnvironment.GetValueCells";
-            valueCellsCopied [mapping.Length] += 1;
-            staticMappings.Note (mapping);
+            valueCellsCopied [mapping.Size] += 1;
+            //staticMappings.Note (mapping);
 #endif
-            int count = mapping.Length;
+            int count = mapping.Size;
             ValueCell [] cells = new ValueCell [count];
             for (int index = 0; index < count; index++) {
-                int o = mapping [index].offset;
+                int o = mapping.GetOffset(index);
                 if (o < 0)
                     cells [index] = this.bindings [(-o) - 1];
                 else
@@ -1358,7 +1292,6 @@ namespace Microcode
                 value = bindings [offset];
                 return false;
             }
-
         }
     }
 
@@ -1404,6 +1337,17 @@ namespace Microcode
             return bindings [offset];
         }
 
+
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
+        {
+            return this.envClosure.SetStaticValue (out oldValue, null, newValue, offset);
+        }
+
         public override object Argument0Value
         {
             get
@@ -1445,9 +1389,6 @@ namespace Microcode
             if (offset == -1) {
                 return envClosure.Environment.DeepSearch (out value, name, depth + 1);
             }
-#if DEBUG
-            foundAtDepth [depth] += 1;
-#endif
             value = bindings [offset];
             return false;
         }
@@ -1459,7 +1400,7 @@ namespace Microcode
 
         internal override bool SetValueCell (object name, ValueCell newCell)
         {
-                throw new NotImplementedException ("Cannot set value cell in SimpleEnvironment.");
+            throw new NotImplementedException ("Cannot set value cell in SimpleEnvironment.");
         }
 
         internal override bool SafeDeepSearch (out object value, object name)
@@ -1517,49 +1458,6 @@ namespace Microcode
             throw new NotImplementedException ("Cannot unbind in simple environment.");
         }
 
-        //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    Symbol [] formals = this.Closure.Lambda.Formals;
-        //    int count = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            count += 1;
-        //        }
-        //    StaticMapping [] statics = this.Closure.StaticNames (freeVariables);
-        //    StaticMapping [] mapping = new StaticMapping [count + statics.Length];
-        //    int mapptr = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            mapping [mapptr] = new StaticMapping (formals [index], -(index + 1));
-        //            mapptr += 1;
-        //        }
-        //    foreach (StaticMapping stat in statics) {
-        //        mapping [mapptr] = new StaticMapping (stat.name, this.Closure.StaticOffset (stat.name));
-        //        mapptr += 1;
-        //    }
-        //    return mapping;
-        //}
-
-        //internal override TRet SpecializeVariable<TRet> (object name,
-        //    Func<int, TRet> ifArgument,
-        //    Func<int, TRet> ifStatic,
-        //    Func<ValueCell, TRet> ifTopLevel,
-        //    Func<GlobalEnvironment, TRet> ifGlobal,
-        //    Func<TRet> ifNotFound)
-        //{
-        //    int offset = this.envClosure.FormalOffset (name);
-        //    if (offset != -1) {
-        //        return ifArgument (offset);
-        //    }
-        //    int soffset = this.envClosure.StaticOffset (name);
-        //    if (soffset != -1) {
-        //        return ifStatic (soffset);
-        //    }
-        //    else {
-        //        return ifNotFound ();
-        //    }
-        //}
-
         internal override bool StaticValue (out object value, object name, int staticOffset)
         {
             return this.Closure.StaticValue (out value, name, staticOffset);
@@ -1573,19 +1471,20 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "Simple.GetValueCells";
-            valueCellsCopied [mapping.Length] += 1;
-            staticMappings.Note (mapping);
+            valueCellsCopied [mapping.Size] += 1;
+            staticMappings.Note (mapping.Offsets);
 #endif
-            int count = mapping.Length;
+            int count = mapping.Size;
             ValueCell [] cells = new ValueCell [count];
             for (int index = 0; index < count; index++) {
-                int o = mapping [index].offset;
+                int o = mapping.GetOffset(index);
                 cells[index] = (o < 0) ?
                     new ValueCell (this.Closure.Lambda.Formals[(-o) - 1], this.bindings [(-o) - 1]) :
+                    //this.bindings[(-o) - 1] :
                     this.Closure.StaticCell (o);
             }
             return cells;
@@ -1616,6 +1515,17 @@ namespace Microcode
         public override object ArgumentValue (int offset)
         {
             throw new NotImplementedException ("Bad offset");
+        }
+
+
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
+        {
+            return this.envClosure.SetStaticValue (out oldValue, null, newValue, offset);
         }
 
         public override object Argument0Value
@@ -1702,45 +1612,6 @@ namespace Microcode
                 return this.envClosure.Environment.UnbindVariable (out answer, name);
         }
 
-        //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    Symbol [] formals = this.Closure.Lambda.Formals;
-        //    int count = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            count += 1;
-        //        }
-        //    StaticMapping [] statics = this.Closure.StaticNames (freeVariables);
-        //    StaticMapping [] mapping = new StaticMapping [count + statics.Length];
-        //    int mapptr = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            mapping [mapptr] = new StaticMapping (formals [index], -(index + 1));
-        //            mapptr += 1;
-        //        }
-        //    foreach (StaticMapping stat in statics) {
-        //        mapping [mapptr] = new StaticMapping (stat.name, this.Closure.StaticOffset (stat.name));
-        //        mapptr += 1;
-        //    }
-        //    return mapping;
-        //}
-
-        //internal override TRet SpecializeVariable<TRet> (object name,
-        //    Func<int, TRet> ifArgument,
-        //    Func<int, TRet> ifStatic,
-        //    Func<ValueCell, TRet> ifTopLevel,
-        //    Func<GlobalEnvironment, TRet> ifGlobal,
-        //    Func<TRet> ifNotFound)
-        //{
-        //    int soffset = this.envClosure.StaticOffset (name);
-        //    if (soffset != -1) {
-        //        return ifStatic (soffset);
-        //    }
-        //    else {
-        //        return ifNotFound ();
-        //    }
-        //}
-
         internal override bool StaticValue (out object value, object name, int staticOffset)
         {
             return this.Closure.StaticValue (out value, name, staticOffset);
@@ -1754,18 +1625,18 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "SmallEnvironment0.GetValueCells";
-            valueCellsCopied [mapping.Length] += 1;
-            staticMappings.Note (mapping);
+            valueCellsCopied [mapping.Size] += 1;
+            staticMappings.Note (mapping.Offsets);
 #endif
-            int count = mapping.Length;
+            int count = mapping.Size;
+            int [] offsets = mapping.Offsets;
             ValueCell [] cells = new ValueCell [count];
             for (int index = 0; index < count; index++) {
-                int o = mapping [index].offset;
-                cells [index] = this.Closure.StaticCell (o);
+                cells [index] = this.Closure.StaticCell (offsets[index]);
             }
             return cells;
         }
@@ -1800,6 +1671,17 @@ namespace Microcode
         {
             if (offset == 0) return this.binding0;
             else throw new NotImplementedException ("Bad offset");
+        }
+
+
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
+        {
+            return this.envClosure.SetStaticValue (out oldValue, null, newValue, offset);
         }
 
         public override object Argument0Value
@@ -1843,9 +1725,6 @@ namespace Microcode
             if (offset == -1) {
                 return envClosure.Environment.DeepSearch (out value, name, depth + 1);
             }
-#if DEBUG
-            foundAtDepth [depth] += 1;
-#endif
             if (offset == 0)
                 value = this.binding0;
             else
@@ -1922,49 +1801,6 @@ namespace Microcode
             throw new NotImplementedException ("Cannot unbind in simple environment.");
         }
 
-        //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    Symbol [] formals = this.Closure.Lambda.Formals;
-        //    int count = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            count += 1;
-        //        }
-        //    StaticMapping [] statics = this.Closure.StaticNames (freeVariables);
-        //    StaticMapping [] mapping = new StaticMapping [count + statics.Length];
-        //    int mapptr = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            mapping [mapptr] = new StaticMapping (formals [index], -(index + 1));
-        //            mapptr += 1;
-        //        }
-        //    foreach (StaticMapping stat in statics) {
-        //        mapping [mapptr] = new StaticMapping (stat.name, this.Closure.StaticOffset (stat.name));
-        //        mapptr += 1;
-        //    }
-        //    return mapping;
-        //}
-
-        //internal override TRet SpecializeVariable<TRet> (object name,
-        //    Func<int, TRet> ifArgument,
-        //    Func<int, TRet> ifStatic,
-        //    Func<ValueCell, TRet> ifTopLevel,
-        //    Func<GlobalEnvironment, TRet> ifGlobal,
-        //    Func<TRet> ifNotFound)
-        //{
-        //    int offset = this.envClosure.FormalOffset (name);
-        //    if (offset != -1) {
-        //        return ifArgument (offset);
-        //    }
-        //    int soffset = this.envClosure.StaticOffset (name);
-        //    if (soffset != -1) {
-        //        return ifStatic (soffset);
-        //    }
-        //    else {
-        //        return ifNotFound ();
-        //    }
-        //}
-
         internal override bool StaticValue (out object value, object name, int staticOffset)
         {
             return this.Closure.StaticValue (out value, name, staticOffset);
@@ -1978,22 +1814,37 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "SmallEnvironment1.GetValueCells";
-            valueCellsCopied [mapping.Length] += 1;
-            staticMappings.Note (mapping);
+            valueCellsCopied [mapping.Size] += 1;
+            staticMappings.Note (mapping.Offsets);
 #endif
-            int count = mapping.Length;
+            int count = mapping.Size;
+            int [] offsets = mapping.Offsets;
+            ValueCell [] incomingCells = this.envClosure.StaticCells;
             ValueCell [] cells = new ValueCell [count];
             for (int index = 0; index < count; index++) {
-                int o = mapping [index].offset;
-                if (o == -1)
-                    cells [index] = new ValueCell (this.Closure.Lambda.Formals[0], this.binding0);
+                int offset = offsets [index];
+                if (offset < 0)
+                    cells [index] = new ValueCell (this.Closure.Lambda.Formals [0], this.binding0);
                 else
-                    cells [index] = this.Closure.StaticCell (o);
+                    cells [index] = incomingCells [offset];
             }
+            //if (count > 0) {
+            //    if (offsets[0] == -1) {
+            //        cells[0] = new ValueCell (this.Closure.Lambda.Formals[0], this.binding0);
+            //        for (int index = 1; index < count; index++) {
+            //            cells [index] = incomingCells [offsets [index]];
+            //        }
+            //    }
+            //    else {
+            //        for (int index = 0; index < count; index++) {
+            //            cells [index] = incomingCells [offsets [index]];
+            //        }
+            //    }
+            //}
             return cells;
         }
 
@@ -2026,6 +1877,16 @@ namespace Microcode
 #if DEBUG
             extendedBy [2] += 1;
 #endif
+        }
+
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
+        {
+            return this.envClosure.SetStaticValue (out oldValue, null, newValue, offset);
         }
 
         public override object ArgumentValue (int offset)
@@ -2074,19 +1935,21 @@ namespace Microcode
 
         internal override bool DeepSearch (out object value, object name, uint depth)
         {
-            int offset = this.envClosure.FormalOffset (name);
-            if (offset == -1) {
-                return envClosure.Environment.DeepSearch (out value, name, depth + 1);
+            switch (this.envClosure.FormalOffset (name)) {
+                case -1:
+                    return envClosure.Environment.DeepSearch (out value, name, depth + 1);
+
+                case 0:
+                    value = this.binding0;
+                    break;
+
+                case 1:
+                    value = this.binding1;
+                    break;
+
+                default:
+                    throw new NotImplementedException ();
             }
-#if DEBUG
-            foundAtDepth [depth] += 1;
-#endif
-            if (offset == 0)
-                value = this.binding0;
-            else if (offset == 1)
-                value = this.binding1;
-            else
-                throw new NotImplementedException ();
             return false;
         }
 
@@ -2163,48 +2026,235 @@ namespace Microcode
             throw new NotImplementedException ("Cannot unbind in simple environment.");
         }
 
-        //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    Symbol [] formals = this.Closure.Lambda.Formals;
-        //    int count = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            count += 1;
-        //        }
-        //    StaticMapping [] statics = this.Closure.StaticNames (freeVariables);
-        //    StaticMapping [] mapping = new StaticMapping [count + statics.Length];
-        //    int mapptr = 0;
-        //    for (int index = 0; index < formals.Length; index++)
-        //        if (freeVariables.Contains (formals [index])) {
-        //            mapping [mapptr] = new StaticMapping (formals [index], -(index + 1));
-        //            mapptr += 1;
-        //        }
-        //    foreach (StaticMapping stat in statics) {
-        //        mapping [mapptr] = new StaticMapping (stat.name, this.Closure.StaticOffset (stat.name));
-        //        mapptr += 1;
-        //    }
-        //    return mapping;
-        //}
+        internal override bool StaticValue (out object value, object name, int staticOffset)
+        {
+            return this.Closure.StaticValue (out value, name, staticOffset);
+        }
 
-        //internal override TRet SpecializeVariable<TRet> (object name,
-        //    Func<int, TRet> ifArgument,
-        //    Func<int, TRet> ifStatic,
-        //    Func<ValueCell, TRet> ifTopLevel,
-        //    Func<GlobalEnvironment, TRet> ifGlobal,
-        //    Func<TRet> ifNotFound)
-        //{
-        //    int offset = this.envClosure.FormalOffset (name);
-        //    if (offset != -1) {
-        //        return ifArgument (offset);
-        //    }
-        //    int soffset = this.envClosure.StaticOffset (name);
-        //    if (soffset != -1) {
-        //        return ifStatic (soffset);
-        //    }
-        //    else {
-        //        return ifNotFound ();
-        //    }
-        //}
+        internal override Environment BaseEnvironment
+        {
+            get
+            {
+                return this.envClosure.Environment;
+            }
+        }
+
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        {
+#if DEBUG
+            SCode.location = "SmallEnvironment2.GetValueCells";
+            valueCellsCopied [mapping.Size] += 1;
+            staticMappings.Note (mapping.Offsets);
+#endif
+            Symbol[] mappingNames = this.Closure.Lambda.Formals;
+            int count = mapping.Size;
+            int [] offsets = mapping.Offsets;
+            ValueCell [] cells = new ValueCell [count];
+            for (int index = 0; index < count; index++) {
+                int o = offsets [index];
+                if (o == -1)
+                    cells [index] = new ValueCell (mappingNames[0], this.binding0);
+                    //cells [index] = this.binding0;
+                else if (o == -2)
+                    cells [index] = new ValueCell (mappingNames [1], this.binding1);
+                    //cells [index] = this.binding1;
+                else
+                    cells [index] = this.Closure.StaticCell (o);
+            }
+            return cells;
+        }
+
+        public override bool FreeReference (out ValueCell value, object name)
+        {
+            return envClosure.Environment.FreeReference (out value, name, 1);
+        }
+
+        internal override bool FreeReference (out ValueCell value, object name, int depth)
+        {
+            return envClosure.Environment.FreeReference (out value, name, depth + 1);
+        }
+
+    }
+
+    [Serializable]
+    sealed class SmallEnvironment3 : LexicalEnvironment<SimpleLambda>
+    {
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly object binding0;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly object binding1;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        readonly object binding2;
+
+        internal SmallEnvironment3 (ClosureBase<SimpleLambda> closure, object binding0Value, object binding1Value, object binding2Value)
+            : base (closure)
+        {
+            this.binding0 = binding0Value;
+            this.binding1 = binding1Value;
+            this.binding2 = binding2Value;
+#if DEBUG
+            extendedBy [3] += 1;
+#endif
+        }
+
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
+        {
+            return this.envClosure.SetStaticValue (out oldValue, null, newValue, offset);
+        }
+
+        public override object ArgumentValue (int offset)
+        {
+            if (offset == 0)
+                return this.binding0;
+            else if (offset == 1)
+                return this.binding1;
+            else if (offset == 2)
+                return this.binding2;
+            else throw new NotImplementedException ("Bad offset");
+        }
+
+        public override object Argument0Value
+        {
+            get
+            {
+                return this.binding0;
+            }
+        }
+
+        public override object Argument1Value
+        {
+            get
+            {
+                return this.binding1;
+            }
+        }
+
+        public override bool Assign (out object oldValue, object name, object newValue)
+        {
+            int offset = this.envClosure.FormalOffset (name);
+            if (offset != -1) throw new NotImplementedException ("Assignment in Simple Environment.");
+            int soffset = this.envClosure.StaticOffset (name);
+            if (soffset != -1) return this.envClosure.SetStaticValue (out oldValue, name, newValue, soffset);
+            return envClosure.Environment.Assign (out oldValue, name, newValue);
+        }
+
+        public override bool Define (object name, object value)
+        {
+            throw new NotImplementedException ("No assignment or definition.");
+        }
+
+        public override bool DeepSearch (out object value, object name)
+        {
+            return DeepSearch (out value, name, 0);
+        }
+
+        internal override bool DeepSearch (out object value, object name, uint depth)
+        {
+            switch (this.envClosure.FormalOffset (name)) {
+                case -1:
+                    return envClosure.Environment.DeepSearch (out value, name, depth + 1);
+
+                case 0:
+                    value = this.binding0;
+                    break;
+
+                case 1:
+                    value = this.binding1;
+                    break;
+
+                case 2:
+                    value = this.binding2;
+                    break;
+
+                default:
+                    throw new NotImplementedException ();
+            }
+            return false;
+        }
+
+        internal override ValueCell GetValueCell (object name)
+        {
+            throw new NotImplementedException ("No value cells in simple environment.");
+        }
+
+        internal override bool SetValueCell (object name, ValueCell newCell)
+        {
+            throw new NotImplementedException ("Cannot set value cell in SimpleEnvironment.");
+        }
+
+        internal override bool SafeDeepSearch (out object value, object name)
+        {
+            int offset = this.envClosure.FormalOffset (name);
+            if (offset == -1) {
+                return envClosure.Environment.SafeDeepSearch (out value, name);
+            }
+            if (offset == 0)
+                value = this.binding0;
+            else if (offset == 1)
+                value = this.binding1;
+            else if (offset == 2)
+                value = this.binding2;
+            else
+                throw new NotImplementedException ();
+            return false;
+        }
+
+        internal override bool DeepSearchType (out object value, object name)
+        {
+            int offset = this.envClosure.FormalOffset (name);
+            if (offset == -1) {
+                return envClosure.Environment.DeepSearchType (out value, name);
+            }
+            throw new NotImplementedException ("deepSearchType in simple environment");
+        }
+
+        internal override bool IsUnreferenceable (object name)
+        {
+            int offset = this.envClosure.FormalOffset (name);
+            if (offset == -1) {
+                return this.envClosure.Environment.IsUnreferenceable (name);
+            }
+            return false;
+        }
+
+        internal override bool IsUnbound (object name)
+        {
+            int offset = this.envClosure.FormalOffset (name);
+            if (offset == -1) {
+                return this.envClosure.Environment.IsUnbound (name);
+            }
+            return false;
+        }
+
+        public override object SystemVectorRef (int index)
+        {
+            if (index == 0)
+                return this.envClosure;
+            else if (index == 1)
+                return this.binding0;
+            else if (index == 2)
+                return this.binding1;
+            else if (index == 3)
+                return this.binding2;
+            else
+                throw new NotImplementedException ("Out of range");
+        }
+
+        internal override bool UnbindVariable (out object answer, object name)
+        {
+            int offset = this.envClosure.FormalOffset (name);
+            if (offset == -1) {
+                return this.envClosure.Environment.UnbindVariable (out answer, name);
+            }
+            throw new NotImplementedException ("Cannot unbind in simple environment.");
+        }
 
         internal override bool StaticValue (out object value, object name, int staticOffset)
         {
@@ -2219,22 +2269,25 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "SmallEnvironment2.GetValueCells";
-            valueCellsCopied [mapping.Length] += 1;
-            staticMappings.Note (mapping);
+            valueCellsCopied [mapping.Size] += 1;
+            staticMappings.Note (mapping.Offsets);
 #endif
             Symbol[] mappingNames = this.Closure.Lambda.Formals;
-            int count = mapping.Length;
+            int count = mapping.Size;
+            int [] offsets = mapping.Offsets;
             ValueCell [] cells = new ValueCell [count];
             for (int index = 0; index < count; index++) {
-                int o = mapping [index].offset;
+                int o = offsets [index];
                 if (o == -1)
-                    cells [index] = new ValueCell (mappingNames[0], this.binding0);
+                    cells [index] = new ValueCell (mappingNames [0], this.binding0);
                 else if (o == -2)
-                    cells [index] = new ValueCell (mappingNames[1], this.binding1);
+                    cells [index] = new ValueCell (mappingNames [1], this.binding1);
+                else if (o == -3)
+                    cells [index] = new ValueCell (mappingNames [1], this.binding2);
                 else
                     cells [index] = this.Closure.StaticCell (o);
             }
@@ -2267,6 +2320,11 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
+        internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
         public override object Argument0Value
         {
             get { throw new NotImplementedException (); }
@@ -2278,6 +2336,11 @@ namespace Microcode
         }
 
         public override bool Assign (out object oldValue, object name, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignStatic (out object oldValue, int offset, object newValue)
         {
             throw new NotImplementedException ();
         }
@@ -2330,15 +2393,10 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping [] mapping)
+        internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
             throw new NotImplementedException ();
         }
-
-        //internal override StaticMapping [] GetStaticMapping (ICollection<Symbol> freeVariables)
-        //{
-        //    throw new NotImplementedException ();
-        //}
 
         internal override bool SafeDeepSearch (out object value, object name)
         {

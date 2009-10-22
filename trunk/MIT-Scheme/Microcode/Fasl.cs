@@ -86,7 +86,7 @@ namespace Microcode
 
         public object ReadBignum (FaslFile file, uint offset)
         {
-            //EncodedObject header = this [offset];
+            //EncodedObject header = this [arg0Offset];
             EncodedObject h1 = this [offset + 4];
             if (h1.Datum == 1)
             {
@@ -106,7 +106,7 @@ namespace Microcode
 
         public double ReadFlonum (FaslFile file, uint offset)
         {
-            //EncodedObject header = this [offset];
+            //EncodedObject header = this [arg0Offset];
             byte b0 = ReadByte (offset + 4);
             byte b1 = ReadByte (offset + 5);
             byte b2 = ReadByte (offset + 6);
@@ -151,7 +151,7 @@ namespace Microcode
 
         public char [] ReadString (uint offset)
         {
-            // EncodedObject header = this [offset];
+            // EncodedObject header = this [arg0Offset];
             uint length = this [offset + 4].Datum;
             char [] result = new char [length];
             for (uint i = 0; i < length; i++)

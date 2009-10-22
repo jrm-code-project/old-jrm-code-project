@@ -37,8 +37,8 @@ namespace Microcode
         {
             this.procedure = predicate.Rator;
             this.method = this.procedure.Method;
-            this.rand0 = predicate.Rand0;
-            this.rand1 = predicate.Rand1;
+            this.rand0 = predicate.Operand0;
+            this.rand1 = predicate.Operand1;
 #if DEBUG
             rand0Type = rand0.GetType ();
             rand1Type = rand1.GetType ();
@@ -48,21 +48,7 @@ namespace Microcode
         public static SCode Make (PrimitiveCombination2 predicate, SCode consequent, SCode alternative)
         {
             return
-                //(predicate is PrimitiveIsCharEq) ? PCondIsCharEq.Make ((PrimitiveIsCharEq) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsIntEq) ? PCondIsIntEq.Make ((PrimitiveIsIntEq) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsEq) ? PCondIsEq.Make ((PrimitiveIsEq) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsFixnumEqual) ? PCondIsFixnumEqual.Make ((PrimitiveIsFixnumEqual) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsObjectEq) ? PCondIsObjectEq.Make ((PrimitiveIsObjectEq) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsObjectType) ? PCondIsObjectType.Make ((PrimitiveIsObjectType) predicate, consequent, alternative) :
-                //(predicate is PrimitiveLessThanFixnum) ? PCondLessThanFixnum.Make ((PrimitiveLessThanFixnum) predicate, consequent, alternative) :
-                //(predicate is PrimitiveCombination2L) ? PCond2L.Make ((PrimitiveCombination2L) predicate, consequent, alternative) :
-                //(predicate is PrimitiveCombination2Q) ? PCond2Q.Make ((PrimitiveCombination2Q) predicate, consequent, alternative) :
-                //(predicate is PrimitiveCombination2SL) ? PCond2SL.Make ((PrimitiveCombination2SL) predicate, consequent, alternative) :
-                //(predicate is PrimitiveCombination2SQ) ? PCond2SQ.Make ((PrimitiveCombination2SQ) predicate, consequent, alternative) :
-                (consequent is LexicalVariable) ? PCond2SSL.Make (predicate, (LexicalVariable) consequent, alternative) :
-                (consequent is Quotation) ? PCond2SSQ.Make (predicate, (Quotation) consequent, alternative) :
-                (alternative is LexicalVariable) ? PCond2SSSL.Make (predicate, consequent, (LexicalVariable) alternative) :
-                (alternative is Quotation) ? PCond2SSSQ.Make (predicate, consequent, (Quotation) alternative) :
+                (predicate is PrimitiveIsEq) ? PCondIsEq.Make ((PrimitiveIsEq) predicate, consequent, alternative) :
                 new PCond2 (predicate, consequent, alternative);
         }
 
@@ -70,8 +56,8 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            noteCalls (this.rand0);
-            noteCalls (this.rand1);
+            NoteCalls (this.rand0);
+            NoteCalls (this.rand1);
             procedureHistogram.Note (this.procedure);
             rand0TypeHistogram.Note (this.rand0Type);
             rand1TypeHistogram.Note (this.rand1Type);
@@ -99,9 +85,6 @@ namespace Microcode
 
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-#endif
             if (this.method (out answer, ev0, ev1)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
@@ -115,7 +98,7 @@ namespace Microcode
 
             if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
-                noteCalls (this.alternative);
+                NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 expression = this.alternative;
@@ -123,7 +106,7 @@ namespace Microcode
             }
             else {
 #if DEBUG
-                noteCalls (this.consequent);
+                NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
 #endif
                 expression = this.consequent;
@@ -132,6 +115,7 @@ namespace Microcode
         }
     }
 
+#if NIL
     class PCond2SSL : PCond2
     {
         // (s s l s)
@@ -3320,4 +3304,5 @@ namespace Microcode
             }
         }
     }
+#endif
 }

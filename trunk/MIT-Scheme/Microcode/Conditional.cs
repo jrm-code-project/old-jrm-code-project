@@ -61,10 +61,10 @@ namespace Microcode
             return
                 (! Configuration.EnableConditionalOptimization) ? new Conditional(predicate, consequent, alternative) :
                 (! Configuration.EnableConditionalSpecialization) ? new Conditional (predicate, consequent, alternative) :
-                //(Configuration.EnablePrimitiveConditional1 &&
-                // predicate is PrimitiveCombination1) ? PCond1.Make ((PrimitiveCombination1) predicate, consequent, alternative) :
-                //(Configuration.EnablePrimitiveConditional2 && 
-                // predicate is PrimitiveCombination2) ? PCond2.Make ((PrimitiveCombination2) predicate, consequent, alternative):
+                (Configuration.EnablePrimitiveConditional1 &&
+                 predicate is PrimitiveCombination1) ? PCond1.Make ((PrimitiveCombination1) predicate, consequent, alternative) :
+                (Configuration.EnablePrimitiveConditional2 && 
+                 predicate is PrimitiveCombination2) ? PCond2.Make ((PrimitiveCombination2) predicate, consequent, alternative):
                 //(Configuration.EnableConditionalSpecialization &&
                 //predicate is LexicalVariable) ? ConditionalL.Make ((LexicalVariable) predicate, consequent, alternative) :
                 //(Configuration.EnableConditionalSpecialization &&

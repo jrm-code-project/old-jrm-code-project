@@ -6,27 +6,72 @@ using System.Text;
 
 namespace Microcode
 {
-    public struct StaticMapping
+    public class StaticMapping
     {
-        public Symbol name;
-        public int offset;
+#if DEBUG
+        static IList<int []> knownMappings = new List<int[]>();
 
-        [DebuggerStepThrough]
-        public StaticMapping (Symbol name, int offset)
+        static bool SameMapping (int [] left, int [] right)
         {
-            this.name = name;
-            this.offset = offset;
+            if (left.Length == right.Length) {
+                for (int index = 0; index < left.Length; index++)
+                    if (left [index] != right [index])
+                        return false;
+                return true;
+            }
+            return false;
+        }
+#endif
+        Symbol [] names;
+        int [] offsets;
+
+        public StaticMapping (Symbol [] names, int [] offsets)
+        {
+            int [] mapping = offsets;
+            
+#if DEBUG
+            bool found = false;
+            foreach (int [] knownMapping in knownMappings) {
+               if (SameMapping(knownMapping, offsets)) {
+                   mapping = knownMapping;
+                   found = true;
+                   break;
+               }
+            }
+            if (!found)
+                knownMappings.Add(mapping);
+#endif
+            this.names = names;
+            this.offsets = mapping;
         }
 
-        public static void ValidateStaticMapping (StaticMapping [] mapping)
+        public Symbol [] Names { [DebuggerStepThrough] get { return this.names; } }
+        public int [] Offsets { [DebuggerStepThrough] get { return this.offsets; } }
+
+        public StaticMapping ()
         {
-            if (mapping.Length > 1) {
-                for (int i = 0; i < mapping.Length - 1; i++)
-                    for (int j = i + 1; j < mapping.Length; j++)
-                        if (mapping [i].name == mapping [j].name ||
-                            mapping [i].offset == mapping [j].offset)
-                            throw new NotImplementedException ();
-            }
+            this.names = new Symbol [0];
+            this.offsets = new int [0];
+        }
+
+        public static void ValidateStaticMapping (StaticMapping staticMap)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal int Offset (object name)
+        {
+            for (int i = 0; i < this.names.Length; i++)
+                if (name == this.names [i])
+                    return i;
+            return -1;
+        }
+
+        public int Size { [DebuggerStepThrough] get { return this.names.Length; } }
+
+        internal int GetOffset (int index)
+        {
+            return this.offsets [index];
         }
     }
 }

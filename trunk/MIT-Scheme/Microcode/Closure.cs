@@ -81,7 +81,7 @@ namespace Microcode
             return this.closureLambda.StaticOffset (name, this.closureEnvironment);
         }
 
-        public StaticMapping [] StaticNames (ICollection<Symbol> freeVariables)
+        public StaticMapping StaticNames (ICollection<Symbol> freeVariables)
         {
             throw new NotImplementedException ();
             //StaticMapping [] answer = this.Environment.GetStaticMapping (freeVariables);
@@ -92,17 +92,28 @@ namespace Microcode
         public bool StaticValue (out object value, object name, int staticOffset)
         {
             return this.staticBindings [staticOffset].GetValue (out value);
+            //object cell = this.staticBindings [staticOffset];
+            //ValueCell vcell = cell as ValueCell;
+            //if (vcell == null) {
+            //    value = cell;
+            //    return false;
+            //}
+            //else {
+            //    return vcell.GetValue (out value);
+            //}
         }
 
         internal bool SetStaticValue (out object oldValue, object name, object newValue, int staticOffset)
         {
-            return this.staticBindings [staticOffset].Assign (out oldValue, newValue);
+                return this.staticBindings [staticOffset].Assign (out oldValue, newValue);
         }
 
         public ValueCell StaticCell (int staticOffset)
         {
             return this.staticBindings [staticOffset];
         }
+
+        public ValueCell [] StaticCells { [DebuggerStepThrough] get { return this.staticBindings; } }
 
         public Symbol Name
         {
@@ -520,7 +531,9 @@ namespace Microcode
                 case 0: return this.Call (out answer, ref expression, ref environment);
                 case 1: return this.Call (out answer, ref expression, ref environment, args [0]);
                 case 2: return this.Call (out answer, ref expression, ref environment, args [0], args [1]);
+                case 3: return this.Call (out answer, ref expression, ref environment, args [0], args [1], args [2]);
                 default:
+
 #if DEBUG
                     this.BumpCallCount ();
                     SCode.location = "SimpleClosure.Apply";
@@ -574,7 +587,15 @@ namespace Microcode
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
-            return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2 });
+#if DEBUG
+            SCode.location = "-";
+            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call3";
+#endif
+            expression = this.closureLambda.Body;
+            environment = new SmallEnvironment3 (this, arg0, arg1, arg2);
+            answer = null; // keep the compiler happy
+            return true;            
         }
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)

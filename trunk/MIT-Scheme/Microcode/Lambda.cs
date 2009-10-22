@@ -29,14 +29,14 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected SCode lambdaBody;
 
-        protected StaticMapping [] staticMapping;
+        protected StaticMapping staticMapping;
 
         // Count of times this lambda is closed over.
         internal long closeCount = 0;
         // Count of times this lambda body is evaluated.
         internal long evaluationCount = 0;
 
-        protected LambdaBase (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+        protected LambdaBase (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping staticMapping)
         {
             this.lambdaName = name;
             this.lambdaFormals = formals;
@@ -44,7 +44,7 @@ namespace Microcode
             this.lambdaFreeVariables = freeVariables;
             this.staticMapping = staticMapping;
 #if DEBUG
-            // Paranoia:  check for duplicate names
+            // Paranoia:  check for duplicate maps
             if (name != Dummy)
                 for (int i = 0; i < formals.Length - 1; i++)
                     if (formals [i] != null)
@@ -141,13 +141,10 @@ namespace Microcode
                 //this.staticMapping = environment.GetStaticMapping (this.lambdaFreeVariables);
                 //StaticMapping.ValidateStaticMapping (this.staticMapping);
             }
-            for (int i = 0; i < this.staticMapping.Length; i++)
-                if (name == this.staticMapping [i].name)
-                    return i;
-            return -1;
+            return this.staticMapping.Offset (name);
         }
 
-        public StaticMapping [] GetStaticMapping (Environment environment)
+        public StaticMapping GetStaticMapping (Environment environment)
         {
             if (this.staticMapping == null) {
                 throw new NotImplementedException ();
@@ -184,7 +181,7 @@ namespace Microcode
         {
         }
 
-        protected Lambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+        protected Lambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping staticMapping)
             : base (name, formals, body, freeVariables, staticMapping)
         {
         }
@@ -207,7 +204,7 @@ namespace Microcode
                 (Lambda) new SimpleLambda (name, formals, body);
         }
 
-        internal static Lambda Make (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+        internal static Lambda Make (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping staticMapping)
         {
             if (body == null)
                 throw new ArgumentNullException ("body");
@@ -221,7 +218,8 @@ namespace Microcode
                 (! Configuration.EnableVariableOptimization) ||
                 (! Configuration.EnableStaticBinding) ||
                 body.CallsTheEnvironment ()) ? (Lambda) new StandardLambda (name, formals, body, freeVariables, staticMapping) :
-                body.MutatesAny (formals) ? (Lambda) new StaticLambda (name, formals, body, freeVariables, staticMapping) :
+                (! Configuration.EnableSimpleLambda ||
+                  body.MutatesAny (formals)) ? (Lambda) new StaticLambda (name, formals, body, freeVariables, staticMapping) :
                 (Lambda) new SimpleLambda (name, formals, body, freeVariables, staticMapping);
         }
 
@@ -330,7 +328,7 @@ namespace Microcode
         }
 
         protected ExtendedLambda (Symbol name, Symbol [] formals,
-SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVariables, StaticMapping [] mapping)
+SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVariables, StaticMapping mapping)
             : base (name, formals, body, freeVariables, mapping)
         {
             this.required = required;
@@ -447,7 +445,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         {
         }
 
-        internal StandardExtendedLambda (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVariables, StaticMapping []  staticMapping)
+        internal StandardExtendedLambda (Symbol name, Symbol [] formals, SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVariables, StaticMapping staticMapping)
             : base (name, formals, body, required, optional, rest, freeVariables, staticMapping)
         {
         }
@@ -486,7 +484,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
 
             return new PartialResult (new StandardExtendedLambda (this.lambdaName, this.lambdaFormals, pbody,
                 this.required, this.optional, this.rest,
-                this.lambdaFreeVariables, closure.StaticMapping));
+                this.lambdaFreeVariables, closure.StaticMap));
         }
 
         #region ISerializable Members
@@ -495,7 +493,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         public void GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (StandardExtendedLambdaDeserializer));
-            // We specially handle the names and formals
+            // We specially handle the maps and formals
             // in order to ensure that they are available when
             // we deserialize the lambda.
             if (this.Name.IsInterned ()) {
@@ -629,7 +627,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         {
         }
 
-        public StandardLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+        public StandardLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping staticMapping)
             : base (name, formals, body, freeVariables, staticMapping)
         {
         }
@@ -655,7 +653,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
 
             SCode pbody = this.lambdaBody.PartialEval (new PartialStandardEnvironment (closure)).Residual;
 
-            return new PartialResult (StandardLambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMapping));
+            return new PartialResult (StandardLambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMap));
         }
 
         #region ISerializable Members
@@ -664,7 +662,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (StandardLambdaDeserializer));
-            // We specially handle the names and formals
+            // We specially handle the maps and formals
             // in order to ensure that they are available when
             // we deserialize the lambda.
             if (this.Name.IsInterned ()) {
@@ -781,7 +779,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         {
         }
 
-        protected StaticLambdaBase (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+        protected StaticLambdaBase (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping staticMapping)
             : base (name, formals, body, freeVariables, staticMapping)
         {
         }
@@ -810,7 +808,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         {
         }
 
-        public StaticLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+        public StaticLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping staticMapping)
             : base (name, formals, body, freeVariables, staticMapping)
         {
         }
@@ -831,7 +829,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
 
             SCode pbody = this.lambdaBody.PartialEval (new PartialStaticEnvironment (closure)).Residual;
 
-            return new PartialResult (StaticLambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMapping));
+            return new PartialResult (StaticLambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMap));
         }
 
         #region ISerializable Members
@@ -840,7 +838,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (StaticLambdaDeserializer));
-            // We specially handle the names and formals
+            // We specially handle the maps and formals
             // in order to ensure that they are available when
             // we deserialize the lambda.
             if (this.Name.IsInterned ()) {
@@ -961,7 +959,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         {
         }
 
-        public SimpleLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping [] staticMapping)
+        public SimpleLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping  staticMapping)
             : base (name, formals, body, freeVariables, staticMapping)
         {
         }
@@ -985,7 +983,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
 
             SCode pbody = this.lambdaBody.PartialEval (new PartialSimpleEnvironment (closure)).Residual;
 
-            return new PartialResult (Lambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMapping));
+            return new PartialResult (Lambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMap));
         }
 
         #region ISerializable Members
@@ -994,7 +992,7 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
         {
             info.SetType (typeof (SimpleLambdaDeserializer));
-            // We specially handle the names and formals
+            // We specially handle the maps and formals
             // in order to ensure that they are available when
             // we deserialize the lambda.
             if (this.Name.IsInterned ()) {

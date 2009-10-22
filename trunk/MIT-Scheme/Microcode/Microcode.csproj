@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BigInteger.cs" />
+    <Compile Include="Comb2S.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="ITopLevelEnvironment.cs" />
     <Compile Include="PartialClosure.cs" />
@@ -97,7 +98,12 @@
     <Compile Include="OSScheme.cs" />
     <Compile Include="PComb1.cs" />
     <Compile Include="PComb2.cs" />
+    <Compile Include="PCond2.cs" />
+    <Compile Include="PCondIsEq.cs" />
+    <Compile Include="PCondIsNull.cs" />
+    <Compile Include="PCondIsPair.cs" />
     <Compile Include="Primitive.cs" />
+    <Compile Include="PrimitiveIsEq.cs" />
     <Compile Include="Promise.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Ratnum.cs" />
