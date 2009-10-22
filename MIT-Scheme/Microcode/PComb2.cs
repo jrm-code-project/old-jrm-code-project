@@ -111,7 +111,7 @@ namespace Microcode
         {
             return
                 //(rator == Primitive.Cons) ? PrimitiveCons.Make (rator, rand0, rand1) :
-                //(rator == Primitive.IsEq) ? PrimitiveIsEq.Make (rator, rand0, rand1) :
+                (rator == Primitive.IsEq) ? PrimitiveIsEq.Make (rator, rand0, rand1) :
                 //(rator == Primitive.ObjectIsEq) ? PrimitiveIsObjectEq.Make (rator, rand0, rand1) :
                 //(rator == Primitive.CharIsEq) ? PrimitiveIsCharEq.Make (rator, rand0, rand1) :
                 //(rator == Primitive.IntIsEq) ? PrimitiveIsIntEq.Make (rator, rand0, rand1) :
@@ -130,7 +130,7 @@ namespace Microcode
         static SCode SpecializedMake (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                //(rand0 is PrimitiveCar) ? PrimitiveCombination2Car.Make (rator, (PrimitiveCar) rand0, rand1) :
+                (rand0 is PrimitiveCar) ? PrimitiveCombination2Car.Make (rator, (PrimitiveCar) rand0, rand1) :
                 //(rand0 is PrimitiveCaar) ? PrimitiveCombination2Caar.Make (rator, (PrimitiveCaar) rand0, rand1) :
                 (rand0 is Argument) ? PrimitiveCombination2A.Make (rator, (Argument) rand0, rand1) :
                 (rand0 is StaticVariable) ? PrimitiveCombination2S.Make (rator, (StaticVariable) rand0, rand1) :
@@ -459,7 +459,9 @@ namespace Microcode
 
         static SCode OptimizedMake (Primitive2 rator, SCode rand0, SCode rand1)
         {
-            return Configuration.EnablePrimitive2Specialization ? SpecializedMake (rator, rand0, rand1) :
+            return 
+                Configuration.EnableInlinePrimitive2 ? InlineMake(rator, rand0, rand1) :
+                Configuration.EnablePrimitive2Specialization ? SpecializedMake (rator, rand0, rand1) :
                 new PrimitiveCombination2 (rator, rand0, rand1);
         }
 
@@ -758,6 +760,94 @@ namespace Microcode
             }
             else return false;
         }
+    }
+
+    [Serializable]
+    class PrimitiveCombination2Car : PrimitiveCombination2
+    {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        Type rand0InnerType;
+#endif
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        protected readonly SCode rand0inner;
+
+        protected PrimitiveCombination2Car (Primitive2 rator, PrimitiveCar rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0inner = rand0.Operand;
+#if DEBUG
+            this.rand0InnerType = rand0.Operand.GetType ();
+#endif
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, SCode rand1)
+        {
+            return new PrimitiveCombination2Car (rator, rand0, rand1);
+        }
+            
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0inner);
+            NoteCalls (this.rand1);
+
+            rand0TypeHistogram.Note (this.rand0InnerType);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveCombination2Car.EvalStep";
+#endif
+            Control unev = this.rand1;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination2Car.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            unev = this.rand0inner;
+            env = environment;
+            object ev0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination2Car.EvalStep";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+#if DEBUG
+            SCode.location = this.rator.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.rator);
+#endif
+            Cons ev0pair = ev0 as Cons;
+            if (ev0pair == null) throw new NotImplementedException ();
+
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0pair.Car, ev1)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null;
+                    expression = tci.Expression;
+                    environment = tci.Environment;
+                    return true;
+                }
+                else
+                    throw new NotImplementedException ();
+            }
+            else return false;
+        }
+
     }
 
     [Serializable]

@@ -22,12 +22,6 @@ namespace Microcode
         public static SCode Make (PrimitiveIsEq predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsEqL) ? PCondIsEqL.Make ((PrimitiveIsEqL) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqCar) ? PCondIsEqCar.Make ((PrimitiveIsEqCar) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqCaar) ? PCondIsEqCaar.Make ((PrimitiveIsEqCaar) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqQ) ? PCondIsEqQ.Make ((PrimitiveIsEqQ) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqSL) ? PCondIsEqSL.Make ((PrimitiveIsEqSL) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqSQ) ? PCondIsEqSQ.Make ((PrimitiveIsEqSQ) predicate, consequent, alternative) :
                 new PCondIsEq (predicate, consequent, alternative);
         }
 
@@ -35,8 +29,8 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("PCondIsEq.EvalStep");
-            noteCalls (this.rand0);
-            noteCalls (this.rand1);
+            NoteCalls (this.rand0);
+            NoteCalls (this.rand1);
             rand0TypeHistogram.Note (this.rand0Type);
             rand1TypeHistogram.Note (this.rand1Type);
 #endif
@@ -64,7 +58,7 @@ namespace Microcode
 
             if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
-                noteCalls (this.alternative);
+                NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 expression = this.alternative;
@@ -72,7 +66,7 @@ namespace Microcode
             }
             else {
 #if DEBUG
-                noteCalls (this.consequent);
+                NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
 #endif
                 expression = this.consequent;
@@ -81,6 +75,7 @@ namespace Microcode
         }
     }
 
+#if NIL
     class PCondIsEqL : PCondIsEq
     {
 #if DEBUG
@@ -7084,6 +7079,6 @@ namespace Microcode
             }
         }
     }
-
+#endif
 
 }

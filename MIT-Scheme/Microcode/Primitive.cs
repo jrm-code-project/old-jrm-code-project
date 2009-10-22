@@ -26,7 +26,7 @@ namespace Microcode
         internal static Histogram<Primitive> hotPrimitives = new Histogram<Primitive> ();
 #endif
 
-        // Global table mapping names to primitive procedures.
+        // Global table mapping maps to primitive procedures.
         [NonSerialized]
         static Dictionary<Symbol, Primitive> primitiveTable = new Dictionary<Symbol, Primitive> ();
 

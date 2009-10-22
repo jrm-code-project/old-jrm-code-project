@@ -26,19 +26,36 @@
 
   (display "\\BootstrapLib\\runtime\\site")
 
+;  (time-phase
+;   "Load rb-tree"
+;   (lambda () (load-option 'rb-tree)))
+
+;  (time-phase
+;   "Load sf"
+;   (lambda () (load-option 'sf)))
+
+;  (time-phase
+;   "Load star-parser"
+;   (lambda () (load-option '*parser)))
+
+;  (time-phase
+;   "Load cref"
+;   (lambda () (load-option 'cref)))
+
   (cd "C:\\Home\\Jrm\\Larceny\\Testsuite\\GC\\")
 
-  ;(time-phase "Load dynamic" (lambda () (load "dynamic.bin")))
-  (time-phase "Load sboyer"  (lambda () (load "sboyer.bin")))
+;  (time-phase "Load dynamic" (lambda () (load "dynamic.bin")))
+;  (time-phase "Load sboyer"  (lambda () (load "sboyer.bin")))
 ;  (time-phase "Load lattice" (lambda () (load "lattice.bin")))
-  (load "lattice.bin")
-  ;(time-phase "Run Dynamic"  doit)
+;  (load "lattice.bin")
+;  (time-phase "Run Dynamic"  doit)
+  (load "sboyer.bin")
   ((access setup-boyer user-initial-environment))
 
-;    (time-phase "Run Sboyer"
-;		(lambda () ((access test-boyer user-initial-environment) 1)))
-
+    (time-phase "Run Sboyer"
+		(lambda () ((access test-boyer user-initial-environment) 1)))
 ;    (%exit 1)
+
   (do ((i 0 (+ i 1)))
       ((>= i 250) (%exit 1))
     (time-phase "Run Sboyer"
@@ -49,26 +66,9 @@
 ;      ((> i 50))
 ;  (time-phase "Run lattice"  (access lb3 user-initial-environment)))
 
-  ;(time-phase
-  ; "Load rb-tree"
-  ; (lambda () (load-option 'rb-tree)))
 
-  ;(time-phase
-  ; "Load sf"
-  ; (lambda () (load-option 'sf)))
+   (identify-world)
 
-  ;(time-phase
-  ; "Load star-parser"
-  ; (lambda () (load-option '*parser)))
-
-  ;(time-phase
-  ; "Load cref"
-  ; (lambda () (load-option 'cref)))
-
-  ; (identify-world)
-
-  ;(cd "c:\\GitRepository\\mit-scheme\\src\\runtime\\")
-  ;(load "runtime.sf")
-
-  
+  (cd "c:\\GitRepository\\mit-scheme\\src\\runtime\\")
+  (load "runtime.sf")
   )

@@ -16,14 +16,20 @@ namespace Microcode
         public const bool EnableCombination0Optimization = false;
         public const bool EnableCombination1Optimization = false;
 
-        public const bool EnableCombination2Optimization = false;
-        public const bool EnableCombination2Specialization = false;
+        public const bool EnableCombination2Optimization = true;
+        public const bool EnableCombination2Specialization = true;
 
         public const bool EnableCommentOptimization = false;
 
         #region Conditional
-        public const bool EnableConditionalOptimization = false;
-        public const bool EnableConditionalSpecialization = false;
+        public const bool EnableConditionalOptimization = true;
+        public const bool EnableConditionalSpecialization = true;
+        /// <summary>
+        /// If true, certain primitive predicates are handled directly
+        /// by the conditional.
+        /// </summary>
+        public const bool EnablePrimitiveConditional1 = true;
+        public const bool EnablePrimitiveConditional2 = true;
         #endregion
 
         public const bool EnableDefinitionOptimization = false;
@@ -36,6 +42,7 @@ namespace Microcode
         /// </summary>
         public const bool EnableLambdaOptimization = true;
         public const bool EnableStaticLambda = true;
+        public const bool EnableSimpleLambda = true;
         #endregion
 
         public const bool EnablePrimitiveCombination0Optimization = false;
@@ -45,13 +52,13 @@ namespace Microcode
         /// <summary>
         /// If true, allow analysis of PrimitiveCombination1.
         /// </summary>
-        public const bool EnablePrimitiveCombination1Optimization = false;
+        public const bool EnablePrimitiveCombination1Optimization = true;
         /// <summary>
         /// Allow Primitive1Combinations to specialize on the type of argument.
         /// </summary>
         public const bool EnablePrimitive1Specialization = true;
 
-        public const bool EnableInlinePrimitive1 = false;
+        public const bool EnableInlinePrimitive1 = true;
 
         #endregion
 
@@ -60,10 +67,10 @@ namespace Microcode
         /// <summary>
         /// If true, allow analysis of PrimitiveCombination2.
         /// </summary>
-        public const bool EnablePrimitiveCombination2Optimization = false;
+        public const bool EnablePrimitiveCombination2Optimization = true;
         public const bool EnablePrimitive2Specialization = true;
 
-        public const bool EnableInlinePrimitive2 = false;
+        public const bool EnableInlinePrimitive2 = true;
 
         #endregion
 
@@ -80,6 +87,7 @@ namespace Microcode
         /// </summary>
         public const bool EnableVariableOptimization = true;
         public const bool EnableArgumentBinding = true;
+        public const bool EnableArgument0And1 = true;
         public const bool EnableStaticBinding = true;
         #endregion
 
@@ -90,12 +98,7 @@ namespace Microcode
 
         public const bool EnableDisjunctionSpecialization = false;
 
-        /// <summary>
-        /// If true, certain primitive predicates are handled directly
-        /// by the conditional.
-        /// </summary>
-        public const bool EnablePrimitiveConditional1 = false;
-        public const bool EnablePrimitiveConditional2 = false;
+
         public const bool EnableSequenceSpecialization = false;
 
 

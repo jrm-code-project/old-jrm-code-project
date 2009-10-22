@@ -242,6 +242,21 @@ namespace Microcode
         }
     }
 
+    public interface IVariableSpecializer
+    {
+        Symbol Name { get; }
+
+        SCode MakeFree ();
+
+        SCode MakeGlobal (GlobalEnvironment globalEnvironment);
+
+        SCode MakeTopLevel (ValueCell cell);
+
+        SCode MakeArgument (int argOffset);
+
+        SCode MakeStatic (int staticOffset);
+    }
+
     [Serializable]
     class Assignment : SCode, ISerializable, ISystemPair
     {
@@ -273,6 +288,10 @@ namespace Microcode
         {
             return
                 //(value is Quotation) ? AssignmentQ.Make (target, (Quotation) value) :
+                (target is Argument) ? AssignmentA.Make ((Argument) target, value) :
+                (target is GlobalVariable) ? AssignmentG.Make ((GlobalVariable) target, value) :
+                (target is StaticVariable) ? AssignmentS.Make ((StaticVariable) target, value) :
+                (target is TopLevelVariable) ? AssignmentT.Make ((TopLevelVariable) target, value) :
                 new Assignment (target, value);
         }
 
@@ -281,14 +300,7 @@ namespace Microcode
             return Make ((Variable) target, EnsureSCode (value));
         }
 
-        public object Name
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.target.Name;
-            }
-        }
+        public Symbol Name { [DebuggerStepThrough] get { return this.Target.Name; } }
 
         public Variable Target
         {
@@ -402,7 +414,11 @@ namespace Microcode
         internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             PartialResult val = this.value.PartialEval (environment);
-            return new PartialResult (this.value == val.Residual ? this : Assignment.Make (this.target, val.Residual));
+            Variable var = environment.LocateVariable (this.Target) as Variable;
+            if (var == null)
+                throw new NotImplementedException ();
+
+            return new PartialResult (Assignment.Make (var, val.Residual));
         }
 
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
@@ -476,85 +492,201 @@ namespace Microcode
         #endregion
     }
 
-//    class AssignArg : Assignment
-//    {
-//#if DEBUG
-//        static Histogram<Type> valueTypeHistogram = new Histogram<Type> ();
-//#endif
-//        readonly LexicalAddress address;
+    [Serializable]
+    class AssignmentA : Assignment
+    {
+#if DEBUG
+        static Histogram<Type> valueTypeHistogram = new Histogram<Type>();
+#endif
+        readonly int offset;
 
-//        AssignArg (Argument target, SCode value)
-//            : base (target, value)
-//        {
-//            this.address = target.Address;
-//        }
+        AssignmentA (Argument target, SCode value)
+            : base (target, value)
+        {
+            this.offset = target.Offset;
+        }
 
-//        static public SCode Make (Argument target, SCode value)
-//        {
-//            return
-//                new AssignArg (target, value);
-//        }
+        public static SCode Make (Argument target, SCode value)
+        {
+            return new AssignmentA (target, value);
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.value);
-//            valueTypeHistogram.Note (this.valueType);
-//            SCode.location = "AssignArg.EvalStep";
-//#endif
-//            Control expr = this.value;
-//            Environment env = closureEnvironment;
-//            object newValue;
-//            while (expr.EvalStep (out newValue, ref expr, ref env)) { };
-//#if DEBUG
-//            SCode.location = "AssignArg.EvalStep.1";
-//#endif
-//            if (newValue == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, closureEnvironment));
-//                //answer = Interpreter.Unwind;
-//                //closureEnvironment = env;
-//                //return false;
-//            }
-
-//            if (closureEnvironment.AssignArg (out answer, this.address.Offset, newValue)) 
-//                throw new NotImplementedException ();
-//            return false;
-//        }
-//    }
-
-//    [Serializable]
-//    class AssignmentQ : Assignment
-//    {
-//        public readonly object assignmentValue;
-
-//        AssignmentQ (Variable target, Quotation value)
-//            : base (target, value)
-//        {
-//           this.assignmentValue = value.Quoted;
-//        }
-
-//        static public SCode Make (Variable target, Quotation value)
-//        {
-//            return
-//                new AssignmentQ (target, value);
-//        }
-
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("AssignmentQ.EvalStep");
-//#endif
-//            if (closureEnvironment.Assign (out answer, this.target.Name, this.assignmentValue)) 
-//                throw new NotImplementedException ();
-//            return false;
-//        }
-//    }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.value);
+            valueTypeHistogram.Note (this.valueType);
+            SCode.location = "AssignmentA.EvalStep";
+#endif
+            Control expr = this.value;
+            Environment env = environment;
+            object newValue;
+            while (expr.EvalStep (out newValue, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "AssignmentA.EvalStep.1";
+#endif
+            if (newValue == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+#if DEBUG
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.AssignArgument (out answer, this.offset, newValue)) throw new NotImplementedException ();
+            return false;
+        }
+    }
 
     [Serializable]
-    public class Variable : SCode, ISerializable, ISystemHunk3
+    class AssignmentG : Assignment
+    {
+#if DEBUG
+        static Histogram<Type> valueTypeHistogram = new Histogram<Type> ();
+#endif
+        AssignmentG (GlobalVariable target, SCode value)
+            : base (target, value)
+        {
+        }
+
+        public static SCode Make (GlobalVariable target, SCode value)
+        {
+            return new AssignmentG (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.value);
+            valueTypeHistogram.Note (this.valueType);
+            SCode.location = "AssignmentG.EvalStep";
+#endif
+            Control expr = this.value;
+            Environment env = environment;
+            object newValue;
+            while (expr.EvalStep (out newValue, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "AssignmentG.EvalStep.1";
+#endif
+            if (newValue == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+#if DEBUG
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class AssignmentS : Assignment
+    {
+        readonly int offset;
+#if DEBUG
+        static Histogram<Type> valueTypeHistogram = new Histogram<Type> ();
+#endif
+        AssignmentS (StaticVariable target, SCode value)
+            : base (target, value)
+        {
+            this.offset = target.Offset;
+        }
+
+        public static SCode Make (StaticVariable target, SCode value)
+        {
+            return new AssignmentS (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.value);
+            valueTypeHistogram.Note (this.valueType);
+            SCode.location = "AssignmentS.EvalStep";
+#endif
+            Control expr = this.value;
+            Environment env = environment;
+            object newValue;
+            while (expr.EvalStep (out newValue, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "AssignmentS.EvalStep.1";
+#endif
+            if (newValue == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+#if DEBUG
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.AssignStatic (out answer, this.offset, newValue)) throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentT : Assignment
+    {
+        readonly ValueCell cell;
+#if DEBUG
+        static Histogram<Type> valueTypeHistogram = new Histogram<Type> ();
+#endif
+        AssignmentT (TopLevelVariable target, SCode value)
+            : base (target, value)
+        {
+            this.cell = target.valueCell;
+        }
+
+        public static SCode Make (TopLevelVariable target, SCode value)
+        {
+            return new AssignmentT (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.value);
+            valueTypeHistogram.Note (this.valueType);
+            SCode.location = "AssignmentT.EvalStep";
+#endif
+            Control expr = this.value;
+            Environment env = environment;
+            object newValue;
+            while (expr.EvalStep (out newValue, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "AssignmentT.EvalStep.1";
+#endif
+            if (newValue == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+#if DEBUG
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            return this.cell.Assign (out answer, newValue);
+        }
+    }
+
+    [Serializable]
+    public class Variable : SCode, ISerializable, ISystemHunk3, IVariableSpecializer
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.VARIABLE; } }
@@ -579,6 +711,7 @@ namespace Microcode
                (
                ((name.ToString()) == "no symbol has this name") ||
                ((name.ToString()) == "%record?") ||
+               //((name.ToString()) == "%char-set-member?") ||
                //((name.ToString()) == "the-console-port") ||
                //((name.ToString()) == "fixed-objects") ||
                //((name.ToString()) == "grow-table!") ||
@@ -612,13 +745,14 @@ namespace Microcode
         }
 
         public Symbol Name
-        {
+        {[DebuggerStepThrough]
             get
             {
                 return this.varname;
             }
         }
 
+        [DebuggerStepThrough]
         public override string ToString ()
         {
             return "#<VARIABLE " + this.Name + ">";
@@ -704,34 +838,6 @@ namespace Microcode
             info.AddValue ("name", this.varname);
         }
 
-        internal SCode MakeArgument (int argOffset)
-        {
-            return Configuration.EnableArgumentBinding ? Argument.Make (this.varname, argOffset) : this;
-        }
-
-
-        internal SCode MakeStatic (int staticOffset)
-        {
-            return Configuration.EnableStaticBinding ? StaticVariable.Make (this.varname, staticOffset) :
-                   Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) :
-                   this;
-        }
-
-
-        internal SCode MakeTopLevel (ValueCell topLevelCell)
-        {
-            return TopLevelVariable.Make (this.varname, topLevelCell);
-        }
-
-        internal SCode MakeGlobal (GlobalEnvironment env)
-        {
-            return GlobalVariable.Make (this.varname, env, null);
-        }
-
-        internal SCode MakeFree ()
-        {
-            return Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) : this;
-        }
 
         internal override PartialResult PartialEval (PartialEnvironment environment)
         {
@@ -747,6 +853,37 @@ namespace Microcode
         }
 
 
+
+        #region IVariableSpecializer Members
+
+        public SCode MakeArgument (int argOffset)
+        {
+            return Configuration.EnableArgumentBinding ? Argument.Make (this.varname, argOffset) : this;
+        }
+
+        public SCode MakeFree ()
+        {
+            return Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) : this;
+        }
+
+        public SCode MakeGlobal (GlobalEnvironment env)
+        {
+            return GlobalVariable.Make (this.varname, env, null);
+        }
+
+        public SCode MakeStatic (int staticOffset)
+        {
+            return Configuration.EnableStaticBinding ? StaticVariable.Make (this.varname, staticOffset) :
+                   Configuration.EnableArgumentBinding ? FreeVariable.Make (this.varname) :
+                   this;
+        }
+
+        public SCode MakeTopLevel (ValueCell topLevelCell)
+        {
+            return TopLevelVariable.Make (this.varname, topLevelCell);
+        }
+
+        #endregion
     }
 
     [Serializable]
@@ -799,11 +936,14 @@ namespace Microcode
 
         static public Argument Make (Symbol name, int offset)
         {
-            switch (offset) {
-                case 0: return new Argument0 (name);
-                case 1: return new Argument1 (name);
-                default: return new Argument (name, offset);
-            }
+            if (Configuration.EnableArgument0And1)
+                switch (offset) {
+                    case 0: return new Argument0 (name);
+                    case 1: return new Argument1 (name);
+                    default: return new Argument (name, offset);
+                }
+            else
+                return new Argument (name, offset);
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
@@ -990,11 +1130,15 @@ namespace Microcode
 #endif
             return cell.GetValue (out answer);
         }
+
+        public ValueCell valueCell { [DebuggerStepThrough] get { return this.cell; } }
     }
 
     [Serializable]
     sealed class FreeVariable : Variable
     {
+        ValueCell lastCell;
+
         FreeVariable (Symbol name)
             : base (name)
         {
@@ -1013,36 +1157,14 @@ namespace Microcode
                 Debugger.Break ();
             }
 #endif
-            //if (Configuration.EnableVariableOptimization && Configuration.EnableLexicalAddressing)
-            //    throw new NotImplementedException ("Should not happen, variables should all be bound.");
-            //Environment start = environment;
-            //for (int i = 0; i < this.depth; i++)
-            //    start = start.Closure.Environment;
-            //if (start.DeepSearch (out answer, this.varname)) {
-            //    throw new NotImplementedException ();
-            //}
-            //if (this.lastCell != null) {
-            //    if (this.lastCell.GetValue (out answer)) {
-            //        throw new NotImplementedException ();
-            //    }
-            //    return false;
-            //}
-            Environment baseEnvironment = environment.BaseEnvironment;
-            ValueCell cell;
-            if (baseEnvironment.FreeReference (out cell, this.varname))
-                throw new NotImplementedException ("Error with free variable " + this.varname);
-            return cell.GetValue (out answer);
-            
-            //if (this.lastCell == null)
-            //    this.lastCell = cell;
 
-            //if (this.lastCell != null && this.lastCell != cell) {
-            //    Debugger.Break ();
+            //if (this.lastCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.lastCell, this.varname))
+                    throw new NotImplementedException ("Error with free variable " + this.varname);
             //}
-            //if (this.lastCell.GetValue (out answer)) {
-            //    throw new NotImplementedException ();
-            //}
-            //return false;
+            return this.lastCell.GetValue (out answer);
         }
     }
 }

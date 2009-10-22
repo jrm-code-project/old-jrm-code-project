@@ -12,7 +12,6 @@ namespace Microcode
         public static bool Reset (out object answer)
         {
 #if DEBUG
-            Environment.foundAtDepth = new long [128];
             Environment.extendedBy = new long [1024];
 
             SCode.evaluations = 0;

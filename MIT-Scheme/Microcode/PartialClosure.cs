@@ -12,8 +12,7 @@ namespace Microcode
         readonly PartialEnvironment environment;
         readonly IDictionary<Symbol, ValueCell> exportedTopLevelVariables;
 
-        StaticMapping [] staticMapping;
-        IList<Symbol> importedStaticVariables;
+        readonly StaticMapping staticMapping;
 
         static IDictionary<Symbol, ValueCell> ComputeUnshadowedTopLevelVariables (IDictionary<Symbol, ValueCell> topLevelVariables, Symbol [] shadowingSymbols)
         {
@@ -38,32 +37,10 @@ namespace Microcode
         {
             this.lambda = lambda;
             this.environment = environment;
-
+            this.staticMapping = environment.GetStaticMapping (lambda.FreeVariables);
             this.exportedTopLevelVariables = lambda.CallsTheEnvironment()
                 ? noUnshadowedTopLevelVariables
                 : ComputeUnshadowedTopLevelVariables (environment.TopLevelVariables, lambda.Formals);
-
-            this.staticMapping = environment.GetStaticMapping (lambda.FreeVariables);
-            this.importedStaticVariables = new List<Symbol> ();
-
-            // get the exported statics
-            IList<Symbol> exportedStatics = environment.ExportedStatics;
-            foreach (Symbol stat in exportedStatics) {
-                int pos = Array.IndexOf<Symbol> (lambda.Formals, stat);
-                bool inFree = lambda.FreeVariables.Contains (stat);
-                if (inFree == true &&
-                    pos == -1) {
-                    this.importedStaticVariables.Add (stat);
-                }
-                else if (inFree == false &&
-                         pos == -1) {
-                }
-                else if (inFree == false) {
-                    //Debugger.Break ();
-                }
-                else
-                    throw new NotImplementedException ();
-            }
         }
 
         public LType Lambda { [DebuggerStepThrough] get { return this.lambda; } }
@@ -73,14 +50,7 @@ namespace Microcode
         /// <summary>
         /// Returns the array of symbols bound when applying this closure.
         /// </summary>
-        public Symbol [] BoundVariables
-        {
-            [DebuggerStepThrough]
-            get
-            {
-                return this.lambda.Formals;
-            }
-        }
+        public Symbol [] BoundVariables { [DebuggerStepThrough] get { return this.lambda.Formals; } }
 
         /// <summary>
         /// Returns the collection of variables used by this closure.
@@ -95,7 +65,7 @@ namespace Microcode
             }
         }
 
-        public StaticMapping [] StaticMapping
+        public StaticMapping StaticMap
         {
             get
             {
@@ -103,12 +73,12 @@ namespace Microcode
             }
         }
 
-        public IList<Symbol> ImportedStaticVariables
+        public Symbol [] ImportedStaticVariables
         {
             [DebuggerStepThrough]
             get
             {
-                return this.importedStaticVariables;
+                return this.staticMapping.Names;
             }
         }
 
@@ -116,5 +86,52 @@ namespace Microcode
         {
             return this.lambda.LexicalOffset (name);
         }
+
+        public StaticMapping ExportedStaticMapping (ICollection<Symbol> freeVariables)
+        {
+            Symbol [] formals = this.Lambda.Formals;
+
+            // determine how many mappings we need.
+            int count = 0;
+            for (int index = 0; index < formals.Length; index++)
+                if (freeVariables.Contains (formals [index])) {
+                    count += 1;
+                }
+
+            // If we don't have shadowing variables, we can pass on the static ones.
+            if (!this.lambda.CallsTheEnvironment ()) {
+                foreach (Symbol stat in this.staticMapping.Names) {
+                    if (freeVariables.Contains (stat)) {
+                        count += 1;
+                    }
+                }
+            }
+
+            Symbol [] exportedNames = new Symbol [count];
+            int [] exportedOffsets = new int [count];
+            int mapptr = 0;
+            // Fill in the arguments
+            for (int index = 0; index < formals.Length; index++)
+                if (freeVariables.Contains (formals [index])) {
+                    exportedNames [mapptr] = formals [index];
+                    exportedOffsets [mapptr] = (-index) - 1;
+                    mapptr += 1;
+                }
+
+            if (!this.lambda.CallsTheEnvironment ()) {
+                Symbol [] importedNames = this.staticMapping.Names;
+                for (int index = 0; index < importedNames.Length; index++) {
+                    Symbol stat = importedNames [index];
+                    if (freeVariables.Contains (stat)) {
+                        exportedNames [mapptr] = stat;
+                        exportedOffsets [mapptr] = index;
+                        mapptr += 1;
+                    }
+                }
+            }
+
+            return new StaticMapping (exportedNames, exportedOffsets);
+        }
+
     }
 }
