@@ -2042,9 +2042,10 @@ namespace Microcode
         internal override ValueCell [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
-            SCode.location = "SmallEnvironment2.GetValueCells";
+            SCode.location = "-";
             valueCellsCopied [mapping.Size] += 1;
             staticMappings.Note (mapping.Offsets);
+            SCode.location = "SmallEnvironment2.GetValueCells";
 #endif
             Symbol[] mappingNames = this.Closure.Lambda.Formals;
             int count = mapping.Size;

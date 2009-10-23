@@ -647,7 +647,7 @@ namespace Microcode
     [Serializable]
     class PrimitiveCarA : PrimitiveCar
     {
-        readonly int offset;
+        public readonly int offset;
 
         protected PrimitiveCarA (Primitive1 procedure, Argument arg0)
             : base (procedure, arg0)
@@ -2196,7 +2196,9 @@ namespace Microcode
 
     #endregion
 
-//    #region Caar
+#region OldCode
+
+      #region Caar
 
 //    [Serializable]
 //    class PrimitiveCaar : PrimitiveCombination1
@@ -2400,9 +2402,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region CharToInteger
+      #region CharToInteger
 
 //    [Serializable]
 //    class PrimitiveCharToInteger : PrimitiveCombination1
@@ -2576,9 +2578,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region FixnumAdd1
+      #region FixnumAdd1
 
 //    [Serializable]
 //    class PrimitiveFixnumAdd1 : PrimitiveCombination1
@@ -2753,9 +2755,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsComplex
+      #region IsComplex
 
 //    [Serializable]
 //    class PrimitiveIsComplex : PrimitiveCombination1
@@ -2928,9 +2930,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsBigFixnum
+      #region IsBigFixnum
 
 //    [Serializable]
 //    class PrimitiveIsBigFixnum : PrimitiveCombination1
@@ -3103,9 +3105,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsBigFlonum
+      #region IsBigFlonum
 
 //    [Serializable]
 //    class PrimitiveIsBigFlonum : PrimitiveCombination1
@@ -3278,9 +3280,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsFixnum
+      #region IsFixnum
 
 //    [Serializable]
 //    class PrimitiveIsFixnum : PrimitiveCombination1
@@ -3453,9 +3455,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsRatnum
+      #region IsRatnum
 
 //    [Serializable]
 //    class PrimitiveIsRatnum : PrimitiveCombination1
@@ -3628,9 +3630,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsSymbol
+      #region IsSymbol
 
 //    [Serializable]
 //    class PrimitiveIsSymbol : PrimitiveCombination1
@@ -3811,9 +3813,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsVector
+      #region IsVector
 
 //    [Serializable]
 //    class PrimitiveIsVector : PrimitiveCombination1
@@ -3986,9 +3988,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region Add1
+      #region Add1
 
 //    [Serializable]
 //    class PrimitiveAdd1 : PrimitiveCombination1
@@ -4183,9 +4185,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsNegative
+      #region IsNegative
 
 //    [Serializable]
 //    class PrimitiveIsNegative : PrimitiveCombination1
@@ -4360,9 +4362,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsPairCar
+      #region IsPairCar
 
 //    [Serializable]
 //    class PrimitiveIsPairCar : PrimitiveIsPair
@@ -4529,9 +4531,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region IsSharpT
+      #region IsSharpT
 
 //    [Serializable]
 //    class PrimitiveIsSharpT : PrimitiveCombination1
@@ -4726,9 +4728,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region Not
+      #region Not
 
 //    [Serializable]
 //    class PrimitiveNot : PrimitiveCombination1
@@ -4912,9 +4914,9 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
-//    #region SystemPairCar
+      #region SystemPairCar
 
 //    [Serializable]
 //    class PrimitiveSystemPairCar : PrimitiveCombination1
@@ -5103,13 +5105,13 @@ namespace Microcode
 //            answer = evpair.SystemPairCar;
 //            return false;
 //        }
-//    }
+    //    }
 
-//    #endregion
+      #endregion
 
-//    #region VectorLength
+    #region VectorLength
 
-//    [Serializable]
+    //    [Serializable]
 //    class PrimitiveVectorLength : PrimitiveCombination1
 //    {
 //        protected PrimitiveVectorLength (Primitive1 procedure, SCode arg0)
@@ -5281,6 +5283,7 @@ namespace Microcode
 //        }
 //    }
 
-//    #endregion
+      #endregion
 
+#endregion
 }
