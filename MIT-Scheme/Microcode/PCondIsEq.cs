@@ -22,17 +22,20 @@ namespace Microcode
         public static SCode Make (PrimitiveIsEq predicate, SCode consequent, SCode alternative)
         {
             return
+                (predicate is PrimitiveIsEqA) ? PCondIsEqA.Make((PrimitiveIsEqA) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsEqCar) ? PCondIsEqCar.Make ((PrimitiveIsEqCar) predicate, consequent, alternative) :
                 new PCondIsEq (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsEq.EvalStep");
+            Warm ("-");
             NoteCalls (this.rand0);
             NoteCalls (this.rand1);
             rand0TypeHistogram.Note (this.rand0Type);
             rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCondIsEq";
 #endif
             Control unev = this.rand1;
             Environment env = environment;
@@ -41,6 +44,9 @@ namespace Microcode
             if (ev1 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
             }
+#if DEBUG
+            SCode.location = "PCondIsEq";
+#endif
 
             unev = this.rand0;
             env = environment;
@@ -53,7 +59,9 @@ namespace Microcode
                 //environment = env;
                 //return false;
             }
-
+#if DEBUG
+            SCode.location = "PCondIsEq";
+#endif
             ObjectModel.Eq (out answer, ev0, ev1);
 
             if ((answer is bool) && (bool) answer == false) {
@@ -75,47 +83,36 @@ namespace Microcode
         }
     }
 
-#if NIL
-    class PCondIsEqL : PCondIsEq
+    class PCondIsEqA : PCondIsEq
     {
 #if DEBUG
         static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 #endif
-        public readonly object rand0Name;
-        public readonly int rand0Depth;
         public readonly int rand0Offset;
 
-        protected PCondIsEqL (PrimitiveIsEqL predicate, SCode consequent, SCode alternative)
+        protected PCondIsEqA (PrimitiveIsEqA predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-            this.rand0Name = predicate.rand0Name;
-            this.rand0Depth = predicate.rand0Depth;
             this.rand0Offset = predicate.rand0Offset;
         }
 
-        public static SCode Make (PrimitiveIsEqL predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsEqA predicate, SCode consequent, SCode alternative)
         {
-            return 
-                (predicate is PrimitiveIsEqA) ? PCondIsEqA.Make ((PrimitiveIsEqA) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqL1) ? PCondIsEqL1.Make ((PrimitiveIsEqL1) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqLL) ? PCondIsEqLL.Make ((PrimitiveIsEqLL) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqLQ) ? PCondIsEqLQ.Make ((PrimitiveIsEqLQ) predicate, consequent, alternative) :
-                (consequent is LexicalVariable) ? PCondIsEqLSL.Make (predicate, (LexicalVariable) consequent, alternative) :
-                (consequent is Quotation) ? PCondIsEqLSQ.Make (predicate, (Quotation) consequent, alternative) :
-                (alternative is LexicalVariable) ? PCondIsEqLSSL.Make (predicate, consequent, (LexicalVariable) alternative) :
-                (alternative is Quotation) ? PCondIsEqLSSQ.Make (predicate, consequent, (Quotation) alternative) :
-                new PCondIsEqL (predicate, consequent, alternative);
+            return
+                (predicate is PrimitiveIsEqA0) ? PCondIsEqA0.Make ((PrimitiveIsEqA0) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsEqA1) ? PCondIsEqA1.Make ((PrimitiveIsEqA1) predicate, consequent, alternative) :
+                new PCondIsEqA (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            noteCalls (this.rand1);
+            NoteCalls (this.rand1);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PCondIsEqL.EvalStep";
+            SCode.location = "PCondIsEqA";
 #endif
             Control unev = this.rand1;
             Environment env = environment;
@@ -124,74 +121,14 @@ namespace Microcode
             if (ev1 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
             }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
+            SCode.location = "PCondIsEqA";
 #endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqA : PCondIsEqL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqA (PrimitiveIsEqA predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-
-        }
-
-        public static SCode Make (PrimitiveIsEqA predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (predicate is PrimitiveIsEqA0) ? PCondIsEqA0.Make ((PrimitiveIsEqA0) predicate, consequent, alternative)
-                : (predicate is PrimitiveIsEqA1) ? PCondIsEqA1.Make ((PrimitiveIsEqA1) predicate, consequent, alternative)
-                : new PCondIsEqA (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqA.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
             ObjectModel.Eq (out answer, environment.ArgumentValue (this.rand0Offset), ev1);
 
             if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
-                noteCalls (this.alternative);
+                NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 expression = this.alternative;
@@ -199,7 +136,7 @@ namespace Microcode
             }
             else {
 #if DEBUG
-                noteCalls (this.consequent);
+                NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
 #endif
                 expression = this.consequent;
@@ -226,17 +163,16 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveIsEqA0Car) ? PCondIsEqA0Car.Make ((PrimitiveIsEqA0Car) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqA0L) ? PCondIsEqA0L.Make ((PrimitiveIsEqA0L) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqA0Q) ? PCondIsEqA0Q.Make ((PrimitiveIsEqA0Q) predicate, consequent, alternative) :
                 new PCondIsEqA0 (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsEqA0.EvalStep");
-            noteCalls (this.rand1);
+            Warm ("-");
+            NoteCalls (this.rand1);
             rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCondIsEqA0";
 #endif
             Control unev = this.rand1;
             Environment env = environment;
@@ -245,12 +181,14 @@ namespace Microcode
             if (ev1 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
             }
-
+#if DEBUG
+            SCode.location = "PCondIsEqA0";
+#endif
             ObjectModel.Eq (out answer, environment.Argument0Value, ev1);
 
             if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
-                noteCalls (this.alternative);
+                NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 expression = this.alternative;
@@ -258,8 +196,74 @@ namespace Microcode
             }
             else {
 #if DEBUG
-                noteCalls (this.consequent);
+                NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+    class PCondIsEqA1 : PCondIsEqA
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type>();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type>();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type>();
+#endif
+
+        protected PCondIsEqA1(PrimitiveIsEqA1 predicate, SCode consequent, SCode alternative)
+            : base(predicate, consequent, alternative)
+        {
+
+        }
+
+        public static SCode Make(PrimitiveIsEqA1 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                //(predicate is PrimitiveIsEqA0Car) ? PCondIsEqA0Car.Make ((PrimitiveIsEqA0Car) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsEqA0L) ? PCondIsEqA0L.Make ((PrimitiveIsEqA0L) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsEqA0Q) ? PCondIsEqA0Q.Make ((PrimitiveIsEqA0Q) predicate, consequent, alternative) :
+                new PCondIsEqA1(predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep(out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm("-");
+            NoteCalls(this.rand1);
+            rand1TypeHistogram.Note(this.rand1Type);
+            SCode.location = "PCondIsEqA1";
+#endif
+            Control unev = this.rand1;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep(out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack)
+            {
+                throw new NotImplementedException();
+            }
+#if DEBUG
+            SCode.location = "PCondIsEqA1";
+#endif
+
+            ObjectModel.Eq(out answer, environment.Argument1Value, ev1);
+
+            if ((answer is bool) && (bool)answer == false)
+            {
+#if DEBUG
+                NoteCalls(this.alternative);
+                alternativeTypeHistogram.Note(this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else
+            {
+#if DEBUG
+                NoteCalls(this.consequent);
+                consequentTypeHistogram.Note(this.consequentType);
 #endif
                 expression = this.consequent;
                 return true;
@@ -283,7 +287,7 @@ namespace Microcode
         public static SCode Make (PrimitiveIsEqA0Car predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsEqA0CarL) ? PCondIsEqA0CarL.Make ((PrimitiveIsEqA0CarL) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsEqA0CarA) ? PCondIsEqA0CarA.Make ((PrimitiveIsEqA0CarA) predicate, consequent, alternative) :
                 new PCondIsEqA0Car (predicate, consequent, alternative);
         }
 
@@ -294,77 +298,17 @@ namespace Microcode
 
     }
 
-    class PCondIsEqA0CarL : PCondIsEqA0Car
+    class PCondIsEqA0CarA : PCondIsEqA0Car
     {
 #if DEBUG
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 #endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
         public readonly int rand1Offset;
-
-        protected PCondIsEqA0CarL (PrimitiveIsEqA0CarL predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.rand1Name = predicate.rand1Name;
-            this.rand1Depth = predicate.rand1Depth;
-            this.rand1Offset = predicate.rand1Offset;
-
-        }
-
-        public static SCode Make (PrimitiveIsEqA0CarL predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (predicate is PrimitiveIsEqA0CarA) ? PCondIsEqA0CarA.Make ((PrimitiveIsEqA0CarA) predicate, consequent, alternative) :
-                new PCondIsEqA0CarL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqA0CarL.EvalStep");
-#endif
-            object ev1; 
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException();
-            ObjectModel.Eq (out answer, environment.Argument0Value, ((Cons)ev1).Car);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                SCode.location = "-";
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-                SCode.location = "PCondIsEqA0CarA.EvalStep.1";
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                SCode.location = "-";
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-                SCode.location = "PCondIsEqA0CarA.EvalStep.2";
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-
-    }
-
-    class PCondIsEqA0CarA : PCondIsEqA0CarL
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
         protected PCondIsEqA0CarA (PrimitiveIsEqA0CarA predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-
+            this.rand1Offset = predicate.rand1Offset;
         }
 
         public static SCode Make (PrimitiveIsEqA0CarA predicate, SCode consequent, SCode alternative)
@@ -379,14 +323,15 @@ namespace Microcode
             Warm ("PCondIsEqA0CarA.EvalStep");
 #endif
             Cons ev1 = environment.ArgumentValue (this.rand1Offset) as Cons;
+            if (ev1 == null) throw new NotImplementedException ();
             ObjectModel.Eq (out answer, environment.Argument0Value, ev1.Car);
 
             if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
                 SCode.location = "-";
-                noteCalls (this.alternative);
+                NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
-                SCode.location = "PCondIsEqA0CarA.EvalStep.1";
+                SCode.location = "PCondIsEqA0CarA";
 #endif
                 expression = this.alternative;
                 return true;
@@ -394,9 +339,9 @@ namespace Microcode
             else {
 #if DEBUG
                 SCode.location = "-";
-                noteCalls (this.consequent);
+                NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
-                SCode.location = "PCondIsEqA0CarA.EvalStep.2";
+                SCode.location = "PCondIsEqA0CarA";
 #endif
                 expression = this.consequent;
                 return true;
@@ -405,54 +350,77 @@ namespace Microcode
 
     }
 
-    class PCondIsEqA0L : PCondIsEqA0
+    [Serializable]
+    class PCondIsEqCar : PCondIsEq
     {
 #if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
         static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
         static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
 #endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
+        protected readonly SCode rand0Arg;
 
-        protected PCondIsEqA0L (PrimitiveIsEqA0L predicate, SCode consequent, SCode alternative)
+        protected PCondIsEqCar (PrimitiveIsEqCar predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-            this.rand1Name = predicate.rand1Name;
-            this.rand1Depth = predicate.rand1Depth;
-            this.rand1Offset = predicate.rand1Offset;
+            this.rand0Arg = predicate.rand0Arg;
         }
 
-        public static SCode Make (PrimitiveIsEqA0L predicate, SCode consequent, SCode alternative)
+        public static SCode Make (PrimitiveIsEqCar predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsEqA0A) ? PCondIsEqA0A.Make ((PrimitiveIsEqA0A) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqA0L1) ? PCondIsEqA0L1.Make ((PrimitiveIsEqA0L1) predicate, consequent, alternative) :
-                new PCondIsEqA0L (predicate, consequent, alternative);
+                (predicate is PrimitiveIsEqCarA) ? PCondIsEqCarA.Make ((PrimitiveIsEqCarA) predicate, consequent, alternative) :
+                new PCondIsEqCar (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsEqA0L.EvalStep");
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCondIsEqCar";
 #endif
+            Control unev = this.rand1;
+            Environment env = environment;
             object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack)
+            {
                 throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, environment.Argument0Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
+            }
 #if DEBUG
-                noteCalls (this.alternative);
+            SCode.location = "PCondIsEqCar";
+#endif
+            unev = this.rand0Arg;
+            env = environment;
+            object ev0temp;
+            while (unev.EvalStep (out ev0temp, ref unev, ref env)) { };
+            if (ev0temp == Interpreter.UnwindStack)
+            {
+                throw new NotImplementedException ();
+            }
+#if DEBUG
+            SCode.location = "PCondIsEqCar";
+#endif
+            Cons ev0 = ev0temp as Cons;
+            if (ev0 == null) throw new NotImplementedException ();
+
+            ObjectModel.Eq (out answer, ev0.Car, ev1);
+
+            if ((answer is bool) && (bool) answer == false)
+            {
+#if DEBUG
+                NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 expression = this.alternative;
                 return true;
             }
-            else {
+            else
+            {
 #if DEBUG
-                noteCalls (this.consequent);
+                NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
 #endif
                 expression = this.consequent;
@@ -461,6 +429,267 @@ namespace Microcode
         }
     }
 
+    [Serializable]
+    class PCondIsEqCarA : PCondIsEqCar
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly int rand0Offset;
+
+        protected PCondIsEqCarA (PrimitiveIsEqCarA predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.rand0Offset = predicate.rand0ArgOffset;
+        }
+
+        public static SCode Make (PrimitiveIsEqCarA predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is PrimitiveIsEqCarA0) ? PCondIsEqCarA0.Make ((PrimitiveIsEqCarA0) predicate, consequent, alternative) :
+                new PCondIsEqCarA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCondIsEqCarA";
+#endif
+            Control unev = this.rand1;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack)
+            {
+                throw new NotImplementedException ();
+            }
+#if DEBUG
+            SCode.location = "PCondIsEqCarA";
+#endif
+            Cons ev0 = environment.ArgumentValue(this.rand0Offset) as Cons;
+            if (ev0 == null) throw new NotImplementedException ();
+
+            ObjectModel.Eq (out answer, ev0.Car, ev1);
+
+            if ((answer is bool) && (bool) answer == false)
+            {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else
+            {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsEqCarA0 : PCondIsEqCarA
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected PCondIsEqCarA0 (PrimitiveIsEqCarA0 predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsEqCarA0 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is PrimitiveIsEqCarA0Car) ? PCondIsEqCarA0Car.Make ((PrimitiveIsEqCarA0Car) predicate, consequent, alternative) :
+                new PCondIsEqCarA0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCondIsEqCarA0";
+#endif
+            Control unev = this.rand1;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack)
+            {
+                throw new NotImplementedException ();
+            }
+#if DEBUG
+            SCode.location = "PCondIsEqCarA0";
+#endif
+            Cons ev0 = environment.Argument0Value as Cons;
+            if (ev0 == null) throw new NotImplementedException ();
+
+            ObjectModel.Eq (out answer, ev0.Car, ev1);
+
+            if ((answer is bool) && (bool) answer == false)
+            {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else
+            {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsEqCarA0Car : PCondIsEqCarA0
+    {
+#if DEBUG
+        static Histogram<Type> rand1ArgTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+        protected Type rand1ArgType;
+#endif
+        public readonly SCode rand1Arg;
+        protected PCondIsEqCarA0Car (PrimitiveIsEqCarA0Car predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.rand1Arg = predicate.rand1Arg;
+#if DEBUG
+            this.rand1ArgType = rand1Arg.GetType();
+#endif
+        }
+
+        public static SCode Make (PrimitiveIsEqCarA0Car predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is PrimitiveIsEqCarA0CarA) ? PCondIsEqCarA0CarA.Make ((PrimitiveIsEqCarA0CarA) predicate, consequent, alternative) :
+                new PCondIsEqCarA0Car (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1Arg);
+            rand1ArgTypeHistogram.Note (this.rand1ArgType);
+            SCode.location = "PCondIsEqCarA0Car";
+#endif
+            Control unev = this.rand1Arg;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack)
+            {
+                throw new NotImplementedException ();
+            }
+#if DEBUG
+            SCode.location = "PCondIsEqCarA0Car";
+#endif
+            Cons ev1Pair = ev1 as Cons;
+            if (ev1Pair == null) throw new NotImplementedException ();
+            Cons ev0 = environment.Argument0Value as Cons;
+            if (ev0 == null) throw new NotImplementedException ();
+
+            ObjectModel.Eq (out answer, ev0.Car, ev1Pair.Car);
+
+            if ((answer is bool) && (bool) answer == false)
+            {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else
+            {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+    class PCondIsEqCarA0CarA : PCondIsEqCarA0Car
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int rand1Offset;
+        protected PCondIsEqCarA0CarA (PrimitiveIsEqCarA0CarA predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.rand1Offset = predicate.rand1Offset;
+        }
+
+        public static SCode Make (PrimitiveIsEqCarA0CarA predicate, SCode consequent, SCode alternative)
+        {
+            return
+                //(predicate is PrimitiveIsEqCarA0CarA) ? PCondIsEqCarA0CarA ((PrimitiveIsEqCarA0CarA) predicate, consequent, alternative) :
+                new PCondIsEqCarA0CarA (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsEqCarA0CarA");
+#endif
+            Cons ev1Pair = environment.ArgumentValue(this.rand1Offset) as Cons;
+            if (ev1Pair == null) throw new NotImplementedException ();
+            Cons ev0 = environment.Argument0Value as Cons;
+            if (ev0 == null) throw new NotImplementedException ();
+
+            ObjectModel.Eq (out answer, ev0.Car, ev1Pair.Car);
+
+            if ((answer is bool) && (bool) answer == false)
+            {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else
+            {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+#if NIL
     class PCondIsEqA0A : PCondIsEqA0L
     {
 #if DEBUG
@@ -552,53 +781,6 @@ namespace Microcode
         }
     }
 
-    class PCondIsEqA0L1 : PCondIsEqA0L
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqA0L1 (PrimitiveIsEqA0L1 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqA0L1 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                new PCondIsEqA0L1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqA0L1.EvalStep");
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, environment.Argument0Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
 
     class PCondIsEqA0Q : PCondIsEqA0
     {
@@ -704,2718 +886,6 @@ namespace Microcode
         }
     }
 
-    class PCondIsEqL1 : PCondIsEqL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1 (PrimitiveIsEqL1 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-
-        }
-
-        public static SCode Make (PrimitiveIsEqL1 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (predicate is PrimitiveIsEqL1L) ? PCondIsEqL1L.Make ((PrimitiveIsEqL1L) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqL1Q) ? Unimplemented() :
-                (consequent is LexicalVariable) ? PCondIsEqL1SL.Make (predicate, (LexicalVariable) consequent, alternative) :
-                (consequent is Quotation) ? PCondIsEqL1SQ.Make (predicate, (Quotation) consequent, alternative) :
-                (alternative is LexicalVariable) ? PCondIsEqL1SSL.Make (predicate, consequent, (LexicalVariable) alternative) :
-                (alternative is Quotation) ? PCondIsEqL1SSQ.Make (predicate, consequent, (Quotation) alternative) :
-                 new PCondIsEqL1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1L : PCondIsEqL1
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PCondIsEqL1L (PrimitiveIsEqL1L predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.rand1Name = predicate.rand1Name;
-            this.rand1Depth = predicate.rand1Depth;
-            this.rand1Offset = predicate.rand1Offset;
-        }
-
-        public static SCode Make (PrimitiveIsEqL1L predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (predicate is PrimitiveIsEqL1A) ? PCondIsEqL1A.Make ((PrimitiveIsEqL1A) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqL1L1) ? PCondIsEqL1L1.Make ((PrimitiveIsEqL1L1) predicate, consequent, alternative) :
-                (consequent is LexicalVariable) ? Unimplemented() :
-                (consequent is Quotation) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                 new PCondIsEqL1L (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1A : PCondIsEqL1L
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1A (PrimitiveIsEqL1A predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL1A predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (predicate is PrimitiveIsEqL1A0) ? PCondIsEqL1A0.Make ((PrimitiveIsEqL1A0) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqL1A1) ? PCondIsEqL1A1.Make ((PrimitiveIsEqL1A1) predicate, consequent, alternative) :
-                (consequent is LexicalVariable) ? Unimplemented () :
-                (consequent is Quotation) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                 new PCondIsEqL1A (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1A0 : PCondIsEqL1A
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1A0 (PrimitiveIsEqL1A0 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL1A0 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (consequent is LexicalVariable) ? PCondIsEqL1A0L.Make (predicate, (LexicalVariable) consequent, alternative) :
-                (consequent is Quotation) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? PCondIsEqL1A0SQ.Make (predicate, consequent, (Quotation) alternative) :
-                 new PCondIsEqL1A0 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1A0L : PCondIsEqL1A0
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1A0L (PrimitiveIsEqL1A0 predicate, LexicalVariable consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL1A0 predicate, LexicalVariable consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument) ? Unimplemented() :
-                (consequent is LexicalVariable1) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                 new PCondIsEqL1A0L (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-               
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    sealed class PCondIsEqL1A0SQ : PCondIsEqL1A0
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        PCondIsEqL1A0SQ (PrimitiveIsEqL1A0 predicate, SCode consequent, Quotation alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL1A0 predicate, SCode consequent, Quotation alternative)
-        {
-            return
-                new PCondIsEqL1A0SQ (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-
-
-    class PCondIsEqL1A1 : PCondIsEqL1A
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1A1 (PrimitiveIsEqL1A1 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL1A1 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (consequent is LexicalVariable) ? Unimplemented () :
-                (consequent is Quotation) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                 new PCondIsEqL1A1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1L1 : PCondIsEqL1L
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        protected PCondIsEqL1L1 (PrimitiveIsEqL1L1 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-
-        }
-
-        public static SCode Make (PrimitiveIsEqL1L1 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (consequent is LexicalVariable) ? PCondIsEqL1L1L.Make (predicate, (LexicalVariable) consequent, alternative) :
-                (consequent is Quotation) ? PCondIsEqL1L1Q.Make (predicate, (Quotation) consequent, alternative) :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? PCondIsEqL1L1SQ.Make (predicate, consequent, (Quotation) alternative) :
-                 new PCondIsEqL1L1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqL1L1.EvalStep");
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1L1L : PCondIsEqL1L1
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object consequentName;
-        public readonly int consequentDepth;
-        public readonly int consequentOffset;
-
-        protected PCondIsEqL1L1L (PrimitiveIsEqL1L1 predicate, LexicalVariable consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.consequentName = consequent.Name;
-            this.consequentDepth = consequent.Depth;
-            this.consequentOffset = consequent.Offset;
-        }
-
-        public static SCode Make (PrimitiveIsEqL1L1 predicate, LexicalVariable consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument) ? PCondIsEqL1L1A.Make (predicate, (Argument) consequent, alternative) :
-                (consequent is LexicalVariable1) ? Unimplemented() :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented() :
-                 new PCondIsEqL1L1L (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL1L1.EvalStep");
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1L1A : PCondIsEqL1L1L
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1L1A (PrimitiveIsEqL1L1 predicate, Argument consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL1L1 predicate, Argument consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument0) ? PCondIsEqL1L1A0.Make (predicate, (Argument0) consequent, alternative) :
-                (consequent is Argument1) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                 new PCondIsEqL1L1A (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL1L1.EvalStep");
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1L1A0 : PCondIsEqL1L1A
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1L1A0 (PrimitiveIsEqL1L1 predicate, Argument0 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL1L1 predicate, Argument0 consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                 new PCondIsEqL1L1A0 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL1L1.EvalStep");
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-
-
-    class PCondIsEqL1L1Q : PCondIsEqL1L1
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object consequentValue;
-        protected PCondIsEqL1L1Q (PrimitiveIsEqL1L1 predicate, Quotation consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.consequentValue = consequent.Quoted;
-        }
-
-        public static SCode Make (PrimitiveIsEqL1L1 predicate, Quotation consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                 new PCondIsEqL1L1Q (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqL1L1Q.EvalStep");
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-                answer = this.consequentValue;
-                return false;
-            }
-        }
-    }
-
-    sealed class PCondIsEqL1L1SQ : PCondIsEqL1L1
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object alternativeValue;
-        PCondIsEqL1L1SQ (PrimitiveIsEqL1L1 predicate, SCode consequent, Quotation alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeValue = alternative.Quoted;
-        }
-
-        public static SCode Make (PrimitiveIsEqL1L1 predicate, SCode consequent, Quotation alternative)
-        {
-            return
-                new PCondIsEqL1L1SQ (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqL1L1SQ.EvalStep");
-#endif
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-                answer = this.alternative;
-                return false;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-
-
-    class PCondIsEqL1SL : PCondIsEqL1
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1SL (PrimitiveIsEqL1 predicate, LexicalVariable consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-
-        }
-
-        public static SCode Make (PrimitiveIsEqL1 predicate, LexicalVariable consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument) ? PCondIsEqL1SA.Make (predicate, (Argument) consequent, alternative) :
-                (consequent is LexicalVariable1) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                 new PCondIsEqL1SL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1SA : PCondIsEqL1SL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1SA (PrimitiveIsEqL1 predicate, Argument consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-
-        }
-
-        public static SCode Make (PrimitiveIsEqL1 predicate, Argument consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument0) ? PCondIsEqL1SA0.Make (predicate, (Argument0) consequent, alternative) :
-                (consequent is Argument1) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                 new PCondIsEqL1SA (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1SA0 : PCondIsEqL1SA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1SA0 (PrimitiveIsEqL1 predicate, Argument0 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-
-        }
-
-        public static SCode Make (PrimitiveIsEqL1 predicate, Argument0 consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? PCondIsEqL1SA0Q.Make (predicate, consequent, (Quotation) alternative) :
-                 new PCondIsEqL1SA0 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1SA0Q : PCondIsEqL1SA0
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        public readonly object alternativeValue;
-
-        protected PCondIsEqL1SA0Q (PrimitiveIsEqL1 predicate, Argument0 consequent, Quotation alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeValue = alternative.Quoted;
-        }
-
-        public static SCode Make (PrimitiveIsEqL1 predicate, Argument0 consequent, Quotation alternative)
-        {
-            return
-                new PCondIsEqL1SA0Q (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqL1SA0Q.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-                answer = this.alternativeValue;
-                return false;
-            }
-            else {
-                answer = environment.Argument0Value;
-                return false;
-            }
-        }
-    }
-
-    class PCondIsEqL1SQ : PCondIsEqL1
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqL1SQ (PrimitiveIsEqL1 predicate, Quotation consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-
-        }
-
-        public static SCode Make (PrimitiveIsEqL1 predicate, Quotation consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? PCondIsEqL1SSQ.Make (predicate, consequent, (Quotation) alternative) :
-                 new PCondIsEqL1SQ (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqA1.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            ObjectModel.Eq (out answer, environment.Argument1Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLSSL : PCondIsEqL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object alternativeName;
-        public readonly int alternativeDepth;
-        public readonly int alternativeOffset;
-        protected PCondIsEqLSSL (PrimitiveIsEqL predicate, SCode consequent, LexicalVariable alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeName = alternative.Name;
-            this.alternativeDepth = alternative.Depth;
-            this.alternativeOffset = alternative.Offset;
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, SCode consequent, LexicalVariable alternative)
-        {
-            return
-                (alternative is Argument) ? PCondIsEqLSSA.Make (predicate, consequent, (Argument) alternative) :
-                (alternative is LexicalVariable1) ? Unimplemented() :
-                new PCondIsEqLSSL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PCondIsEqLSSL.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-                if (environment.FastLexicalRef (out answer, this.alternativeName, this.alternativeDepth, this.alternativeOffset))
-                    throw new NotImplementedException ();
-                return false;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLSSA : PCondIsEqLSSL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLSSA (PrimitiveIsEqL predicate, SCode consequent, Argument alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, SCode consequent, Argument alternative)
-        {
-            return
-                (alternative is Argument0) ? PCondIsEqLSSA0.Make (predicate, consequent, (Argument0) alternative) :
-                (alternative is Argument1) ? PCondIsEqLSSA1.Make (predicate, consequent, (Argument1) alternative) :
-                new PCondIsEqLSSA (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    sealed class PCondIsEqLSSA0 : PCondIsEqLSSA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        PCondIsEqLSSA0 (PrimitiveIsEqL predicate, SCode consequent, Argument0 alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, SCode consequent, Argument0 alternative)
-        {
-            return
-                new PCondIsEqLSSA0 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    sealed class PCondIsEqLSSA1 : PCondIsEqLSSA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        PCondIsEqLSSA1 (PrimitiveIsEqL predicate, SCode consequent, Argument1 alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, SCode consequent, Argument1 alternative)
-        {
-            return
-                new PCondIsEqLSSA1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqL1SSL : PCondIsEqL1
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object alternativeName;
-        public readonly int alternativeDepth;
-        public readonly int alternativeOffset;
-
-        protected PCondIsEqL1SSL (PrimitiveIsEqL1 predicate, SCode consequent, LexicalVariable alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeName = alternative.Name;
-            this.alternativeDepth = alternative.Depth;
-            this.alternativeOffset = alternative.Offset;
-        }
-
-        internal static SCode Make (PrimitiveIsEqL1 predicate, SCode consequent, LexicalVariable alternative)
-        {
-            return
-                (alternative is Argument) ? PCondIsEqL1SSA.Make (predicate, consequent, (Argument) alternative) :
-                (alternative is LexicalVariable1) ? Unimplemented():
-                 new PCondIsEqL1SSL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            Unimplemented ();
-            answer = false;
-            return false;
-        }
-    }
-
-    class PCondIsEqL1SSA : PCondIsEqL1SSL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-#endif
-        protected PCondIsEqL1SSA (PrimitiveIsEqL1 predicate, SCode consequent, Argument alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        internal static SCode Make (PrimitiveIsEqL1 predicate, SCode consequent, Argument alternative)
-        {
-            return
-                (alternative is Argument0) ? PCondIsEqL1SSA0.Make (predicate, consequent, (Argument0) alternative) :
-                (alternative is Argument1) ? Unimplemented () :
-                 new PCondIsEqL1SSA (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            Unimplemented ();
-            answer = false;
-            return false;
-        }
-    }
-
-    sealed class PCondIsEqL1SSA0 : PCondIsEqL1SSA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-#endif
-        PCondIsEqL1SSA0 (PrimitiveIsEqL1 predicate, SCode consequent, Argument0 alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        internal static SCode Make (PrimitiveIsEqL1 predicate, SCode consequent, Argument0 alternative)
-        {
-            return
-                new PCondIsEqL1SSA0 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            SCode.location = "PCondIsEqL1SSA0.EvalStep";
-#endif
-            object ev1;
-            Control exp = this.rand1;
-            Environment env = environment;
-            while (exp.EvalStep (out ev1, ref exp, ref env)) { };
-#if DEBUG
-            SCode.location = "PCondIsEqL1SSA0.EvalStep";
-#endif
-            if (ev1 == Interpreter.UnwindStack)
-                throw new NotImplementedException ();
-
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException();
-            object tmp;
-            ObjectModel.Eq (out tmp, ev0, ev1);
-
-            if (tmp is bool && (bool) tmp == false) {
-                answer = environment.Argument0Value;
-                return false;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-
-
-    sealed class PCondIsEqL1SSQ : PCondIsEqL1
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-#endif
-        readonly object alternativeValue;
-        PCondIsEqL1SSQ (PrimitiveIsEqL1 predicate, SCode consequent, Quotation alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeValue = alternative.Quoted;
-        }
-
-        internal static SCode Make (PrimitiveIsEqL1 predicate, SCode consequent, Quotation alternative)
-        {
-            return
-                 new PCondIsEqL1SSQ (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PCondIsEqL1SSQ.EvalStep";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-                answer = this.alternativeValue;
-                return false;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLL : PCondIsEqL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PCondIsEqLL (PrimitiveIsEqLL predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.rand1Name = predicate.rand1Name;
-            this.rand1Depth = predicate.rand1Depth;
-            this.rand1Offset = predicate.rand1Offset;
-        }
-
-        public static SCode Make (PrimitiveIsEqLL predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (predicate is PrimitiveIsEqLA) ? PCondIsEqLA.Make ((PrimitiveIsEqLA) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqLL1) ? PCondIsEqLL1.Make ((PrimitiveIsEqLL1) predicate, consequent, alternative) :
-                (consequent is LexicalVariable) ? PCondIsEqLLL.Make (predicate, (LexicalVariable) consequent, alternative) :
-                (consequent is Quotation) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLA : PCondIsEqLL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLA (PrimitiveIsEqLA predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqLA predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (predicate is PrimitiveIsEqLA0) ? PCondIsEqLA0.Make ((PrimitiveIsEqLA0) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqLA1) ? Unimplemented () :
-                (consequent is LexicalVariable) ? Unimplemented () :
-                (consequent is Quotation) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLA (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLA0 : PCondIsEqLA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLA0 (PrimitiveIsEqLA0 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqLA0 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (consequent is LexicalVariable) ? PCondIsEqLA0L.Make (predicate, (LexicalVariable) consequent, alternative) :
-                (consequent is Quotation) ? PCondIsEqLA0Q.Make (predicate, (Quotation) consequent, alternative) :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLA0 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLA0L : PCondIsEqLA0
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object consequentName;
-        public readonly int consequentDepth;
-        public readonly int consequentOffset;
-
-        protected PCondIsEqLA0L (PrimitiveIsEqLA0 predicate, LexicalVariable consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.consequentName = consequent.Name;
-            this.consequentDepth = consequent.Depth;
-            this.consequentOffset = consequent.Offset;
-        }
-
-        public static SCode Make (PrimitiveIsEqLA0 predicate, LexicalVariable consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument) ? PCondIsEqLA0A.Make (predicate, (Argument) consequent, alternative) :
-                (consequent is LexicalVariable1) ? PCondIsEqLA0L1.Make (predicate, (LexicalVariable1) consequent, alternative) :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLA0L (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqLA0L.EvalStep");
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, environment.Argument0Value);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-                if (environment.FastLexicalRef (out answer, this.consequentName, this.consequentDepth, this.consequentOffset))
-                    throw new NotImplementedException ();
-                return false;
-            }
-        }
-    }
-
-    class PCondIsEqLA0A : PCondIsEqLA0L
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLA0A (PrimitiveIsEqLA0 predicate, Argument consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqLA0 predicate, Argument consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument0) ? Unimplemented() :
-                (consequent is Argument1) ? PCondIsEqLA0A1.Make (predicate, (Argument1) consequent, alternative) :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLA0A (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLA0A1 : PCondIsEqLA0A
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLA0A1 (PrimitiveIsEqLA0 predicate, Argument1 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqLA0 predicate, Argument1 consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLA0A1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-
-
-    class PCondIsEqLA0L1 : PCondIsEqLA0L
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLA0L1 (PrimitiveIsEqLA0 predicate, LexicalVariable1 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqLA0 predicate, LexicalVariable1 consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLA0L1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqLA0L1.EvalStep");
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, environment.Argument0Value);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-                if (environment.FastLexicalRef1 (out answer, this.consequentName, this.consequentOffset))
-                    throw new NotImplementedException ();
-                return false;
-            }
-        }
-    }
-
-    class PCondIsEqLA0Q : PCondIsEqLA0
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object consequentValue;
-
-        protected PCondIsEqLA0Q (PrimitiveIsEqLA0 predicate, Quotation consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.consequentValue = consequent.Quoted;
-        }
-
-        public static SCode Make (PrimitiveIsEqLA0 predicate, Quotation consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLA0Q (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqLA0Q.EvalStep");
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, environment.Argument0Value);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-                answer = this.consequentValue;
-                return false;
-            }
-        }
-    }
-
-    class PCondIsEqLL1 : PCondIsEqL
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        protected PCondIsEqLL1 (PrimitiveIsEqLL1 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqLL1 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (consequent is LexicalVariable) ? Unimplemented () :
-                (consequent is Quotation) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLL1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLLL : PCondIsEqLL
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object consequentName;
-        public readonly int consequentDepth;
-        public readonly int consequentOffset;
-
-        protected PCondIsEqLLL (PrimitiveIsEqLL predicate, LexicalVariable consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.consequentName = consequent.Name;
-            this.consequentDepth = consequent.Depth;
-            this.consequentOffset = consequent.Offset;
-        }
-
-        public static SCode Make (PrimitiveIsEqLL predicate, LexicalVariable consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument) ? PCondIsEqLLA.Make (predicate, (Argument) consequent, alternative) :
-                (consequent is LexicalVariable1) ? PCondIsEqLLL1.Make (predicate, (LexicalVariable1) consequent, alternative) :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLLL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLLA : PCondIsEqLLL
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLLA (PrimitiveIsEqLL predicate, Argument consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqLL predicate, Argument consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument0) ? PCondIsEqLLA0.Make (predicate, (Argument0) consequent, alternative) :
-                (consequent is Argument1) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLLA (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLLA0 : PCondIsEqLLA
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLLA0 (PrimitiveIsEqLL predicate, Argument0 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqLL predicate, Argument0 consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLLA0 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLLL1 : PCondIsEqLLL
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLLL1 (PrimitiveIsEqLL predicate, LexicalVariable1 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqLL predicate, LexicalVariable1 consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLLL1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqLLL1.EvalStep");
-#endif
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-                if (environment.FastLexicalRef1 (out answer, this.consequentName, this.consequentOffset))
-                    throw new NotImplementedException ();
-                return false;
-            }
-        }
-    }
-
-
-
-    class PCondIsEqLQ : PCondIsEqL
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object rand1Value;
-
-        protected PCondIsEqLQ (PrimitiveIsEqLQ predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.rand1Value = predicate.rand1Value;
-        }
-
-        public static SCode Make (PrimitiveIsEqLQ predicate, SCode consequent, SCode alternative)
-        {
-            return new PCondIsEqLQ (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqLQ.EvalStep");
-#endif
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, this.rand1Value);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLSL : PCondIsEqL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLSL (PrimitiveIsEqL predicate, LexicalVariable consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, LexicalVariable consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument) ? PCondIsEqLSA.Make(predicate, (Argument) consequent, alternative) :
-                (consequent is LexicalVariable1) ? Unimplemented():
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLSL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLSA : PCondIsEqLSL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLSA (PrimitiveIsEqL predicate, Argument consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, Argument consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument0) ? PCondIsEqLSA0.Make (predicate, (Argument0) consequent, alternative) :
-                (consequent is Argument1) ? Unimplemented () :
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLSA (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLSA0 : PCondIsEqLSA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLSA0 (PrimitiveIsEqL predicate, Argument0 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, Argument0 consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? Unimplemented () :
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLSA0 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqLSA0.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-                answer = environment.Argument0Value;
-                return false;
-            }
-        }
-    }
-
-
-
-    class PCondIsEqLSQ : PCondIsEqL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object consequentValue;
-        protected PCondIsEqLSQ (PrimitiveIsEqL predicate, Quotation consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-   this.consequentValue = consequent.Quoted;
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, Quotation consequent, SCode alternative)
-        {
-            return
-                (alternative is LexicalVariable) ? PCondIsEqLSQL.Make (predicate, consequent, (LexicalVariable) alternative):
-                (alternative is Quotation) ? Unimplemented () :
-                new PCondIsEqLSQ (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsEqLSQL : PCondIsEqLSQ
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondIsEqLSQL (PrimitiveIsEqL predicate, Quotation consequent, LexicalVariable alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, Quotation consequent, LexicalVariable alternative)
-        {
-            return
-                (alternative is Argument) ? Unimplemented() :
-                (alternative is LexicalVariable1) ? Unimplemented () :
-                new PCondIsEqLSQL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-
-
-    sealed class PCondIsEqLSSQ : PCondIsEqL
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object alternativeValue;
-
-        PCondIsEqLSSQ (PrimitiveIsEqL predicate, SCode consequent, Quotation alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeValue = alternative.Quoted;
-        }
-
-        public static SCode Make (PrimitiveIsEqL predicate, SCode consequent, Quotation alternative)
-        {
-            return
-                new PCondIsEqLSSQ (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-            throw new NotImplementedException ();
-#if DEBUG
-            Warm ("PCondIsEqL.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsEqCar : PCondIsEq
-    {
-#if DEBUG
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        protected readonly SCode rand0Arg;
-
-        protected PCondIsEqCar (PrimitiveIsEqCar predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.rand0Arg = predicate.rand0Arg;
-        }
-
-        public static SCode Make (PrimitiveIsEqCar predicate, SCode consequent, SCode alternative)
-        {
-            return 
-                (predicate is PrimitiveIsEqCarL) ? PCondIsEqCarL.Make ((PrimitiveIsEqCarL) predicate, consequent, alternative)
-                //(predicate is PrimitiveIsEqCarQ) ? Unimplemented()
-                //: (predicate is PrimitiveIsEqCarSL) ? 
-                : (predicate is PrimitiveIsEqCarSQ) ? PCondIsEqCarSQ.Make ((PrimitiveIsEqCarSQ) predicate, consequent, alternative)
-                //: (consequent is LexicalVariable) ? Unimplemented()
-                //: (consequent is Quotation) ? Unimplemented()
-                //: (alternative is LexicalVariable) ? Unimplemented()
-                //: (alternative is Quotation) ? Unimplemented()
-                : new PCondIsEqCar (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsEqCar.EvalStep");
-            noteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            unev = this.rand0Arg;
-            env = environment;
-            object ev0temp;
-            while (unev.EvalStep (out ev0temp, ref unev, ref env)) { };
-            if (ev0temp == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            Cons ev0 = ev0temp as Cons;
-            if (ev0 == null) throw new NotImplementedException ();
-
-            ObjectModel.Eq (out answer, ev0.Car, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
 
     class PCondIsEqCarL : PCondIsEqCar
     {
