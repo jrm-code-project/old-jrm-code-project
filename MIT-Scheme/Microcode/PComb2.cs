@@ -120,7 +120,7 @@ namespace Microcode
                 //(rator == Primitive.GreaterThanFixnum) ? PrimitiveGreaterThanFixnum.Make (rator, rand0, rand1) :
                 //(rator == Primitive.LessThanFixnum) ? PrimitiveLessThanFixnum.Make (rator, rand0, rand1) :
                 //(rator == Primitive.PlusFixnum) ? PrimitivePlusFixnum.Make (rator, rand0, rand1) :
-                //(rator == Primitive.IsObjectType) ? PrimitiveIsObjectType.Make (rator, rand0, rand1) :
+                (rator == Primitive.IsObjectType) ? PrimitiveIsObjectType.Make (rator, rand0, rand1) :
                 //(rator == Primitive.RecordRef) ? PrimitiveRecordRef.Make (rator, rand0, rand1) :
                 //(rator == Primitive.Vector8BRef) ? PrimitiveVector8BRef.Make (rator, rand0, rand1) :
                 //(rator == Primitive.VectorRef) ? PrimitiveVectorRef.Make (rator, rand0, rand1) :
@@ -631,6 +631,16 @@ namespace Microcode
             this.Operand0.CollectFreeVariables (freeVariableSet);
             this.Operand1.CollectFreeVariables (freeVariableSet);
         }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            SCode r0 = this.rand0.SubstituteStatics (statics);
+            SCode r1 = this.rand1.SubstituteStatics (statics);
+            return (this.rand0 == r0 &&
+                    this.rand1 == r1) ?
+                    this :
+                    PrimitiveCombination2.Make (this.rator, r0, r1);
+        }
     }
 
     [Serializable]
@@ -885,14 +895,14 @@ namespace Microcode
             NoteCalls (this.rand1);
             ratorHistogram.Note (this.rator);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A";
 #endif
             Control unev = this.rand1;
             Environment env = environment;
             object ev1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -949,14 +959,14 @@ namespace Microcode
             NoteCalls (this.rand1);
             ratorHistogram.Note (this.rator);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A0";
 #endif
             Control unev = this.rand1;
             Environment env = environment;
             object ev1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A0";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -1010,7 +1020,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A0A";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1054,7 +1064,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A0A0";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1098,7 +1108,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A0A1";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1145,7 +1155,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A0S";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1193,7 +1203,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A0Q";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1243,14 +1253,14 @@ namespace Microcode
             NoteCalls (this.rand1);
             ratorHistogram.Note (this.rator);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A1";
 #endif
             Control unev = this.rand1;
             Environment env = environment;
             object ev1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A1";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -1305,7 +1315,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A1A";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1349,7 +1359,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A1A0";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1392,7 +1402,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A1A1";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1440,7 +1450,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A1S";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1488,7 +1498,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2A1Q";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1536,7 +1546,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2AA";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1580,7 +1590,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2AA0";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1623,7 +1633,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2AA1";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1670,7 +1680,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2AS";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1718,7 +1728,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2AQ";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1773,14 +1783,14 @@ namespace Microcode
             NoteCalls (this.rand1);
             ratorHistogram.Note (this.rator);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2S";
 #endif
             Control unev = this.rand1;
             Environment env = environment;
             object ev1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2S";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -1839,7 +1849,7 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.rand1);
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2SA";
 #endif
 
 
@@ -1886,7 +1896,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2SA0";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1931,7 +1941,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2SA1";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -1980,7 +1990,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2SS";
 #endif
 
 
@@ -2033,7 +2043,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2SQ";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -2087,14 +2097,14 @@ namespace Microcode
             NoteCalls (this.rand1);
             ratorHistogram.Note (this.rator);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2Q";
 #endif
             Control unev = this.rand1;
             Environment env = environment;
             object ev1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2Q";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -2149,7 +2159,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2QA";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -2191,7 +2201,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2QA0";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -2233,7 +2243,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2QA1";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -2279,7 +2289,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2QS";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -2326,7 +2336,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2QQ";
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -2377,7 +2387,7 @@ namespace Microcode
             NoteCalls (this.rand0);
             rand0TypeHistogram.Note (this.rand0Type);
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XA";
 #endif
             object ev1 = environment.ArgumentValue (this.rand1Offset);
 
@@ -2386,7 +2396,7 @@ namespace Microcode
             object ev0;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XA";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
@@ -2438,7 +2448,7 @@ namespace Microcode
             NoteCalls (this.rand0);
             rand0TypeHistogram.Note (this.rand0Type);
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XA0";
 #endif
             object ev1 = environment.Argument0Value;
 
@@ -2447,7 +2457,7 @@ namespace Microcode
             object ev0;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XA0";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
@@ -2499,7 +2509,7 @@ namespace Microcode
             NoteCalls (this.rand0);
             rand0TypeHistogram.Note (this.rand0Type);
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XA1";
 #endif
             object ev1 = environment.Argument1Value;
 
@@ -2508,7 +2518,7 @@ namespace Microcode
             object ev0;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XA1";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
@@ -2565,7 +2575,7 @@ namespace Microcode
             NoteCalls (this.rand0);
             rand0TypeHistogram.Note (this.rand0Type);
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XS";
 #endif
             object ev1;
             if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
@@ -2576,7 +2586,7 @@ namespace Microcode
             object ev0;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XS";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, ev1));
@@ -2629,7 +2639,7 @@ namespace Microcode
             NoteCalls (this.rand0);
             rand0TypeHistogram.Note (this.rand0Type);
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XQ";
 #endif
 
             Control unev = this.rand0;
@@ -2637,7 +2647,7 @@ namespace Microcode
             object ev0;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination2.EvalStep";
+            SCode.location = "PrimitiveCombination2XQ";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame1 (this, environment, this.rand1Value));

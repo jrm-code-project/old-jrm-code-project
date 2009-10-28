@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="BigInteger.cs" />
     <Compile Include="Comb2S.cs" />
+    <Compile Include="Disjunction.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="ITopLevelEnvironment.cs" />
     <Compile Include="PartialClosure.cs" />
@@ -106,9 +107,13 @@
     <Compile Include="PCond2.cs" />
     <Compile Include="PCondIsEq.cs" />
     <Compile Include="PCondIsNull.cs" />
-    <Compile Include="PCondIsPair.cs" />
+    <Compile Include="PCondIsType.cs" />
+    <Compile Include="POr1.cs" />
+    <Compile Include="POr2.cs" />
+    <Compile Include="POrIsType.cs" />
     <Compile Include="Primitive.cs" />
     <Compile Include="PrimitiveIsEq.cs" />
+    <Compile Include="PrimitiveIsObjectType.cs" />
     <Compile Include="Promise.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Ratnum.cs" />
@@ -122,6 +127,7 @@
     <Compile Include="SComb.cs" />
     <Compile Include="SComb1.cs" />
     <Compile Include="SComb2.cs" />
+    <Compile Include="SComb3.cs" />
     <Compile Include="StaticMapping.cs" />
     <Compile Include="Statistics.cs" />
     <Compile Include="Symbol.cs" />

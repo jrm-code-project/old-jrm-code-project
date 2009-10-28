@@ -77,31 +77,19 @@ namespace Microcode
         {
 #if DEBUG
             Entity.applicationCount += 1;
+            SCode.location = "Entity.Call3";
 #endif
             return Interpreter.Call (out answer, ref expression, ref environment, this.first, this, arg0, arg1, arg2);
-
         }
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
         {
 #if DEBUG
             Entity.applicationCount += 1;
+            SCode.location = "Entity.Call4";
 #endif
-            return Interpreter.Call (out answer, ref expression, ref environment, this.first, this, arg0, arg1, arg2, arg3);
-        }
-
-        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
-        {
             throw new NotImplementedException ();
         }
-
-        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
-        {
-            throw new NotImplementedException ();
-        }
-
-
-
         #endregion
 
         #region ISystemPair Members
@@ -135,9 +123,5 @@ namespace Microcode
         }
 	
 	#endregion
-
-        #region IApplicable Members
-
-        #endregion
     }
 }

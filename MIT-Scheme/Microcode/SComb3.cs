@@ -37,24 +37,47 @@ namespace Microcode
                 new Combination3 (rator, rand0, rand1, rand2);
         }
 
+        internal override PartialResult PartialEval (PartialEnvironment environment)
+        {
+            PartialResult rator = this.components[0].PartialEval (environment);
+            PartialResult rand0 = this.components[1].PartialEval (environment);
+            PartialResult rand1 = this.components[2].PartialEval (environment);
+            PartialResult rand2 = this.components [3].PartialEval (environment);
+            return new PartialResult (rator.Residual == this.components[0] &&
+                rand0.Residual == this.components[1] &&
+                rand1.Residual == this.components[2] &&
+                rand2.Residual == this.components[3] ? this : Combination3.Make (rator.Residual, rand0.Residual, rand1.Residual, rand2.Residual));
+        }
+
+        public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
+        {
+            this.components[0].CollectFreeVariables (freeVariableSet);
+            this.components[1].CollectFreeVariables (freeVariableSet);
+            this.components[2].CollectFreeVariables (freeVariableSet);
+            this.components [3].CollectFreeVariables (freeVariableSet);
+        }
+
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("Combination3.EvalStep");
-            noteCalls (this.components [0]);
-            noteCalls (this.components [1]);
-            noteCalls (this.components [2]);
-            noteCalls (this.components [3]);
+            Warm ("-");
+            NoteCalls (this.components [0]);
+            NoteCalls (this.components [1]);
+            NoteCalls (this.components [2]);
+            NoteCalls (this.components [3]);
             c0TypeHistogram.Note (this.c0Type);
             c1TypeHistogram.Note (this.c1Type);
             c2TypeHistogram.Note (this.c2Type);
             c3TypeHistogram.Note (this.c3Type);
-
+            SCode.location = "Combination3";
 #endif
             object ev2;
             Environment env = environment;
             Control unev = this.components [3];
             while (unev.EvalStep (out ev2, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (ev2 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination3Frame0 (this, environment));
                 environment = env;
@@ -66,6 +89,9 @@ namespace Microcode
             env = environment;
             unev = this.components [2];
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination3Frame1 (this, environment, ev2));
                 environment = env;
@@ -77,6 +103,9 @@ namespace Microcode
             env = environment;
             unev = this.components [1];
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination3Frame2 (this, environment, ev1, ev2));
                 environment = env;
@@ -88,6 +117,9 @@ namespace Microcode
             env = environment;
             unev = this.components [0];
             while (unev.EvalStep (out evop, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (evop == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new Combination3Frame3 (this, environment, ev0, ev1, ev2));
@@ -132,6 +164,9 @@ namespace Microcode
             Environment env = environment;
             Control unevop = this.expression.Components [2];
             while (unevop.EvalStep (out ev1, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination3Frame1 (this.expression, environment, ev2));
                 environment = env;
@@ -143,6 +178,9 @@ namespace Microcode
             env = environment;
             unevop = this.expression.Components [1];
             while (unevop.EvalStep (out ev0, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
             }
@@ -151,6 +189,9 @@ namespace Microcode
             env = environment;
             unevop = this.expression.Operator;
             while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (evop == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
             }
@@ -193,6 +234,9 @@ namespace Microcode
             Environment env = environment;
             Control unevop = this.expression.Components [1];
             while (unevop.EvalStep (out ev0, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
             }
@@ -201,6 +245,9 @@ namespace Microcode
             env = environment;
             unevop = this.expression.Operator;
             while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (evop == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
             }
@@ -245,6 +292,9 @@ namespace Microcode
             Environment env = environment;
             Control unevop = this.expression.Operator;
             while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination3";
+#endif
             if (evop == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
             }
@@ -292,6 +342,8 @@ namespace Microcode
             return Interpreter.Call (out answer, ref expression, ref environment, value, this.ev0, this.ev1, this.ev2);
         }
     }
+
+#if NIL
 
     [Serializable]
     class Combination3SSSA : Combination3
@@ -515,6 +567,6 @@ namespace Microcode
         }
 
     }
-
+#endif
 
 }

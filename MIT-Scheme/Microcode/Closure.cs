@@ -11,32 +11,42 @@ namespace Microcode
     {
 #if DEBUG
         static Histogram<ClosureBase<LType>> hotClosures = new Histogram<ClosureBase<LType>>();
-        static long closureCount;
-        static long staticClosureCallCount;
+                static long staticClosureCallCount;
 #endif
+        static long closureCount;
+
+
         protected long callCount;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly LType closureLambda;
 
+        //[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        protected SCode lambdaBody;
+
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected readonly Environment closureEnvironment;
 
-        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        protected readonly ValueCell [] staticBindings;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        //protected readonly ValueCell [] staticBindings;
+        protected readonly object[] staticBindings;
 
         protected ClosureBase (LType lambda, Environment environment)
             : base ()
         {
             this.closureLambda = lambda;
+            this.lambdaBody = lambda.Body;
             this.closureEnvironment = environment;
             this.staticBindings = environment.GetValueCells (lambda.GetStaticMapping (environment));
         }
 
-        protected ClosureBase (LType lambda, Environment environment, ValueCell [] staticBindings)
+        protected ClosureBase (LType lambda, Environment environment, 
+            //ValueCell [] staticBindings
+            object [] staticBindings)
             : base ()
         {
             this.closureLambda = lambda;
+            this.lambdaBody = lambda.Body;
             this.closureEnvironment = environment;
             this.staticBindings = staticBindings;
         }
@@ -91,29 +101,36 @@ namespace Microcode
 
         public bool StaticValue (out object value, object name, int staticOffset)
         {
-            return this.staticBindings [staticOffset].GetValue (out value);
-            //object cell = this.staticBindings [staticOffset];
-            //ValueCell vcell = cell as ValueCell;
-            //if (vcell == null) {
-            //    value = cell;
-            //    return false;
-            //}
-            //else {
-            //    return vcell.GetValue (out value);
-            //}
+            //return this.staticBindings [staticOffset].GetValue (out value);
+            object cell = this.staticBindings[staticOffset];
+            ValueCell vcell = cell as ValueCell;
+            if (vcell == null) {
+                value = cell;
+                return false;
+            }
+            else {
+                return vcell.GetValue(out value);
+            }
         }
 
         internal bool SetStaticValue (out object oldValue, object name, object newValue, int staticOffset)
         {
-                return this.staticBindings [staticOffset].Assign (out oldValue, newValue);
+            object cell = this.staticBindings[staticOffset];
+            ValueCell vcell = cell as ValueCell;
+            if (vcell != null)
+                return vcell.Assign(out oldValue, newValue);
+            else
+                throw new NotImplementedException();
+                // return this.staticBindings [staticOffset].Assign (out oldValue, newValue);
         }
 
-        public ValueCell StaticCell (int staticOffset)
-        {
-            return this.staticBindings [staticOffset];
-        }
+        //public ValueCell StaticCell (int staticOffset)
+        //{
+        //    return this.staticBindings [staticOffset];
+        //}
 
-        public ValueCell [] StaticCells { [DebuggerStepThrough] get { return this.staticBindings; } }
+        //public ValueCell [] StaticCells { [DebuggerStepThrough] get { return this.staticBindings; } }
+        public object[] StaticCells { [DebuggerStepThrough] get { return this.staticBindings; } }
 
         public Symbol Name
         {
@@ -131,17 +148,27 @@ namespace Microcode
             get { return this.closureEnvironment; }
         }
 
-#if DEBUG
+
         protected void BumpCallCount() 
         {
             closureCount += 1;
-            callCount+= 1;
-            if ((callCount % 500) == 499)
+            //callCount+= 1;
+            //if (callCount++ == 49 && this.optimizedLambda == null &&  this.StaticCells.Length != 0) this.Optimize ();
+#if DEBUG  
+            if ((callCount % 50) == 49) {
+
                 hotClosures.Note (this);
+
+            }
             if (!this.closureLambda.CallsTheEnvironment())
                 staticClosureCallCount += 1;
-        }
 #endif
+        }
+
+        protected void Optimize ()
+        {
+            this.lambdaBody = this.closureLambda.Body.SubstituteStatics (this.staticBindings);
+        }
 
         //public abstract bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args);
         //public abstract bool Call (out object answer, ref Control expression, ref Environment environment);
@@ -348,7 +375,7 @@ namespace Microcode
             this.arity = lambda.Formals.Length;
         }
 
-        protected Closure (LType lambda, Environment environment, ValueCell [] staticBindings)
+        protected Closure (LType lambda, Environment environment, object [] staticBindings)
             : base (lambda, environment, staticBindings)
         {
             this.arity = lambda.Formals.Length;
@@ -443,14 +470,14 @@ namespace Microcode
 
     abstract class StaticClosureBase<LType> : Closure<LType> where LType : StaticLambdaBase
     {
-        protected StaticClosureBase (LType lambda, Environment environment, ValueCell [] staticBindings)
+        protected StaticClosureBase (LType lambda, Environment environment, object [] staticBindings)
             : base (lambda, environment, staticBindings)
         { }
     }
 
     sealed class StaticClosure : StaticClosureBase<StaticLambda>, IApplicable
     {
-        internal StaticClosure (StaticLambda lambda, Environment environment, ValueCell [] staticBindings)
+        internal StaticClosure (StaticLambda lambda, Environment environment, object [] staticBindings)
             : base (lambda, environment, staticBindings)
         {
         }
@@ -518,7 +545,7 @@ namespace Microcode
 
     sealed class SimpleClosure : StaticClosureBase<SimpleLambda>, IApplicable
     {
-        internal SimpleClosure (SimpleLambda lambda, Environment environment, ValueCell [] staticBindings)
+        internal SimpleClosure (SimpleLambda lambda, Environment environment, object [] staticBindings)
             : base (lambda, environment, staticBindings)
         {
         }
@@ -533,14 +560,14 @@ namespace Microcode
                 case 2: return this.Call (out answer, ref expression, ref environment, args [0], args [1]);
                 case 3: return this.Call (out answer, ref expression, ref environment, args [0], args [1], args [2]);
                 default:
-
-#if DEBUG
                     this.BumpCallCount ();
+#if DEBUG
+
                     SCode.location = "SimpleClosure.Apply";
 #endif
                     if (args.Length != this.arity)
                         throw new NotImplementedException ();
-                    expression = this.closureLambda.Body;
+                    expression = this.lambdaBody;
                     environment = new SimpleEnvironment (this, args);
                     answer = null; // keep the compiler happy
                     return true;
@@ -550,10 +577,14 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            this.BumpCallCount ();
+            SCode.location = "-";
+
             SCode.location = "SimpleClosure.Call0";
 #endif
-            expression = this.closureLambda.Body;
+            //this.BumpCallCount ();  
+            if (callCount++ == Configuration.SubstituteStaticsThreshold && this.StaticCells.Length != 0) this.Optimize ();
+
+            expression = this.lambdaBody;
             environment = new SmallEnvironment0 (this);
             answer = null; // keep the compiler happy
             return true;
@@ -563,10 +594,13 @@ namespace Microcode
         {
 #if DEBUG
             SCode.location = "-";
-            this.BumpCallCount ();
+            //this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call1";
 #endif
-            expression = this.closureLambda.Body;
+            if (callCount++ == Configuration.SubstituteStaticsThreshold && this.StaticCells.Length != 0) this.Optimize ();
+
+            //this.BumpCallCount ();
+            expression = this.lambdaBody;
             environment = new SmallEnvironment1 (this, arg0);
             answer = null; // keep the compiler happy
             return true;
@@ -576,12 +610,17 @@ namespace Microcode
         {
 #if DEBUG
             SCode.location = "-";
-            this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call2";
 #endif
-            expression = this.closureLambda.Body;
+            if (callCount++ == Configuration.SubstituteStaticsThreshold  && this.StaticCells.Length != 0) this.Optimize ();
+
+            //this.BumpCallCount ();
+            expression = this.lambdaBody;
             environment = new SmallEnvironment2 (this, arg0, arg1);
             answer = null; // keep the compiler happy
+#if DEBUG
+            SCode.location = "-";
+#endif
             return true;
         }
 
@@ -589,10 +628,12 @@ namespace Microcode
         {
 #if DEBUG
             SCode.location = "-";
-            this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call3";
 #endif
-            expression = this.closureLambda.Body;
+            if (callCount++ == Configuration.SubstituteStaticsThreshold && this.StaticCells.Length != 0) this.Optimize ();
+
+            //this.BumpCallCount ();
+            expression = this.lambdaBody; 
             environment = new SmallEnvironment3 (this, arg0, arg1, arg2);
             answer = null; // keep the compiler happy
             return true;            

@@ -56,18 +56,18 @@ namespace Microcode
                 //(Configuration.EnableInvertConditional && predicate is PrimitiveNot) ? InvertConditional ((PrimitiveNot) predicate, consequent, alternative) :
                 //(predicate is PrimitiveCarL) ? SpecialMake ((PrimitiveCarL) predicate, consequent, alternative) :
                 //(predicate is PrimitiveCdr) ? Unimplemented() :
-                //(predicate is PrimitiveIsBigFixnum) ? PCondIsBigFixnum.Make ((PrimitiveIsBigFixnum) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsBigFlonum) ? PCondIsBigFlonum.Make ((PrimitiveIsBigFlonum) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsComplex) ? PCondIsComplex.Make ((PrimitiveIsComplex) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsChar) ? PCondIsChar.Make ((PrimitiveIsChar) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsFixnum) ? PCondIsFixnum.Make ((PrimitiveIsFixnum) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<long>) ? PCondIsType<long>.Make ((PrimitiveIsType<long>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<double>) ? PCondIsType<double>.Make ((PrimitiveIsType<double>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<Complex>) ? PCondIsType<Complex>.Make ((PrimitiveIsType<Complex>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<char>) ? PCondIsType<char>.Make ((PrimitiveIsType<char>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<int>) ? PCondIsType<int>.Make ((PrimitiveIsType<int>) predicate, consequent, alternative) :
                 //(predicate is PrimitiveIsNegative) ? PCondIsNegative.Make ((PrimitiveIsNegative) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsNull) ? PCondIsNull.Make ((PrimitiveIsNull) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsPair) ? PCondIsPair.Make ((PrimitiveIsPair) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsRatnum) ? PCondIsRatnum.Make ((PrimitiveIsRatnum) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsRecord) ? PCondIsRecord.Make ((PrimitiveIsRecord) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<Cons>) ? PCondIsType<Cons>.Make ((PrimitiveIsType<Cons>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<Ratnum>) ? PCondIsType<Ratnum>.Make ((PrimitiveIsType<Ratnum>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<Record>) ? PCondIsType<Record>.Make ((PrimitiveIsType<Record>) predicate, consequent, alternative) :
                 //(predicate is PrimitiveIsSymbol) ? PCondIsSymbol.Make ((PrimitiveIsSymbol) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsVector) ? PCondIsVector.Make ((PrimitiveIsVector) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<object []>) ? PCondIsType<object []>.Make ((PrimitiveIsType<object[]>) predicate, consequent, alternative) :
                 //(predicate is PrimitiveCombination1L) ? PCond1L.Make ((PrimitiveCombination1L) predicate, consequent, alternative) :
                 //(predicate is PrimitiveCombination1Q) ? Unimplemented () :
                 //(consequent is LexicalVariable) ? PCond1SL.Make (predicate, (LexicalVariable) consequent, alternative) :

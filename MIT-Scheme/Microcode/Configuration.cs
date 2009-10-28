@@ -12,12 +12,22 @@ namespace Microcode
         /// </summary>
         public const bool EnableAccessOptimization = false;
         public const bool EnableAssignmentOptimization = false;
-        public const bool EnableCombinationOptimization = false;
-        public const bool EnableCombination0Optimization = false;
-        public const bool EnableCombination1Optimization = false;
 
+        #region Combination
+        public const bool EnableCombinationOptimization = true;
+        public const bool EnableCombination0 = true;
+        public const bool EnableCombination3 = true;
+        #endregion
+
+        #region Combination1
+        public const bool EnableCombination1Optimization = true;
+        public const bool EnableCombination1Specialization = true;
+        #endregion
+
+        #region Combination2
         public const bool EnableCombination2Optimization = true;
         public const bool EnableCombination2Specialization = true;
+        #endregion
 
         public const bool EnableCommentOptimization = false;
 
@@ -34,7 +44,13 @@ namespace Microcode
 
         public const bool EnableDefinitionOptimization = false;
         public const bool EnableDelayOptimization = false;
-        public const bool EnableDisjunctionOptimization = false;
+
+        #region Disjunction
+        public const bool EnableDisjunctionOptimization = true;
+        public const bool EnablePrimitiveDisjunction1 = true;
+        public const bool EnablePrimitiveDisjunction2 = true;
+        public const bool EnableDisjunctionSpecialization = true;
+        #endregion
 
         #region Lambda
         /// <summary>
@@ -48,7 +64,6 @@ namespace Microcode
         public const bool EnablePrimitiveCombination0Optimization = false;
 
         #region PrimitiveCombination1
-
         /// <summary>
         /// If true, allow analysis of PrimitiveCombination1.
         /// </summary>
@@ -57,27 +72,23 @@ namespace Microcode
         /// Allow Primitive1Combinations to specialize on the type of argument.
         /// </summary>
         public const bool EnablePrimitive1Specialization = true;
-
         public const bool EnableInlinePrimitive1 = true;
-
         #endregion
 
         #region PrimitiveCombination2
-
         /// <summary>
         /// If true, allow analysis of PrimitiveCombination2.
         /// </summary>
         public const bool EnablePrimitiveCombination2Optimization = true;
         public const bool EnablePrimitive2Specialization = true;
-
         public const bool EnableInlinePrimitive2 = true;
-
         #endregion
 
         public const bool EnablePrimitiveCombination3Optimization = false;
         public const bool EnableQuotationOptimization = false;
         public const bool EnableSequence2Optimization = false;
         public const bool EnableSequence3Optimization = false;
+        public const bool EnableSequenceSpecialization = false;
         public const bool EnableTheEnvironmentOptimization = false;
 
         #region Variable
@@ -91,16 +102,17 @@ namespace Microcode
         public const bool EnableStaticBinding = true;
         #endregion
 
-        public const bool EnableCombination1Specialization = false;
+        /// <summary>
+        /// If true, calls to OBJECT-TYPE? with a constant fixnum are rewritten
+        /// as the appropriate calls to the one-argument primitives.
+        /// </summary>
+        public const bool EnableObjectTypePrimitives = true;
 
-        public const bool EnableCombination3 = false;
         public const bool EnableCombination3Specialization = false;
 
-        public const bool EnableDisjunctionSpecialization = false;
-
-
-        public const bool EnableSequenceSpecialization = false;
-
+        // When closure call count reaches this, walk the code
+        // and substitute the static variables.
+        public const int SubstituteStaticsThreshold = -1;
 
         /// <summary>
         /// Special case combination1.

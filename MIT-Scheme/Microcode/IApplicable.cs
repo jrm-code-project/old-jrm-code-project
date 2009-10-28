@@ -15,7 +15,5 @@ namespace Microcode
         bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1);
         bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2);
         bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3);
-        bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4);
-        bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5);
     }
 }

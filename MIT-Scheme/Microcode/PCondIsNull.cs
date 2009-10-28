@@ -180,7 +180,7 @@ namespace Microcode
             Warm ("PCondIsNullA0Q.EvalStep");
 #endif
             if (environment.Argument0Value == null) {
-                expression = this.consequent;
+                //expression = this.consequent;
                 answer = this.consequentValue;
                 return false;
             }

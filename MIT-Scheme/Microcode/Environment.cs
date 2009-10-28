@@ -96,7 +96,8 @@ namespace Microcode
 
         internal abstract bool StaticValue (out object value, object name, int staticOffset);
 
-        internal abstract ValueCell [] GetValueCells (StaticMapping mapping);
+        //internal abstract ValueCell [] GetValueCells (StaticMapping mapping);
+        internal abstract object[] GetValueCells (StaticMapping mapping);
 
         // Implementation of primitive.
         internal abstract bool SafeDeepSearch (out object value, object name);
@@ -328,7 +329,7 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
             throw new NotImplementedException ();
         }
@@ -525,8 +526,8 @@ namespace Microcode
             }
         }
 
-        ValueCell [] noValueCells = new ValueCell [0];
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        object [] noValueCells = new ValueCell [0];
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             valueCellsCopied [0] += 1;
@@ -645,10 +646,10 @@ namespace Microcode
             return this.Closure.StaticValue (out value, name, staticOffset);
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
-        {
-            throw new NotImplementedException ();
-        }
+        //internal override object [] GetValueCells (StaticMapping mapping)
+        //{
+        //    throw new NotImplementedException ();
+        //}
 
         internal override bool SafeDeepSearch (out object value, object name)
         {
@@ -968,7 +969,7 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "StandardEnvironment.GetValueCells";
@@ -976,12 +977,12 @@ namespace Microcode
             //staticMappings.Note (mapping);
 #endif
             int count = mapping.Size;
-            ValueCell [] cells = new ValueCell [count];
+            object [] newCells = new object [count];
             for (int index = 0; index < count; index++) {
                 int o = mapping.GetOffset (index);
-                cells [index] = this.bindings [(-o) - 1];
+                newCells [index] = this.bindings [o];
             }
-            return cells;
+            return newCells;
         }
 
         public override bool FreeReference (out ValueCell value, object name)
@@ -1258,7 +1259,7 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "StaticEnvironment.GetValueCells";
@@ -1266,15 +1267,17 @@ namespace Microcode
             //staticMappings.Note (mapping);
 #endif
             int count = mapping.Size;
-            ValueCell [] cells = new ValueCell [count];
+            int formalCount = this.bindings.Length;
+            object[] oldCells = this.Closure.StaticCells;
+            object [] newCells = new object [count];
             for (int index = 0; index < count; index++) {
                 int o = mapping.GetOffset(index);
-                if (o < 0)
-                    cells [index] = this.bindings [(-o) - 1];
+                if (o < formalCount)
+                    newCells [index] = this.bindings [o];
                 else
-                    cells [index] = this.Closure.StaticCell (o);
+                    newCells [index] = oldCells[o - formalCount];
             }
-            return cells;
+            return newCells;
         }
 
         public override bool FreeReference (out ValueCell value, object name)
@@ -1471,7 +1474,7 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "Simple.GetValueCells";
@@ -1479,13 +1482,16 @@ namespace Microcode
             staticMappings.Note (mapping.Offsets);
 #endif
             int count = mapping.Size;
-            ValueCell [] cells = new ValueCell [count];
+            int formalCount = this.bindings.Length;
+            object [] oldCells = this.Closure.StaticCells;
+            object [] cells = new object [count];
             for (int index = 0; index < count; index++) {
                 int o = mapping.GetOffset(index);
-                cells[index] = (o < 0) ?
-                    new ValueCell (this.Closure.Lambda.Formals[(-o) - 1], this.bindings [(-o) - 1]) :
-                    //this.bindings[(-o) - 1] :
-                    this.Closure.StaticCell (o);
+                cells [index] = (o < formalCount) ?
+                    //new ValueCell (this.Closure.Lambda.Formals[o], this.bindings [o]) :
+                    this.bindings [o] :
+                    oldCells [o - formalCount];
+                    //this.Closure.StaticCell (o - formalCount);
             }
             return cells;
         }
@@ -1624,21 +1630,26 @@ namespace Microcode
                 return this.envClosure.Environment;
             }
         }
-
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        static int[] codes = new int[64];
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "SmallEnvironment0.GetValueCells";
             valueCellsCopied [mapping.Size] += 1;
             staticMappings.Note (mapping.Offsets);
+            int code = mapping.OffsetCode;
+            if (code >= 0 &&
+                code < 64)
+                codes[code] += 1;
 #endif
             int count = mapping.Size;
             int [] offsets = mapping.Offsets;
-            ValueCell [] cells = new ValueCell [count];
+            object [] newCells = new object [count];
+            object [] oldCells = this.Closure.StaticCells;
             for (int index = 0; index < count; index++) {
-                cells [index] = this.Closure.StaticCell (offsets[index]);
+                newCells [index] = oldCells[offsets[index]];
             }
-            return cells;
+            return newCells;
         }
 
         public override bool FreeReference (out ValueCell value, object name)
@@ -1814,23 +1825,30 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        static int [] codes = new int [64];
+
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "SmallEnvironment1.GetValueCells";
             valueCellsCopied [mapping.Size] += 1;
             staticMappings.Note (mapping.Offsets);
+            int code = mapping.OffsetCode;
+            if (code >= 0 &&
+                code < 64)
+                codes[code] += 1;
 #endif
             int count = mapping.Size;
             int [] offsets = mapping.Offsets;
-            ValueCell [] incomingCells = this.envClosure.StaticCells;
-            ValueCell [] cells = new ValueCell [count];
+            object [] incomingCells = this.envClosure.StaticCells;
+            object [] cells = new object [count];
             for (int index = 0; index < count; index++) {
                 int offset = offsets [index];
-                if (offset < 0)
-                    cells [index] = new ValueCell (this.Closure.Lambda.Formals [0], this.binding0);
+                if (offset == 0)
+                    //cells [index] = new ValueCell (this.Closure.Lambda.Formals [0], this.binding0);
+                    cells [index] = this.binding0;
                 else
-                    cells [index] = incomingCells [offset];
+                    cells [index] = incomingCells [offset - 1];
             }
             //if (count > 0) {
             //    if (offsets[0] == -1) {
@@ -2039,30 +2057,70 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        static int[] codes = new int[64];
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "-";
             valueCellsCopied [mapping.Size] += 1;
             staticMappings.Note (mapping.Offsets);
             SCode.location = "SmallEnvironment2.GetValueCells";
+            int code = mapping.OffsetCode;
+            if (code >= 0 &&
+                code < 64)
+                codes[code] += 1;
 #endif
             Symbol[] mappingNames = this.Closure.Lambda.Formals;
-            int count = mapping.Size;
-            int [] offsets = mapping.Offsets;
-            ValueCell [] cells = new ValueCell [count];
-            for (int index = 0; index < count; index++) {
-                int o = offsets [index];
-                if (o == -1)
-                    cells [index] = new ValueCell (mappingNames[0], this.binding0);
-                    //cells [index] = this.binding0;
-                else if (o == -2)
-                    cells [index] = new ValueCell (mappingNames [1], this.binding1);
-                    //cells [index] = this.binding1;
-                else
-                    cells [index] = this.Closure.StaticCell (o);
+            object [] oldCells = this.Closure.StaticCells;
+            object [] cells;
+            switch (mapping.OffsetCode) {
+
+                case 1:
+                    cells = new object [1];
+                    cells[0] = this.binding0;
+                    return cells;
+
+                case 2:
+                    cells = new object [1];
+                    cells[0] = this.binding1;
+                    return cells;
+
+                case 3:
+                    cells = new object[2];
+                    cells[0] =  this.binding0;
+                    cells[1] =  this.binding1;
+                    return cells;
+
+               case 23: 
+                    cells = new object[4];
+                    cells[0] = this.binding0;
+                    cells[1] = this.binding1;
+                    cells [2] = oldCells [0];
+                    cells [3] = oldCells [2];
+                //    cells[0] = new ValueCell(mappingNames[1], this.binding1);
+                //    cells[1] = this.Closure.StaticCell(0);
+                //    cells[2] = this.Closure.StaticCell(1);
+                //    cells[3] = this.Closure.StaticCell(2);
+                    return cells;
+
+                default:
+                    //if (mapping.OffsetCode == 23) Debugger.Break();
+                    int count = mapping.Size;
+                    cells = new object [count];
+                    int[] offsets = mapping.Offsets;
+                    for (int index = 0; index < count; index++) {
+                        int o = offsets[index];
+                        if (o == 0)
+                            cells[index] = this.binding0;
+                        //cells [index] = this.binding0;
+                        else if (o == 1)
+                            cells[index] = this.binding1;
+                        //cells [index] = this.binding1;
+                        else
+                            cells [index] = oldCells [o - 2];
+                    }
+                    return cells;
             }
-            return cells;
         }
 
         public override bool FreeReference (out ValueCell value, object name)
@@ -2270,27 +2328,33 @@ namespace Microcode
             }
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        static int[] codes = new int[64];
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
             SCode.location = "SmallEnvironment2.GetValueCells";
             valueCellsCopied [mapping.Size] += 1;
             staticMappings.Note (mapping.Offsets);
+            int code = mapping.OffsetCode;
+            if (code >= 0 &&
+                code < 64)
+                codes[code] += 1;
 #endif
             Symbol[] mappingNames = this.Closure.Lambda.Formals;
             int count = mapping.Size;
             int [] offsets = mapping.Offsets;
-            ValueCell [] cells = new ValueCell [count];
+            object [] cells = new object [count];
+            object [] oldCells = this.Closure.StaticCells;
             for (int index = 0; index < count; index++) {
                 int o = offsets [index];
-                if (o == -1)
-                    cells [index] = new ValueCell (mappingNames [0], this.binding0);
-                else if (o == -2)
-                    cells [index] = new ValueCell (mappingNames [1], this.binding1);
-                else if (o == -3)
-                    cells [index] = new ValueCell (mappingNames [1], this.binding2);
+                if (o == 0)
+                    cells [index] =  this.binding0;
+                else if (o == 1)
+                    cells [index] = this.binding1;
+                else if (o == 2)
+                    cells [index] =  this.binding2;
                 else
-                    cells [index] = this.Closure.StaticCell (o);
+                    cells [index] = oldCells [o-3];
             }
             return cells;
         }
@@ -2394,7 +2458,7 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        internal override ValueCell [] GetValueCells (StaticMapping mapping)
+        internal override object [] GetValueCells (StaticMapping mapping)
         {
             throw new NotImplementedException ();
         }

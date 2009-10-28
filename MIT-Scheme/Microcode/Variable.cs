@@ -152,6 +152,12 @@ namespace Microcode
         {
             this.env.CollectFreeVariables (freeVariableSet);
         }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            SCode newEnv = this.env.SubstituteStatics (statics);
+            return (newEnv == this.env) ? this : Access.Make (newEnv, this.var);
+        }
     }
 
     [Serializable]
@@ -425,6 +431,12 @@ namespace Microcode
         {
             freeVariableSet.Add (this.target.Name);
             this.value.CollectFreeVariables (freeVariableSet);
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            SCode newValue = this.value.SubstituteStatics (statics);
+            return (newValue == this.value) ? this : Assignment.Make (this.target, newValue);
         }
     }
 
@@ -884,6 +896,11 @@ namespace Microcode
         }
 
         #endregion
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            return this;
+        }
     }
 
     [Serializable]
@@ -983,6 +1000,11 @@ namespace Microcode
             value = environment.Argument0Value;
             return false;
         }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            return this;
+        }
     }
 
     /// <summary>
@@ -1006,6 +1028,11 @@ namespace Microcode
 #endif
             value = environment.Argument1Value;
             return false;
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            return this;
         }
     }
 
@@ -1048,6 +1075,21 @@ namespace Microcode
             }
             return false;
         }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            object maybeCell = statics [this.offset];
+            ValueCell vcell = maybeCell as ValueCell;
+            if (vcell == null) {
+               // Debug.WriteLine ("Substitute " + this.Name);
+                return Quotation.Make (maybeCell);
+            }
+            else {
+                return TopLevelVariable.Make (this.varname, vcell);
+                //return this;
+            }
+        }
+
     }
 
     /// <summary>

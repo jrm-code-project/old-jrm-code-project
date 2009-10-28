@@ -49,12 +49,11 @@ namespace Microcode
 
         public static SCode Make (object [] components)
         {
-            //if (components.Length == 1)
-            //    return Combination0.Make (components [0]);
-            return new Combination (components);
-            //object oper = components [0];
-            //if (!Configuration.EnableCombinationOptimization)
-            //    return new Combination (components);
+            return
+                (!Configuration.EnableCombinationOptimization) ? new Combination(components) :
+                (Configuration.EnableCombination0 && components.Length == 1) ? Combination0.Make(components[0]) :
+                (Configuration.EnableCombination3 && components.Length == 4) ? Combination3.Make(EnsureSCode(components[0]), EnsureSCode(components[1]), EnsureSCode(components[2]), EnsureSCode(components[3])):
+                new Combination(components);
 
             //if (Configuration.EnableSuperOperators) {
             //    switch (components.Length) {
@@ -175,8 +174,6 @@ namespace Microcode
                     return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0], evaluated [1]);
                 case 3:
                     return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0], evaluated [1], evaluated [2]);
-                case 4:
-                    return Interpreter.Call (out answer, ref expression, ref environment, rator, evaluated [0], evaluated [1], evaluated [2], evaluated [3]);
                 default:
                     return Interpreter.Apply (out answer, ref expression, ref environment, rator, evaluated);
             }
@@ -252,6 +249,17 @@ namespace Microcode
         {
             foreach (SCode component in this.components)
                 component.CollectFreeVariables (freeVariableSet);
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            SCode [] newComponents = new SCode [this.components.Length];
+            bool differ = false;
+            for (int i = 0; i < this.components.Length; i++) {
+                newComponents [i] = this.components [i].SubstituteStatics (statics);
+                if (newComponents [i] != this.components [i]) differ = true;
+            }
+            return differ ? Combination.Make (newComponents) : this;
         }
     }
 
@@ -473,6 +481,12 @@ namespace Microcode
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
             this.Operator.CollectFreeVariables (freeVariableSet);
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            SCode newOperator = this.Operator.SubstituteStatics (statics);
+            return (newOperator == this.Operator) ? this : Combination0.Make (newOperator);
         }
     }
 
@@ -705,6 +719,11 @@ namespace Microcode
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
             return;
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            throw new NotImplementedException ();
         }
     }
 
@@ -991,6 +1010,18 @@ namespace Microcode
             this.arg0.CollectFreeVariables (freeVariableSet);
             this.arg1.CollectFreeVariables (freeVariableSet);
             this.arg2.CollectFreeVariables (freeVariableSet);
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            SCode newArg0 = this.arg0.SubstituteStatics (statics);
+            SCode newArg1 = this.arg1.SubstituteStatics (statics);
+            SCode newArg2 = this.arg2.SubstituteStatics (statics);
+            return (newArg0 == this.arg0 &&
+                newArg1 == this.arg1 &&
+                newArg2 == this.arg2) ?
+                this :
+                PrimitiveCombination3.Make (this.procedure, newArg0, newArg1, newArg2);
         }
     }
 

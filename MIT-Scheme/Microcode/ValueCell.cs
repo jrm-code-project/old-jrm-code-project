@@ -13,6 +13,9 @@ namespace Microcode
         bool trapOnReference;
         object val;
 
+        int readCount;
+        int writeCount;
+
         ValueCell ()
         {
             this.trapOnReference = true;
@@ -121,6 +124,7 @@ namespace Microcode
 
         public bool Assign (out object oldValue, object newValue)
         {
+            this.writeCount += 1;
 #if DEBUG
             if (!ValidValue(newValue)) throw new ArgumentException ("Illegal value cell contents.", "newValue");
 #endif
@@ -138,6 +142,9 @@ namespace Microcode
 
         internal bool GetValue (out object value)
         {
+            this.readCount += 1;
+            //if (this.readCount == 1000)
+            //    Debugger.Break ();
             value = this.val;
             return this.trapOnReference;
         }

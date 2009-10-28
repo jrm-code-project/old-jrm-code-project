@@ -93,7 +93,7 @@ namespace Microcode
             SCode.location = oldLocation;
         }
 
-        static long warm_break = 100000000;
+        static long warm_break = 1000000000;
 
         [DebuggerStepThrough]
         protected void Warm (String location)
@@ -136,6 +136,7 @@ namespace Microcode
         /// <returns></returns>
         internal abstract PartialResult PartialEval (PartialEnvironment environment);
 
+        internal abstract SCode SubstituteStatics (object [] statics);
 #if DEBUG
         // for hash consing
         public virtual string Key ()
@@ -290,6 +291,11 @@ namespace Microcode
         {
             this.code.CollectFreeVariables (freeVariableSet);
         }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
      [Serializable]
@@ -411,6 +417,11 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     [Serializable]
@@ -502,6 +513,11 @@ namespace Microcode
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
             this.body.CollectFreeVariables (freeVariableSet);
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            throw new NotImplementedException ();
         }
     }
 
@@ -670,6 +686,11 @@ namespace Microcode
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
             return;
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            return this;
         }
     }
 
@@ -899,6 +920,16 @@ namespace Microcode
         {
             this.first.CollectFreeVariables (freeVariableSet);
             this.second.CollectFreeVariables (freeVariableSet);
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            SCode newFirst = this.first.SubstituteStatics (statics);
+            SCode newSecond = this.second.SubstituteStatics (statics);
+            return (newFirst == this.first &&
+                newSecond == this.second) ?
+                this :
+                Sequence2.Make (newFirst, newSecond);
         }
     }
 
@@ -1670,6 +1701,16 @@ namespace Microcode
             this.second.CollectFreeVariables (freeVariableSet);
             this.third.CollectFreeVariables (freeVariableSet);
         }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            SCode newFirst = this.first.SubstituteStatics (statics);
+            SCode newSecond = this.second.SubstituteStatics (statics);
+            SCode newThird = this.third.SubstituteStatics (statics);
+            return (newFirst == this.first &&
+                newSecond == this.second &&
+                newThird == this.third) ? this : Sequence3.Make (newFirst, newSecond, newThird);
+        }
     }
 
     [Serializable]
@@ -1847,6 +1888,11 @@ namespace Microcode
         }
 
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override SCode SubstituteStatics (object [] statics)
         {
             throw new NotImplementedException ();
         }
