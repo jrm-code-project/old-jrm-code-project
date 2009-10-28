@@ -90,6 +90,7 @@ namespace Microcode
         public StaticMapping ExportedStaticMapping (ICollection<Symbol> freeVariables)
         {
             Symbol [] formals = this.Lambda.Formals;
+            int formalCount = formals.Length;
 
             // determine how many mappings we need.
             int count = 0;
@@ -114,7 +115,7 @@ namespace Microcode
             for (int index = 0; index < formals.Length; index++)
                 if (freeVariables.Contains (formals [index])) {
                     exportedNames [mapptr] = formals [index];
-                    exportedOffsets [mapptr] = (-index) - 1;
+                    exportedOffsets [mapptr] = index;
                     mapptr += 1;
                 }
 
@@ -124,7 +125,7 @@ namespace Microcode
                     Symbol stat = importedNames [index];
                     if (freeVariables.Contains (stat)) {
                         exportedNames [mapptr] = stat;
-                        exportedOffsets [mapptr] = index;
+                        exportedOffsets [mapptr] = index + formalCount;
                         mapptr += 1;
                     }
                 }

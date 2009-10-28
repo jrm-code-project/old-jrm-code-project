@@ -381,25 +381,6 @@ namespace Microcode
             return op.Call (out answer, ref expression, ref environment, evarg0, evarg1, evarg2, evarg3);
         }
 
-        internal static bool Call (out object answer, ref Control expression, ref Environment environment, object evop, object evarg0, object evarg1, object evarg2, object evarg3, object evarg4)
-        {
-#if DEBUG
-            SCode.location = "Interpreter.Call.5";
-#endif
-            IApplicable op = evop as IApplicable;
-            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
-            return op.Call (out answer, ref expression, ref environment, evarg0, evarg1, evarg2, evarg3, evarg4);
-        }
-
-        internal static bool Call (out object answer, ref Control expression, ref Environment environment, object evop, object evarg0, object evarg1, object evarg2, object evarg3, object evarg4, object evarg5)
-        {
-#if DEBUG
-            SCode.location = "Interpreter.Call.6";
-#endif
-            IApplicable op = evop as IApplicable;
-            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
-            return op.Call (out answer, ref expression, ref environment, evarg0, evarg1, evarg2, evarg3, evarg4, evarg5);
-        }
     }
 
     /// <summary>

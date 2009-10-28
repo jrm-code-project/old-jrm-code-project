@@ -24,6 +24,7 @@ namespace Microcode
 #endif
         Symbol [] names;
         int [] offsets;
+        int offsetCode;
 
         public StaticMapping (Symbol [] names, int [] offsets)
         {
@@ -43,10 +44,20 @@ namespace Microcode
 #endif
             this.names = names;
             this.offsets = mapping;
+            foreach (int offset in offsets)
+            {
+                if (offset > 30)
+                {
+                    this.offsetCode = -1;
+                    break;
+                }
+                this.offsetCode += 1 << offset;
+            }
         }
 
-        public Symbol [] Names { [DebuggerStepThrough] get { return this.names; } }
+        public Symbol[] Names { [DebuggerStepThrough] get { return this.names; } }
         public int [] Offsets { [DebuggerStepThrough] get { return this.offsets; } }
+        public int OffsetCode { [DebuggerStepThrough] get { return this.offsetCode; } }
 
         public StaticMapping ()
         {

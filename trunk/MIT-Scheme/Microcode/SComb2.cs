@@ -262,6 +262,18 @@ namespace Microcode
             this.rand0.CollectFreeVariables (freeVariableSet);
             this.rand1.CollectFreeVariables (freeVariableSet);
         }
+
+        internal override SCode SubstituteStatics (object [] statics)
+        {
+            SCode newRator = this.rator.SubstituteStatics (statics);
+            SCode newRand0 = this.rand0.SubstituteStatics (statics);
+            SCode newRand1 = this.rand1.SubstituteStatics (statics);
+            return (newRator == this.rator &&
+                    newRand0 == this.rand0 &&
+                    newRand1 == this.rand1) ?
+                    this :
+                    Combination2.Make (newRator, newRand0, newRand1);
+        }
     }
 
     [Serializable]
