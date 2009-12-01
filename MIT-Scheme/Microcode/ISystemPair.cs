@@ -88,7 +88,7 @@ namespace Microcode
                         plam.Formals, 
                         plam.Body,
                         ulam.FreeVariables,
-                        plam.GetStaticMapping(env)
+                        plam.StaticMapping
                         );
                     answer = new StandardClosure (slam, env);
                     break;

@@ -250,17 +250,6 @@ namespace Microcode
             foreach (SCode component in this.components)
                 component.CollectFreeVariables (freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode [] newComponents = new SCode [this.components.Length];
-            bool differ = false;
-            for (int i = 0; i < this.components.Length; i++) {
-                newComponents [i] = this.components [i].SubstituteStatics (statics);
-                if (newComponents [i] != this.components [i]) differ = true;
-            }
-            return differ ? Combination.Make (newComponents) : this;
-        }
     }
 
     [Serializable]
@@ -481,12 +470,6 @@ namespace Microcode
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
             this.Operator.CollectFreeVariables (freeVariableSet);
-        }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newOperator = this.Operator.SubstituteStatics (statics);
-            return (newOperator == this.Operator) ? this : Combination0.Make (newOperator);
         }
     }
 
@@ -720,11 +703,6 @@ namespace Microcode
         {
             return;
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
@@ -791,7 +769,7 @@ namespace Microcode
             this.arg1 = arg1;
             this.arg2 = arg2;
 #if DEBUG
-            this.histogramKey = procedure.ToString () + " " + this.arg0.GetType ().Name.ToString () + " " + this.arg1.GetType ().Name.ToString () + " " + this.arg2.GetType ().ToString ();
+            this.histogramKey = procedure.ToString () + " " + this.arg0.GetType ().Name.ToString () + " " + this.arg1.GetType ().Name.ToString () + " " + this.arg2.GetType ().Name.ToString ();
             rand0Type = this.arg0.GetType ();
             rand1Type = this.arg1.GetType ();
             rand2Type = this.arg2.GetType ();
@@ -1010,18 +988,6 @@ namespace Microcode
             this.arg0.CollectFreeVariables (freeVariableSet);
             this.arg1.CollectFreeVariables (freeVariableSet);
             this.arg2.CollectFreeVariables (freeVariableSet);
-        }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newArg0 = this.arg0.SubstituteStatics (statics);
-            SCode newArg1 = this.arg1.SubstituteStatics (statics);
-            SCode newArg2 = this.arg2.SubstituteStatics (statics);
-            return (newArg0 == this.arg0 &&
-                newArg1 == this.arg1 &&
-                newArg2 == this.arg2) ?
-                this :
-                PrimitiveCombination3.Make (this.procedure, newArg0, newArg1, newArg2);
         }
     }
 

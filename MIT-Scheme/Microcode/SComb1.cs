@@ -47,15 +47,15 @@ namespace Microcode
                 (! Configuration.EnableCombination1Specialization) ? new Combination1 (rator, rand) :
                 (rator is StaticVariable) ? Combination1S.Make((StaticVariable) rator, rand) :
                 (rator is TopLevelVariable) ? Combination1T.Make ((TopLevelVariable) rator, rand) :
-                //(Configuration.EnableLet1 &&
-                // rator is Lambda) ? Let1.Make ((Lambda) rator, rand)  :
+                (Configuration.EnableLet1 &&
+                 rator is Lambda) ? Let1.Make ((Lambda) rator, rand)  :
                 //(Configuration.EnableCombination1Specialization &&
                 //rator is LexicalVariable) ? Combination1L.Make ((LexicalVariable) rator, rand) :
                 //(Configuration.EnableCombination1Specialization &&
                 //rator is TopLevelVariable) ? Combination1T.Make ((TopLevelVariable) rator, rand) :
                 //(rator is Quotation &&
                 //! (((Quotation) rator).Quoted is PrimitiveN)) ? Unimplemented() :
-                //(Configuration.EnableCombination1Specialization &&
+                (rand is Argument) ? Combination1XA.Make(rator, (Argument) rand) :
                 //  rand is LexicalVariable) ? Combination1SL.Make (rator, (LexicalVariable) rand) :
                 //(Configuration.EnableCombination1Specialization &&
                 // rand is Quotation) ? Combination1SQ.Make (rator, (Quotation) rand) :
@@ -210,16 +210,6 @@ namespace Microcode
             this.rator.CollectFreeVariables (freeVariableSet);
             this.rand.CollectFreeVariables (freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newRator = this.rator.SubstituteStatics (statics);
-            SCode newRand = this.rand.SubstituteStatics (statics);
-            return (this.rator == newRator &&
-                    this.rand == newRand) ?
-                    this :
-                    Combination1.Make (newRator, newRand);
-        }
     }
 
     [Serializable]
@@ -320,6 +310,7 @@ namespace Microcode
 
     }
 
+
     [Serializable]
     class Combination1S : Combination1
     {
@@ -391,6 +382,7 @@ namespace Microcode
         public static SCode Make (TopLevelVariable rator, SCode rand0)
         {
             return
+                (rand0 is Argument) ? Combination1TA.Make(rator, (Argument) rand0) :
                 new Combination1T (rator, rand0);
         }
 
@@ -421,6 +413,235 @@ namespace Microcode
                 throw new NotImplementedException ();
 
             return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg);
+        }
+    }
+
+    [Serializable]
+    class Combination1TA : Combination1T
+    {
+        public readonly int randOffset;
+
+        protected Combination1TA (TopLevelVariable rator, Argument rand)
+            : base (rator, rand)
+        {
+            this.randOffset = rand.Offset;
+        }
+
+        public static SCode Make (TopLevelVariable rator, Argument rand0)
+        {
+            return
+                (rand0 is Argument0) ? Combination1TA0.Make (rator, (Argument0) rand0) :
+                (rand0 is Argument1) ? Combination1TA1.Make (rator, (Argument1) rand0) :
+                new Combination1TA (rator, rand0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand);
+            SCode.location = "Combination1TA";
+#endif
+            object evarg = environment.ArgumentValue (this.randOffset);
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg);
+        }
+    }
+
+    [Serializable]
+    class Combination1TA0 : Combination1TA
+    {
+        protected Combination1TA0 (TopLevelVariable rator, Argument0 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable rator, Argument0 rand0)
+        {
+            return
+                new Combination1TA0 (rator, rand0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination1TA0");
+#endif
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+    class Combination1TA1 : Combination1TA
+    {
+        protected Combination1TA1 (TopLevelVariable rator, Argument1 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable rator, Argument1 rand0)
+        {
+            return
+                new Combination1TA1 (rator, rand0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination1TA0");
+#endif
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value);
+        }
+    }
+
+    [Serializable]
+    class Combination1XA : Combination1
+    {
+#if DEBUG
+                static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int randOffset;
+
+        protected Combination1XA (SCode rator, Argument rand)
+            : base (rator, rand)
+        {
+            this.randOffset = rand.Offset;
+        }
+
+        public static SCode Make (SCode rator, Argument rand0)
+        {
+            return
+                (rand0 is Argument0) ? Combination1XA0.Make (rator, (Argument0) rand0) :
+                (rand0 is Argument1) ? Combination1XA1.Make (rator, (Argument1) rand0) :
+                new Combination1XA (rator, rand0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination1XA";
+#endif
+
+            object evop;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination1XA";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, environment.ArgumentValue (this.randOffset)));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue(this.randOffset));
+        }
+    }
+
+    [Serializable]
+    class Combination1XA0 : Combination1XA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected Combination1XA0 (SCode rator, Argument0 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (SCode rator, Argument0 rand0)
+        {
+            return
+                new Combination1XA0 (rator, rand0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination1XA0";
+#endif
+
+            object evop;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination1XA0";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, environment.Argument0Value));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+    class Combination1XA1 : Combination1XA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected Combination1XA1 (SCode rator, Argument1 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (SCode rator, Argument1 rand0)
+        {
+            return
+                new Combination1XA1 (rator, rand0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination1XA1";
+#endif
+
+            object evop;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination1XA1";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, environment.Argument1Value));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.Argument1Value);
         }
     }
 

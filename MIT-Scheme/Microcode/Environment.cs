@@ -402,6 +402,11 @@ namespace Microcode
         {
             ValueCell cell = null;
             if (this.globalBindings.TryGetValue (name, out cell) == false) {
+#if DEBUG
+                if (name is Symbol &&
+                   ! ((Symbol) name).IsInterned())
+                    throw new NotImplementedException();
+#endif
                 cell = new ValueCell (name, value);
                 this.globalBindings.Add (name, cell);
             }
@@ -433,6 +438,11 @@ namespace Microcode
 
         internal override ValueCell GetValueCell (object name)
         {
+#if DEBUG
+            if (name is Symbol &&
+               !((Symbol) name).IsInterned ())
+                throw new NotImplementedException ();
+#endif
             ValueCell cell = null;
             this.globalBindings.TryGetValue (name, out cell);
             return cell;
@@ -474,6 +484,11 @@ namespace Microcode
                     // No effect to just do it again, even if it is weird.
                     return false;
             }
+#if DEBUG
+            if (name is Symbol &&
+               !((Symbol) name).IsInterned ())
+                throw new NotImplementedException ();
+#endif
             this.globalBindings.Add (name, newCell);
             return false; // copacetic
         }
@@ -972,7 +987,6 @@ namespace Microcode
         internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
-            SCode.location = "StandardEnvironment.GetValueCells";
             valueCellsCopied [mapping.Size] += 1;
             //staticMappings.Note (mapping);
 #endif
@@ -1262,7 +1276,6 @@ namespace Microcode
         internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
-            SCode.location = "StaticEnvironment.GetValueCells";
             valueCellsCopied [mapping.Size] += 1;
             //staticMappings.Note (mapping);
 #endif
@@ -1477,7 +1490,6 @@ namespace Microcode
         internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
-            SCode.location = "Simple.GetValueCells";
             valueCellsCopied [mapping.Size] += 1;
             staticMappings.Note (mapping.Offsets);
 #endif
@@ -1634,7 +1646,6 @@ namespace Microcode
         internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
-            SCode.location = "SmallEnvironment0.GetValueCells";
             valueCellsCopied [mapping.Size] += 1;
             staticMappings.Note (mapping.Offsets);
             int code = mapping.OffsetCode;
@@ -1642,12 +1653,15 @@ namespace Microcode
                 code < 64)
                 codes[code] += 1;
 #endif
+            object [] oldCells = this.Closure.StaticCells;
+            if (mapping.Size == oldCells.Length) return oldCells;
+
             int count = mapping.Size;
             int [] offsets = mapping.Offsets;
             object [] newCells = new object [count];
-            object [] oldCells = this.Closure.StaticCells;
+
             for (int index = 0; index < count; index++) {
-                newCells [index] = oldCells[offsets[index]];
+                newCells [index] = oldCells [offsets [index]];
             }
             return newCells;
         }
@@ -1826,7 +1840,7 @@ namespace Microcode
         }
 
         static int [] codes = new int [64];
-
+        private static object [] noCells = new object [0];
         internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
@@ -1838,31 +1852,66 @@ namespace Microcode
                 code < 64)
                 codes[code] += 1;
 #endif
-            int count = mapping.Size;
-            int [] offsets = mapping.Offsets;
-            object [] incomingCells = this.envClosure.StaticCells;
-            object [] cells = new object [count];
-            for (int index = 0; index < count; index++) {
-                int offset = offsets [index];
-                if (offset == 0)
-                    //cells [index] = new ValueCell (this.Closure.Lambda.Formals [0], this.binding0);
-                    cells [index] = this.binding0;
-                else
-                    cells [index] = incomingCells [offset - 1];
+            object [] cells;
+                               object [] incomingCells = this.envClosure.StaticCells;
+            switch (mapping.OffsetCode) {
+                case 0:
+                    return noCells;
+                case 1:
+                    return new object [] { this.binding0 };
+                case 2:
+                    return (incomingCells.Length == 1) ? incomingCells :
+                        new object [] { incomingCells [0] };
+                case 3:
+                    return new object [] { this.binding0, incomingCells [0] };
+                case 4:
+                    return new object [] { incomingCells [1] };
+                case 5:
+                    return new object [] {this.binding0, incomingCells [1] };
+                case 6:
+                    return (incomingCells.Length == 2) ? incomingCells :
+                        new object [] {incomingCells[0], incomingCells [1] };
+                case 7:
+                    return new object [] {this.binding0,
+                                          incomingCells[0],
+                                          incomingCells[1]};
+                case 8:
+                    return new object [] {incomingCells[2]};
+
+                case 9:
+                    return new object [] {this.binding0,
+                                          incomingCells[2]};
+
+                case 14:
+                    return  (incomingCells.Length == 3) ? incomingCells :
+                    new object [] {incomingCells[0],
+                                   incomingCells[1],
+                                   incomingCells[2]};
+
+                case 15:
+                    return 
+                        new object [] {this.binding0,
+                                       incomingCells[0],
+                                       incomingCells[1],
+                                       incomingCells[2]};
+                case 16:
+                    return new object [] { incomingCells [3] };
+
+                default:
+                    int count = mapping.Size;
+                    int [] offsets = mapping.Offsets;
+ 
+                    cells = new object [count];
+                    for (int index = 0; index < count; index++) {
+                        int offset = offsets [index];
+                        if (offset == 0)
+                            //cells [index] = new ValueCell (this.Closure.Lambda.Formals [0], this.binding0);
+                            cells [index] = this.binding0;
+                        else
+                            cells [index] = incomingCells [offset - 1];
+                    }
+                    break;
             }
-            //if (count > 0) {
-            //    if (offsets[0] == -1) {
-            //        cells[0] = new ValueCell (this.Closure.Lambda.Formals[0], this.binding0);
-            //        for (int index = 1; index < count; index++) {
-            //            cells [index] = incomingCells [offsets [index]];
-            //        }
-            //    }
-            //    else {
-            //        for (int index = 0; index < count; index++) {
-            //            cells [index] = incomingCells [offsets [index]];
-            //        }
-            //    }
-            //}
             return cells;
         }
 
@@ -2076,20 +2125,24 @@ namespace Microcode
             switch (mapping.OffsetCode) {
 
                 case 1:
-                    cells = new object [1];
-                    cells[0] = this.binding0;
-                    return cells;
+                    return new object [] { this.binding0 };
 
                 case 2:
-                    cells = new object [1];
-                    cells[0] = this.binding1;
-                    return cells;
+                    return new object [] { this.binding1 };
 
                 case 3:
-                    cells = new object[2];
-                    cells[0] =  this.binding0;
-                    cells[1] =  this.binding1;
-                    return cells;
+                    return new object [] { this.binding0, this.binding1 };
+
+                case 7:
+                    return new object [] {this.binding0,
+                                          this.binding1,
+                                          oldCells[0]};
+
+                case 15:
+                    return new object [] {this.binding0,
+                                          this.binding1,
+                                          oldCells[0],
+                                          oldCells[1]};
 
                case 23: 
                     cells = new object[4];
@@ -2332,7 +2385,7 @@ namespace Microcode
         internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
-            SCode.location = "SmallEnvironment2.GetValueCells";
+            SCode.location = "SmallEnvironment3.GetValueCells";
             valueCellsCopied [mapping.Size] += 1;
             staticMappings.Note (mapping.Offsets);
             int code = mapping.OffsetCode;

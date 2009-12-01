@@ -22,11 +22,19 @@ namespace Microcode
         #region Combination1
         public const bool EnableCombination1Optimization = true;
         public const bool EnableCombination1Specialization = true;
+        /// <summary>
+        /// Special case combination1.
+        /// </summary>
+        public const bool EnableLet1 = true;
         #endregion
 
         #region Combination2
         public const bool EnableCombination2Optimization = true;
         public const bool EnableCombination2Specialization = true;
+        /// <summary>
+        /// Special case combination1.
+        /// </summary>
+        public const bool EnableLet2 = true;
         #endregion
 
         public const bool EnableCommentOptimization = false;
@@ -39,7 +47,7 @@ namespace Microcode
         /// by the conditional.
         /// </summary>
         public const bool EnablePrimitiveConditional1 = true;
-        public const bool EnablePrimitiveConditional2 = true;
+        public const bool EnablePrimitiveConditional2 = false;
         #endregion
 
         public const bool EnableDefinitionOptimization = false;
@@ -86,9 +94,10 @@ namespace Microcode
 
         public const bool EnablePrimitiveCombination3Optimization = false;
         public const bool EnableQuotationOptimization = false;
-        public const bool EnableSequence2Optimization = false;
+        public const bool EnableSequence2Optimization = true;
+        public const bool EnableSequence2Specialization = true;
         public const bool EnableSequence3Optimization = false;
-        public const bool EnableSequenceSpecialization = false;
+        public const bool EnableSequence3Specialization = false;
         public const bool EnableTheEnvironmentOptimization = false;
 
         #region Variable
@@ -111,13 +120,10 @@ namespace Microcode
         public const bool EnableCombination3Specialization = false;
 
         // When closure call count reaches this, walk the code
-        // and substitute the static variables.
-        public const int SubstituteStaticsThreshold = -1;
+        // and substitute the static variables.  Set to -1 to disable
+        // optimization.
+        public const int OptimizeThreshold = 8;
 
-        /// <summary>
-        /// Special case combination1.
-        /// </summary>
-        public const bool EnableLet1 = false;
 
         /// <summary>
         /// If true, allow interpreter to rewrite code to improve performance.

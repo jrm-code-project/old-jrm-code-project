@@ -433,18 +433,6 @@ namespace Microcode
             this.consequent.CollectFreeVariables (freeVariableSet);
             this.alternative.CollectFreeVariables (freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newPredicate = this.predicate.SubstituteStatics (statics);
-            SCode newConsequent = this.consequent.SubstituteStatics (statics);
-            SCode newAlternative = this.alternative.SubstituteStatics (statics);
-            return (newPredicate == this.predicate &&
-                newConsequent == this.consequent &&
-                newAlternative == this.alternative) ?
-                this :
-                Conditional.Make (newPredicate, newConsequent, newAlternative);
-        }
     }
 
     [Serializable]
@@ -1317,15 +1305,19 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("ConditionalXQ.EvalStep");
+            Warm ("-");
             NoteCalls (this.predicate);
             predicateTypeHistogram.Note (this.predicateType);
+            SCode.location = "ConditionalXQ";
 #endif
             object ev;
             Control unev = this.predicate;
             Environment env = environment;
 
             while (unev.EvalStep (out ev, ref unev, ref env)) { };
+#if DEBUG
+                        SCode.location = "ConditionalXQ";
+#endif
             if (ev == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new ConditionalFrame (this, environment));
                 environment = env;
@@ -1335,8 +1327,10 @@ namespace Microcode
 
             if ((ev is bool) && (bool) ev == false) {
 #if DEBUG
+                SCode.location = "-";
                 NoteCalls(this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
+                SCode.location = "ConditionalXQ";
 #endif
                 expression = this.alternative;
                 answer = null;

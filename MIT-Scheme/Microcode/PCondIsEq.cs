@@ -23,7 +23,7 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveIsEqA) ? PCondIsEqA.Make((PrimitiveIsEqA) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsEqCar) ? PCondIsEqCar.Make ((PrimitiveIsEqCar) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsEqCar) ? PCondIsEqCar.Make ((PrimitiveIsEqCar) predicate, consequent, alternative) :
                 new PCondIsEq (predicate, consequent, alternative);
         }
 

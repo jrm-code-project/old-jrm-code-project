@@ -244,6 +244,9 @@ namespace Microcode
                 object ignore;
                 Statistics.Reset (out ignore);
                 Console.WriteLine (";; Hack:  invoking finish-cold-load.");
+                StandardClosure.printName = true;
+                StaticClosure.printName = true;
+                SimpleClosure.printName = true;
                 for (int i = 0; i < cannedString.Length; i++)
                     buffer [start + i] = cannedString [i];
                 firstTime = false;
@@ -381,6 +384,15 @@ namespace Microcode
         public static bool ChannelWrite (out object answer, object [] arglist)
         {
             answer = Channel.ArgChannel ((int) arglist[0]).Write ((char []) (arglist [1]), (int) (arglist [2]), (int) (arglist [3]));
+            return false;
+        }
+
+        [SchemePrimitive ("FILE-EQ?", 2, false)]
+        public static bool IsFileEq (out object answer, object arg0, object arg1)
+        {
+            string name0 = new string ((char[]) arg0);
+            string name1 = new string ((char[]) arg1);
+            answer = new FileInfo (name0).FullName == new FileInfo (name1).FullName;
             return false;
         }
 
