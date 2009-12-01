@@ -7544,3 +7544,172 @@ Now without variable optimization....
 ; Run lattice took .23199999999999932 (-6.363880201078659).
 ; Run lattice took .2360000000000042 (-6.289321377282647).
 ; Run lattice took .22399999999998954 (-6.497519816658573).
+
++		[0]	{[SimpleClosure.Call1, 978]}	System.Collections.Generic.KeyValuePair<string,long>
++		[1]	{[Combination2S.EvalStep, 887]}	System.Collections.Generic.KeyValuePair<string,long>
++		[2]	{[PCondIsEqCarA0CarA, 873]}	System.Collections.Generic.KeyValuePair<string,long>
++		[3]	{[StaticVariable.EvalStep, 869]}	System.Collections.Generic.KeyValuePair<string,long>
++		[4]	{[SimpleClosure.Call2, 835]}	System.Collections.Generic.KeyValuePair<string,long>
++		[5]	{[SmallEnvironment1.GetValueCells, 737]}	System.Collections.Generic.KeyValuePair<string,long>
++		[6]	{[Combination1.EvalStep, 710]}	System.Collections.Generic.KeyValuePair<string,long>
++		[7]	{[PCondIsNullA1.EvalStep, 697]}	System.Collections.Generic.KeyValuePair<string,long>
++		[8]	{[PCondIsNullA0.EvalStep, 685]}	System.Collections.Generic.KeyValuePair<string,long>
++		[9]	{[AssignmentS.EvalStep.1, 614]}	System.Collections.Generic.KeyValuePair<string,long>
++		[10]	{[Sequence2.EvalStep, 591]}	System.Collections.Generic.KeyValuePair<string,long>
++		[11]	{[SmallEnvironment2.GetValueCells, 571]}	System.Collections.Generic.KeyValuePair<string,long>
++		[12]	{[GENERAL-CAR-CDR, 522]}	System.Collections.Generic.KeyValuePair<string,long>
++		[13]	{[PCondIsNullA0Q.EvalStep, 515]}	System.Collections.Generic.KeyValuePair<string,long>
++		[14]	{[VECTOR-REF, 485]}	System.Collections.Generic.KeyValuePair<string,long>
++		[15]	{[FreeVariable.EvalStep, 482]}	System.Collections.Generic.KeyValuePair<string,long>
++		[16]	{[PCondIsNullA1A0.EvalStep, 438]}	System.Collections.Generic.KeyValuePair<string,long>
++		[17]	{[Interpreter.Call.2, 431]}	System.Collections.Generic.KeyValuePair<string,long>
++		[18]	{[Combination2SA0.EvalStep, 421]}	System.Collections.Generic.KeyValuePair<string,long>
++		[19]	{[Combination3, 420]}	System.Collections.Generic.KeyValuePair<string,long>
++		[20]	{[PCondIsType, 416]}	System.Collections.Generic.KeyValuePair<string,long>
++		[21]	{[StaticClosure.Apply, 411]}	System.Collections.Generic.KeyValuePair<string,long>
+
+
+
+
++		[0]	{[Interpreter.Call.2, 1779]}	System.Collections.Generic.KeyValuePair<string,long>
++		[1]	{[Interpreter.Call.1, 1322]}	System.Collections.Generic.KeyValuePair<string,long>
++		[2]	{[SimpleClosure.Call2, 1107]}	System.Collections.Generic.KeyValuePair<string,long>
++		[3]	{[PCondIsEq, 1099]}	System.Collections.Generic.KeyValuePair<string,long>
++		[4]	{[SimpleClosure.Call1, 763]}	System.Collections.Generic.KeyValuePair<string,long>
++		[5]	{[Combination2S.EvalStep, 751]}	System.Collections.Generic.KeyValuePair<string,long>
++		[6]	{[SmallEnvironment1.GetValueCells, 710]}	System.Collections.Generic.KeyValuePair<string,long>
++		[7]	{[PrimitiveCdrA0, 667]}	System.Collections.Generic.KeyValuePair<string,long>
++		[8]	{[PCondIsNullA0.EvalStep, 619]}	System.Collections.Generic.KeyValuePair<string,long>
++		[9]	{[PCondIsNullA1.EvalStep, 586]}	System.Collections.Generic.KeyValuePair<string,long>
++		[10]	{[SmallEnvironment2.GetValueCells, 566]}	System.Collections.Generic.KeyValuePair<string,long>
++		[11]	{[Combination1S, 529]}	System.Collections.Generic.KeyValuePair<string,long>
++		[12]	{[GENERAL-CAR-CDR, 502]}	System.Collections.Generic.KeyValuePair<string,long>
++		[13]	{[AssignmentS.EvalStep.1, 500]}	System.Collections.Generic.KeyValuePair<string,long>
++		[14]	{[Sequence2.EvalStep, 463]}	System.Collections.Generic.KeyValuePair<string,long>
++		[15]	{[PCondIsType, 453]}	System.Collections.Generic.KeyValuePair<string,long>
++		[16]	{[PCondIsNullA0Q.EvalStep, 451]}	System.Collections.Generic.KeyValuePair<string,long>
++		[17]	{[StaticVariable.EvalStep, 441]}	System.Collections.Generic.KeyValuePair<string,long>
++		[18]	{[PCondIsNullA1A0.EvalStep, 426]}	System.Collections.Generic.KeyValuePair<string,long>
++		[19]	{[VECTOR-REF, 416]}	System.Collections.Generic.KeyValuePair<string,long>
++		[20]	{[FreeVariable.EvalStep, 400]}	System.Collections.Generic.KeyValuePair<string,long>
++		[21]	{[Combination3, 386]}	System.Collections.Generic.KeyValuePair<string,long>
++		[22]	{[SmallEnvironment0.GetValueCells, 385]}	System.Collections.Generic.KeyValuePair<string,long>
++		[23]	{[Combination2SA0.EvalStep, 369]}	System.Collections.Generic.KeyValuePair<string,long>
++		[24]	{[Interpreter.Call.3, 367]}	System.Collections.Generic.KeyValuePair<string,long>
+
+
+;; hot simple closures
++		[0]	{[#<PROCEDURE one-way-unify1>, 48196]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase<Microcode.SimpleLambda>,long>
++		[1]	{[#<PROCEDURE rewrite-args>, 40606]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase<Microcode.SimpleLambda>,long>
++		[2]	{[#<PROCEDURE scons>, 40606]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase<Microcode.SimpleLambda>,long>
++		[3]	{[#<PROCEDURE rewrite-with-lemmas>, 37394]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase<Microcode.SimpleLambda>,long>
++		[4]	{[#<PROCEDURE one-way-unify1-lst>, 30697]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase<Microcode.SimpleLambda>,long>
++		[5]	{[#<PROCEDURE rewrite>, 22380]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase<Microcode.SimpleLambda>,long>
++		[6]	{[#<PROCEDURE one-way-unify>, 19168]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase<Microcode.SimpleLambda>,long>
++		[7]	{[#<PROCEDURE assq>, 12640]}	System.Collections.Generic.KeyValuePair<Microcode.ClosureBase<Microcode.SimpleLambda>,long>
+
+--------
+port? about 5000 calls
+
+read-unquoted                                         read-unquoted                                 
+#[unnamed-procedure]                                  #[unnamed-procedure]                          
+peek-char                                             %peek-char                                    
+#[let-procedure]                                      #[let-procedure]                      
+#[internal-lambda]                                    #[internal-lambda]                            
+loop                                                  loop                                          
+input-port/peek-char                                    
+port/operation/peek-char                                
+port/type                                               
+port?                         ***                       
+#[unnamed-procedure]                                  #[unnamed-procedure]                        
+generic-io/peek-char                                  generic-io/peek-char                          
+generic-io/read-char                                  generic-io/read-char                        
+port/state                                            port/state                                    
+port?                         ***                     port?                                         
+reset-prev-char                                       reset-prev-char                               
+#[let-procedure]                                      #[let-procedure]                              
+#[internal-lambda]                                    #[internal-lambda]                            
+loop                                                  loop                                          
+read-next-char                                        read-next-char                                
+#[unnamed-procedure]                                  #[unnamed-procedure]                          
+decode-char                                           decode-char                                   
+#[unnamed-procedure]                                  #[unnamed-procedure]                          
+port/state                                            port/state                                    
+port?                         ***                     port?                                       
+transcribe-input-char                                 transcribe-input-char                       
+transcribe-char                                       transcribe-char                             
+eof-object?                                           eof-object?                                   
+char-set-member?                                      char-set-member?                            
+char-set?                                             char-set?                                   
+%char-set-member?                                     %char-set-member?                           
+guarantee-constituent                                 guarantee-constituent                         
+char-set-member?                                      char-set-member?                              
+char-set?                                             char-set?                                     
+%char-set-member?                                     %char-set-member?                             
+#[unnamed-procedure]                                  #[unnamed-procedure]                        
+read-char                                             %read-char                                    
+port/operation                                        port-type/%operation                          
+port/type                                               
+port?                        ***                        
+port-type/operation                                   
+guarantee-port-type                                     
+port-type?                                              
+assq                                                  assq                                        
+#[let-procedure]                                      #[let-procedure]                              
+#[internal-lambda]                                    #[internal-lambda]                            
+loop                                                  loop                                          
+loop                                                  loop                                          
+loop                                                  loop                                          
+#[let-procedure]                                      #[let-procedure]                            
+#[internal-lambda]                                    #[internal-lambda]                            
+loop                                                  loop                                          
+input-port/read-char                                    
+port/operation/read-char                                
+port/type                                               
+port?                        ***                        
+#[unnamed-procedure]                                  #[unnamed-procedure]                        
+operation/read-char                                   operation/read-char                           
+generic-io/read-char                                  generic-io/read-char                        
+port/state                                            port/state                                    
+port?                        ***                      port?                                         
+reset-prev-char                                       reset-prev-char                               
+#[let-procedure]                                      #[let-procedure]                              
+#[internal-lambda]                                    #[internal-lambda]                            
+loop                                                  loop                                          
+read-next-char                                        read-next-char                                
+#[unnamed-procedure]                                  #[unnamed-procedure]                          
+decode-char                                           decode-char                                   
+#[unnamed-procedure]                                  #[unnamed-procedure]                          
+eof-object?                                           eof-object?                                   
+transcribe-input-char                                 transcribe-input-char                       
+#[let-procedure]                                      #[let-procedure]                            
+operation/discretionary-write-char                    operation/discretionary-write-char            
+#[unnamed-procedure]                                  #[unnamed-procedure]                          
+port/state                                            port/state                                    
+port?                        ***                      port?                                         
+char-downcase                                         char-downcase                               
+%char-downcase                                        %char-downcase                                
+optional-output-port                                  
+guarantee-output-port                                 
+output-port?                                          
+port?                        ***                      
+output-port/write-char                                %write-char                                 
+port/operation/write-char                             
+port/type                                             
+port?                        ***                      
+#[unnamed-procedure]                                  #[unnamed-procedure]                        
+narrow-out/write-char                                 narrow-out/write-char                       
+port/state                                            port/state                                  
+port?                        ***                      port?                                       
+maybe-grow-buffer                                     maybe-grow-buffer                           
+#[let-procedure]                                      #[let-procedure]                            
+wide-string?                                          wide-string?                                
+new-column                                            new-column                                  
+transcribe-char                                       transcribe-char                             
+output-port/discretionary-flush                       
+port/operation/discretionary-flush-output             
+port/type                                             
+port?                        ***                      
+#[unnamed-procedure]                                  #[unnamed-procedure]                        
+no-flush                                              no-flush                                    
+discretionary-flush-transcript                        discretionary-flush-transcript              

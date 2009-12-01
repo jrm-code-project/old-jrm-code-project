@@ -152,12 +152,6 @@ namespace Microcode
         {
             this.env.CollectFreeVariables (freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newEnv = this.env.SubstituteStatics (statics);
-            return (newEnv == this.env) ? this : Access.Make (newEnv, this.var);
-        }
     }
 
     [Serializable]
@@ -252,6 +246,8 @@ namespace Microcode
     {
         Symbol Name { get; }
 
+        SCode MakeConstant (object value);
+
         SCode MakeFree ();
 
         SCode MakeGlobal (GlobalEnvironment globalEnvironment);
@@ -261,6 +257,8 @@ namespace Microcode
         SCode MakeArgument (int argOffset);
 
         SCode MakeStatic (int staticOffset);
+
+        SCode LeaveAlone ();
     }
 
     [Serializable]
@@ -431,12 +429,6 @@ namespace Microcode
         {
             freeVariableSet.Add (this.target.Name);
             this.value.CollectFreeVariables (freeVariableSet);
-        }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newValue = this.value.SubstituteStatics (statics);
-            return (newValue == this.value) ? this : Assignment.Make (this.target, newValue);
         }
     }
 
@@ -723,6 +715,7 @@ namespace Microcode
                (
                ((name.ToString()) == "no symbol has this name") ||
                ((name.ToString()) == "%record?") ||
+               //((name.ToString()) == "unscan-defines") ||
                //((name.ToString()) == "%char-set-member?") ||
                //((name.ToString()) == "the-console-port") ||
                //((name.ToString()) == "fixed-objects") ||
@@ -854,9 +847,7 @@ namespace Microcode
         internal override PartialResult PartialEval (PartialEnvironment environment)
         {
             return
-                new PartialResult (Configuration.EnableVariableOptimization 
-                    ? environment.LocateVariable (this) 
-                    : this);
+                new PartialResult (environment.LocateVariable (this));
         }
 
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
@@ -864,13 +855,16 @@ namespace Microcode
             freeVariableSet.Add (this.varname);
         }
 
-
-
         #region IVariableSpecializer Members
 
         public SCode MakeArgument (int argOffset)
         {
             return Configuration.EnableArgumentBinding ? Argument.Make (this.varname, argOffset) : this;
+        }
+
+        public SCode MakeConstant (object value)
+        {
+            return Quotation.Make (value);
         }
 
         public SCode MakeFree ()
@@ -895,12 +889,12 @@ namespace Microcode
             return TopLevelVariable.Make (this.varname, topLevelCell);
         }
 
-        #endregion
-
-        internal override SCode SubstituteStatics (object [] statics)
+        public SCode LeaveAlone ()
         {
             return this;
         }
+
+        #endregion
     }
 
     [Serializable]
@@ -975,7 +969,11 @@ namespace Microcode
             return false;
         }
 
-
+        // Already know it is an argument.
+        internal override PartialResult PartialEval (PartialEnvironment environment)
+        {
+            return new PartialResult (this);
+        }
     }
 
     /// <summary>
@@ -1000,11 +998,6 @@ namespace Microcode
             value = environment.Argument0Value;
             return false;
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            return this;
-        }
     }
 
     /// <summary>
@@ -1028,11 +1021,6 @@ namespace Microcode
 #endif
             value = environment.Argument1Value;
             return false;
-        }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            return this;
         }
     }
 
@@ -1075,21 +1063,38 @@ namespace Microcode
             }
             return false;
         }
+    }
 
-        internal override SCode SubstituteStatics (object [] statics)
+    /// <summary>
+    /// A static cell variable was bound in the static block of a closure,
+    /// but we snapped directly to the cell itself.
+    /// </summary>
+    [Serializable]
+    class SnappedStaticVariable : BoundVariable
+    {
+        readonly ValueCell cell;
+        protected SnappedStaticVariable (Symbol name, ValueCell cell)
+            : base (name)
         {
-            object maybeCell = statics [this.offset];
-            ValueCell vcell = maybeCell as ValueCell;
-            if (vcell == null) {
-               // Debug.WriteLine ("Substitute " + this.Name);
-                return Quotation.Make (maybeCell);
-            }
-            else {
-                return TopLevelVariable.Make (this.varname, vcell);
-                //return this;
-            }
+            this.cell = cell;
         }
 
+        static public SnappedStaticVariable Make (Symbol name, ValueCell cell)
+        {
+            return new SnappedStaticVariable (name, cell);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            if (this.breakOnReference) {
+                Debugger.Break ();
+            }
+            SCode.location = "SnappedStaticVariable";
+#endif
+            return this.cell.GetValue (out answer);
+        }
     }
 
     /// <summary>
@@ -1179,6 +1184,9 @@ namespace Microcode
     [Serializable]
     sealed class FreeVariable : Variable
     {
+#if DEBUG
+        static Histogram<Symbol> freeNames = new Histogram<Symbol>();
+#endif
         ValueCell lastCell;
 
         FreeVariable (Symbol name)
@@ -1194,12 +1202,13 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("FreeVariable.EvalStep");
+            Warm ("-");
+            freeNames.Note (this.varname);
             if (this.breakOnReference) {
                 Debugger.Break ();
             }
+            SCode.location = "FreeVariable";
 #endif
-
             //if (this.lastCell == null) {
                 Environment baseEnvironment = environment.BaseEnvironment;
 

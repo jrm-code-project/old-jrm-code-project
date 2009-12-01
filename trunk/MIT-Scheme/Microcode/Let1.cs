@@ -49,8 +49,9 @@ namespace Microcode
             return
                 //(body is Variable) ? ((((Variable) body).Name == formals [0]) ? RewriteAsIdentity (arg0) : RewriteAsSequence(arg0, body)) :
                 (rator is SimpleLambda) ? SimpleLet1.Make ((SimpleLambda) rator, arg0) :
-                (arg0 is LexicalVariable) ? Let1L.Make (rator, (LexicalVariable) arg0) :
-                (arg0 is Quotation) ? Let1Q.Make (rator, (Quotation) arg0) :
+                //(rator is StaticLambda) ? StaticLet1.Make ((StaticLambda) rator, arg0) :
+                //(arg0 is LexicalVariable) ? Let1L.Make (rator, (LexicalVariable) arg0) :
+                //(arg0 is Quotation) ? Let1Q.Make (rator, (Quotation) arg0) :
                 new Let1 (rator, arg0);
         }
 
@@ -115,24 +116,26 @@ namespace Microcode
             //}
             return
                 StandardMake (rator, arg0);
-
-
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("Let1.EvalStep");
-            noteCalls (this.rator);
-            noteCalls (this.rand);
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand);
             ratorTypeHistogram.Note (this.ratorType);
             randTypeHistogram.Note (this.randType);
+            SCode.location = "Let1";
 #endif
 
             object evarg = null;
             Control unev = this.rand;
             Environment env = environment;
             while (unev.EvalStep (out evarg, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Let1";
+#endif
             if (evarg == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Let1Frame0 (this, environment));
                 answer = Interpreter.UnwindStack;
@@ -144,6 +147,9 @@ namespace Microcode
             Control unevop = this.rator;
             env = environment;
             while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Let1";
+#endif
             if (evop == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
@@ -152,7 +158,7 @@ namespace Microcode
                 //return false;
             }
 
-            return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg);
+            return ((IApplicable) evop).Call (out answer, ref expression, ref environment, evarg);
         }
 
         public object [] Formals
@@ -217,6 +223,252 @@ namespace Microcode
             return Interpreter.Call (out answer, ref expression, ref environment, evop, value);
         }
     }
+
+    [Serializable]
+    class SimpleLet1 : Let1
+    {
+#if DEBUG
+        static Histogram<Type> bodyTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> randTypeHistogram = new Histogram<Type> ();
+        readonly Type bodyType;
+#endif
+        public readonly SimpleLambda lambda;
+
+        protected SimpleLet1 (SimpleLambda rator, SCode rand)
+            : base (rator, rand)
+        {
+            this.lambda = rator;
+            //this.staticMapping = rator.GetStaticMapping ();
+#if DEBUG
+            this.bodyType = rator.Body.GetType();
+#endif
+        }
+
+        public static SCode Make (SimpleLambda rator, SCode arg0)
+        {
+            return
+                //(arg0 is PrimitiveCar) ? SimpleLet1Car.Make (rator, (PrimitiveCar) arg0) :
+                //(arg0 is PrimitiveCdr) ? SimpleLet1Cdr.Make (rator, (PrimitiveCdr) arg0) :
+                //(arg0 is StaticLambda) ? SimpleLet1StaticLambda.Make (rator, (StaticLambda) arg0) :
+                //(arg0 is Quotation) ? SimpleLet1Q.Make (rator, (Quotation) arg0) :
+                new SimpleLet1 (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            NoteCalls (this.rand);
+            randTypeHistogram.Note (this.randType);
+            bodyTypeHistogram.Note (this.bodyType);
+            SCode.location = "SimpleLet1";
+#endif
+
+            object evarg = null;
+            Control unev = this.rand;
+            Environment env = environment;
+            while (unev.EvalStep (out evarg, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "SimpleLet1";
+#endif
+            if (evarg == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Let1Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            // this.closeCount += 1;
+            // Use the base environment for lookup.
+            SimpleClosure cl = new SimpleClosure (this.lambda, environment.BaseEnvironment, environment.GetValueCells (this.lambda.StaticMapping));
+            
+
+
+//            object evop = null;
+//            Control unevop = this.rator;
+//            env = environment;
+//            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+//#if DEBUG
+//            SCode.location = "SimpleLet1";
+//#endif
+//            if (evop == Interpreter.UnwindStack) {
+//                throw new NotImplementedException ();
+//                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+//                //answer = Interpreter.UnwindStack;
+//                //environment = env;
+//                //return false;
+//            }
+            expression = this.lambda.Body;
+            environment = new SmallEnvironment1 (cl, evarg);
+            answer = null; // keep the compiler happy
+            return true;
+
+           // return cl.Call (out answer, ref expression, ref environment, evarg);
+        }
+
+     }
+
+    [Serializable]
+    sealed class SimpleLet1Frame0 : SubproblemContinuation<SimpleLet1>, ISystemVector
+    {
+        public SimpleLet1Frame0 (SimpleLet1 combination1, Environment environment)
+            : base (combination1, environment)
+        {
+        }
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
+        {
+            object evop = null;
+            Control unevop = this.expression.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "SimpleLet1";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            return ((SimpleClosure) evop).Call (out answer, ref expression, ref environment, value);
+        }
+
+        #region ISystemVector Members
+
+                public int SystemVectorSize
+        {
+            get { return 3; }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            switch (index) {
+                case 0: return ReturnCode.COMB_1_PROCEDURE;
+                case 1: return this.expression;
+                case 2: return this.environment;
+                default:
+                    throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    class StaticLet1 : Let1
+    {
+#if DEBUG
+        static Histogram<Type> bodyTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> randTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly StaticLambda lambda;
+        public StaticMapping staticMapping;
+        protected StaticLet1 (StaticLambda rator, SCode rand)
+            : base (rator, rand)
+        {
+            this.lambda = rator;
+
+        }
+
+        public static SCode Make (StaticLambda rator, SCode arg0)
+        {
+            return
+                //(arg0 is LexicalVariable) ? SimpleLet1L.Make (rator, (LexicalVariable) arg0) :
+                //(arg0 is PrimitiveCar) ? SimpleLet1Car.Make (rator, (PrimitiveCar) arg0) :
+                //(arg0 is PrimitiveCdr) ? SimpleLet1Cdr.Make (rator, (PrimitiveCdr) arg0) :
+                //(arg0 is StaticLambda) ? SimpleLet1StaticLambda.Make (rator, (StaticLambda) arg0) :
+                //(arg0 is Quotation) ? SimpleLet1Q.Make (rator, (Quotation) arg0) :
+                new StaticLet1 (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.body);
+            bodyTypeHistogram.Note (this.bodyType);
+            NoteCalls (this.rand);
+            randTypeHistogram.Note (this.randType);
+            SCode.location = "StaticLet1";
+#endif
+            object evarg;
+            Control unev = this.rand;
+            Environment env = environment;
+            while (unev.EvalStep (out evarg, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "StaticLet1";
+#endif
+            if (evarg == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new StaticLet1Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            // StaticClosure cl = new StaticClosure ((StaticLambda) this.rator, environment);
+            StaticClosure cl = new StaticClosure (this.lambda, environment.BaseEnvironment, environment.GetValueCells (this.lambda.StaticMapping));
+
+            expression = this.body;
+            environment = new StaticEnvironment (cl, new object [] {evarg});
+            answer = null;
+            return true;
+        }
+    }
+
+    [Serializable]
+    sealed class StaticLet1Frame0 : SubproblemContinuation<StaticLet1>, ISystemVector
+    {
+        public StaticLet1Frame0 (StaticLet1 combination1, Environment environment)
+            : base (combination1, environment)
+        {
+        }
+
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
+        {
+            StaticClosure cl = new StaticClosure (this.expression.lambda, environment.BaseEnvironment, environment.GetValueCells (this.expression.staticMapping));
+
+            expression = this.expression.body;
+            environment = new StaticEnvironment (cl, new object [] {value});
+            answer = null;
+            return true;
+        }
+        #region ISystemVector Members
+
+        public int SystemVectorSize
+        {
+            get { return 3; }
+        }
+
+        public object SystemVectorRef (int index)
+        {
+            switch (index) {
+                case 0: return ReturnCode.COMB_1_PROCEDURE;
+                case 1: return this.expression;
+                case 2: return this.environment;
+                default:
+                    throw new NotImplementedException ();
+            }
+        }
+
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+    }
+
+#if NIL
 
     [Serializable]
     class Let1L : Let1
@@ -467,106 +719,6 @@ namespace Microcode
 
             return Interpreter.Call (out answer, ref expression, ref environment, evop, this.argumentValue);
         }
-    }
-
-    [Serializable]
-    class SimpleLet1 : Let1
-    {
-#if DEBUG
-        static Histogram<Type> bodyTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> randTypeHistogram = new Histogram<Type> ();
-#endif
-        protected SimpleLet1 (SimpleLambda rator, SCode rand)
-            : base (rator, rand)
-        {
-        }
-
-        public static SCode Make (SimpleLambda rator, SCode arg0)
-        {
-            return
-                (arg0 is LexicalVariable) ? SimpleLet1L.Make (rator, (LexicalVariable) arg0) :
-                //(arg0 is PrimitiveCar) ? SimpleLet1Car.Make (rator, (PrimitiveCar) arg0) :
-                //(arg0 is PrimitiveCdr) ? SimpleLet1Cdr.Make (rator, (PrimitiveCdr) arg0) :
-                //(arg0 is StaticLambda) ? SimpleLet1StaticLambda.Make (rator, (StaticLambda) arg0) :
-                (arg0 is Quotation) ? SimpleLet1Q.Make (rator, (Quotation) arg0) :
-                new SimpleLet1 (rator, arg0);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            noteCalls (this.body);
-            bodyTypeHistogram.Note (this.bodyType);
-            noteCalls (this.rand);
-            randTypeHistogram.Note (this.randType);
-            SCode.location = "SimpleLet1.EvalStep";
-#endif
-            object evarg;
-            Control unev = this.rand;
-            Environment env = environment;
-            while (unev.EvalStep (out evarg, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "SimpleLet1.EvalStep.1";
-#endif
-            if (evarg == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new SimpleLet1Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            SimpleClosure cl = new SimpleClosure ((SimpleLambda) this.rator, environment);
-
-            expression = this.body;
-            environment = new SmallEnvironment1 (cl, evarg);
-            answer = null;
-            return true;
-        }
-    }
-
-    [Serializable]
-    sealed class SimpleLet1Frame0 : SubproblemContinuation<SimpleLet1>, ISystemVector
-    {
-        public SimpleLet1Frame0 (SimpleLet1 combination1, Environment environment)
-            : base (combination1, environment)
-        {
-        }
-
-        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
-        {
-            SimpleClosure cl = new SimpleClosure ((SimpleLambda) this.expression.rator, environment);
-
-            expression = this.expression.body;
-            environment = new SmallEnvironment1 (cl, value);
-            answer = null;
-            return true;
-        }
-
-        #region ISystemVector Members
-
-                public int SystemVectorSize
-        {
-            get { return 3; }
-        }
-
-        public object SystemVectorRef (int index)
-        {
-            switch (index) {
-                case 0: return ReturnCode.COMB_1_PROCEDURE;
-                case 1: return this.expression;
-                case 2: return this.environment;
-                default:
-                    throw new NotImplementedException ();
-            }
-        }
-
-        public object SystemVectorSet (int index, object newValue)
-        {
-            throw new NotImplementedException ();
-        }
-
-        #endregion
     }
 
     [Serializable]
@@ -1885,4 +2037,5 @@ namespace Microcode
             return false;
         }
     }
+#endif
 }

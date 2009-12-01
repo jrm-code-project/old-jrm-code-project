@@ -11,10 +11,8 @@ namespace Microcode
     {
 #if DEBUG
         static Histogram<ClosureBase<LType>> hotClosures = new Histogram<ClosureBase<LType>>();
-                static long staticClosureCallCount;
 #endif
         static long closureCount;
-
 
         protected long callCount;
 
@@ -37,7 +35,7 @@ namespace Microcode
             this.closureLambda = lambda;
             this.lambdaBody = lambda.Body;
             this.closureEnvironment = environment;
-            this.staticBindings = environment.GetValueCells (lambda.GetStaticMapping (environment));
+            this.staticBindings = environment.GetValueCells (lambda.StaticMapping);
         }
 
         protected ClosureBase (LType lambda, Environment environment, 
@@ -148,36 +146,45 @@ namespace Microcode
             get { return this.closureEnvironment; }
         }
 
+        //public static Symbol [] closureHistory = new Symbol [15];
+        //public static Symbol isPort = Symbol.Make ("port?");
+        public static Symbol readChar = Symbol.Make ("read-char");
+        public static Symbol peekChar = Symbol.Make ("peek-char");
+        public static Symbol readUnquoted = Symbol.Make ("read-unquoted");
 
+        public static bool printName = false;
+        static Histogram<string> callPath = new Histogram<String> ();
         protected void BumpCallCount() 
         {
             closureCount += 1;
-            //callCount+= 1;
-            //if (callCount++ == 49 && this.optimizedLambda == null &&  this.StaticCells.Length != 0) this.Optimize ();
-#if DEBUG  
-            if ((callCount % 50) == 49) {
-
+            //if (printName) {
+            //    Debug.WriteLine (this.closureLambda.Name);
+            //    if (this.closureLambda.Name == readUnquoted) {
+            //        Debug.WriteLine ("");
+            //        Debugger.Break ();
+            //    }
+            //}
+#if DEBUG
+            //for (int i = closureHistory.Length-1; i > 0; --i)
+            //    closureHistory [i] = closureHistory [i-1];
+            //closureHistory[0] = this.closureLambda.Name;
+            //if (this.closureLambda.Name == isPort) {
+            //    string path = "";
+            //    for (int i = 0; i < closureHistory.Length; i++)
+            //        path = path +  closureHistory [i].ToString () + " ";
+            //    callPath.Note (path);
+            //}
+            //if (this.closureLambda.Name == Symbol.Make ("read"))
+            //    Debugger.Break ();
+            if ((callCount % 1000) == 999 &&
+                this.StaticCells.Length > 0) {
                 hotClosures.Note (this);
-
             }
-            if (!this.closureLambda.CallsTheEnvironment())
-                staticClosureCallCount += 1;
 #endif
         }
 
-        protected void Optimize ()
-        {
-            this.lambdaBody = this.closureLambda.Body.SubstituteStatics (this.staticBindings);
-        }
+        protected abstract void XXOptimize ();
 
-        //public abstract bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args);
-        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment);
-        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0);
-        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1);
-        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2);
-        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3);
-        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4);
-        //public abstract bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5);
 
         #region ISystemPair Members
 
@@ -245,13 +252,9 @@ namespace Microcode
     [Serializable]
     class StandardExtendedClosure : ExtendedClosure<StandardExtendedLambda>, IApplicable
     {
-        //[DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        //readonly StandardExtendedLambda lambda;
-
         public StandardExtendedClosure (StandardExtendedLambda lambda, Environment environment)
             : base (lambda, environment)
         {
-            //this.lambda = lambda;
         }
 
         #region IApplicable Members
@@ -301,10 +304,10 @@ namespace Microcode
         public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
         {
 #if DEBUG
-            SCode.location = "StandardExtendedClosure.Apply";
+            SCode.location = "-";
             this.BumpCallCount ();
+            SCode.location = "StandardExtendedClosure.Apply";
 #endif
-            //object [] rands = closureEnvironment.FrameVector;
             int nargs = args.Length;
             int nparams = this.closureLambda.Formals.Length; // param 0 is self
             int formals = (int) this.closureLambda.required;
@@ -359,6 +362,11 @@ namespace Microcode
         }
 
         #endregion
+
+        protected override void XXOptimize ()
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     [Serializable]
@@ -466,6 +474,11 @@ namespace Microcode
         }
 
         #endregion
+
+        protected override void XXOptimize ()
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     abstract class StaticClosureBase<LType> : Closure<LType> where LType : StaticLambdaBase
@@ -521,11 +534,17 @@ namespace Microcode
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
+#if DEBUG
+            SCode.location = "StaticClosure.Call3";
+#endif
             return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2 });
         }
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
         {
+#if DEBUG
+            SCode.location = "StaticClosure.Call4";
+#endif
             return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2, arg3 });
         }
 
@@ -534,13 +553,13 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
+        #endregion
+
+
+        protected override void XXOptimize ()
         {
             throw new NotImplementedException ();
         }
-
-        #endregion
-
     }
 
     sealed class SimpleClosure : StaticClosureBase<SimpleLambda>, IApplicable
@@ -560,9 +579,8 @@ namespace Microcode
                 case 2: return this.Call (out answer, ref expression, ref environment, args [0], args [1]);
                 case 3: return this.Call (out answer, ref expression, ref environment, args [0], args [1], args [2]);
                 default:
-                    this.BumpCallCount ();
 #if DEBUG
-
+                    this.BumpCallCount ();
                     SCode.location = "SimpleClosure.Apply";
 #endif
                     if (args.Length != this.arity)
@@ -577,12 +595,10 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            SCode.location = "-";
-
+            this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call0";
-#endif
-            //this.BumpCallCount ();  
-            if (callCount++ == Configuration.SubstituteStaticsThreshold && this.StaticCells.Length != 0) this.Optimize ();
+#endif 
+            if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
 
             expression = this.lambdaBody;
             environment = new SmallEnvironment0 (this);
@@ -593,13 +609,11 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
 #if DEBUG
-            SCode.location = "-";
-            //this.BumpCallCount ();
+            this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call1";
 #endif
-            if (callCount++ == Configuration.SubstituteStaticsThreshold && this.StaticCells.Length != 0) this.Optimize ();
+            if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
 
-            //this.BumpCallCount ();
             expression = this.lambdaBody;
             environment = new SmallEnvironment1 (this, arg0);
             answer = null; // keep the compiler happy
@@ -609,30 +623,25 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG
-            SCode.location = "-";
+            this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call2";
 #endif
-            if (callCount++ == Configuration.SubstituteStaticsThreshold  && this.StaticCells.Length != 0) this.Optimize ();
+            if (callCount++ == Configuration.OptimizeThreshold  && this.StaticCells.Length != 0) this.XXOptimize ();
 
-            //this.BumpCallCount ();
             expression = this.lambdaBody;
             environment = new SmallEnvironment2 (this, arg0, arg1);
             answer = null; // keep the compiler happy
-#if DEBUG
-            SCode.location = "-";
-#endif
             return true;
         }
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
 #if DEBUG
-            SCode.location = "-";
+            this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call3";
 #endif
-            if (callCount++ == Configuration.SubstituteStaticsThreshold && this.StaticCells.Length != 0) this.Optimize ();
+            if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
 
-            //this.BumpCallCount ();
             expression = this.lambdaBody; 
             environment = new SmallEnvironment3 (this, arg0, arg1, arg2);
             answer = null; // keep the compiler happy
@@ -649,12 +658,30 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
-        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4, object arg5)
-        {
-            throw new NotImplementedException ();
-        }
-
         #endregion
+
+        protected override void XXOptimize ()
+                    {
+                        return;
+            //Symbol [] names = this.closureLambda.StaticMapping.Names;
+            //object [] values = this.staticBindings;
+            //Debugger.Break ();
+            //IDictionary<Symbol, object> namesToValues = new Dictionary<Symbol, object> ();
+            //for (int i = 0; i < names.Length; i++) {
+            //    Symbol name = names [i];
+            //    object value = values [i];
+            //    ValueCell cell = value as ValueCell;
+            //    if (cell == null) {
+            //        namesToValues.Add (name, value);
+            //    }
+            //}
+            //if (namesToValues.Count > 0) {
+            //    PartialEnvironment env = new PartialValueEnvironment (namesToValues);
+            //    Debugger.Break ();
+            //    PartialResult res = this.closureLambda.PartialEval (env);
+            //    this.lambdaBody = res.Residual;
+            //}
+        }
     }
 
 }

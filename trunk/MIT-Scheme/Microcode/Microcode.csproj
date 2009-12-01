@@ -61,6 +61,8 @@
     <Compile Include="Disjunction.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="ITopLevelEnvironment.cs" />
+    <Compile Include="Let1.cs" />
+    <Compile Include="Let2.cs" />
     <Compile Include="PartialClosure.cs" />
     <Compile Include="PartialEnvironment.cs" />
     <Compile Include="PartialResult.cs" />

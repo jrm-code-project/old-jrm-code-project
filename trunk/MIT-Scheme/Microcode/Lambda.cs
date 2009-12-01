@@ -29,6 +29,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected SCode lambdaBody;
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         protected StaticMapping staticMapping;
 
         // Count of times this lambda is closed over.
@@ -144,14 +145,15 @@ namespace Microcode
             return this.staticMapping.Offset (name);
         }
 
-        public StaticMapping GetStaticMapping (Environment environment)
+        public StaticMapping StaticMapping 
         {
-            if (this.staticMapping == null) {
-                throw new NotImplementedException ();
-                //this.staticMapping = environment.GetStaticMapping (this.lambdaFreeVariables);
-                //StaticMapping.ValidateStaticMapping (this.staticMapping);
+            get {
+#if DEBUG
+               if (this.staticMapping == null) 
+                    throw new NotImplementedException ();
+#endif
+                return this.staticMapping;
             }
-            return this.staticMapping;
         }
 
         public override bool MutatesAny (Symbol [] formals)
@@ -159,10 +161,6 @@ namespace Microcode
             // Should check for shadowing.
             return this.lambdaBody.MutatesAny (formals);
         }
-
-
-        public abstract LambdaBase Optimize (object [] statics);
-
     }
 
     /// <summary>
@@ -542,15 +540,6 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
 
         #endregion
 
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override LambdaBase Optimize (object [] statics)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
@@ -718,15 +707,6 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
 
         #endregion
 
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            throw new NotImplementedException ();
-        }
-
-        public override LambdaBase Optimize (object [] statics)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
@@ -904,15 +884,6 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
 
         #endregion
 
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            return this;
-        }
-
-        public override LambdaBase Optimize (object [] statics)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
@@ -1067,36 +1038,6 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         }
 
         #endregion
-
-        static Symbol argMarker = Symbol.Make ("ArgumentMarker");
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            return this;
-            //int nssize = this.staticMapping.Size;
-            //object [] newStatics = new object [nssize];
-            //int [] offsets = this.staticMapping.Offsets;
-            //int argcount = this.lambdaFormals.Length;
-            //for (int i = 0; i < nssize; i++) {
-            //    int offset = offsets [i];
-            //    if (offset < argcount)
-            //        newStatics [i] = argMarker;
-            //    else
-            //        newStatics [i] = statics [offset - argcount];
-            //}
-            //SCode newBody = this.lambdaBody.SubstituteStatics (newStatics);
-            //return (newBody == this.lambdaBody) ?
-            //    this :
-            //    Lambda.Make (this.lambdaName, this.lambdaFormals, newBody, this.lambdaFreeVariables, this.staticMapping);
-        }
-
-
-        public override LambdaBase Optimize (object [] statics)
-        {
-            SCode newBody = this.lambdaBody.SubstituteStatics (statics);
-            return (newBody == this.lambdaBody) ? this :
-            Lambda.Make (this.lambdaName, this.lambdaFormals, newBody,  this.lambdaFreeVariables, this.staticMapping);
-        }
     }
 
     [Serializable]

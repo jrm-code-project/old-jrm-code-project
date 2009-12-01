@@ -61,7 +61,7 @@ namespace Microcode
             string loc = location;
             if (loc != null && loc != "-")
                 topOfStack.Note (loc);
-            topOfStackTimer.Change (1, random.Next (1, 5));
+            topOfStackTimer.Change (1, random.Next (1, 4));
         }
 
         [DebuggerStepThrough]
@@ -136,7 +136,6 @@ namespace Microcode
         /// <returns></returns>
         internal abstract PartialResult PartialEval (PartialEnvironment environment);
 
-        internal abstract SCode SubstituteStatics (object [] statics);
 #if DEBUG
         // for hash consing
         public virtual string Key ()
@@ -291,11 +290,6 @@ namespace Microcode
         {
             this.code.CollectFreeVariables (freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
      [Serializable]
@@ -417,11 +411,6 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            throw new NotImplementedException ();
-        }
     }
 
     [Serializable]
@@ -513,11 +502,6 @@ namespace Microcode
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
         {
             this.body.CollectFreeVariables (freeVariableSet);
-        }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            throw new NotImplementedException ();
         }
     }
 
@@ -687,11 +671,6 @@ namespace Microcode
         {
             return;
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            return this;
-        }
     }
 
     [Serializable]
@@ -769,8 +748,8 @@ namespace Microcode
 
         static public SCode Make (SCode first, SCode second)
         {
-            return new Sequence2 (first, second);
-               // (! Configuration.EnableSequence2Optimization) ? new Sequence2 (first, second) :
+            return 
+                 (! Configuration.EnableSequence2Optimization) ? new Sequence2 (first, second) :
                // (Configuration.EnableCodeRewriting &&
                //  Configuration.EnableSequenceConditionalSwap &&
                //  first is Conditional) ? SwapConditional ((Conditional) first, second) :
@@ -784,15 +763,15 @@ namespace Microcode
                //(Configuration.EnableCodeRewriting &&
                // first is Sequence3) ? Flatten ((Sequence3) first, second) :
                // (Configuration.EnableSuperOperators &&
-               // Configuration.EnableSequenceSpecialization &&
-               // second is LexicalVariable) ? Sequence2SL.Make (first, (LexicalVariable) second) :
+               (Configuration.EnableSequence2Specialization &&
+                 second is Argument) ? Sequence2XA.Make (first, (Argument) second) :
                // (Configuration.EnableSuperOperators &&
                //  Configuration.EnableSequenceSpecialization &&
                // second is Quotation) ? Sequence2SQ.Make (first, (Quotation) second) :
                // (Configuration.EnableCodeRewriting &&
                // second is Sequence2) ? Flatten (first, (Sequence2) second) :
 
-               // new Sequence2 (first, second);
+                new Sequence2 (first, second);
         }
 
         static public SCode Make (object first, object second)
@@ -920,16 +899,6 @@ namespace Microcode
         {
             this.first.CollectFreeVariables (freeVariableSet);
             this.second.CollectFreeVariables (freeVariableSet);
-        }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newFirst = this.first.SubstituteStatics (statics);
-            SCode newSecond = this.second.SubstituteStatics (statics);
-            return (newFirst == this.first &&
-                newSecond == this.second) ?
-                this :
-                Sequence2.Make (newFirst, newSecond);
         }
     }
 
@@ -1075,146 +1044,149 @@ namespace Microcode
 //        }
 //    }
 
-//    class Sequence2SA : Sequence2SL
-//    {
-//        protected Sequence2SA (SCode first, Argument second)
-//            : base (first, second)
-//        {
-//        }
+    class Sequence2XA : Sequence2
+    {
+        public readonly int secondOffset;
 
-//        static public SCode Make (SCode first, Argument second)
-//        {
-//            return
-//                (second is Argument0) ? Sequence2SA0.Make (first, (Argument0) second) :
-//                (second is Argument1) ? Sequence2SA1.Make (first, (Argument1) second) :
-//                new Sequence2SA (first, second);
-//        }
+        protected Sequence2XA (SCode first, Argument second)
+            : base (first, second)
+        {
+            this.secondOffset = second.Offset;
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("Sequenc2SA.EvalStep");
-//            NoteCalls (this.first);
-//#endif
-//            Control first = this.first;
-//            Environment env = closureEnvironment;
-//            while (first.EvalStep (out answer, ref first, ref env)) { };
-//            if (answer == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+        static public SCode Make (SCode first, Argument second)
+        {
+            return
+                (second is Argument0) ? Sequence2XA0.Make (first, (Argument0) second) :
+                (second is Argument1) ? Sequence2XA1.Make (first, (Argument1) second) :
+                new Sequence2XA (first, second);
+        }
 
-//            answer = closureEnvironment.ArgumentValue (this.secondOffset);
-//            return false;
-//        }
-//    }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+        {
+#if DEBUG
+            Warm ("Sequence2XA");
+            NoteCalls (this.first);
+#endif
+            Control first = this.first;
+            Environment env = closureEnvironment;
+            while (first.EvalStep (out answer, ref first, ref env)) { };
+            if (answer == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
+                //closureEnvironment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
 
-//    sealed class Sequence2SA0 : Sequence2SA
-//    {
-//        Sequence2SA0 (SCode first, Argument0 second)
-//            : base (first, second)
-//        {
-//        }
+            answer = closureEnvironment.ArgumentValue (this.secondOffset);
+            return false;
+        }
+    }
 
-//        static public SCode Make (SCode first, Argument0 second)
-//        {
-//            return new Sequence2SA0 (first, second);
-//        }
+    sealed class Sequence2XA0 : Sequence2XA
+    {
+        Sequence2XA0 (SCode first, Argument0 second)
+            : base (first, second)
+        {
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("Sequence2SA0.EvalStep");
-//            NoteCalls (this.first);
-//#endif
-//            Control first = this.first;
-//            Environment env = closureEnvironment;
-//            while (first.EvalStep (out answer, ref first, ref env)) { };
-//            if (answer == Interpreter.Unwind) {
-//                ((UnwinderState) env).AddFrame (new Sequence2SA0Frame0 (this, closureEnvironment));
-//                closureEnvironment = env;
-//                answer = Interpreter.Unwind;
-//                return false;
-//            }
+        static public SCode Make (SCode first, Argument0 second)
+        {
+            return new Sequence2XA0 (first, second);
+        }
 
-//            answer = closureEnvironment.Argument0Value;
-//            return false;
-//        }
-//    }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+        {
+#if DEBUG
+            Warm ("Sequence2XA0");
+            NoteCalls (this.first);
+#endif
+            Control first = this.first;
+            Environment env = closureEnvironment;
+            while (first.EvalStep (out answer, ref first, ref env)) { };
+            if (answer == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence2SX0Frame0 (this, closureEnvironment));
+                closureEnvironment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
 
-//    sealed class Sequence2SA0Frame0 : SubproblemContinuation<Sequence2SA0>, ISystemVector
-//    {
-//        public Sequence2SA0Frame0 (Sequence2SA0 expression, Environment closureEnvironment)
-//            : base (expression, closureEnvironment)
-//        {
-//        }
+            answer = closureEnvironment.Argument0Value;
+            return false;
+        }
+    }
 
-//        public override bool Continue (out object answer, ref Control expression, ref Environment closureEnvironment, object value)
-//        {
-//            answer = this.closureEnvironment.Argument0Value;
-//            return false;
-//        }
+    sealed class Sequence2SX0Frame0 : SubproblemContinuation<Sequence2XA0>, ISystemVector
+    {
+        public Sequence2SX0Frame0 (Sequence2XA0 expression, Environment closureEnvironment)
+            : base (expression, closureEnvironment)
+        {
+        }
 
-//        #region ISystemVector Members
+        public override bool Continue (out object answer, ref Control expression, ref Environment environment, object value)
+        {
+            answer = this.environment.Argument0Value;
+            return false;
+        }
 
-//        public int SystemVectorSize
-//        {
-//            get { return 3; }
-//        }
+        #region ISystemVector Members
 
-//        public object SystemVectorRef (int index)
-//        {
-//            switch (index) {
-//                case 0: return ReturnCode.SEQ_2_DO_2;
-//                default:
-//                    throw new NotImplementedException ();
-//            }
-//        }
+        public int SystemVectorSize
+        {
+            get { return 3; }
+        }
 
-//        public object SystemVectorSet (int index, object newValue)
-//        {
-//            throw new NotImplementedException ();
-//        }
+        public object SystemVectorRef (int index)
+        {
+            switch (index) {
+                case 0: return ReturnCode.SEQ_2_DO_2;
+                default:
+                    throw new NotImplementedException ();
+            }
+        }
 
-//        #endregion
-//    }
+        public object SystemVectorSet (int index, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
 
-//    sealed class Sequence2SA1 : Sequence2SA
-//    {
-//        Sequence2SA1 (SCode first, Argument1 second)
-//            : base (first, second)
-//        {
-//        }
+        #endregion
+    }
 
-//        static public SCode Make (SCode first, Argument1 second)
-//        {
-//            return new Sequence2SA1 (first, second);
-//        }
+    sealed class Sequence2XA1 : Sequence2XA
+    {
+        Sequence2XA1 (SCode first, Argument1 second)
+            : base (first, second)
+        {
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("Sequence2SA1.EvalStep");
-//            NoteCalls (this.first);
-//#endif
-//            Control first = this.first;
-//            Environment env = closureEnvironment;
-//            while (first.EvalStep (out answer, ref first, ref env)) { };
-//            if (answer == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+        static public SCode Make (SCode first, Argument1 second)
+        {
+            return new Sequence2XA1 (first, second);
+        }
 
-//            answer = closureEnvironment.Argument1Value;
-//            return false;
-//        }
-//    }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+        {
+#if DEBUG
+            Warm ("Sequence2XA1");
+            NoteCalls (this.first);
+#endif
+            Control first = this.first;
+            Environment env = closureEnvironment;
+            while (first.EvalStep (out answer, ref first, ref env)) { };
+            if (answer == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
+                //closureEnvironment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            answer = closureEnvironment.Argument1Value;
+            return false;
+        }
+    }
 
 //    sealed class Sequence2SL1 : Sequence2SL
 //    {
@@ -1701,16 +1673,6 @@ namespace Microcode
             this.second.CollectFreeVariables (freeVariableSet);
             this.third.CollectFreeVariables (freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newFirst = this.first.SubstituteStatics (statics);
-            SCode newSecond = this.second.SubstituteStatics (statics);
-            SCode newThird = this.third.SubstituteStatics (statics);
-            return (newFirst == this.first &&
-                newSecond == this.second &&
-                newThird == this.third) ? this : Sequence3.Make (newFirst, newSecond, newThird);
-        }
     }
 
     [Serializable]
@@ -1888,11 +1850,6 @@ namespace Microcode
         }
 
         public override void CollectFreeVariables (HashSet<Symbol> freeVariableSet)
-        {
-            throw new NotImplementedException ();
-        }
-
-        internal override SCode SubstituteStatics (object [] statics)
         {
             throw new NotImplementedException ();
         }

@@ -18,10 +18,10 @@ namespace Listener
                 if (true) {
                     String projectRoot = 
                         System.IO.Directory.GetParent (System.Environment.CurrentDirectory).Parent.Parent.FullName;
-                    if (System.IO.File.Exists (projectRoot + "\\lib\\runtime\\make.bin")) {
+                    if (System.IO.File.Exists (projectRoot + "\\lib\\runtime\\site.bin")) {
                         Microcode.Interpreter.LibraryPath = projectRoot + "\\lib\\";
                     }
-                    else if (System.IO.File.Exists (projectRoot + "\\StagingLib\\Runtime\\make.bin")) {
+                    else if (System.IO.File.Exists (projectRoot + "\\StagingLib\\Runtime\\site.bin")) {
                         Microcode.Interpreter.LibraryPath = projectRoot + "\\StagingLib\\";
                     }
                     else {

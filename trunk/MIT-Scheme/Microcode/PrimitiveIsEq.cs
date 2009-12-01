@@ -25,8 +25,9 @@ namespace Microcode
                 //(rand0 is PrimitiveCaar) ? PrimitiveIsEqCaar.Make (rator, (PrimitiveCaar) rand0, rand1) :
                 //(rand0 is PrimitiveRecordRef) ? PrimitiveIsEqRecordRef.Make (rator, (PrimitiveRecordRef) rand0, rand1) :
                 (rand0 is Argument) ? PrimitiveIsEqA.Make (rator, (Argument) rand0, rand1) :
-                //(rand0 is Quotation) ? PrimitiveIsEqQ.Make (rator, (Quotation) rand0, rand1) :
-                //(rand1 is Quotation) ? PrimitiveIsEqSQ.Make (rator, rand0, (Quotation) rand1) :
+                (rand0 is StaticVariable) ? PrimitiveIsEqS.Make (rator, (StaticVariable) rand0, rand1) :
+                (rand0 is Quotation) ? PrimitiveIsEqQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqXQ.Make (rator, rand0, (Quotation) rand1) :
                 new PrimitiveIsEq (rator, rand0, rand1);
         }
 
@@ -87,7 +88,7 @@ namespace Microcode
 #if DEBUG
         static Histogram<Type> rand0TypeHistogram = new Histogram<Type>();
         static Histogram<Type> rand1TypeHistogram = new Histogram<Type>();
-        readonly Type rand0ArgType;
+        public readonly Type rand0ArgType;
 #endif
         public readonly SCode rand0Arg;
 
@@ -105,6 +106,7 @@ namespace Microcode
 
             return 
                 (rand0 is PrimitiveCarA) ? PrimitiveIsEqCarA.Make (rator, (PrimitiveCarA) rand0, rand1) :
+                (rand1 is StaticVariable) ? PrimitiveIsEqCarXS.Make (rator, rand0, (StaticVariable) rand1) :
                 new PrimitiveIsEqCar(rator, rand0, rand1);
         }
 
@@ -376,6 +378,72 @@ namespace Microcode
     }
 
     [Serializable]
+    class PrimitiveIsEqCarXS : PrimitiveIsEqCar
+    {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+
+        protected PrimitiveIsEqCarXS (Primitive2 rator, PrimitiveCar rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, PrimitiveCar rand0, StaticVariable rand1)
+        {
+
+            return
+                new PrimitiveIsEqCarXS (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0Arg);
+
+            rand0TypeHistogram.Note (this.rand0ArgType);
+            SCode.location = "PrimitiveIsEqCarXS";
+#endif
+            // Eval argument1
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset)) {
+                throw new NotImplementedException ();
+            }
+
+            // Eval argument0
+            object ev0;
+
+            Control unev = this.rand0Arg;
+            Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsEqCarXS";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            Cons ev0Pair = ev0 as Cons;
+            if (ev0Pair == null) throw new NotImplementedException ();
+
+            if (ObjectModel.Eq (out answer, ev0Pair.Car, ev1))
+                throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+
+    [Serializable]
     class PrimitiveIsEqA : PrimitiveIsEq
     {
 #if DEBUG
@@ -444,7 +512,7 @@ namespace Microcode
         {
             return
                 (rand1 is PrimitiveCar) ? PrimitiveIsEqA0Car.Make (rator, rand0, (PrimitiveCar) rand1) :
-                //(rand1 is Quotation) ? PrimitiveIsEqA0Q.Make (rator, rand0, (Quotation) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqA0Q.Make (rator, rand0, (Quotation) rand1) :
                 new PrimitiveIsEqA0 (rator, rand0, rand1);
         }
 
@@ -535,7 +603,7 @@ namespace Microcode
             Cons ev1Pair = ev1 as Cons;
             if (ev1Pair == null) throw new NotImplementedException();
 
-            if (ObjectModel.Eq(out answer, environment.Argument0Value, ev1Pair))
+            if (ObjectModel.Eq(out answer, environment.Argument0Value, ev1Pair.Car))
                 throw new NotImplementedException();
             return false;
         }
@@ -568,6 +636,33 @@ namespace Microcode
 
             if (ObjectModel.Eq(out answer, environment.Argument0Value, ev1Pair))
                 throw new NotImplementedException();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqA0Q : PrimitiveIsEqA0
+    {
+        public readonly object rand1Value;
+        protected PrimitiveIsEqA0Q (Primitive2 rator, Argument0 rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, Argument0 rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveIsEqA0Q (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsEqA0Q");
+#endif
+            if (ObjectModel.Eq (out answer, environment.Argument0Value, this.rand1Value))
+                throw new NotImplementedException ();
             return false;
         }
     }
@@ -855,7 +950,7 @@ namespace Microcode
 #if DEBUG
             Warm ("PrimitiveIsEqAA");
 #endif
-            if (ObjectModel.Eq (out answer, ( environment.ArgumentValue (this.rand0Offset)), (environment.ArgumentValue(this.rand1Offset))))
+            if (ObjectModel.Eq (out answer, environment.ArgumentValue (this.rand0Offset), environment.ArgumentValue(this.rand1Offset)))
                 throw new NotImplementedException();
             return false;
         }
@@ -927,18 +1022,78 @@ namespace Microcode
 #if DEBUG
             Warm ("PrimitiveIsEqAQ.EvalStep");
 #endif
-            if (ObjectModel.Eq (out answer, ( environment.ArgumentValue(this.rand0Offset)), (this.rand1Value)))
+            if (ObjectModel.Eq (out answer, ( environment.ArgumentValue(this.rand0Offset)), this.rand1Value))
                 throw new NotImplementedException();
             return false;
         }
     }
 
+    [Serializable]
+    class PrimitiveIsEqS : PrimitiveIsEq
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly Symbol rand0Name;
+        public readonly int rand0Offset;
 
+        protected PrimitiveIsEqS (Primitive2 rator, StaticVariable rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Name = rand0.Name;
+            this.rand0Offset = rand0.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, StaticVariable rand0, SCode rand1)
+        {
+            return
+                //(rand0 is Argument0) ? PrimitiveIsEqA0.Make (rator, (Argument0) rand0, rand1) :
+                //(rand0 is Argument1) ? PrimitiveIsEqA1.Make (rator, (Argument1) rand0, rand1) :
+                //(rand1 is Quotation) ? PrimitiveIsEqAQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsEqS (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveIsEqS";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsEqS";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            // Eval argument0
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            return ObjectModel.Eq (out answer, ev0, ev1);
+        }
+    }
 
 
     [Serializable]
     class PrimitiveIsEqQ : PrimitiveIsEq
     {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type>();
+#endif
         public readonly object rand0Value;
 
         protected PrimitiveIsEqQ (Primitive2 rator, Quotation rand0, SCode rand1)
@@ -950,16 +1105,21 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
         {
             return
-                 (rand1 is Quotation) ? PrimitiveIsEqQQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveIsEqQ (rator, rand0, rand1);
+                (rand0.Quoted is char) ? PrimitiveIsCharEqQ.Make (rator, rand0, rand1) :
+                (rand0.Quoted is int) ? PrimitiveIsIntEqQ.Make (rator, rand0, rand1) :
+                (rand0.Quoted is Cons ||
+                 rand0.Quoted is Symbol) ? PrimitiveIsObjectEqQ.Make (rator, rand0, rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqQQ.Make (rator, rand0, (Quotation) rand1) :
+                new PrimitiveIsEqQ (rator, rand0, rand1);
         }
-
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PrimitiveIsEqQ.EvalStep");
+            Warm ("-");
             NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveIsEqQ";
 #endif
             // Eval argument1
             object ev1;
@@ -1221,11 +1381,11 @@ namespace Microcode
     }
 
     [Serializable]
-    class PrimitiveIsEqSQ : PrimitiveIsEq
+    class PrimitiveIsEqXQ : PrimitiveIsEq
     {
         public readonly object rand1Value;
 
-        protected PrimitiveIsEqSQ (Primitive2 rator, SCode rand0, Quotation rand1)
+        protected PrimitiveIsEqXQ (Primitive2 rator, SCode rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value =  rand1.Quoted;
@@ -1234,13 +1394,16 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, SCode rand0, Quotation rand1)
         {
             return
-                new PrimitiveIsEqSQ (rator, rand0, rand1);
+                (rand1.Quoted is int) ? PrimitiveIsEqXFixnum.Make (rator, rand0, rand1) :
+                (rand1.Quoted is Symbol ||
+                 rand1.Quoted is Record) ? PrimitiveIsEqXObject.Make (rator, rand0, rand1) :
+                new PrimitiveIsEqXQ (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PrimitiveIsEqSQ.EvalStep");
+            Warm ("PrimitiveIsEqXQ.EvalStep");
             NoteCalls (this.rand0);
 #endif
             // Eval argument0
@@ -1257,9 +1420,237 @@ namespace Microcode
                 //return false;
             }
 
-            if (ObjectModel.Eq (out answer, ev0, this.rand1Value))
-                throw new NotImplementedException();
+            return ObjectModel.Eq (out answer, ev0, this.rand1Value);
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsEqXFixnum : PrimitiveIsEqXQ
+    {
+        public readonly int rand1Value;
+
+        protected PrimitiveIsEqXFixnum (Primitive2 rator, SCode rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = (int) rand1.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveIsEqXFixnum (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsEqXFixnum");
+            NoteCalls (this.rand0);
+#endif
+            // Eval argument0
+            object ev0;
+
+            Control unev = this.rand0;
+            Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+            answer = ev0 is int && (((int) ev0) == this.rand1Value);
             return false;
         }
     }
+
+    [Serializable]
+    class PrimitiveIsEqXObject : PrimitiveIsEqXQ
+    {
+        public readonly object rand1Value;
+
+        protected PrimitiveIsEqXObject (Primitive2 rator, SCode rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveIsEqXObject (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0);
+            SCode.location = "PrimitiveIsEqXObject";
+#endif
+            // Eval argument0
+            object ev0;
+
+            Control unev = this.rand0;
+            Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+            answer = ev0 == this.rand1Value;
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsCharEqQ : PrimitiveIsEqQ
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly char rand0Value;
+
+        protected PrimitiveIsCharEqQ (Primitive2 rator, Quotation rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Value = (char) rand0.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
+        {
+            return
+                new PrimitiveIsCharEqQ (rator, rand0, rand1);
+        }
+
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveIsCharEqQ";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            answer = (ev1 is char) && (this.rand0Value == (char) ev1);
+            return false;
+        }
+    }
+
+
+    [Serializable]
+    class PrimitiveIsIntEqQ : PrimitiveIsEqQ
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int rand0Value;
+
+        protected PrimitiveIsIntEqQ (Primitive2 rator, Quotation rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Value = (int) rand0.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
+        {
+            return
+                new PrimitiveIsIntEqQ (rator, rand0, rand1);
+        }
+
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveIsIntEqQ";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            answer = (ev1 is int) && (this.rand0Value == (int)ev1);
+            return false;
+        }
+    }
+
+
+    [Serializable]
+    class PrimitiveIsObjectEqQ : PrimitiveIsEqQ
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object rand0Value;
+
+        protected PrimitiveIsObjectEqQ (Primitive2 rator, Quotation rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Value = rand0.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
+        {
+            return
+                new PrimitiveIsObjectEqQ (rator, rand0, rand1);
+        }
+
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveIsObjectEqQ";
+#endif
+            // Eval argument1
+            object ev1;
+
+            Control unev = this.rand1;
+            Environment env = environment;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+            if (ev1 == Interpreter.UnwindStack) {
+                //throw new NotImplementedException ();
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+            answer = (this.rand0Value == ev1);
+            return false;
+        }
+    }
+
 }

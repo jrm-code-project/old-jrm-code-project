@@ -24,15 +24,17 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveIsTypeA<SType>) ? PCondIsTypeA<SType>.Make ((PrimitiveIsTypeA<SType>) predicate, consequent, alternative) :
+                (consequent is Quotation) ? PCondIsTypeXQ<SType>.Make (predicate, (Quotation) consequent, alternative) :
                  new PCondIsType<SType> (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsType");
+            Warm ("-");
             NoteCalls (this.arg0);
             arg0TypeHistogram.Note (this.arg0Type);
+            SCode.location = "PCondIsType";
 #endif
             Control unev0 = this.arg0;
             Environment env = environment;
@@ -817,61 +819,65 @@ namespace Microcode
 //        }
 //    }
 
-//    [Serializable]
-//    class PCondIsTypeSQ : PCondIsType
-//    {
-//        public readonly object consequentValue;
+    [Serializable]
+    class PCondIsTypeXQ<SType> : PCondIsType<SType>
+    {
+#if DEBUG
+        static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object consequentValue;
 
-//        protected PCondIsTypeSQ (PrimitiveIsType predicate, Quotation consequent, SCode alternative)
-//            : base (predicate, consequent, alternative)
-//        {
-//            this.consequentValue = consequent.Quoted;
-//        }
+        protected PCondIsTypeXQ (PrimitiveIsType<SType> predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
 
-//        public static SCode Make (PrimitiveIsType predicate, Quotation consequent, SCode alternative)
-//        {
-//            return
-//                (alternative is LexicalVariable) ? PCondIsTypeSQL.Make (predicate, consequent, (LexicalVariable) alternative) :
-//                (alternative is Quotation) ? PCondIsTypeSQQ.Make (predicate, consequent, (Quotation) alternative) :
-//                new PCondIsTypeSQ (predicate, consequent, alternative);
-//        }
+        public static SCode Make (PrimitiveIsType<SType> predicate, Quotation consequent, SCode alternative)
+        {
+            return
+                new PCondIsTypeXQ<SType> (predicate, consequent, alternative);
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            noteCalls (this.arg0);
-//            SCode.location = "PCondIsTypeSQ.EvalStep";
-//#endif
-//            Control unev0 = this.arg0;
-//            Environment env = environment;
-//            object ev0;
-//            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
-//#if DEBUG
-//                        SCode.location = "PCondIsTypeSQ.EvalStep.1";
-//#endif
-//            if (ev0 == Interpreter.UnwindStack) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new PrimitiveIsTypeFrame0 (this, environment));
-//                //answer = Interpreter.UnwindStack;
-//                //environment = env;
-//                //return false;
-//            }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg0);
+            arg0TypeHistogram.Note (this.arg0Type);
+            SCode.location = "PCondIsTypeXQ";
+#endif
+            Control unev0 = this.arg0;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveIsTypeFrame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+#if DEBUG
+            SCode.location = "PCondIsTypeXQ";
+#endif
+            if (ev0 is SType) {
+                answer = this.consequentValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
 
-//            if (ev0 is Cons) {
-//                answer = this.consequentValue;
-//                return false;
-//            } 
-//            else {
-//#if DEBUG
-//                noteCalls (this.alternative);
-//#endif
-//                expression = this.alternative;
-//                answer = null;
-//                return true;
-//            }
-//        }
-//    }
+    }
 
 
 //    [Serializable]

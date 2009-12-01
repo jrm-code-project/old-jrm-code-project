@@ -200,4 +200,29 @@ namespace Microcode
             }
         }
     }
+
+    class PartialValueEnvironment : PartialEnvironment
+    {
+        IDictionary<Symbol, object> namesToValues;
+        public PartialValueEnvironment (IDictionary<Symbol, object> namesToValues)
+            :base (null)
+        {
+            this.namesToValues = namesToValues;
+        }
+
+        internal override StaticMapping GetStaticMapping (ICollection<Symbol> freeVariables)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override IList<Symbol> ExportedStatics
+        {
+            get { throw new NotImplementedException (); }
+        }
+
+        internal override SCode LocateVariable (IVariableSpecializer variable)
+        {
+            throw new NotImplementedException ();
+        }
+    }
 }

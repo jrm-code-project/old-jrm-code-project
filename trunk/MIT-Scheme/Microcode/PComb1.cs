@@ -295,14 +295,6 @@ namespace Microcode
         {
             this.arg0.CollectFreeVariables (freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics) 
-        {
-            SCode newArg0 = this.arg0.SubstituteStatics (statics);
-            return (newArg0 == this.arg0) ?
-                this :
-                PrimitiveCombination1.Make (this.procedure, newArg0);
-        }
     }
 
     [Serializable]

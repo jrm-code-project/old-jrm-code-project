@@ -220,16 +220,6 @@ namespace Microcode
             this.predicate.CollectFreeVariables(freeVariableSet);
             this.alternative.CollectFreeVariables(freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newPredicate = this.predicate.SubstituteStatics (statics);
-            SCode newAlternative = this.alternative.SubstituteStatics (statics);
-            return (newPredicate == this.predicate &&
-                newAlternative == this.alternative) ?
-                this :
-                Disjunction.Make (newPredicate, newAlternative);
-        }
     }
 
     [Serializable]

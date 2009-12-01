@@ -631,16 +631,6 @@ namespace Microcode
             this.Operand0.CollectFreeVariables (freeVariableSet);
             this.Operand1.CollectFreeVariables (freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode r0 = this.rand0.SubstituteStatics (statics);
-            SCode r1 = this.rand1.SubstituteStatics (statics);
-            return (this.rand0 == r0 &&
-                    this.rand1 == r1) ?
-                    this :
-                    PrimitiveCombination2.Make (this.rator, r0, r1);
-        }
     }
 
     [Serializable]

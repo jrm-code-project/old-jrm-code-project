@@ -22,8 +22,13 @@ namespace Microcode
             return false;
         }
 #endif
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Symbol [] names;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         int [] offsets;
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         int offsetCode;
 
         public StaticMapping (Symbol [] names, int [] offsets)

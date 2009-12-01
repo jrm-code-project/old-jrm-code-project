@@ -56,17 +56,12 @@ namespace Microcode
         {
             return
                 (! Configuration.EnableCombination2Optimization) ? new Combination2(rator, rand0, rand1):
-                ////(Configuration.EnableSuperOperators && rator is Lambda) ? Let2.Make ((Lambda) rator, rand0, rand1)
-                //(Configuration.EnableSuperOperators &&
-                // Configuration.EnableCombination2Specialization &&
-                //rator is LexicalVariable) ? Combination2L.Make ((LexicalVariable) rator, rand0, rand1) :
-                //(Configuration.EnableSuperOperators &&
-                // Configuration.EnableCombination2Specialization &&
-                // rator is TopLevelVariable) ? Combination2T.Make ((TopLevelVariable) rator, rand0, rand1) :
+                 (rator is TopLevelVariable) ? Combination2T.Make ((TopLevelVariable) rator, rand0, rand1) :
                 // (rator is Quotation &&
                 // ! (((Quotation) rator).Quoted is PrimitiveN)) ? Unimplemented():
 
                 (! Configuration.EnableCombination2Specialization) ? new Combination2 (rator, rand0, rand1) :
+                (Configuration.EnableLet2 && rator is Lambda) ? Let2.Make ((Lambda) rator, rand0, rand1) :
                 (rator is StaticVariable) ? Combination2S.Make((StaticVariable) rator, rand0, rand1) :
                 //(rand0 is Argument) ? Combination2XA.Make (rator, (Argument) rand0, rand1) :
                 //(rand0 is Quotation) ? Combination2XQ.Make (rator, (Quotation) rand0, rand1) :
@@ -262,18 +257,6 @@ namespace Microcode
             this.rand0.CollectFreeVariables (freeVariableSet);
             this.rand1.CollectFreeVariables (freeVariableSet);
         }
-
-        internal override SCode SubstituteStatics (object [] statics)
-        {
-            SCode newRator = this.rator.SubstituteStatics (statics);
-            SCode newRand0 = this.rand0.SubstituteStatics (statics);
-            SCode newRand1 = this.rand1.SubstituteStatics (statics);
-            return (newRator == this.rator &&
-                    newRand0 == this.rand0 &&
-                    newRand1 == this.rand1) ?
-                    this :
-                    Combination2.Make (newRator, newRand0, newRand1);
-        }
     }
 
     [Serializable]
@@ -430,6 +413,73 @@ namespace Microcode
             }
 
             return Interpreter.Call (out answer, ref expression, ref environment, evop, value, this.ev0, this.ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2T : Combination2
+    {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly ValueCell ratorCell;
+
+        protected Combination2T (TopLevelVariable rator, SCode rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.ratorCell = rator.valueCell;
+        }
+
+        public static SCode Make (TopLevelVariable rator, SCode rand0, SCode rand1)
+        {
+            return
+                 new Combination2T (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0);
+            NoteCalls (this.rand1);
+            rand0TypeHistogram.Note (this.rand0Type);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2T.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0;
+            env = environment;
+            unev = this.rand0;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2.EvalStep";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
         }
     }
 
