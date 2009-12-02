@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Microcode
 {
@@ -15,19 +17,21 @@ namespace Microcode
 
 
     [Serializable]
-    sealed class ReferenceTrap
+    sealed class ReferenceTrap : ISerializable
     {
         public static TrapKind GetTrapKind (object value)
         {
             ReferenceTrap reftrap = value as ReferenceTrap;
             if (reftrap == null)
                 return TrapKind.NON_TRAP_KIND;
+            else if (reftrap == expensive)
+                return TrapKind.TRAP_EXPENSIVE;
             else if (reftrap == unassigned)
                 return TrapKind.TRAP_UNASSIGNED;
             else if (reftrap == unbound)
                 return TrapKind.TRAP_UNBOUND;
             else
-                return (TrapKind) (((Cons) (reftrap.contents)).Car);
+                return (TrapKind) (reftrap.contents.Car);
         }
         
         static ReferenceTrap expensive;
@@ -35,14 +39,14 @@ namespace Microcode
         static ReferenceTrap unbound;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        object contents;
+        Cons contents;
 
-        public ReferenceTrap ()
+        ReferenceTrap ()
         {
             contents = null;
         }
 
-        public ReferenceTrap (object obj)
+        public ReferenceTrap (Cons obj)
         {
             this.contents = obj;
         }
@@ -117,6 +121,48 @@ namespace Microcode
             answer = arg is ReferenceTrap;
             return false;
         }
+
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public void GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            switch (GetTrapKind (this)) {
+                case TrapKind.TRAP_UNASSIGNED:
+                    info.SetType (typeof (UnassignedReferenceTrapDeserializer));
+                    return;
+                default:
+                    throw new NotImplementedException ();
+            }
+        }
+        #endregion
+    }
+
+    [Serializable]
+    sealed class UnassignedReferenceTrapDeserializer : ISerializable, IObjectReference
+    {
+
+        UnassignedReferenceTrapDeserializer (SerializationInfo info, StreamingContext context)
+        {
+        }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            throw new NotImplementedException ();
+        }
+        #endregion
+
+        #region IObjectReference Members
+
+        public object GetRealObject (StreamingContext context)
+        {
+            return ReferenceTrap.Unassigned;
+        }
+        #endregion
 
     }
 }
