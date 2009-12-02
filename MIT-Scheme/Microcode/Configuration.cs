@@ -25,7 +25,7 @@ namespace Microcode
         /// <summary>
         /// Special case combination1.
         /// </summary>
-        public const bool EnableLet1 = true;
+        public const bool EnableLet1 = false;
         #endregion
 
         #region Combination2
@@ -34,7 +34,7 @@ namespace Microcode
         /// <summary>
         /// Special case combination1.
         /// </summary>
-        public const bool EnableLet2 = true;
+        public const bool EnableLet2 = false;
         #endregion
 
         public const bool EnableCommentOptimization = false;

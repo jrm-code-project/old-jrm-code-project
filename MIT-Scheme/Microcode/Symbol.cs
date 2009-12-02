@@ -102,7 +102,7 @@ namespace Microcode
         {
             get
             {
-                ValueCell cell = Environment.Global.GetValueCell(this.name);
+                ValueCell cell = Environment.Global.GetValueCell(this);
                 if (cell == null) return ReferenceTrap.Unbound;
                 object result;
                 cell.GetValue(out result);
