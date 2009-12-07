@@ -317,7 +317,6 @@ namespace Microcode
 #if DEBUG
         static Histogram<Type> randTypeHistogram = new Histogram<Type> ();
 #endif
-
         public readonly object ratorName;
         public readonly int ratorOffset;
 
@@ -331,6 +330,7 @@ namespace Microcode
         public static SCode Make (StaticVariable rator, SCode rand0)
         {
             return
+                (rand0 is PrimitiveCdrA0) ? Combination1SCdrA0.Make (rator, (PrimitiveCdrA0) rand0) :
                 new Combination1S (rator, rand0);
         }
 
@@ -361,6 +361,37 @@ namespace Microcode
                 throw new NotImplementedException ();
 
             return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg);
+        }
+    }
+
+    [Serializable]
+    class Combination1SCdrA0 : Combination1S
+    {
+        protected Combination1SCdrA0 (StaticVariable rator, PrimitiveCdrA0 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCdrA0 rand0)
+        {
+            return
+                new Combination1SCdrA0 (rator, rand0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination1SCdrA0");
+#endif
+            Cons evarg = environment.Argument0Value as Cons;
+            if (evarg == null)
+                throw new NotImplementedException ();
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg.Cdr);
         }
     }
 
