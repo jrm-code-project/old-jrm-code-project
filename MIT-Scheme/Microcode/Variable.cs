@@ -715,6 +715,7 @@ namespace Microcode
                (
                ((name.ToString()) == "no symbol has this name") ||
                ((name.ToString()) == "%record?") ||
+               ((name.ToString()) == "for-each-symbol-in-obarray") ||
                //((name.ToString()) == "unscan-defines") ||
                //((name.ToString()) == "%char-set-member?") ||
                //((name.ToString()) == "the-console-port") ||
@@ -1209,12 +1210,24 @@ namespace Microcode
             }
             SCode.location = "FreeVariable";
 #endif
-            //if (this.lastCell == null) {
+            if (this.lastCell == null) {
                 Environment baseEnvironment = environment.BaseEnvironment;
 
                 if (baseEnvironment.FreeReference (out this.lastCell, this.varname))
                     throw new NotImplementedException ("Error with free variable " + this.varname);
+            }
+            //else {
+            //    ValueCell thisCell;
+
+            //    Environment baseEnvironment = environment.BaseEnvironment;
+
+            //    if (baseEnvironment.FreeReference (out thisCell, this.varname))
+            //        throw new NotImplementedException ("Error with free variable " + this.varname);
+            //    if (thisCell != lastCell)
+            //        Debugger.Break ();
+            //    lastCell = thisCell;
             //}
+
             return this.lastCell.GetValue (out answer);
         }
     }

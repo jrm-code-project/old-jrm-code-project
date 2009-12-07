@@ -612,7 +612,7 @@ namespace Microcode
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call1";
 #endif
-            if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
+            //if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
 
             expression = this.lambdaBody;
             environment = new SmallEnvironment1 (this, arg0);

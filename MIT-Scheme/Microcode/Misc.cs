@@ -164,14 +164,25 @@ namespace Microcode
             String filename = new String ((char []) arg);
             System.IO.FileAttributes fa;
             try {
+#if DEBUG
+                // Don't benchmark the file system.
+                SCode.location = "-";
+#endif
                 fa = System.IO.File.GetAttributes (filename);
+#if DEBUG
+                SCode.location = "FILE-TYPE-INDIRECT";
+#endif
                 if ((fa & System.IO.FileAttributes.Directory) == System.IO.FileAttributes.Directory)
                     answer = 1;
                 else {
                     answer = 0;
                 }
+
             }
             catch (System.IO.FileNotFoundException) {
+#if DEBUG
+                SCode.location = "FILE-TYPE-INDIRECT";
+#endif
                 answer = false;
             }
 

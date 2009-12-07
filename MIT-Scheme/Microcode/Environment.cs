@@ -1527,6 +1527,10 @@ namespace Microcode
         {
 #if DEBUG
             extendedBy [0] += 1;
+                        // sanity check.
+            object [] formals = closure.Lambda.Formals;
+            if (formals.Length != 0)
+                throw new NotImplementedException ();
 #endif
         }
 
@@ -1689,6 +1693,10 @@ namespace Microcode
             this.binding0 = binding0Value;
 #if DEBUG
             extendedBy [1] += 1;
+                        // sanity check.
+            object [] formals = closure.Lambda.Formals;
+            if (formals.Length != 1)
+                throw new NotImplementedException ();
 #endif
         }
 
@@ -1844,16 +1852,17 @@ namespace Microcode
         internal override object [] GetValueCells (StaticMapping mapping)
         {
 #if DEBUG
-            SCode.location = "SmallEnvironment1.GetValueCells";
+            SCode.location = "-";
             valueCellsCopied [mapping.Size] += 1;
             staticMappings.Note (mapping.Offsets);
             int code = mapping.OffsetCode;
             if (code >= 0 &&
                 code < 64)
                 codes[code] += 1;
+            SCode.location = "SmallEnvironment1.GetValueCells";
 #endif
             object [] cells;
-                               object [] incomingCells = this.envClosure.StaticCells;
+            object [] incomingCells = this.envClosure.StaticCells;
             switch (mapping.OffsetCode) {
                 case 0:
                     return noCells;
@@ -1882,6 +1891,23 @@ namespace Microcode
                     return new object [] {this.binding0,
                                           incomingCells[2]};
 
+                case 10:
+                    return new object [] {incomingCells[0],
+                                          incomingCells[2]};
+
+                case 11:
+                    return new object [] {this.binding0, 
+                                          incomingCells[0],
+                                          incomingCells[2]};
+
+                case 12:
+                    return new object [] {incomingCells[1],
+                                          incomingCells[2]};
+
+                case 13:
+                    return new object [] {this.binding0, 
+                                          incomingCells[1],
+                                          incomingCells[2]};
                 case 14:
                     return  (incomingCells.Length == 3) ? incomingCells :
                     new object [] {incomingCells[0],
@@ -1897,6 +1923,13 @@ namespace Microcode
                 case 16:
                     return new object [] { incomingCells [3] };
 
+                case 31:
+                    return
+                        new object [] {this.binding0,
+                                       incomingCells[0],
+                                       incomingCells[1],
+                                       incomingCells[2],
+                                       incomingCells[3]};
                 default:
                     int count = mapping.Size;
                     int [] offsets = mapping.Offsets;
@@ -1943,6 +1976,10 @@ namespace Microcode
             this.binding1 = binding1Value;
 #if DEBUG
             extendedBy [2] += 1;
+                        // sanity check.
+            object [] formals = closure.Lambda.Formals;
+            if (formals.Length != 2)
+                throw new NotImplementedException ();
 #endif
         }
 
@@ -2208,6 +2245,10 @@ namespace Microcode
             this.binding2 = binding2Value;
 #if DEBUG
             extendedBy [3] += 1;
+                        // sanity check.
+            object [] formals = closure.Lambda.Formals;
+            if (formals.Length != 3)
+                throw new NotImplementedException ();
 #endif
         }
 

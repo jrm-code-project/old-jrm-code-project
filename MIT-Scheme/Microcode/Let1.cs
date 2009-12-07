@@ -49,7 +49,7 @@ namespace Microcode
             return
                 //(body is Variable) ? ((((Variable) body).Name == formals [0]) ? RewriteAsIdentity (arg0) : RewriteAsSequence(arg0, body)) :
                 (rator is SimpleLambda) ? SimpleLet1.Make ((SimpleLambda) rator, arg0) :
-                //(rator is StaticLambda) ? StaticLet1.Make ((StaticLambda) rator, arg0) :
+                (rator is StaticLambda) ? StaticLet1.Make ((StaticLambda) rator, arg0) :
                 //(arg0 is LexicalVariable) ? Let1L.Make (rator, (LexicalVariable) arg0) :
                 //(arg0 is Quotation) ? Let1Q.Make (rator, (Quotation) arg0) :
                 new Let1 (rator, arg0);
@@ -386,7 +386,7 @@ namespace Microcode
                 //(arg0 is PrimitiveCar) ? SimpleLet1Car.Make (rator, (PrimitiveCar) arg0) :
                 //(arg0 is PrimitiveCdr) ? SimpleLet1Cdr.Make (rator, (PrimitiveCdr) arg0) :
                 //(arg0 is StaticLambda) ? SimpleLet1StaticLambda.Make (rator, (StaticLambda) arg0) :
-                //(arg0 is Quotation) ? SimpleLet1Q.Make (rator, (Quotation) arg0) :
+                (arg0 is Quotation) ? StaticLet1Q.Make (rator, (Quotation) arg0) :
                 new StaticLet1 (rator, arg0);
         }
 
@@ -466,6 +466,49 @@ namespace Microcode
 
         #endregion
 
+    }
+
+    [Serializable]
+    class StaticLet1Q : StaticLet1
+    {
+#if DEBUG
+        static Histogram<Type> bodyTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object rand0Value;
+
+        protected StaticLet1Q (StaticLambda rator, Quotation rand)
+            : base (rator, rand)
+        {
+            this.rand0Value = rand.Quoted;
+        }
+
+        public static SCode Make (StaticLambda rator, Quotation arg0)
+        {
+            return
+                //(arg0 is LexicalVariable) ? SimpleLet1L.Make (rator, (LexicalVariable) arg0) :
+                //(arg0 is PrimitiveCar) ? SimpleLet1Car.Make (rator, (PrimitiveCar) arg0) :
+                //(arg0 is PrimitiveCdr) ? SimpleLet1Cdr.Make (rator, (PrimitiveCdr) arg0) :
+                //(arg0 is StaticLambda) ? SimpleLet1StaticLambda.Make (rator, (StaticLambda) arg0) :
+                //(arg0 is Quotation) ? StaticLet1Q.Make (rator, (Quotation) arg0) :
+                new StaticLet1Q (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.body);
+            bodyTypeHistogram.Note (this.bodyType);
+            SCode.location = "StaticLet1Q";
+#endif
+            // StaticClosure cl = new StaticClosure ((StaticLambda) this.rator, environment);
+            StaticClosure cl = new StaticClosure (this.lambda, environment.BaseEnvironment, environment.GetValueCells (this.lambda.StaticMapping));
+
+            expression = this.body;
+            environment = new StaticEnvironment (cl, new object [] { this.rand0Value });
+            answer = null;
+            return true;
+        }
     }
 
 #if NIL
