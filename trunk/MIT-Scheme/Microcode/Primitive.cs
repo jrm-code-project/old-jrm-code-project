@@ -37,12 +37,14 @@ namespace Microcode
 
         internal static Primitive1 Add1;
         internal static Primitive1 Car;
+        internal static Primitive1 Caar;
         internal static Primitive1 Cdr;
         internal static Primitive1 CharToInteger;
         internal static Primitive1 ExitWithValue;
         internal static Primitive1 FixnumAdd1;
         internal static Primitive1 FixnumIsNegative;
         internal static Primitive1 FixnumNegate;
+        internal static Primitive1 FixnumNot;
         internal static Primitive1 FixnumSub1;
         internal static Primitive1 FloatingVectorCons;
         internal static Primitive1 FlonumIsNegative;
@@ -51,19 +53,28 @@ namespace Microcode
         internal static Primitive1 IntegerAdd1;
         internal static Primitive1 IntegerIsPositive;
         internal static Primitive1 IntegerSub1;
+        internal static Primitive1 IntegerToChar;
         internal static Primitive1 IsBigFixnum;
         internal static Primitive1 IsBigFlonum;
         internal static Primitive1 IsChar;
         internal static Primitive1 IsComplex;
+        internal static Primitive1 IsEntity;
+        //internal static Primitive1 IsExtendedProcedure;
         internal static Primitive1 IsFixnum;
         internal static Primitive1 IsFixnumZero;
+        internal static Primitive1 IsIntegerZero;
         internal static Primitive1 IsNegative;
         internal static Primitive1 IsNull;
         internal static Primitive1 IsPair;
+        internal static Primitive1 IsPrimitiveProcedure;
+        //internal static Primitive1 IsProcedure;
         internal static Primitive1 IsRatnum;
         internal static Primitive1 IsRecord;
         internal static Primitive1 IsSharpT;
+        internal static Primitive1 IsString;
         internal static Primitive1 IsSymbol;
+        internal static Primitive1 IsUninternedSymbol;
+        internal static Primitive1 IsWeakCons;
         internal static Primitive1 IsVector;
         internal static Primitive1 Not;
         internal static Primitive1 ObjectDatum;
@@ -73,7 +84,9 @@ namespace Microcode
         internal static Primitive1 RequestInterrupts;
         internal static Primitive1 SetInterruptEnables;
         internal static Primitive1 StringAllocate;
+        internal static Primitive1 StringLength;
         internal static Primitive1 SystemPairCar;
+        internal static Primitive1 SystemPairCdr;
         internal static Primitive1 SystemVectorSize;
         internal static Primitive1 VectorLength;
 
@@ -149,6 +162,13 @@ namespace Microcode
         internal static Primitive2 VectorRef;
         internal static Primitive2 WithInterruptMask;
 
+        internal static Primitive3 Hunk3Cons;
+        internal static Primitive3 RecordSet;
+        internal static Primitive3 StringSet;
+        internal static Primitive3 SystemPairCons;
+        internal static Primitive3 Vector8BSet;
+        internal static Primitive3 VectorSet;
+
         public static void Initialize ()
         {
             Assembly asm = Assembly.GetExecutingAssembly ();
@@ -157,12 +177,14 @@ namespace Microcode
 
             Add1 = (Primitive1) Find ("1+", 1);
             Car = (Primitive1) Find ("CAR", 1);
+            Caar = (Primitive1) Find ("CAAR", 1);
             Cdr = (Primitive1) Find ("CDR", 1);
             CharToInteger = (Primitive1) Find ("CHAR->INTEGER", 1);
             ExitWithValue = (Primitive1) Find ("EXIT-WITH-VALUE", 1);
             FixnumAdd1 = (Primitive1) Find ("ONE-PLUS-FIXNUM", 1);
             FixnumIsNegative = (Primitive1) Find ("NEGATIVE-FIXNUM?", 1);
             FixnumNegate = (Primitive1) Find ("FIXNUM-NEGATE", 1);
+            FixnumNot = (Primitive1) Find ("FIXNUM-NOT", 1);
             FixnumSub1 = (Primitive1) Find ("MINUS-ONE-PLUS-FIXNUM", 1);
             FloatingVectorCons = (Primitive1) Find ("FLOATING-VECTOR-CONS", 1);
             FlonumIsNegative = (Primitive1) Find ("FLONUM-NEGATIVE?", 1);
@@ -170,20 +192,29 @@ namespace Microcode
             InitializeCCompiledBlock = (Primitive1) Find ("INITIALIZE-C-COMPILED-BLOCK", 1);
             IntegerAdd1 = (Primitive1) Find ("INTEGER-ADD-1", 1);
             IntegerSub1 = (Primitive1) Find ("INTEGER-SUBTRACT-1", 1);
+            IntegerToChar = (Primitive1) Find ("INTEGER->CHAR", 1);
             IsBigFixnum = (Primitive1) Find ("BIG-FIXNUM?", 1);
             IsBigFlonum = (Primitive1) Find ("BIG-FLONUM?", 1);
             IsChar = (Primitive1) Find ("CHAR?", 1);
             IsComplex = (Primitive1) Find ("COMPLEX?", 1);
+            IsEntity = (Primitive1) Find ("ENTITY?", 1);
+            //IsExtendedProcedure = (Primitive1) Find ("EXTENDED-PROCEDURE?", 1);
             IsFixnum = (Primitive1) Find ("FIXNUM?", 1);
             IsFixnumZero = (Primitive1) Find ("ZERO-FIXNUM?", 1);
+            IsIntegerZero = (Primitive1) Find ("INTEGER-ZERO?", 1);
             IsNegative = (Primitive1) Find ("NEGATIVE?", 1);
             IsNull = (Primitive1) Find ("NULL?", 1);
             IsPair = (Primitive1) Find ("PAIR?", 1);
+            IsPrimitiveProcedure = (Primitive1) Find ("PRIMITIVE?", 1);
+            //IsProcedure = (Primitive1) Find ("PROCEDURE?", 1);
             IsRatnum = (Primitive1) Find ("RATNUM?", 1);
             IsRecord = (Primitive1) Find ("%RECORD?", 1);
             IsSharpT = (Primitive1) Find ("OBJECT-IS-TRUE?", 1);
+            IsString = (Primitive1) Find ("STRING?", 1);
             IsSymbol = (Primitive1) Find ("SYMBOL?", 1);
+            IsUninternedSymbol = (Primitive1) Find ("UNINTERNED-SYMBOL?", 1);
             IsVector = (Primitive1) Find ("VECTOR?", 1);
+            IsWeakCons = (Primitive1) Find ("WEAK-CONS?", 1);
             Not = (Primitive1) Find ("NOT", 1);
             ObjectDatum = (Primitive1) Find ("OBJECT-DATUM", 1);
             ObjectIsZero = (Primitive1) Find ("OBJECT-IS-ZERO?", 1);
@@ -192,7 +223,9 @@ namespace Microcode
             RequestInterrupts = (Primitive1) Find ("REQUEST-INTERRUPTS!", 1);
             SetInterruptEnables = (Primitive1) Find ("SET-INTERRUPT-ENABLES!", 1);
             StringAllocate = (Primitive1) Find ("STRING-ALLOCATE", 1);
+            StringLength = (Primitive1) Find ("STRING-LENGTH", 1);
             SystemPairCar = (Primitive1) Find ("SYSTEM-PAIR-CAR", 1);
+            SystemPairCdr = (Primitive1) Find ("SYSTEM-PAIR-CDR", 1);
             SystemVectorSize = (Primitive1) Find ("SYSTEM-VECTOR-SIZE", 1);
             VectorLength = (Primitive1) Find ("VECTOR-LENGTH", 1);
 
@@ -269,6 +302,13 @@ namespace Microcode
             VectorCons = (Primitive2) Find ("VECTOR-CONS", 2);
             VectorRef = (Primitive2) Find ("VECTOR-REF", 2);
             WithInterruptMask = (Primitive2) Find ("WITH-INTERRUPT-MASK", 2);
+
+            Hunk3Cons = (Primitive3) Find ("HUNK3-CONS", 3);
+            RecordSet = (Primitive3) Find ("%RECORD-SET!", 3);
+            StringSet = (Primitive3) Find ("STRING-SET!", 3);
+            SystemPairCons = (Primitive3) Find ("SYSTEM-PAIR-CONS", 3);
+            VectorSet = (Primitive3) Find ("VECTOR-SET!", 3);
+            Vector8BSet = (Primitive3) Find ("VECTOR-8B-SET!", 3);
         }
 
         internal Primitive (Symbol name, int arity)

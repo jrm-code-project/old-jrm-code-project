@@ -14,18 +14,18 @@ namespace Microcode
         public const bool EnableAssignmentOptimization = false;
 
         #region Combination
-        public const bool EnableCombinationOptimization = true;
-        public const bool EnableCombination0 = true;
-        public const bool EnableCombination3 = true;
+        public const bool EnableCombinationOptimization = false;
+        public const bool EnableCombination0 = false;
+        public const bool EnableCombination3 = false;
         #endregion
 
         #region Combination1
         public const bool EnableCombination1Optimization = true;
-        public const bool EnableCombination1Specialization = true;
+        public const bool EnableCombination1Specialization =true;
         /// <summary>
         /// Special case combination1.
         /// </summary>
-        public const bool EnableLet1 = true;
+        public const bool EnableLet1 = false;
         #endregion
 
         #region Combination2
@@ -34,7 +34,7 @@ namespace Microcode
         /// <summary>
         /// Special case combination1.
         /// </summary>
-        public const bool EnableLet2 = true;
+        public const bool EnableLet2 = false;
         #endregion
 
         public const bool EnableCommentOptimization = false;
@@ -46,7 +46,7 @@ namespace Microcode
         /// If true, certain primitive predicates are handled directly
         /// by the conditional.
         /// </summary>
-        public const bool EnablePrimitiveConditional1 = true;
+        public const bool EnablePrimitiveConditional1 = false;
         public const bool EnablePrimitiveConditional2 = false;
         #endregion
 
@@ -54,10 +54,10 @@ namespace Microcode
         public const bool EnableDelayOptimization = false;
 
         #region Disjunction
-        public const bool EnableDisjunctionOptimization = true;
-        public const bool EnablePrimitiveDisjunction1 = true;
-        public const bool EnablePrimitiveDisjunction2 = true;
-        public const bool EnableDisjunctionSpecialization = true;
+        public const bool EnableDisjunctionOptimization = false;
+        public const bool EnablePrimitiveDisjunction1 = false;
+        public const bool EnablePrimitiveDisjunction2 = false;
+        public const bool EnableDisjunctionSpecialization = false;
         #endregion
 
         #region Lambda
@@ -89,13 +89,16 @@ namespace Microcode
         /// </summary>
         public const bool EnablePrimitiveCombination2Optimization = true;
         public const bool EnablePrimitive2Specialization = true;
-        public const bool EnableInlinePrimitive2 = true;
+        public const bool EnableInlinePrimitive2 = false;
         #endregion
 
-        public const bool EnablePrimitiveCombination3Optimization = false;
+        public const bool EnablePrimitiveCombination3Optimization = true;
+        public const bool EnablePrimitive3Specialization = true;
+        public const bool EnableInlinePrimitive3 = false;
+
         public const bool EnableQuotationOptimization = false;
-        public const bool EnableSequence2Optimization = true;
-        public const bool EnableSequence2Specialization = true;
+        public const bool EnableSequence2Optimization = false;
+        public const bool EnableSequence2Specialization = false;
         public const bool EnableSequence3Optimization = false;
         public const bool EnableSequence3Specialization = false;
         public const bool EnableTheEnvironmentOptimization = false;

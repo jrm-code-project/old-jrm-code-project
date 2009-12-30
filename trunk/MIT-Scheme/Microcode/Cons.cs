@@ -134,6 +134,14 @@ namespace Microcode
             return false;
         }
 
+
+        [SchemePrimitive ("CAAR", 1, false)]
+        public static bool PrimitiveCaar (out object answer, object arg0)
+        {
+            answer = ((Cons) ((Cons) arg0).Car).Car;
+            return false;
+        }
+
         [SchemePrimitive ("CDR", 1, false)]
         public static bool PrimitiveCdr (out object answer, object arg0)
         {

@@ -32,8 +32,8 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            noteCalls (this.rand0);
-            noteCalls (this.rand1);
+            NoteCalls (this.rand0);
+            NoteCalls (this.rand1);
             rand0TypeHistogram.Note (this.rand0Type);
             rand1TypeHistogram.Note (this.rand1Type);
             SCode.location = "PCondIsObjectType";
@@ -62,7 +62,7 @@ namespace Microcode
 
             if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
-                noteCalls (this.alternative);
+                NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 expression = this.alternative;
@@ -70,7 +70,7 @@ namespace Microcode
             }
             else {
 #if DEBUG
-                noteCalls (this.consequent);
+                NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
 #endif
                 expression = this.consequent;
@@ -94,7 +94,7 @@ namespace Microcode
         protected PCondIsObjectTypeQ (PrimitiveIsObjectTypeQ predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-            this.rand0Value = (TC) predicate.rand0Value;
+            this.rand0Value =  predicate.rand0Value;
         }
 
         static SCode Rewrite (TC oldType, Primitive1 newPred, SCode arg)
@@ -109,7 +109,7 @@ namespace Microcode
                 //((TC) predicate.rand0Value == TC.BIG_FLONUM) ? PCondIsBigFlonum.Make (Flatten ((TC) predicate.rand0Value, Primitive.IsBigFlonum, predicate.Rand1), consequent, alternative) :
                 //((TC) predicate.rand0Value == TC.RATNUM) ? PCondIsBigFlonum.Make (Flatten ((TC) predicate.rand0Value, Primitive.IsRatnum, predicate.Rand1), consequent, alternative) :
                 //((TC) predicate.rand0Value == TC.VECTOR) ? PCondIsVector.Make (Flatten ((TC) predicate.rand0Value, Primitive.IsVector, predicate.Rand1), consequent, alternative) :
-                (predicate is PrimitiveIsObjectTypeQL) ? PCondIsObjectTypeQL.Make ((PrimitiveIsObjectTypeQL) predicate, consequent, alternative) :
+                //(predicate is PrimitiveIsObjectTypeQL) ? PCondIsObjectTypeQL.Make ((PrimitiveIsObjectTypeQL) predicate, consequent, alternative) :
                 //(consequent is Quotation) ? Unimplemented() :
                 //(alternative is Quotation) ? Unimplemented() :
                 new PCondIsObjectTypeQ (predicate, consequent, alternative);
@@ -119,7 +119,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            noteCalls (this.rand1);
+            NoteCalls (this.rand1);
             rand0Histogram.Note (this.rand0Value);
             rand1TypeHistogram.Note (this.rand1Type);
             SCode.location = "PCondIsObjectTypeQ.EvalStep";
@@ -136,7 +136,7 @@ namespace Microcode
 
             if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
-                noteCalls (this.alternative);
+                NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 expression = this.alternative;
@@ -144,66 +144,7 @@ namespace Microcode
             }
             else {
 #if DEBUG
-                noteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                return true;
-            }
-        }
-    }
-
-    class PCondIsObjectTypeQL : PCondIsObjectTypeQ
-    {
-#if DEBUG
-        static Histogram<TC> rand0Histogram = new Histogram<TC> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PCondIsObjectTypeQL (PrimitiveIsObjectTypeQL predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.rand1Name = predicate.rand1Name;
-            this.rand1Depth = predicate.rand1Depth;
-            this.rand1Offset = predicate.rand1Offset;
-        }
-
-        public static SCode Make (PrimitiveIsObjectTypeQL predicate, SCode consequent, SCode alternative)
-        {
-            return
-                //(consequent is Quotation) ? Unimplemented () :
-                //(alternative is Quotation) ? Unimplemented () :
-                new PCondIsObjectTypeQL (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            rand0Histogram.Note (this.rand0Value);
-            SCode.location = "PCondIsObjectTypeQL.EvalStep";
-#endif
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value, ev1);
-
-            if ((answer is bool) && (bool) answer == false) {
-#if DEBUG
-                noteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                return true;
-            }
-            else {
-#if DEBUG
-                noteCalls (this.consequent);
+                NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
 #endif
                 expression = this.consequent;

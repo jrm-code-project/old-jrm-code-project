@@ -1182,7 +1182,10 @@ namespace Microcode
                 //: (code == TC.COMBINATION_2) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("COMBINATION2?", 1), rand1)
                 //: (code == TC.COMMENT) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("COMMENT?", 1), rand1)
                 //: (code == TC.COMPILED_CODE_BLOCK) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("COMPILED_CODE_BLOCK?", 1), rand1)
-                //: (code == TC.COMPILED_ENTRY) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("COMPILED-ENTRY?", 1), rand1)
+
+                // There are no compiled entries, so simply eval the operand and return false.
+                // Other optimizations may improve this sequence.
+                (code == TC.COMPILED_ENTRY) ? Sequence2.Make (rand1, Quotation.Make (false)) :
                 (code == TC.COMPLEX) ? PrimitiveCombination1.Make (Primitive.IsComplex, rand1) :
                 //: (code == TC.CONDITIONAL) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("CONDITIONAL?", 1), rand1)
                 //: (code == TC.CONTROL_POINT) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("CONTROL-POINT?", 1), rand1)
@@ -1190,13 +1193,13 @@ namespace Microcode
                 //: (code == TC.DELAY) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("DELAY?", 1), rand1)
                 //: (code == TC.DELAYED) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("DELAYED?", 1), rand1)
                 //: (code == TC.DISJUNCTION) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("DISJUNCTION?", 1), rand1)
-                //: (code == TC.ENTITY) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("ENTITY?", 1), rand1)
+                (code == TC.ENTITY) ? PrimitiveCombination1.Make (Primitive.IsEntity, rand1) :
                 //: (code == TC.EXTENDED_LAMBDA) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("EXTENDED-LAMBDA?", 1), rand1)
-                //: (code == TC.EXTENDED_PROCEDURE) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("EXTENDED-PROCEDURE?", 1), rand1)
+                //(code == TC.EXTENDED_PROCEDURE) ? PrimitiveCombination1.Make (Primitive.IsExtendedProcedure, rand1) :
                 //: (code == TC.ENVIRONMENT) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("ENVIRONMENT?", 1), rand1)
                 (code == TC.FIXNUM) ? PrimitiveCombination1.Make (Primitive.IsFixnum, rand1) :
                 //: (code == TC.HUNK3_B) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("HUNK3B?", 1), rand1)
-                //(code == TC.INTERNED_SYMBOL) ? PrimitiveCombination1.Make (Primitive.IsSymbol, rand1) :
+                (code == TC.INTERNED_SYMBOL) ? PrimitiveCombination1.Make (Primitive.IsSymbol, rand1) :
                 //: (code == TC.LAMBDA) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("LAMBDA?", 1), rand1)
                 //: (code == TC.LEXPR) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("LEXPR?", 1), rand1)
                 //: (code == TC.MANIFEST_CLOSURE) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("MANIFEST-CLOSURE?", 1), rand1)
@@ -1215,13 +1218,14 @@ namespace Microcode
                 //: (code == TC.SEQUENCE_3) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("SEQUENCE3?", 1), rand1)
                 //: (code == TC.STACK_ENVIRONMENT) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("STACK-ENVIRONMENT?", 1), rand1)
                 //: (code == TC.THE_ENVIRONMENT) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("THE-ENVIRONMENT?", 1), rand1)
-                //: (code == TC.UNINTERNED_SYMBOL) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("UNINTERNED-SYMBOL?", 1), rand1)
+                (code == TC.UNINTERNED_SYMBOL) ? PrimitiveCombination1.Make (Primitive.IsUninternedSymbol, rand1) :
                 //: (code == TC.VARIABLE) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("VARIABLE?", 1), rand1)
                 (code == TC.VECTOR) ? PrimitiveCombination1.Make (Primitive.IsVector, rand1) :
-                //: (code == TC.WEAK_CONS) ? PrimitiveCombination1.Make ((Primitive1) Primitive.Find ("WEAK-CONS?", 1), rand1)
+                (code == TC.WEAK_CONS) ? PrimitiveCombination1.Make (Primitive.IsWeakCons, rand1) :
                 //: Unimplemented ();
                 //(rand1 is LexicalVariable) ? PrimitiveIsObjectTypeQL.Make (rator, rand0, (LexicalVariable) rand1) :
                 //(rand1 is Quotation) ? PrimitiveIsObjectTypeQQ.Make (rator, rand0, (Quotation) rand1) :
+                (rand1 is Argument) ? PrimitiveIsObjectTypeQA.Make (rator, rand0, (Argument) rand1) :
                  new PrimitiveIsObjectTypeQ (rator, rand0, rand1);
         }
 
@@ -1253,6 +1257,43 @@ namespace Microcode
 
             if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value, ev1))
                 throw new NotImplementedException();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsObjectTypeQA : PrimitiveIsObjectTypeQ
+    {
+#if DEBUG
+        static Histogram<TC> tcHistogram = new Histogram<TC> ();
+#endif
+        public readonly int rand1Offset;
+        protected PrimitiveIsObjectTypeQA (Primitive2 rator, Quotation rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, Quotation rand0, Argument rand1)
+        {
+            TC code = (TC) rand0.Quoted;
+            return
+                 new PrimitiveIsObjectTypeQA (rator, rand0, rand1);
+        }
+
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            tcHistogram.Note (this.rand0Value);
+            SCode.location = "PrimitiveIsObjectTypeQA";
+#endif
+            // Eval argument1
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            if (ObjectModel.IsPrimitiveObjectType (out answer, this.rand0Value, ev1))
+                throw new NotImplementedException ();
             return false;
         }
     }

@@ -236,12 +236,6 @@ namespace Microcode
         {
         }
 
-        [SchemePrimitive ("EXTENDED-PROCEDURE?", 1, true)]
-        public static bool IsExtendedProcedure (out object answer, object arg)
-        {
-            answer = arg is StandardExtendedClosure;
-            return false;
-        }
 
         public override string ToString ()
         {
@@ -392,15 +386,6 @@ namespace Microcode
         // Used in subclasses when they want to invoke the closure
         // on zero arguments.
         static protected object [] noArguments =  new object [] { };
-
-        [SchemePrimitive ("PROCEDURE?", 1, true)]
-        public static bool IsProcedure (out object answer, object arg0)
-        {
-            answer = arg0 is StandardClosure ||
-                arg0 is StaticClosure ||
-                arg0 is SimpleClosure;
-            return false;
-        }
 
         public override string ToString ()
         {
@@ -584,7 +569,7 @@ namespace Microcode
                     SCode.location = "SimpleClosure.Apply";
 #endif
                     if (args.Length != this.arity)
-                        throw new NotImplementedException ();
+                        return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
                     expression = this.lambdaBody;
                     environment = new SimpleEnvironment (this, args);
                     answer = null; // keep the compiler happy
@@ -598,6 +583,9 @@ namespace Microcode
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call0";
 #endif 
+            if (this.arity != 0)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+
             if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
 
             expression = this.lambdaBody;
@@ -609,9 +597,12 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
         {
 #if DEBUG
+            SCode.location = "-";
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call1";
 #endif
+            if (this.arity != 1)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
             //if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
 
             expression = this.lambdaBody;
@@ -623,9 +614,12 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
         {
 #if DEBUG
+            SCode.location = "-";
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call2";
 #endif
+            if (this.arity != 2)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
             if (callCount++ == Configuration.OptimizeThreshold  && this.StaticCells.Length != 0) this.XXOptimize ();
 
             expression = this.lambdaBody;
@@ -640,6 +634,8 @@ namespace Microcode
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call3";
 #endif
+            if (this.arity != 3)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
             if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
 
             expression = this.lambdaBody; 

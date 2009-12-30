@@ -93,7 +93,7 @@ namespace Microcode
             SCode.location = oldLocation;
         }
 
-        static long warm_break = 1000000000;
+        static long warm_break = 10000000;
 
         [DebuggerStepThrough]
         protected void Warm (String location)
@@ -762,12 +762,16 @@ namespace Microcode
                // first is Sequence2) ? Flatten ((Sequence2) first, second) :
                //(Configuration.EnableCodeRewriting &&
                // first is Sequence3) ? Flatten ((Sequence3) first, second) :
-               // (Configuration.EnableSuperOperators &&
+               (Configuration.EnableSequence2Specialization &&
+               first is Argument) ? second :
+               (Configuration.EnableSequence2Specialization &&
+               first is Quotation) ? Sequence2Q.Make ((Quotation) first, second) :
+               (Configuration.EnableSequence2Specialization &&
+               first is AssignmentA0SimpleLambda) ? Sequence2AssignmentA0SimpleLambda.Make ((AssignmentA0SimpleLambda) first, second) :
                (Configuration.EnableSequence2Specialization &&
                  second is Argument) ? Sequence2XA.Make (first, (Argument) second) :
-               // (Configuration.EnableSuperOperators &&
-               //  Configuration.EnableSequenceSpecialization &&
-               // second is Quotation) ? Sequence2SQ.Make (first, (Quotation) second) :
+               (Configuration.EnableSequence2Specialization &&
+                second is Quotation) ? Sequence2XQ.Make (first, (Quotation) second) :
                // (Configuration.EnableCodeRewriting &&
                // second is Sequence2) ? Flatten (first, (Sequence2) second) :
 
@@ -958,44 +962,35 @@ namespace Microcode
 //        }
 //    }
 
-//    /// <summary>
-//    /// This one is weird, but we sometimes see declarations.
-//    /// </summary>
-//    [Serializable]
-//    class Sequence2Q : Sequence2
-//    {
-//        protected Sequence2Q (Quotation first, SCode second)
-//            : base (first, second)
-//        {
-//        }
+    /// <summary>
+    /// This one is weird, but we sometimes see declarations.
+    /// </summary>
+    [Serializable]
+    class Sequence2Q : Sequence2
+    {
+        protected Sequence2Q (Quotation first, SCode second)
+            : base (first, second)
+        {
+        }
 
-//        static SCode Simplify (SCode second)
-//        {
-//            //Debug.Write ("\n; Sequence2Q.Simplify");
-//            return second;
-//        }
+        static public SCode Make (Quotation first, SCode second)
+        {
+            return
+                new Sequence2Q (first, second);
+        }
 
-//        static public SCode Make (Quotation first, SCode second)
-//        {
-//            return 
-//                (Configuration.EnableCodeRewriting &&
-//                 Configuration.EnableSequenceSimplification &&
-//                 !(first.Quoted is object [])) ? Simplify(second) :
-//                new Sequence2Q (first, second);
-//        }
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.second);
-//            SCode.location = "Sequence2Q.EvalStep";
-//#endif
-//            expression = this.second;
-//            answer = null;
-//            return true;
-//        }
-//    }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.second);
+            SCode.location = "Sequence2Q.EvalStep";
+#endif
+            expression = this.second;
+            answer = null;
+            return true;
+        }
+    }
 
 //    class Sequence2SL : Sequence2
 //    {
@@ -1044,6 +1039,78 @@ namespace Microcode
 //        }
 //    }
 
+    class Sequence2AssignmentA0SimpleLambda : Sequence2
+    {
+        public readonly SimpleLambda lambda;
+        protected Sequence2AssignmentA0SimpleLambda (AssignmentA0SimpleLambda first, SCode second)
+            : base (first, second)
+        {
+            this.lambda = first.lambda;
+        }
+
+        public static Sequence2AssignmentA0SimpleLambda Make (AssignmentA0SimpleLambda first, SCode second)
+        {
+            return
+                (second is Argument0) ? Letrec1Body.Make(first, (Argument0) second) :
+                new Sequence2AssignmentA0SimpleLambda (first, second);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.second);
+            SCode.location = "Sequence2AssignmentA0SimpleLambda";
+#endif
+            this.lambda.closeCount += 1;
+            object [] staticCells = environment.GetValueCells (this.lambda.StaticMapping);
+#if DEBUG
+            SCode.location = "Sequence2AssignmentA0SimpleLambda";
+#endif
+            // Use the base environment for lookup.
+            SimpleClosure newValue = new SimpleClosure (this.lambda, environment.BaseEnvironment, staticCells);
+
+            if (environment.AssignArgument0 (out answer, newValue)) throw new NotImplementedException ();
+
+            expression = this.second;
+            answer = null;
+            return true; //tailcall  to second
+        }
+    }
+
+    sealed class Letrec1Body : Sequence2AssignmentA0SimpleLambda
+    {
+        protected Letrec1Body (AssignmentA0SimpleLambda first, Argument0 second)
+            : base (first, second)
+        {
+        }
+
+        public static Letrec1Body Make (AssignmentA0SimpleLambda first, Argument0 second)
+        {
+            return
+                new Letrec1Body (first,  second);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Letrec1Body");
+#endif
+            this.lambda.closeCount += 1;
+            object [] staticCells = environment.GetValueCells (this.lambda.StaticMapping);
+#if DEBUG
+            SCode.location = "Letrec1Body";
+#endif
+            // Use the base environment for lookup.
+            SimpleClosure newValue = new SimpleClosure (this.lambda, environment.BaseEnvironment, staticCells);
+
+            if (environment.AssignArgument0 (out answer, newValue)) throw new NotImplementedException ();
+
+            answer = newValue;
+            return false;
+        }
+    }
+
     class Sequence2XA : Sequence2
     {
         public readonly int secondOffset;
@@ -1086,6 +1153,9 @@ namespace Microcode
 
     sealed class Sequence2XA0 : Sequence2XA
     {
+#if DEBUG
+                static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+#endif
         Sequence2XA0 (SCode first, Argument0 second)
             : base (first, second)
         {
@@ -1099,8 +1169,10 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
         {
 #if DEBUG
-            Warm ("Sequence2XA0");
+            Warm ("-");
             NoteCalls (this.first);
+            firstTypeHistogram.Note (this.firstType);
+            SCode.location = "Sequence2XA0";
 #endif
             Control first = this.first;
             Environment env = closureEnvironment;
@@ -1117,6 +1189,7 @@ namespace Microcode
         }
     }
 
+    [Serializable]
     sealed class Sequence2SX0Frame0 : SubproblemContinuation<Sequence2XA0>, ISystemVector
     {
         public Sequence2SX0Frame0 (Sequence2XA0 expression, Environment closureEnvironment)
@@ -1223,58 +1296,58 @@ namespace Microcode
 //        }
 //    }
 
-//    [Serializable]
-//    sealed class Sequence2SQ : Sequence2
-//    {
-//#if DEBUG
-//        static public new Histogram<Type> firstTypeHistogram = new Histogram<Type>();
-//        static public Histogram<object> quotedHistogram = new Histogram<object> ();
-//#endif
-//        public object quoted;
+    [Serializable]
+    sealed class Sequence2XQ : Sequence2
+    {
+#if DEBUG
+        static public new Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+        static public Histogram<object> quotedHistogram = new Histogram<object> ();
+#endif
+        public readonly object quoted;
 
-//        Sequence2SQ (SCode first, Quotation second)
-//            : base (first, second)
-//        {
-//            this.quoted = second.Quoted;
-//        }
+        Sequence2XQ (SCode first, Quotation second)
+            : base (first, second)
+        {
+            this.quoted = second.Quoted;
+        }
 
-//        static public SCode Make (SCode first, Quotation second)
-//        {
-//            return 
-//                //(Configuration.EnableTrueUnspecific && second.Quoted == Constant.Unspecific)? first
-//                //: (first is Conditional) ? Conditional.Make (((Conditional)first).Predicate,
-//                //                                             Sequence2.Make (((Conditional)first).Consequent, second),
-//                //                                             Sequence2.Make (((Conditional) first).Alternative, second))
-//                new Sequence2SQ (first, second);
-//        }
+        static public SCode Make (SCode first, Quotation second)
+        {
+            return
+                //(Configuration.EnableTrueUnspecific && second.Quoted == Constant.Unspecific)? first
+                //: (first is Conditional) ? Conditional.Make (((Conditional)first).Predicate,
+                //                                             Sequence2.Make (((Conditional)first).Consequent, second),
+                //                                             Sequence2.Make (((Conditional) first).Alternative, second))
+                new Sequence2XQ (first, second);
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.first);
-//            firstTypeHistogram.Note (this.firstType);
-//            if (this.quoted != null)
-//                quotedHistogram.Note (this.quoted);
-//            SCode.location = "Sequence2SQ.EvalStep";
-//#endif
-//            Control first = this.first;
-//            Environment env = closureEnvironment;
-//            while (first.EvalStep (out answer, ref first, ref env)) { };
-//#if DEBUG
-//            SCode.location = "Sequence2SQ.EvalStep.1";
-//#endif
-//            if (answer == Interpreter.Unwind) {
-//                ((UnwinderState) env).AddFrame (new Sequence2SQFrame0 (this, closureEnvironment));
-//                closureEnvironment = env;
-//                answer = Interpreter.Unwind;
-//                return false;
-//            }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.first);
+            firstTypeHistogram.Note (this.firstType);
+            if (this.quoted != null)
+                quotedHistogram.Note (this.quoted);
+            SCode.location = "Sequence2XQ";
+#endif
+            Control first = this.first;
+            Environment env = closureEnvironment;
+            while (first.EvalStep (out answer, ref first, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence2XQ";
+#endif
+            if (answer == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
+                closureEnvironment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
 
-//            answer = this.quoted;
-//            return false;
-//        }
-//    }
+            answer = this.quoted;
+            return false;
+        }
+    }
 
     [Serializable]
     sealed class Sequence2Frame0 : SubproblemContinuation<Sequence2>, ISystemVector
@@ -1354,34 +1427,48 @@ namespace Microcode
     //}
 
     [Serializable]
-    sealed class Sequence3 : SCode, ISerializable, ISystemHunk3
+    class Sequence3 : SCode, ISerializable, ISystemHunk3
     {
+#if DEBUG
+        static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+        static public Histogram<Type> secondTypeHistogram = new Histogram<Type> ();
+        static public Histogram<Type> thirdTypeHistogram = new Histogram<Type> ();
+
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public Type firstType;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public Type secondType;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        public Type thirdType;
+#endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.SEQUENCE_3; } }
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode first;
+        protected readonly SCode first;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode second;
+        protected readonly SCode second;
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
-        readonly SCode third;
+        protected readonly SCode third;
 
-        Sequence3 (SCode first, SCode second, SCode third)
+        protected Sequence3 (SCode first, SCode second, SCode third)
             : base ()
         {
             this.first = first;
             this.second = second;
             this.third = third;
+#if DEBUG
+            this.firstType = first.GetType();
+            this.secondType = second.GetType();
+            this.thirdType = third.GetType();
+#endif
         }
 
         public Sequence3 (Hunk3 init)
-            : base ()
+            : this (EnsureSCode (init.Cxr0), EnsureSCode (init.Cxr1), EnsureSCode (init.Cxr2))
         {
-            this.first = EnsureSCode (init.Cxr0);
-            this.second = EnsureSCode (init.Cxr1);
-            this.third = EnsureSCode (init.Cxr2);
         }
 
         static SCode Simplify (SCode first, SCode second)
@@ -1463,8 +1550,8 @@ namespace Microcode
 
         public static SCode Make (SCode first, SCode second, SCode third)
         {
-            return new Sequence3 (first, second, third);
-                //(! Configuration.EnableSequence3Optimization) ? new Sequence3 (first, second, third) :
+            return
+                (! Configuration.EnableSequence3Optimization) ? new Sequence3 (first, second, third) :
                 ////: (Configuration.EnableTrueUnspecific && third is Quotation && ((Quotation) third).Quoted == Constant.Unspecific) ? Sequence2.Make (first, second)
                 ////: 
                 //(Configuration.EnableCodeRewriting &&
@@ -1479,8 +1566,10 @@ namespace Microcode
                 // first is Quotation)) ? Simplify (second, third) :
                 //(Configuration.EnableCodeRewriting &&
                 // Configuration.EnableSequenceSimplification &&
-                // (second is Variable ||
-                // second is Quotation)) ? Simplify (first, third) :
+                (second is Variable ||
+                 second is Quotation) ? Sequence3B.Make (first, second, third) :
+                 (third is Argument) ? Sequence3A.Make (first, second, (Argument) third) :
+                 (third is Quotation) ? Sequence3Q.Make (first, second, (Quotation) third) :
                 // (Configuration.EnableCodeRewriting &&
                 // Configuration.EnableFlattenSequence &&
                 // third is Sequence2) ? Flatten (first, second, (Sequence2) third) :
@@ -1496,7 +1585,7 @@ namespace Microcode
                 //(Configuration.EnableCodeRewriting &&
                 // Configuration.EnableFlattenSequence &&
                 // first is Sequence3) ? Flatten ((Sequence3) first, second, third) :
-                //new Sequence3 (first, second, third);
+                new Sequence3 (first, second, third);
         }
 
         public static SCode Make (object first, object second, object third)
@@ -1541,16 +1630,23 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("Sequence3.EvalStep");
+            Warm ("-");
             NoteCalls (this.first);
             NoteCalls (this.second);
             NoteCalls (this.third);
+            firstTypeHistogram.Note (this.firstType); 
+            secondTypeHistogram.Note (this.secondType);
+            thirdTypeHistogram.Note (this.thirdType);
+            SCode.location = "Sequence3";
 #endif
             object ev;
             Control expr = this.first;
             Environment env = environment;
 
             while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+                        SCode.location = "Sequence3";
+#endif
             if (ev == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Sequence3Frame0 (this, environment));
                 environment = env;
@@ -1561,6 +1657,9 @@ namespace Microcode
             expr = this.second;
             env = environment;
             while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3";
+#endif
             if (ev  == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this, environment));
                 environment = env;
@@ -1717,7 +1816,6 @@ namespace Microcode
         #endregion
     }
 
-
     [Serializable]
     sealed class Sequence3Frame0 : SubproblemContinuation<Sequence3>, ISystemVector
     {
@@ -1805,6 +1903,325 @@ namespace Microcode
             expression = this.expression.Third;
             return true;
         }
+    }
+
+    [Serializable]
+    class Sequence3A : Sequence3
+    {
+#if DEBUG
+        static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+        static public Histogram<Type> secondTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly int offset;
+        protected Sequence3A (SCode first, SCode second, Argument third)
+            : base (first, second, third)
+        {
+            this.offset = third.Offset; 
+    }
+
+        public static SCode Make (SCode first, SCode second, Argument third)
+        {
+            return
+                (third is Argument0) ? Sequence3A0.Make (first, second, (Argument0) third) :
+                (third is Argument1) ? Sequence3A1.Make (first, second, (Argument1) third) :
+                new Sequence3A (first, second, third);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.first);
+            NoteCalls (this.second);
+            firstTypeHistogram.Note (this.firstType);
+            secondTypeHistogram.Note (this.secondType);
+            SCode.location = "Sequence3A";
+#endif
+            object ev;
+            Control expr = this.first;
+            Environment env = environment;
+
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3A";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+                        expr = this.second;
+                        env = environment;
+                        while (expr.EvalStep (out ev, ref expr, ref env)) { };
+            #if DEBUG
+                        SCode.location = "Sequence3A";
+            #endif
+                        if (ev  == Interpreter.UnwindStack) {
+                            ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this, environment));
+                            environment = env;
+                            answer = Interpreter.UnwindStack;
+                            return false;
+                        } 
+
+            answer = environment.ArgumentValue (this.offset);
+            return false;
+        }
+
+    }
+
+    [Serializable]
+    class Sequence3A0 : Sequence3A
+    {
+#if DEBUG
+        static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+        static public Histogram<Type> secondTypeHistogram = new Histogram<Type> ();
+#endif
+        protected Sequence3A0 (SCode first, SCode second, Argument0 third)
+            : base (first, second, third)
+        {
+        }
+
+        public static SCode Make (SCode first, SCode second, Argument0 third)
+        {
+            return
+                new Sequence3A0 (first, second, third);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.first);
+            NoteCalls (this.second);
+            firstTypeHistogram.Note (this.firstType);
+            secondTypeHistogram.Note (this.secondType);
+            SCode.location = "Sequence3A0";
+#endif
+            object ev;
+            Control expr = this.first;
+            Environment env = environment;
+
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3A0";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            expr = this.second;
+            env = environment;
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3A0";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            answer = environment.Argument0Value;
+            return false;
+        }
+
+    }
+
+    [Serializable]
+    class Sequence3A1 : Sequence3A
+    {
+#if DEBUG
+        static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+        static public Histogram<Type> secondTypeHistogram = new Histogram<Type> ();
+#endif
+        protected Sequence3A1 (SCode first, SCode second, Argument1 third)
+            : base (first, second, third)
+        {
+        }
+
+        public static SCode Make (SCode first, SCode second, Argument1 third)
+        {
+            return
+                new Sequence3A1 (first, second, third);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.first);
+            NoteCalls (this.second);
+            firstTypeHistogram.Note (this.firstType);
+            secondTypeHistogram.Note (this.secondType);
+            SCode.location = "Sequence3A1";
+#endif
+            object ev;
+            Control expr = this.first;
+            Environment env = environment;
+
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3A1";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            expr = this.second;
+            env = environment;
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3A0";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            answer = environment.Argument1Value;
+            return false;
+        }
+
+    }
+
+    [Serializable]
+    class Sequence3Q : Sequence3
+    {
+#if DEBUG
+        static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+        static public Histogram<Type> secondTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly object thirdValue;
+        protected Sequence3Q (SCode first, SCode second, Quotation third)
+            : base (first, second, third)
+        {
+            this.thirdValue = third.Quoted;
+        }
+
+        public static SCode Make (SCode first, SCode second, Quotation third)
+        {
+            return
+                new Sequence3Q (first, second, third);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.first);
+            NoteCalls (this.second);
+            firstTypeHistogram.Note (this.firstType);
+            secondTypeHistogram.Note (this.secondType);
+            SCode.location = "Sequence3Q";
+#endif
+            object ev;
+            Control expr = this.first;
+            Environment env = environment;
+
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3Q";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            expr = this.second;
+            env = environment;
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3Q";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            answer = this.thirdValue;
+            return false;
+        }
+
+    }
+
+    [Serializable]
+    class Sequence3B : Sequence3
+    {
+        #if DEBUG
+        static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+        static public Histogram<Type> thirdTypeHistogram = new Histogram<Type> ();
+#endif
+        protected Sequence3B (SCode first, SCode second, SCode third)
+            : base (first, second, third)
+        { }
+
+        public static new SCode Make (SCode first, SCode second, SCode third)
+        {
+            return
+                new Sequence3B (first, second, third);
+        }
+
+                public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.first);
+            NoteCalls (this.third);
+            firstTypeHistogram.Note (this.firstType); 
+            thirdTypeHistogram.Note (this.thirdType);
+            SCode.location = "Sequence3B";
+#endif
+            object ev;
+            Control expr = this.first;
+            Environment env = environment;
+
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+                        SCode.location = "Sequence3B";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+                    // Since the second term is a variable or quotation,
+                    // there is no need to evaluate it.
+//            expr = this.second;
+//            env = environment;
+//            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+//#if DEBUG
+//            SCode.location = "Sequence3";
+//#endif
+//            if (ev  == Interpreter.UnwindStack) {
+//                ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this, environment));
+//                environment = env;
+//                answer = Interpreter.UnwindStack;
+//                return false;
+//            } 
+
+            // Tail call into third part.
+            expression = this.third;
+            answer = null;
+            return true;
+        }
+
     }
 
     [Serializable]

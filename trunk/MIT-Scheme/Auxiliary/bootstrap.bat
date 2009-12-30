@@ -4,11 +4,11 @@
 @SET AUXILIARY=C:\jrm-code-project\MIT-Scheme\Auxiliary\
 @SET BOOTSTRAP_LIB=C:\jrm-code-project\MIT-Scheme\BootstrapLib\
 @SET FINAL_LIB=C:\jrm-code-project\MIT-Scheme\lib\
-@SET SCHEME_BAND=all.com
-@SET SCHEME_DIRECTORY="C:\Program Files\MIT-GNU Scheme"
-@SET SCHEME_EXECUTABLE="C:\Program Files\MIT-GNU Scheme\bin\scheme.exe"
-@SET SCHEME_HEAP=5000
-@SET SCHEME_LIBRARY="C:\Program Files\MIT-GNU Scheme\lib"
+@SET SCHEME_BAND=compiler.com
+@SET SCHEME_DIRECTORY="C:\GitRepository\mit-scheme\"
+@SET SCHEME_EXECUTABLE="C:\GitRepository\mit-scheme\bin\scheme.exe"
+@SET SCHEME_HEAP=6000
+@SET SCHEME_LIBRARY="C:\GitRepository\mit-scheme\lib"
 @SET SCHEME_SRC=C:\GitRepository\mit-scheme\src\
 @SET STAGING_LIB=C:\jrm-code-project\MIT-Scheme\StagingLib\
 

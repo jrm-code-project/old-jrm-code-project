@@ -48,7 +48,14 @@ namespace Microcode
         public static SCode Make (PrimitiveCombination2 predicate, SCode consequent, SCode alternative)
         {
             return
+                (predicate is PrimitiveGreaterThanFixnum) ? PCondGreaterThanFixnum.Make ((PrimitiveGreaterThanFixnum) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsEq) ? PCondIsEq.Make ((PrimitiveIsEq) predicate, consequent, alternative) :
+                (predicate is PrimitiveLessThanFixnum) ? PCondLessThanFixnum.Make ((PrimitiveLessThanFixnum) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsObjectType) ? PCondIsObjectType.Make ((PrimitiveIsObjectType) predicate, consequent, alternative) :
+                (predicate is PrimitiveRecordRef) ? PCondRecordRef.Make ((PrimitiveRecordRef) predicate, consequent, alternative) :
+                (predicate is PrimitiveVectorRef) ? PCondVectorRef.Make ((PrimitiveVectorRef) predicate, consequent, alternative) :
+                (predicate is PrimitiveCombination2A) ? PCond2A.Make ((PrimitiveCombination2A) predicate, consequent, alternative) :
+                (predicate is PrimitiveCombination2Q) ? PCond2Q.Make ((PrimitiveCombination2Q) predicate, consequent, alternative) :
                 new PCond2 (predicate, consequent, alternative);
         }
 
@@ -61,12 +68,15 @@ namespace Microcode
             procedureHistogram.Note (this.procedure);
             rand0TypeHistogram.Note (this.rand0Type);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PCond2.EvalStep";
+            SCode.location = "PCond2";
 #endif
             Control unev = this.rand1;
             Environment env = environment;
             object ev1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PCond2";
+#endif
             if (ev1 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
             }
@@ -75,6 +85,9 @@ namespace Microcode
             env = environment;
             object ev0;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PCond2";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, environment));
@@ -95,7 +108,9 @@ namespace Microcode
                     while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
                 }
             }
-
+#if DEBUG
+            SCode.location = "PCond2";
+#endif
             if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
                 NoteCalls (this.alternative);
@@ -114,6 +129,463 @@ namespace Microcode
             }
         }
     }
+
+    [Serializable]
+    class PCond2A : PCond2
+    {
+#if DEBUG
+        static Histogram<Primitive2> procedureHistogram = new Histogram<Primitive2> ();
+        [NonSerialized]
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int rand0Offset;
+        protected PCond2A (PrimitiveCombination2A predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.rand0Offset = predicate.rand0Offset;
+        }
+
+        public static SCode Make (PrimitiveCombination2A predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is PrimitiveCombination2A0) ? PCond2A0.Make ((PrimitiveCombination2A0) predicate, consequent, alternative) :
+                (predicate is PrimitiveCombination2A1) ? PCond2A1.Make ((PrimitiveCombination2A1) predicate, consequent, alternative) :
+                new PCond2A (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            procedureHistogram.Note (this.procedure);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCond2A";
+#endif
+            Control unev = this.rand1;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PCond2A";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0, ev1)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+#if DEBUG
+            SCode.location = "PCond2A";
+#endif
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCond2A0 : PCond2A
+    {
+#if DEBUG
+        static Histogram<Primitive2> procedureHistogram = new Histogram<Primitive2> ();
+        [NonSerialized]
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected PCond2A0 (PrimitiveCombination2A0 predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveCombination2A0 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is PrimitiveCombination2A0Q) ? PCond2A0Q.Make ((PrimitiveCombination2A0Q) predicate, consequent, alternative) :
+                (alternative is Quotation) ? new PCond2A0XXQ (predicate, consequent, (Quotation) alternative) :
+                new PCond2A0 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            procedureHistogram.Note (this.procedure);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCond2A0";
+#endif
+            Control unev = this.rand1;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PCond2A0";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            object ev0 = environment.Argument0Value;
+
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0, ev1)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+#if DEBUG
+            SCode.location = "PCond2A0";
+#endif
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCond2A0Q : PCond2A0
+    {
+#if DEBUG
+        static Histogram<Primitive2> procedureHistogram = new Histogram<Primitive2> ();
+        [NonSerialized]
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object rand1Value;
+        protected PCond2A0Q (PrimitiveCombination2A0Q predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.rand1Value = predicate.rand1Value;
+        }
+
+        public static SCode Make (PrimitiveCombination2A0Q predicate, SCode consequent, SCode alternative)
+        {
+            return
+                new PCond2A0Q (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            procedureHistogram.Note (this.procedure);
+            SCode.location = "PCond2A0Q";
+#endif
+            object ev0 = environment.Argument0Value;
+
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0, this.rand1Value)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+#if DEBUG
+            SCode.location = "PCond2A0Q";
+#endif
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                SCode.location = "PCond2A0Q";
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCond2A0Q";
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    sealed class PCond2A0XXQ : PCond2A0
+    {
+#if DEBUG
+        static Histogram<Primitive2> procedureHistogram = new Histogram<Primitive2> ();
+        [NonSerialized]
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeValue;
+        internal PCond2A0XXQ (PrimitiveCombination2A0 predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            procedureHistogram.Note (this.procedure);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCond2A0XXQ";
+#endif
+            Control unev = this.rand1;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PCond2A0XXQ";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            object ev0 = environment.Argument0Value;
+
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0, ev1)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+#if DEBUG
+            SCode.location = "PCond2A0XXQ";
+#endif
+            if ((answer is bool) && (bool) answer == false) {
+                answer = this.alternativeValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCond2A0XXQ";
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+
+    [Serializable]
+    class PCond2A1 : PCond2A
+    {
+#if DEBUG
+        static Histogram<Primitive2> procedureHistogram = new Histogram<Primitive2> ();
+        [NonSerialized]
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected PCond2A1 (PrimitiveCombination2A1 predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveCombination2A1 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                new PCond2A1 (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            procedureHistogram.Note (this.procedure);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCond2A1";
+#endif
+            Control unev = this.rand1;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PCond2A1";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            object ev0 = environment.Argument1Value;
+
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0, ev1)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+#if DEBUG
+            SCode.location = "PCond2A1";
+#endif
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCond2Q : PCond2
+    {
+#if DEBUG
+        static Histogram<Primitive2> procedureHistogram = new Histogram<Primitive2> ();
+        [NonSerialized]
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object rand0Value;
+        protected PCond2Q (PrimitiveCombination2Q predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.rand0Value = predicate.rand0Value;
+        }
+
+        public static SCode Make (PrimitiveCombination2Q predicate, SCode consequent, SCode alternative)
+        {
+            return
+                new PCond2Q (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            procedureHistogram.Note (this.procedure);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PCond2Q";
+#endif
+            Control unev = this.rand1;
+            Environment env = environment;
+            object ev1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PCond2Q";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+            }
+
+            object ev0 = this.rand0Value;
+
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0, ev1)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+#if DEBUG
+            SCode.location = "PCond2Q";
+#endif
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+
 
 #if NIL
     class PCond2SSL : PCond2

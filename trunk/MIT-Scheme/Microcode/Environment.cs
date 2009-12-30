@@ -72,6 +72,7 @@ namespace Microcode
         // Deep search for variable location and smash the value.
         public abstract bool Assign (out object oldValue, object name, object newValue);
         internal abstract bool AssignArgument (out object oldValue, int offset, object newValue);
+        internal abstract bool AssignArgument0 (out object oldValue, object newValue);
         internal abstract bool AssignStatic (out object oldValue, int offset, object newValue);
 
         // Define a variable in the topmost frame.  This will shadow
@@ -98,6 +99,7 @@ namespace Microcode
 
         //internal abstract ValueCell [] GetValueCells (StaticMapping mapping);
         internal abstract object[] GetValueCells (StaticMapping mapping);
+        internal abstract object [] StaticCells { get; }
 
         // Implementation of primitive.
         internal abstract bool SafeDeepSearch (out object value, object name);
@@ -244,6 +246,11 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
         internal override bool AssignStatic (out object oldValue, int offset, object newValue)
         {
             throw new NotImplementedException ();
@@ -334,6 +341,11 @@ namespace Microcode
             throw new NotImplementedException ();
         }
 
+        internal override object [] StaticCells
+        {
+            get { throw new NotImplementedException (); }
+        }
+
         public override bool FreeReference (out ValueCell value, object name)
         {
             throw new NotImplementedException ();
@@ -378,6 +390,11 @@ namespace Microcode
 
 
         internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
         {
             throw new NotImplementedException ();
         }
@@ -552,6 +569,12 @@ namespace Microcode
             if (mapping.Size != 0)
                 throw new NotImplementedException ();
             else return noValueCells;
+        }
+
+
+        internal override object [] StaticCells
+        {
+            get { return noValueCells; }
         }
 
         public override bool FreeReference (out ValueCell value, object name)
@@ -743,6 +766,11 @@ namespace Microcode
         internal override bool AssignArgument (out object oldValue, int offset, object newValue)
         {
             return bindings [offset].Assign (out oldValue, newValue);
+        }
+
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
+        {
+            return bindings [0].Assign (out oldValue, newValue);
         }
 
         internal override bool AssignStatic (out object oldValue, int offset, object newValue)
@@ -999,6 +1027,12 @@ namespace Microcode
             return newCells;
         }
 
+        static object [] noStaticCells = new object [] { };
+        internal override object [] StaticCells
+        {
+            get { return noStaticCells; }
+        }
+
         public override bool FreeReference (out ValueCell value, object name)
         {
             return this.FreeReference (out value, name, 0);
@@ -1123,6 +1157,11 @@ namespace Microcode
         internal override bool AssignArgument (out object oldValue, int offset, object newValue)
         {
             return bindings [offset].Assign (out oldValue, newValue);
+        }
+
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
+        {
+            return bindings [0].Assign (out oldValue, newValue);
         }
 
         internal override bool AssignStatic (out object oldValue, int offset, object newValue)
@@ -1293,6 +1332,12 @@ namespace Microcode
             return newCells;
         }
 
+
+        internal override object [] StaticCells
+        {
+            get { return this.Closure.StaticCells; }
+        }
+
         public override bool FreeReference (out ValueCell value, object name)
         {
             return envClosure.Environment.FreeReference (out value, name, 1);
@@ -1355,6 +1400,11 @@ namespace Microcode
 
 
         internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
         {
             throw new NotImplementedException ();
         }
@@ -1508,6 +1558,12 @@ namespace Microcode
             return cells;
         }
 
+
+        internal override object [] StaticCells
+        {
+            get { return this.Closure.StaticCells; }
+        }
+
         public override bool FreeReference (out ValueCell value, object name)
         {
             return envClosure.Environment.FreeReference (out value, name, 1);
@@ -1541,6 +1597,11 @@ namespace Microcode
 
 
         internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
         {
             throw new NotImplementedException ();
         }
@@ -1670,6 +1731,12 @@ namespace Microcode
             return newCells;
         }
 
+
+        internal override object [] StaticCells
+        {
+            get { return this.Closure.StaticCells; }
+        }
+
         public override bool FreeReference (out ValueCell value, object name)
         {
             return envClosure.Environment.FreeReference (out value, name, 1);
@@ -1692,6 +1759,7 @@ namespace Microcode
         {
             this.binding0 = binding0Value;
 #if DEBUG
+            SCode.location = "-";
             extendedBy [1] += 1;
                         // sanity check.
             object [] formals = closure.Lambda.Formals;
@@ -1708,6 +1776,11 @@ namespace Microcode
 
 
         internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
         {
             throw new NotImplementedException ();
         }
@@ -1948,6 +2021,12 @@ namespace Microcode
             return cells;
         }
 
+        internal override object [] StaticCells
+        {
+            get { return this.envClosure.StaticCells; }
+        }
+
+
         public override bool FreeReference (out ValueCell value, object name)
         {
             return envClosure.Environment.FreeReference (out value, name, 1);
@@ -1987,6 +2066,11 @@ namespace Microcode
         {
             throw new NotImplementedException ();
         }
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
 
         internal override bool AssignStatic (out object oldValue, int offset, object newValue)
         {
@@ -2213,6 +2297,12 @@ namespace Microcode
             }
         }
 
+        internal override object [] StaticCells
+        {
+            get { return this.Closure.StaticCells; }
+        }
+      
+
         public override bool FreeReference (out ValueCell value, object name)
         {
             return envClosure.Environment.FreeReference (out value, name, 1);
@@ -2253,6 +2343,11 @@ namespace Microcode
         }
 
         internal override bool AssignArgument (out object oldValue, int offset, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
         {
             throw new NotImplementedException ();
         }
@@ -2453,6 +2548,11 @@ namespace Microcode
             return cells;
         }
 
+        internal override object [] StaticCells
+        {
+            get { return this.Closure.StaticCells; }
+        }
+
         public override bool FreeReference (out ValueCell value, object name)
         {
             return envClosure.Environment.FreeReference (out value, name, 1);
@@ -2495,6 +2595,11 @@ namespace Microcode
         }
 
         public override bool Assign (out object oldValue, object name, object newValue)
+        {
+            throw new NotImplementedException ();
+        }
+
+        internal override bool AssignArgument0 (out object oldValue, object newValue)
         {
             throw new NotImplementedException ();
         }
@@ -2555,6 +2660,11 @@ namespace Microcode
         internal override object [] GetValueCells (StaticMapping mapping)
         {
             throw new NotImplementedException ();
+        }
+
+        internal override object [] StaticCells
+        {
+            get { throw new NotImplementedException (); }
         }
 
         internal override bool SafeDeepSearch (out object value, object name)

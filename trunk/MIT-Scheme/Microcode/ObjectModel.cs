@@ -179,6 +179,14 @@ namespace Microcode
             return false;
         }
 
+        [SchemePrimitive ("EXTENDED-PROCEDURE?", 1, true)]
+        public static bool IsExtendedProcedure (out object answer, object arg)
+        {
+            answer = arg is StandardExtendedClosure;
+            return false;
+        }
+
+
         [SchemePrimitive ("HUNK3-CONS", 3, true)]
         public static bool Hunk3Cons (out object answer, object cxr0, object cxr1, object cxr2)
         {
@@ -682,8 +690,11 @@ namespace Microcode
             TC newType = (TC) (int) arg0;
             switch (newType) {
 
-                case TC.FIXNUM:
+                case TC.CONSTANT:
+                    answer = Constant.Decode ((uint) (int) arg1);
+                    break;
 
+                case TC.FIXNUM:
                     answer = (arg1 == null) ? 9
                         : (arg1 is SchemeObject) ? (int)((SchemeObject)arg1).GetHashCode()
                         : arg1.GetHashCode();
@@ -712,6 +723,15 @@ namespace Microcode
                 default:
                     throw new NotImplementedException ();
             }
+            return false;
+        }
+
+        [SchemePrimitive ("PROCEDURE?", 1, true)]
+        public static bool IsProcedure (out object answer, object arg0)
+        {
+            answer = (arg0 is StandardClosure ||
+                arg0 is StaticClosure ||
+                arg0 is SimpleClosure) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
 

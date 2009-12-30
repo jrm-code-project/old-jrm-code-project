@@ -73,6 +73,7 @@ namespace Microcode
                  predicate is PrimitiveCombination1) ? POr1.Make((PrimitiveCombination1)predicate, alternative) :
                 (Configuration.EnablePrimitiveDisjunction2 &&
                  predicate is PrimitiveCombination2) ? POr2.Make((PrimitiveCombination2)predicate, alternative) :
+
                 //(predicate is Conditional) ? DistributeDisjunction((Conditional) predicate, alternative) :
                 //(predicate is Disjunction) ? RewriteDisjunction ((Disjunction) predicate, alternative):
 
@@ -125,14 +126,18 @@ namespace Microcode
         public override bool EvalStep(out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm("Disjunction.EvalStep");
+            Warm("-");
             NoteCalls(this.predicate);
             predicateTypeHistogram.Note(this.predicateType);
+            SCode.location = "Disjunction";
 #endif
             Environment env = environment;
             Control pred = this.predicate;
             object ev;
             while (pred.EvalStep(out ev, ref pred, ref env)) { };
+#if DEBUG
+            SCode.location = "Disjunction";
+#endif
             if (ev == Interpreter.UnwindStack)
             {
                 ((UnwinderState)env).AddFrame(new DisjunctionFrame(this, environment));
@@ -144,8 +149,10 @@ namespace Microcode
             if (ev is bool && (bool)ev == false)
             {
 #if DEBUG
+                SCode.location = "-";
                 NoteCalls(this.alternative);
                 alternativeTypeHistogram.Note(this.alternativeType);
+                SCode.location = "Disjunction";
 #endif
                 // tail call alternative
                 expression = this.alternative;

@@ -11,6 +11,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly SCode residual;
 
+       [DebuggerStepThrough]
         public PartialResult (SCode residual)
         {
             this.residual = residual;
