@@ -154,6 +154,10 @@ namespace Microcode
         public static bool FileModTime (out object answer, object arg)
         {
             String filename = new String ((char []) arg);
+#if DEBUG
+            // Don't benchmark the file system.
+            SCode.location = "-";
+#endif
             answer = System.IO.File.GetLastWriteTimeUtc (filename).ToFileTimeUtc ();
             return false;
         }
@@ -345,6 +349,10 @@ namespace Microcode
         [SchemePrimitive ("PRIMITIVE-FASDUMP", 3, false)]
         public static bool PrimitiveFasdump (out object answer, object arg0, object arg1, object arg2)
         {
+#if DEBUG
+            // Don't profile the disk.
+            SCode.location = "-";
+#endif
             System.IO.FileStream output = System.IO.File.OpenWrite (new String ((char []) arg1));
             // Slap in the expected header.
             output.WriteByte (0xFA);

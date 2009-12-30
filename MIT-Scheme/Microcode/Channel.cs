@@ -215,6 +215,10 @@ namespace Microcode
 
         public override int Write (char [] buffer, int start, int end)
         {
+#if DEBUG
+            // Don't measure the operating system.
+            SCode.location = "-";
+#endif
             for (int i = start; i < end; i++) {
                 output.Write (buffer [i]);
             }
@@ -238,11 +242,15 @@ namespace Microcode
         static object promptTime = 0;
         public override int Read (char [] buffer, int start, int end)
         {
+#if DEBUG
+            // Don't measure the operating system.
+            SCode.location = "-";
+#endif
             if (firstTime) {
                 Misc.SystemClock (out promptTime);
                 Console.WriteLine ("Cold load time: {0}", promptTime);
-                object ignore;
-                Statistics.Reset (out ignore);
+                //object ignore;
+                //Statistics.Reset (out ignore);
                 Console.WriteLine (";; Hack:  invoking finish-cold-load.");
                 StandardClosure.printName = true;
                 StaticClosure.printName = true;
@@ -254,6 +262,7 @@ namespace Microcode
             }
 
             if (blocking == true) {
+
                 int filled = this.input.Read (buffer, start, end - start);
                 return filled;
             }
@@ -450,6 +459,10 @@ namespace Microcode
         {
             char [] filename = (char []) arg0;
             WeakCons holder = (WeakCons) arg1;
+#if DEBUG
+            // don't benchmark the file system.
+            SCode.location = "-";
+#endif
             int channel = Channel.MakeFileChannel (new FileStream (new String (filename), System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read));
             holder.Cdr = channel;
             answer = true;

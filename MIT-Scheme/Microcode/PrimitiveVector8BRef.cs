@@ -9,6 +9,10 @@ namespace Microcode
     [Serializable]
     class PrimitiveVector8BRef : PrimitiveCombination2
     {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
         protected PrimitiveVector8BRef (Primitive2 rator, SCode rand0, SCode rand1)
             : base (rator, rand0, rand1)
         {
@@ -17,19 +21,18 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
-                (rand0 is LexicalVariable) ? PrimitiveVector8BRefL.Make (rator, (LexicalVariable) rand0, rand1)
-                : (rand0 is Quotation) ? Unimplemented()
-                : (rand1 is LexicalVariable) ? Unimplemented()
-                : (rand1 is Quotation) ? PrimitiveVector8BRefSQ.Make (rator, rand0, (Quotation) rand1)
-                : new PrimitiveVector8BRef (rator, rand0, rand1);
+                new PrimitiveVector8BRef (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PrimitiveVector8BRef.EvalStep");
-            noteCalls (this.rand0);
-            noteCalls (this.rand1);
+            Warm ("-");
+            NoteCalls (this.rand0);
+            rand0TypeHistogram.Note (this.rand0Type);
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveVector8BRef";
 #endif
             // Eval argument1
             object ev1;      
@@ -37,6 +40,10 @@ namespace Microcode
             Control unev = this.rand1;
             Environment env = environment;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveVector8BRef";
+#endif
+
             if (ev1 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -51,6 +58,10 @@ namespace Microcode
             unev = this.rand0;
             env = environment;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveVector8BRef";
+#endif
+
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
@@ -65,6 +76,7 @@ namespace Microcode
         }
     }
 
+#if NIL
     [Serializable]
     class PrimitiveVector8BRefL : PrimitiveVector8BRef
     {
@@ -703,5 +715,5 @@ namespace Microcode
             throw new NotImplementedException ();
         }
     }
-
+#endif
 }

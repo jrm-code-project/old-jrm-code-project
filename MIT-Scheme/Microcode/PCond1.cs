@@ -60,14 +60,18 @@ namespace Microcode
                 (predicate is PrimitiveIsType<double>) ? PCondIsType<double>.Make ((PrimitiveIsType<double>) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsType<Complex>) ? PCondIsType<Complex>.Make ((PrimitiveIsType<Complex>) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsType<char>) ? PCondIsType<char>.Make ((PrimitiveIsType<char>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<char []>) ? PCondIsType<char []>.Make ((PrimitiveIsType<char []>) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsType<int>) ? PCondIsType<int>.Make ((PrimitiveIsType<int>) predicate, consequent, alternative) :
                 //(predicate is PrimitiveIsNegative) ? PCondIsNegative.Make ((PrimitiveIsNegative) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsNull) ? PCondIsNull.Make ((PrimitiveIsNull) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsType<Cons>) ? PCondIsType<Cons>.Make ((PrimitiveIsType<Cons>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<Entity>) ? PCondIsType<Entity>.Make ((PrimitiveIsType<Entity>) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsType<Ratnum>) ? PCondIsType<Ratnum>.Make ((PrimitiveIsType<Ratnum>) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsType<Record>) ? PCondIsType<Record>.Make ((PrimitiveIsType<Record>) predicate, consequent, alternative) :
                 //(predicate is PrimitiveIsSymbol) ? PCondIsSymbol.Make ((PrimitiveIsSymbol) predicate, consequent, alternative) :
                 (predicate is PrimitiveIsType<object []>) ? PCondIsType<object []>.Make ((PrimitiveIsType<object[]>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsType<WeakCons>) ? PCondIsType<WeakCons>.Make ((PrimitiveIsType<WeakCons>) predicate, consequent, alternative) :
+                (predicate is PrimitiveCombination1A) ? PCond1A.Make ((PrimitiveCombination1A) predicate, consequent, alternative) :
                 //(predicate is PrimitiveCombination1L) ? PCond1L.Make ((PrimitiveCombination1L) predicate, consequent, alternative) :
                 //(predicate is PrimitiveCombination1Q) ? Unimplemented () :
                 //(consequent is LexicalVariable) ? PCond1SL.Make (predicate, (LexicalVariable) consequent, alternative) :
@@ -80,15 +84,19 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCond1.EvalStep");
+            Warm ("-");
             NoteCalls (this.arg0);
             procedureHistogram.Note (this.procedure);
             arg0TypeHistogram.Note (this.arg0Type);
+            SCode.location = "PCond1";
 #endif
             Control unev0 = this.arg0;
             Environment env = environment;
             object ev0;
             while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+#if DEBUG
+            SCode.location = "PCond1";
+#endif
             if (ev0 == Interpreter.UnwindStack) {
                 throw new NotImplementedException ();
                 //((UnwinderState) env).AddFrame (new PrimitiveCombination1Frame0 (this, closureEnvironment));
@@ -109,19 +117,26 @@ namespace Microcode
                     while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
                 }
             }
+#if DEBUG
+            SCode.location = "PCond1";
+#endif
 
             if ((answer is bool) && (bool) answer == false) {
 #if DEBUG
+                SCode.location = "-";
                 NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
+                SCode.location = "PCond1";
 #endif
                 expression = this.alternative;
                 return true;
             }
             else {
 #if DEBUG
+                SCode.location = "-";
                 NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCond1";
 #endif
                 expression = this.consequent;
                 return true;
@@ -129,194 +144,226 @@ namespace Microcode
         }
     }
 
-//    [Serializable]
-//    class PCond1L : PCond1
-//    {
-//        public readonly object predicateName;
-//        public readonly int predicateDepth;
-//        public readonly int predicateOffset;
+    [Serializable]
+    class PCond1A : PCond1
+    {
+#if DEBUG
+        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int predicateArgumentOffset;
 
-//        protected PCond1L (PrimitiveCombination1L predicate, SCode consequent, SCode alternative)
-//            : base (predicate, consequent, alternative)
-//        {
-//            this.predicateName = predicate.OperandName;
-//            this.predicateDepth = predicate.OperandDepth;
-//            this.predicateOffset = predicate.OperandOffset;
-//        }
+        protected PCond1A (PrimitiveCombination1A predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.predicateArgumentOffset = predicate.offset;
+        }
 
-//        public static SCode Make (PrimitiveCombination1L predicate, SCode consequent, SCode alternative)
-//        {
-//            return
-//                (predicate is PrimitiveCombination1A) ? PCond1A.Make ((PrimitiveCombination1A) predicate, consequent, alternative)
-//                : (predicate is PrimitiveCombination1L1) ? PCond1L1.Make ((PrimitiveCombination1L1) predicate, consequent, alternative)
-//                : (consequent is LexicalVariable) ? PCond1LL.Make (predicate, (LexicalVariable) consequent, alternative)
-//                : (consequent is Quotation) ? PCond1LQ.Make (predicate, (Quotation) consequent, alternative)
-//                : (alternative is LexicalVariable) ? PCond1LSL.Make (predicate, consequent, (LexicalVariable) alternative)
-//                : (alternative is Quotation) ? PCond1LSQ.Make (predicate, consequent, (Quotation) alternative)
-//                : new PCond1L (predicate, consequent, alternative);
-//        }
+        public static SCode Make (PrimitiveCombination1A predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is PrimitiveCombination1A0) ? PCond1A0.Make ((PrimitiveCombination1A0) predicate, consequent, alternative) :
+                (predicate is PrimitiveCombination1A1) ? PCond1A1.Make ((PrimitiveCombination1A1) predicate, consequent, alternative) :
+                //: (consequent is LexicalVariable) ? PCond1AL.Make (predicate, (LexicalVariable) consequent, alternative)
+                //: (consequent is Quotation) ? PCond1AQ.Make (predicate, (Quotation) consequent, alternative)
+                //: (alternative is LexicalVariable) ? PCond1ASL.Make (predicate, consequent, (LexicalVariable) alternative)
+                //: (alternative is Quotation) ? PCond1ASQ.Make (predicate, consequent, (Quotation) alternative)
+                new PCond1A (predicate, consequent, alternative);
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("PCond1L.EvalStep");
-//#endif
-//            object ev0;
-//            if (closureEnvironment.FastLexicalRef (out ev0, this.predicateName, this.predicateDepth, this.predicateOffset))
-//                throw new NotImplementedException ();
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            procedureHistogram.Note (this.procedure);
+            SCode.location = "PCond1A";
+#endif
+            object ev0 = environment.ArgumentValue (this.predicateArgumentOffset);
 
-//#if DEBUG
-//            Primitive.hotPrimitives.Note (this.procedure);
-//            SCode.location = this.procedure.Name.ToString();
-//#endif
-//            if (this.method (out answer, ev0)) {
-//                TailCallInterpreter tci = answer as TailCallInterpreter;
-//                if (tci != null) {
-//                    answer = null; // dispose of the evidence
-//                    // set up the interpreter for a tail call
-//                    Control cExpression = tci.Expression;
-//                    Environment cEnvironment = tci.Environment;
-//                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
-//                }
-//            }
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+#if DEBUG
+            SCode.location = "PCond1A";
+#endif
 
-//            if ((answer is bool) && (bool) answer == false) {
-//#if DEBUG
-//                NoteCalls (this.alternative);
-//#endif
-//                expression = this.alternative;
-//                return true;
-//            }
-//            else {
-//#if DEBUG
-//                NoteCalls (this.consequent);
-//#endif
-//                expression = this.consequent;
-//                return true;
-//            }
-//        }
-//    }
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                SCode.location = "PCond1A";
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCond1A";
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+     }
 
-//    [Serializable]
-//    class PCond1A : PCond1L
-//    {
-//        protected PCond1A (PrimitiveCombination1A predicate, SCode consequent, SCode alternative)
-//            : base (predicate, consequent, alternative)
-//        {
-//        }
+    [Serializable]
+    class PCond1A0 : PCond1A
+    {
+#if DEBUG
+        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int predicateArgumentOffset;
 
-//        public static SCode Make (PrimitiveCombination1A predicate, SCode consequent, SCode alternative)
-//        {
-//            return
-//                (predicate is PrimitiveCombination1A0) ? PCond1A0.Make ((PrimitiveCombination1A0) predicate, consequent, alternative)
-//                : (predicate is PrimitiveCombination1A1) ? PCond1A1.Make ((PrimitiveCombination1A1) predicate, consequent, alternative)
-//                : (consequent is LexicalVariable) ? PCond1AL.Make (predicate, (LexicalVariable) consequent, alternative)
-//                : (consequent is Quotation) ? PCond1AQ.Make (predicate, (Quotation) consequent, alternative)
-//                : (alternative is LexicalVariable) ? PCond1ASL.Make (predicate, consequent, (LexicalVariable) alternative)
-//                : (alternative is Quotation) ? PCond1ASQ.Make (predicate, consequent, (Quotation) alternative)
-//                : new PCond1A (predicate, consequent, alternative);
-//        }
+        protected PCond1A0 (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//            #region EvalStepBody
-//#if DEBUG
-//            Warm ("PCond1A.EvalStep");
+        public static SCode Make (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                //: (consequent is LexicalVariable) ? PCond1AL.Make (predicate, (LexicalVariable) consequent, alternative)
+                //: (consequent is Quotation) ? PCond1AQ.Make (predicate, (Quotation) consequent, alternative)
+                //: (alternative is LexicalVariable) ? PCond1ASL.Make (predicate, consequent, (LexicalVariable) alternative)
+                //: (alternative is Quotation) ? PCond1ASQ.Make (predicate, consequent, (Quotation) alternative)
+                new PCond1A0 (predicate, consequent, alternative);
+        }
 
-//#endif
-//            object ev0 = closureEnvironment.ArgumentValue (this.predicateOffset);
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            procedureHistogram.Note (this.procedure);
+            SCode.location = "PCond1A0";
+#endif
+            object ev0 = environment.Argument0Value;
 
-//#if DEBUG
-//            Primitive.hotPrimitives.Note (this.procedure);
-//#endif
-//            if (this.method (out answer, ev0)) {
-//                TailCallInterpreter tci = answer as TailCallInterpreter;
-//                if (tci != null) {
-//                    answer = null; // dispose of the evidence
-//                    // set up the interpreter for a tail call
-//                    Control cExpression = tci.Expression;
-//                    Environment cEnvironment = tci.Environment;
-//                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
-//                }
-//            }
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+#if DEBUG
+            SCode.location = "PCond1A0";
+#endif
 
-//            if ((answer is bool) && (bool) answer == false) {
-//#if DEBUG
-//                NoteCalls (this.alternative);
-//#endif
-//                expression = this.alternative;
-//                return true;
-//            }
-//            else {
-//#if DEBUG
-//                NoteCalls (this.consequent);
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                SCode.location = "PCond1A0";
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCond1A0";
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
+    [Serializable]
+    class PCond1A1 : PCond1A
+    {
+#if DEBUG
+        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
 
-//#endif
-//                expression = this.consequent;
-//                return true;
-//            }
-//            #endregion
+        protected PCond1A1 (PrimitiveCombination1A1 predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
 
-//        }
-//    }
+        public static SCode Make (PrimitiveCombination1A1 predicate, SCode consequent, SCode alternative)
+        {
+            return
+                //: (consequent is LexicalVariable) ? PCond1AL.Make (predicate, (LexicalVariable) consequent, alternative)
+                //: (consequent is Quotation) ? PCond1AQ.Make (predicate, (Quotation) consequent, alternative)
+                //: (alternative is LexicalVariable) ? PCond1ASL.Make (predicate, consequent, (LexicalVariable) alternative)
+                //: (alternative is Quotation) ? PCond1ASQ.Make (predicate, consequent, (Quotation) alternative)
+                new PCond1A1 (predicate, consequent, alternative);
+        }
 
-//    [Serializable]
-//    class PCond1A0 : PCond1A
-//    {
-//        protected PCond1A0 (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
-//            : base (predicate, consequent, alternative)
-//        {
-//        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            procedureHistogram.Note (this.procedure);
+            SCode.location = "PCond1A1";
+#endif
+            object ev0 = environment.Argument1Value;
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("PCond1A0.EvalStep");
-//#endif
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+#if DEBUG
+            SCode.location = "PCond1A1";
+#endif
 
-//            object ev0 = closureEnvironment.Argument0Value;
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                SCode.location = "PCond1A1";
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCond1A1";
+#endif
+                expression = this.consequent;
+                return true;
+            }
+        }
+    }
 
-
-//#if DEBUG
-//            Primitive.hotPrimitives.Note (this.procedure);
-//#endif
-//            if (this.method (out answer, ev0)) {
-//                TailCallInterpreter tci = answer as TailCallInterpreter;
-//                if (tci != null) {
-//                    answer = null; // dispose of the evidence
-//                    // set up the interpreter for a tail call
-//                    Control cExpression = tci.Expression;
-//                    Environment cEnvironment = tci.Environment;
-//                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
-//                }
-//            }
-
-//            if ((answer is bool) && (bool) answer == false) {
-//#if DEBUG
-//                NoteCalls (this.alternative);
-//#endif
-//                expression = this.alternative;
-//                return true;
-//            }
-//            else {
-//#if DEBUG
-//                NoteCalls (this.consequent);
-//#endif
-//                expression = this.consequent;
-//                return true;
-//            }
-//        }
-
-//        internal static SCode Make (PrimitiveCombination1A0 predicate, SCode consequent, SCode alternative)
-//        {
-//            return
-//       (consequent is LexicalVariable) ? PCond1A0L.Make (predicate, (LexicalVariable) consequent, alternative)
-//       : (consequent is Quotation) ? PCond1A0Q.Make (predicate, (Quotation) consequent, alternative)
-//       : (alternative is LexicalVariable) ? PCond1A0SL.Make (predicate, consequent, (LexicalVariable) alternative)
-//       : (alternative is Quotation) ? PCond1A0SQ.Make (predicate, consequent, (Quotation) alternative)
-//       : new PCond1A0 (predicate, consequent, alternative);
-//        }
-//    }
 
 //    [Serializable]
 //    class PCond1A0L : PCond1A0

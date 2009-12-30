@@ -24,8 +24,10 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveIsTypeA<SType>) ? PCondIsTypeA<SType>.Make ((PrimitiveIsTypeA<SType>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsTypeCar<SType>) ? PCondIsTypeCar<SType>.Make ((PrimitiveIsTypeCar<SType>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsTypeS<SType>) ? PCondIsTypeS<SType>.Make ((PrimitiveIsTypeS<SType>) predicate, consequent, alternative) :
                 (consequent is Quotation) ? PCondIsTypeXQ<SType>.Make (predicate, (Quotation) consequent, alternative) :
-                 new PCondIsType<SType> (predicate, consequent, alternative);
+                new PCondIsType<SType> (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -120,6 +122,11 @@ namespace Microcode
         internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, SCode consequent, SCode alternative)
         {
             return
+                (consequent is Argument) ? PCondIsTypeA0A<SType>.Make (predicate, (Argument) consequent, alternative) :
+                (consequent is Quotation) ? PCondIsTypeA0Q<SType>.Make (predicate, (Quotation) consequent, alternative) :
+                (alternative is Argument) ? PCondIsTypeA0XA<SType>.Make (predicate, consequent, (Argument) alternative) :
+                (alternative is StaticVariable) ? PCondIsTypeA0XS<SType>.Make (predicate, consequent, (StaticVariable) alternative) :
+                (alternative is Quotation) ? PCondIsTypeA0XQ<SType>.Make (predicate, consequent, (Quotation) alternative) :
                new PCondIsTypeA0<SType> (predicate, consequent, alternative);
         }
 
@@ -146,6 +153,381 @@ namespace Microcode
     }
 
     [Serializable]
+    class PCondIsTypeA0A<SType> : PCondIsTypeA0<SType>
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int consequentOffset;
+        protected PCondIsTypeA0A (PrimitiveIsTypeA0<SType> predicate, Argument consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentOffset = consequent.Offset;
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, Argument consequent, SCode alternative)
+        {
+            return
+                (consequent is Argument0) ? PCondIsTypeA0A0<SType>.Make (predicate, (Argument0) consequent, alternative) :
+                (consequent is Argument1) ? PCondIsTypeA0A1<SType>.Make (predicate, (Argument1) consequent, alternative) :
+               new PCondIsTypeA0A<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA0A");
+#endif
+            if (environment.Argument0Value is SType) {
+                answer = environment.ArgumentValue (this.consequentOffset);
+                return false;
+            }
+            else {
+ #if DEBUG
+            SCode.location = "-";
+            NoteCalls ((SCode) this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeA0A0<SType> : PCondIsTypeA0A<SType>
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected PCondIsTypeA0A0 (PrimitiveIsTypeA0<SType> predicate, Argument0 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, Argument0 consequent, SCode alternative)
+        {
+            return
+               new PCondIsTypeA0A0<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA0A0");
+#endif
+            object obj = environment.Argument0Value;
+
+            if (obj is SType) {
+                answer = obj;
+                return false;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeA0A1<SType> : PCondIsTypeA0A<SType>
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected PCondIsTypeA0A1 (PrimitiveIsTypeA0<SType> predicate, Argument1 consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, Argument1 consequent, SCode alternative)
+        {
+            return
+               new PCondIsTypeA0A1<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA0A1");
+#endif
+            if (environment.Argument0Value is SType) {
+                answer = environment.Argument1Value;
+                return false;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeA0Q<SType> : PCondIsTypeA0<SType>
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object consequentValue;
+        protected PCondIsTypeA0Q (PrimitiveIsTypeA0<SType> predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, Quotation consequent, SCode alternative)
+        {
+            return
+               new PCondIsTypeA0Q<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA0Q");
+#endif
+            if (environment.Argument0Value is SType) {
+                answer = this.consequentValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                SCode.location = "PCondIsTypeA0Q";
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeA0XA<SType> : PCondIsTypeA0<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int alternativeOffset;
+        protected PCondIsTypeA0XA (PrimitiveIsTypeA0<SType> predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, SCode consequent, Argument alternative)
+        {
+            return
+               (alternative is Argument0) ? PCondIsTypeA0XA0<SType>.Make (predicate, consequent, (Argument0) alternative) :
+               (alternative is Argument1) ? PCondIsTypeA0XA1<SType>.Make (predicate, consequent, (Argument1) alternative) :
+               new PCondIsTypeA0XA<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA0XA");
+#endif
+            if (environment.Argument0Value is SType) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCondIsTypeA0XA";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.ArgumentValue (this.alternativeOffset);
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    sealed class PCondIsTypeA0XA0<SType> : PCondIsTypeA0XA<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeOffset;
+        PCondIsTypeA0XA0 (PrimitiveIsTypeA0<SType> predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, SCode consequent, Argument0 alternative)
+        {
+            return
+               new PCondIsTypeA0XA0<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA0XA0");
+#endif
+            if (environment.Argument0Value is SType) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCondIsTypeA0XA";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument0Value;
+                return false;
+            }
+        }
+    }
+    [Serializable]
+    sealed class PCondIsTypeA0XA1<SType> : PCondIsTypeA0XA<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeOffset;
+        PCondIsTypeA0XA1 (PrimitiveIsTypeA0<SType> predicate, SCode consequent, Argument1 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, SCode consequent, Argument1 alternative)
+        {
+            return
+               new PCondIsTypeA0XA1<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA0XA1");
+#endif
+            if (environment.Argument0Value is SType) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCondIsTypeA0XA1";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument1Value;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeA0XS<SType> : PCondIsTypeA0<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly Symbol alternativeName;
+        public readonly int alternativeOffset;
+        protected PCondIsTypeA0XS (PrimitiveIsTypeA0<SType> predicate, SCode consequent, StaticVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, SCode consequent, StaticVariable alternative)
+        {
+            return
+               new PCondIsTypeA0XS<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA0XS");
+#endif
+            if (environment.Argument0Value is SType) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCondIsTypeA0XS";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.StaticValue (out answer, this.alternativeName, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+        }
+    }
+
+
+    [Serializable]
+    class PCondIsTypeA0XQ<SType> : PCondIsTypeA0<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeValue;
+        protected PCondIsTypeA0XQ (PrimitiveIsTypeA0<SType> predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA0<SType> predicate, SCode consequent, Quotation alternative)
+        {
+            return
+               new PCondIsTypeA0XQ<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA0XQ");
+#endif
+            if (environment.Argument0Value is SType) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCondIsTypeA0XQ";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = this.alternativeValue;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
     class PCondIsTypeA1<SType> : PCondIsTypeA<SType>
     {
 #if DEBUG
@@ -160,6 +542,8 @@ namespace Microcode
         internal static SCode Make(PrimitiveIsTypeA1<SType> predicate, SCode consequent, SCode alternative)
         {
             return
+                (consequent is Quotation) ? PCondIsTypeA1Q<SType>.Make (predicate, (Quotation) consequent, alternative) :
+                (alternative is Quotation) ? PCondIsTypeA1XQ<SType>.Make (predicate,  consequent, (Quotation) alternative) :
                 new PCondIsTypeA1<SType>(predicate, consequent, alternative);
         }
 
@@ -187,6 +571,399 @@ namespace Microcode
                 NoteCalls(this.alternative);
                 alternativeTypeHistogram.Note(this.alternativeType);
                 SCode.location = "PCondIsTypeA1";
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeA1Q<SType> : PCondIsTypeA1<SType>
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object consequentValue;
+        protected PCondIsTypeA1Q (PrimitiveIsTypeA1<SType> predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA1<SType> predicate, Quotation consequent, SCode alternative)
+        {
+            return
+                new PCondIsTypeA1Q<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA1Q");
+#endif
+            if (environment.Argument1Value is SType) {
+                answer = this.consequentValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+                SCode.location = "PCondIsTypeA1Q";
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeA1XQ<SType> : PCondIsTypeA1<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeValue;
+        protected PCondIsTypeA1XQ (PrimitiveIsTypeA1<SType> predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        internal static SCode Make (PrimitiveIsTypeA1<SType> predicate, SCode consequent, Quotation alternative)
+        {
+            return
+                new PCondIsTypeA1XQ<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeA1XQ");
+#endif
+            if (environment.Argument1Value is SType) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.alternative);
+                consequentTypeHistogram.Note (this.consequentType);
+                SCode.location = "PCondIsTypeA1XQ";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = this.alternativeValue;
+                return false;
+            } 
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeCar<SType> : PCondIsType<SType>
+    {
+#if DEBUG
+        static Histogram<Type> arg0TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+        public Type operandType;
+#endif
+        public readonly SCode operand;
+        protected PCondIsTypeCar (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.operand = predicate.randArg;
+#if DEBUG
+            this.operandType = this.operand.GetType ();
+#endif
+        }
+
+        public static SCode Make (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is PrimitiveIsTypeCarA<SType>) ? PCondIsTypeCarA<SType>.Make ((PrimitiveIsTypeCarA<SType>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsTypeCarS<SType>) ? PCondIsTypeCarS<SType>.Make ((PrimitiveIsTypeCarS<SType>) predicate, consequent, alternative) :
+                new PCondIsTypeCar<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.operand);
+            arg0TypeHistogram.Note (this.operandType);
+            SCode.location = "PCondIsTypeCar";
+#endif
+            Control unev0 = this.operand;
+            Environment env = environment;
+            object ev0;
+            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
+#if DEBUG
+            SCode.location = "PCondIsTypeCar";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveIsTypeFrame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            if (((Cons)ev0).Car is SType) {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            } 
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeCarA<SType> : PCondIsTypeCar<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int predicateOffset;
+        protected PCondIsTypeCarA (PrimitiveIsTypeCarA<SType> predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.predicateOffset = predicate.offset;
+        }
+
+        public static SCode Make (PrimitiveIsTypeCarA<SType> predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (predicate is PrimitiveIsTypeCarA0<SType>) ? PCondIsTypeCarA0<SType>.Make ((PrimitiveIsTypeCarA0<SType>) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsTypeCarA1<SType>) ? PCondIsTypeCarA1<SType>.Make ((PrimitiveIsTypeCarA1<SType>) predicate, consequent, alternative) :
+                new PCondIsTypeCarA<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeCarA");
+#endif
+            object ev0 = environment.ArgumentValue (this.predicateOffset);
+
+            if (((Cons) ev0).Car is SType) {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeCarA0<SType> : PCondIsTypeCarA<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected PCondIsTypeCarA0 (PrimitiveIsTypeCarA0<SType> predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsTypeCarA0<SType> predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (consequent is Quotation) ? PCondIsTypeCarA0Q<SType>.Make (predicate, (Quotation) consequent, alternative) :
+                new PCondIsTypeCarA0<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeCarA0");
+#endif
+            object ev0 = environment.Argument0Value;
+
+            if (((Cons) ev0).Car is SType) {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeCarA0Q<SType> : PCondIsTypeCarA0<SType>
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object consequentValue;
+
+        protected PCondIsTypeCarA0Q (PrimitiveIsTypeCarA0<SType> predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
+
+        public static SCode Make (PrimitiveIsTypeCarA0<SType> predicate, Quotation consequent, SCode alternative)
+        {
+            return
+                new PCondIsTypeCarA0Q<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeCarA0Q");
+#endif
+            object ev0 = environment.Argument0Value;
+
+            if (((Cons) ev0).Car is SType) {
+                answer = this.consequent;
+                return false;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeCarA1<SType> : PCondIsTypeCarA<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected PCondIsTypeCarA1 (PrimitiveIsTypeCarA1<SType> predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveIsTypeCarA1<SType> predicate, SCode consequent, SCode alternative)
+        {
+            return
+                new PCondIsTypeCarA1<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeCarA1");
+#endif
+            object ev0 = environment.Argument1Value;
+
+            if (((Cons) ev0).Car is SType) {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeCarS<SType> : PCondIsTypeCar<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly Symbol predicateName;
+        public readonly int predicateOffset;
+        protected PCondIsTypeCarS (PrimitiveIsTypeCarS<SType> predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.predicateName = predicate.name;
+            this.predicateOffset = predicate.offset;
+        }
+
+        public static SCode Make (PrimitiveIsTypeCarS<SType> predicate, SCode consequent, SCode alternative)
+        {
+            return
+                new PCondIsTypeCarS<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeCarS");
+#endif
+            object ev0;
+            if (environment.StaticValue (out ev0, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException();
+
+            if (((Cons) ev0).Car is SType) {
+#if DEBUG
+                NoteCalls (this.consequent);
+                consequentTypeHistogram.Note (this.consequentType);
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 expression = this.alternative;
                 answer = null;
@@ -818,6 +1595,146 @@ namespace Microcode
 //            return new PCondIsTypeASQ (predicate, consequent, alternative);
 //        }
 //    }
+
+    [Serializable]
+    class PCondIsTypeS<SType> : PCondIsType<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly Symbol predicateName;
+        public readonly int predicateOffset;
+        protected PCondIsTypeS (PrimitiveIsTypeS<SType> predicate, SCode consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.predicateName = predicate.varname;
+            this.predicateOffset = predicate.offset;
+        }
+
+        public static SCode Make (PrimitiveIsTypeS<SType> predicate, SCode consequent, SCode alternative)
+        {
+            return
+                (consequent is Quotation) ? PCondIsTypeSQ<SType>.Make (predicate, (Quotation) consequent, alternative) :
+                (alternative is Quotation) ? PCondIsTypeSXQ<SType>.Make (predicate, consequent, (Quotation) alternative) :
+                new PCondIsTypeS<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeS");
+#endif
+            object evpred;
+            if (environment.StaticValue (out evpred, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            expression = evpred is SType
+                ? this.consequent
+                : this.alternative;
+            answer = null;
+#if DEBUG
+            if (evpred is SType)
+                consequentTypeHistogram.Note (this.consequentType);
+            else
+                alternativeTypeHistogram.Note (this.alternativeType);
+            NoteCalls ((SCode) expression);
+#endif
+            return true;
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeSQ<SType> : PCondIsTypeS<SType>
+    {
+#if DEBUG
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object consequentValue;
+
+        protected PCondIsTypeSQ (PrimitiveIsTypeS<SType> predicate, Quotation consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentValue = consequent.Quoted;
+        }
+
+        public static SCode Make (PrimitiveIsTypeS<SType> predicate, Quotation consequent, SCode alternative)
+        {
+            return
+                new PCondIsTypeSQ<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeSQ");
+#endif
+            object evpred;
+            if (environment.StaticValue (out evpred, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if (evpred is SType) {
+                answer = this.consequentValue;
+                return false;
+            }
+            else {
+#if DEBUG
+                alternativeTypeHistogram.Note (this.alternativeType);
+                NoteCalls (this.alternative);
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeSXQ<SType> : PCondIsTypeS<SType>
+    {
+#if DEBUG
+        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object alternativeValue;
+
+        protected PCondIsTypeSXQ (PrimitiveIsTypeS<SType> predicate, SCode consequent, Quotation alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeValue = alternative.Quoted;
+        }
+
+        public static SCode Make (PrimitiveIsTypeS<SType> predicate, SCode consequent, Quotation alternative)
+        {
+            return
+                new PCondIsTypeSXQ<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeSXQ");
+#endif
+            object evpred;
+            if (environment.StaticValue (out evpred, this.predicateName, this.predicateOffset))
+                throw new NotImplementedException ();
+
+            if (evpred is SType)  {
+#if DEBUG
+                SCode.location = "-";
+                consequentTypeHistogram.Note (this.consequentType);
+                NoteCalls (this.consequent);
+                SCode.location = "PCondIsTypeSXQ";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = this.alternativeValue;
+                return false;
+            }
+        }
+    }
 
     [Serializable]
     class PCondIsTypeXQ<SType> : PCondIsType<SType>

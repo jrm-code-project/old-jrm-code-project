@@ -705,6 +705,10 @@ namespace Microcode
         [SchemePrimitive ("BINARY-FASLOAD", 1, false)]
         public static bool BinaryFasload (out object answer, object arg)
         {
+            // don't benchmark the file system
+#if DEBUG
+            SCode.location = "-";
+#endif
             answer = Fasload (new String ((char []) arg));
             return false;
         }

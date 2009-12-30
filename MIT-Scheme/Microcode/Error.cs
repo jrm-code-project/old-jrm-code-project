@@ -19,6 +19,11 @@ namespace Microcode
                 return FixedObjectsVector.ErrorVector [this.code];
             }
         }
+
+        internal static bool WrongNumberOfArguments (out object answer, ref Control expression, ref Environment environment)
+        {
+            throw new NotImplementedException ();
+        }
     }
 
     class UnboundVariableError : Error

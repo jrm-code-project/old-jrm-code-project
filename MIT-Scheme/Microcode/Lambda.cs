@@ -188,6 +188,18 @@ namespace Microcode
         {
         }
 
+        static public bool IsLetrec (Symbol [] formals, SCode body)
+        {
+            // too early to try this.
+            return false;
+            //return (formals.Length == 1) &&
+            //       (body is Sequence2) &&
+            //       (((Sequence2) body).First is Assignment) &&
+            //       (((Assignment) ((Sequence2) body).First).Name == formals [0]) &&
+            //       (((Sequence2) body).Second is Variable) &&
+            //       (((Variable) ((Sequence2) body).Second).Name == formals [0]);
+        }
+
         public static Lambda Make (Symbol name, Symbol [] formals, SCode body)
         {
             if (body == null)
@@ -202,6 +214,8 @@ namespace Microcode
                  (! Configuration.EnableVariableOptimization) ||
                  (! Configuration.EnableStaticBinding) ||
                   body.CallsTheEnvironment ()) ? (Lambda) new StandardLambda (name, formals, body) :
+                (Configuration.EnableSimpleLambda &&
+                  IsLetrec(formals,body)) ? (Lambda) new SimpleLambda (name, formals, body) :
                 body.MutatesAny (formals) ? (Lambda) new StaticLambda (name, formals, body) :
                 (Lambda) new SimpleLambda (name, formals, body);
         }
@@ -220,6 +234,8 @@ namespace Microcode
                 (! Configuration.EnableVariableOptimization) ||
                 (! Configuration.EnableStaticBinding) ||
                 body.CallsTheEnvironment ()) ? (Lambda) new StandardLambda (name, formals, body, freeVariables, staticMapping) :
+                (Configuration.EnableSimpleLambda &&
+                IsLetrec(formals,body)) ? (Lambda) new SimpleLambda (name, formals, body, freeVariables, staticMapping) :
                 (! Configuration.EnableSimpleLambda ||
                   body.MutatesAny (formals)) ? (Lambda) new StaticLambda (name, formals, body, freeVariables, staticMapping) :
                 (Lambda) new SimpleLambda (name, formals, body, freeVariables, staticMapping);
@@ -820,10 +836,14 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("StaticLambda.EvalStep");
+            Warm ("StaticLambda");
 #endif
             this.closeCount += 1;
-            answer = new StaticClosure (this, environment.BaseEnvironment, environment.GetValueCells (this.staticMapping));
+            object [] cells = environment.GetValueCells (this.staticMapping);
+#if DEBUG
+            SCode.location = "StaticLambda";
+#endif
+            answer = new StaticClosure (this, environment.BaseEnvironment, cells);
             return false;
         }
 
@@ -972,13 +992,18 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("SimpleLambda.EvalStep");
+            Warm ("SimpleLambda");
             if (this.staticMapping == null)
                 throw new NotImplementedException("Static mapping should not be null.");
 #endif
             this.closeCount += 1;
+            object [] cells = environment.GetValueCells (this.staticMapping);
+#if DEBUG
+            SCode.location = "SimpleLambda";
+#endif
             // Use the base environment for lookup.
-            answer = new SimpleClosure (this, environment.BaseEnvironment, environment.GetValueCells (this.staticMapping));
+            answer = new SimpleClosure (this, environment.BaseEnvironment, cells);
+
             return false;
         }
 
