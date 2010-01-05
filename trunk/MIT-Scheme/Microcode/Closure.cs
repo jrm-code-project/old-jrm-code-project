@@ -277,7 +277,6 @@ namespace Microcode
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
         {
             return Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2 });
-
         }
 
         public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
@@ -301,6 +300,7 @@ namespace Microcode
             SCode.location = "-";
             this.BumpCallCount ();
             SCode.location = "StandardExtendedClosure.Apply";
+            SCode.NoteCalls (this, this.closureLambda.Body);
 #endif
             int nargs = args.Length;
             int nparams = this.closureLambda.Formals.Length; // param 0 is self
@@ -408,11 +408,14 @@ namespace Microcode
 #if DEBUG
             this.BumpCallCount ();
             SCode.location = "StandardClosure.Apply";
+            SCode.NoteCalls (this, this.closureLambda.Body);
 #endif
             if (args.Length != this.arity)
                 throw new NotImplementedException ();
+
             expression = this.closureLambda.Body;
             environment = new StandardEnvironment<StandardLambda, StandardClosure> (this, args);
+
             answer = null; // keep the compiler happy
             return true;
         }
@@ -487,6 +490,7 @@ namespace Microcode
 #if DEBUG
             this.BumpCallCount ();
             SCode.location = "StaticClosure.Apply";
+            SCode.NoteCalls (this, this.closureLambda.Body);
 #endif
             if (args.Length != this.arity)
                 throw new NotImplementedException ();
@@ -567,6 +571,7 @@ namespace Microcode
 #if DEBUG
                     this.BumpCallCount ();
                     SCode.location = "SimpleClosure.Apply";
+                    SCode.NoteCalls (this, this.lambdaBody);
 #endif
                     if (args.Length != this.arity)
                         return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
@@ -582,6 +587,7 @@ namespace Microcode
 #if DEBUG
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call0";
+            SCode.NoteCalls (this, this.lambdaBody);
 #endif 
             if (this.arity != 0)
                 return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
@@ -600,6 +606,7 @@ namespace Microcode
             SCode.location = "-";
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call1";
+            SCode.NoteCalls (this, this.lambdaBody);
 #endif
             if (this.arity != 1)
                 return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
@@ -607,6 +614,7 @@ namespace Microcode
 
             expression = this.lambdaBody;
             environment = new SmallEnvironment1 (this, arg0);
+
             answer = null; // keep the compiler happy
             return true;
         }
@@ -617,6 +625,7 @@ namespace Microcode
             SCode.location = "-";
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call2";
+            SCode.NoteCalls (this, this.lambdaBody);
 #endif
             if (this.arity != 2)
                 return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
@@ -624,6 +633,7 @@ namespace Microcode
 
             expression = this.lambdaBody;
             environment = new SmallEnvironment2 (this, arg0, arg1);
+
             answer = null; // keep the compiler happy
             return true;
         }
@@ -633,6 +643,7 @@ namespace Microcode
 #if DEBUG
             this.BumpCallCount ();
             SCode.location = "SimpleClosure.Call3";
+            SCode.NoteCalls (this, this.lambdaBody);
 #endif
             if (this.arity != 3)
                 return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
@@ -679,5 +690,169 @@ namespace Microcode
             //}
         }
     }
+
+    sealed class ConstantClosure : StaticClosureBase<ConstantLambda>, IApplicable
+    {
+        public readonly object constantValue;
+        internal ConstantClosure (ConstantLambda lambda, Environment environment, object [] staticBindings)
+            : base (lambda, environment, staticBindings)
+        {
+            this.constantValue = lambda.constantValue;
+        }
+
+        #region IApplicable Members
+
+        public bool Apply (out object answer, ref Control expression, ref Environment environment, object [] args)
+        {
+            if (this.arity != args.Length)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+            answer = this.constantValue;
+            return false;
+
+//            switch (args.Length) {
+//                case 0: return this.Call (out answer, ref expression, ref environment);
+//                case 1: return this.Call (out answer, ref expression, ref environment, args [0]);
+//                case 2: return this.Call (out answer, ref expression, ref environment, args [0], args [1]);
+//                case 3: return this.Call (out answer, ref expression, ref environment, args [0], args [1], args [2]);
+//                default:
+//#if DEBUG
+//                    this.BumpCallCount ();
+//                    SCode.location = "SimpleClosure.Apply";
+//                    SCode.NoteCalls (this, this.lambdaBody);
+//#endif
+//                    if (args.Length != this.arity)
+//                        return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+//                    expression = this.lambdaBody;
+//                    environment = new SimpleEnvironment (this, args);
+//                    answer = null; // keep the compiler happy
+//                    return true;
+//            }
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+//            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call0";
+//            SCode.NoteCalls (this, this.lambdaBody);
+#endif
+            if (this.arity != 0)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+            answer = this.constantValue;
+            return false;
+
+//            if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
+
+//            expression = this.lambdaBody;
+//            environment = new SmallEnvironment0 (this);
+//            answer = null; // keep the compiler happy
+//            return true;
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0)
+        {
+#if DEBUG
+//            SCode.location = "-";
+//            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call1";
+//            SCode.NoteCalls (this, this.lambdaBody);
+#endif
+            if (this.arity != 1)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+            answer = this.constantValue;
+            return false;
+//            //if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
+
+//            expression = this.lambdaBody;
+//            environment = new SmallEnvironment1 (this, arg0);
+
+//            answer = null; // keep the compiler happy
+//            return true;
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1)
+        {
+#if DEBUG
+//            SCode.location = "-";
+//            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call2";
+//            SCode.NoteCalls (this, this.lambdaBody);
+#endif
+            if (this.arity != 2)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+            answer = this.constantValue;
+            return false;
+//            if (this.arity != 2)
+//                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+//            if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
+
+//            expression = this.lambdaBody;
+//            environment = new SmallEnvironment2 (this, arg0, arg1);
+
+//            answer = null; // keep the compiler happy
+//            return true;
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2)
+        {
+#if DEBUG
+//            this.BumpCallCount ();
+            SCode.location = "SimpleClosure.Call3";
+//            SCode.NoteCalls (this, this.lambdaBody);
+#endif
+            if (this.arity != 3)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+            answer = this.constantValue;
+            return false;
+//            if (this.arity != 3)
+//                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+//            if (callCount++ == Configuration.OptimizeThreshold && this.StaticCells.Length != 0) this.XXOptimize ();
+
+//            expression = this.lambdaBody;
+//            environment = new SmallEnvironment3 (this, arg0, arg1, arg2);
+//            answer = null; // keep the compiler happy
+//            return true;
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3)
+        {
+            if (this.arity != 4)
+                return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
+            answer = this.constantValue;
+            return false;
+            //return this.Apply (out answer, ref expression, ref environment, new object [] { arg0, arg1, arg2, arg3 });
+        }
+
+        public bool Call (out object answer, ref Control expression, ref Environment environment, object arg0, object arg1, object arg2, object arg3, object arg4)
+        {
+            throw new NotImplementedException ();
+        }
+
+        #endregion
+
+        protected override void XXOptimize ()
+        {
+            return;
+            //Symbol [] names = this.closureLambda.StaticMapping.Names;
+            //object [] values = this.staticBindings;
+            //Debugger.Break ();
+            //IDictionary<Symbol, object> namesToValues = new Dictionary<Symbol, object> ();
+            //for (int i = 0; i < names.Length; i++) {
+            //    Symbol name = names [i];
+            //    object value = values [i];
+            //    ValueCell cell = value as ValueCell;
+            //    if (cell == null) {
+            //        namesToValues.Add (name, value);
+            //    }
+            //}
+            //if (namesToValues.Count > 0) {
+            //    PartialEnvironment env = new PartialValueEnvironment (namesToValues);
+            //    Debugger.Break ();
+            //    PartialResult res = this.closureLambda.PartialEval (env);
+            //    this.lambdaBody = res.Residual;
+            //}
+        }
+    }
+
 
 }

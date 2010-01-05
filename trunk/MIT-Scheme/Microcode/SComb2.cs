@@ -70,7 +70,7 @@ namespace Microcode
                 (rand0 is Argument) ? Combination2XA.Make (rator, (Argument) rand0, rand1) :
                 (rand0 is Quotation) ? Combination2XQ.Make (rator, (Quotation) rand0, rand1) :
                 (rand0 is StaticVariable) ? Combination2XS.Make (rator, (StaticVariable) rand0, rand1) :
-                //(rand1 is Argument) ? Combination2XXA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Argument) ? Combination2XXA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is Quotation) ? Combination2XXQ.Make (rator, rand0, (Quotation) rand1) :
                 (rand1 is StaticVariable) ? Combination2XXS.Make (rator, rand0, (StaticVariable) rand1) :
                  new Combination2 (rator, rand0, rand1);
@@ -523,6 +523,7 @@ namespace Microcode
             return
                 (rand0 is Argument0) ? Combination2FA0.Make (rator, (Argument0) rand0, rand1) :
                 (rand0 is Argument1) ? Combination2FA1.Make (rator, (Argument1) rand0, rand1) :
+                (rand1 is Argument) ? Combination2FAA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is Quotation) ? new Combination2FAQ (rator, rand0, (Quotation) rand1) :
                 (rand1 is StaticVariable) ? new Combination2FAS (rator, rand0, (StaticVariable) rand1) :
                  new Combination2FA (rator, rand0, rand1);
@@ -840,7 +841,7 @@ namespace Microcode
         public static SCode Make (FreeVariable rator, Argument1 rand0, SCode rand1)
         {
             return
-               // (rand1 is Argument) ? Combination2FA1A.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Argument) ? Combination2FA1A.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is Quotation) ? new Combination2FA1Q (rator, rand0, (Quotation) rand1) :
                  new Combination2FA1 (rator, rand0, rand1);
         }
@@ -885,6 +886,127 @@ namespace Microcode
     }
 
     [Serializable]
+    class Combination2FA1A : Combination2FA1
+    {
+        public readonly int rand1Offset;
+        protected Combination2FA1A (FreeVariable rator, Argument1 rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (FreeVariable rator, Argument1 rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2FA1A0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2FA1A1.Make (rator, rand0, (Argument1) rand1) :
+                 new Combination2FA1A (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FA1A";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0 = environment.Argument1Value;
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2FA1A0 : Combination2FA1A
+    {
+        protected Combination2FA1A0 (FreeVariable rator, Argument1 rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (FreeVariable rator, Argument1 rand0, Argument0 rand1)
+        {
+            return
+                 new Combination2FA1A0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FA1A0";
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object ev0 = environment.Argument1Value;
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2FA1A1 : Combination2FA1A
+    {
+        protected Combination2FA1A1 (FreeVariable rator, Argument1 rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (FreeVariable rator, Argument1 rand0, Argument1 rand1)
+        {
+            return
+                 new Combination2FA1A1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FA1A1";
+#endif
+            //object ev1 = environment.Argument0Value;
+
+            object ev0 = environment.Argument1Value;
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev0);
+        }
+    }
+
+    [Serializable]
     sealed class Combination2FA1Q : Combination2FA1
     {
         public readonly object rand1Value;
@@ -918,6 +1040,127 @@ namespace Microcode
         }
     }
 
+    [Serializable]
+    class Combination2FAA : Combination2FA
+    {
+        public readonly int rand1Offset;
+        internal Combination2FAA (FreeVariable rator, Argument rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (FreeVariable rator, Argument rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2FAA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2FAA1.Make (rator, rand0, (Argument1) rand1) :
+                new Combination2FAA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FAA";
+#endif
+
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.ArgumentValue (this.rand1Offset));
+        }
+    }
+
+    [Serializable]
+    class Combination2FAA0 : Combination2FAA
+    {
+        internal Combination2FAA0 (FreeVariable rator, Argument rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (FreeVariable rator, Argument rand0, Argument0 rand1)
+        {
+            return
+                new Combination2FAA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FAA0";
+#endif
+
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+    class Combination2FAA1 : Combination2FAA
+    {
+        internal Combination2FAA1 (FreeVariable rator, Argument rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (FreeVariable rator, Argument rand0, Argument1 rand1)
+        {
+            return
+                new Combination2FAA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FAA1";
+#endif
+
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
+        }
+    }
+ 
     [Serializable]
     sealed class Combination2FAQ : Combination2FA
     {
@@ -1014,7 +1257,7 @@ namespace Microcode
         public static SCode Make (FreeVariable rator, Quotation rand0, SCode rand1)
         {
             return
-                //(rand1 is Argument) ? Combination2FQA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Argument) ? Combination2FQA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is Quotation) ? new Combination2FQQ (rator, rand0, (Quotation) rand1) :
                 (rand1 is StaticVariable) ? new Combination2FQS (rator, rand0, (StaticVariable) rand1) :
                  new Combination2FQ (rator, rand0, rand1);
@@ -1041,6 +1284,124 @@ namespace Microcode
                 answer = Interpreter.UnwindStack;
                 return false;
             }
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2FQA : Combination2FQ
+    {
+        public readonly int rand1Offset;
+
+        protected Combination2FQA (FreeVariable rator, Quotation rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (FreeVariable rator, Quotation rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2FQA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2FQA1.Make (rator, rand0, (Argument1) rand1) :
+                 new Combination2FQA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FQA";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2FQA0 : Combination2FQA
+    {
+
+        protected Combination2FQA0 (FreeVariable rator, Quotation rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (FreeVariable rator, Quotation rand0, Argument0 rand1)
+        {
+            return
+                 new Combination2FQA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FQA0";
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2FQA1 : Combination2FQA
+    {
+
+        protected Combination2FQA1 (FreeVariable rator, Quotation rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (FreeVariable rator, Quotation rand0, Argument1 rand1)
+        {
+            return
+                 new Combination2FQA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FQA1";
+#endif
+            object ev1 = environment.Argument1Value;
 
             object evop;
 
@@ -1143,7 +1504,7 @@ namespace Microcode
         public static SCode Make (FreeVariable rator, StaticVariable rand0, SCode rand1)
         {
             return
-                //(rand1 is Argument) ? Combination2FSA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Argument) ? Combination2FSA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is Quotation) ? new Combination2FSQ (rator, rand0, (Quotation) rand1) :
                 (rand1 is StaticVariable) ? new Combination2FSS (rator, rand0, (StaticVariable) rand1) :
                  new Combination2FS (rator, rand0, rand1);
@@ -1174,6 +1535,133 @@ namespace Microcode
             object ev0;
             if (environment.StaticValue(out ev0, this.rand0Name, this.rand0Offset))
             throw new NotImplementedException(); 
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2FSA : Combination2FS
+    {
+        public readonly int rand1Offset;
+        protected Combination2FSA (FreeVariable rator, StaticVariable rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (FreeVariable rator, StaticVariable rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2FSA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2FSA1.Make (rator, rand0, (Argument1) rand1) :
+                 new Combination2FSA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FSA";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2FSA0 : Combination2FSA
+    {
+        protected Combination2FSA0 (FreeVariable rator, StaticVariable rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (FreeVariable rator, StaticVariable rand0, Argument0 rand1)
+        {
+            return
+                 new Combination2FSA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FSA0";
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+
+            if (this.ratorCell == null) {
+                Environment baseEnvironment = environment.BaseEnvironment;
+
+                if (baseEnvironment.FreeReference (out this.ratorCell, this.ratorName))
+                    throw new NotImplementedException ("Error with free variable " + this.ratorName);
+            }
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ("Error with free variable " + this.ratorName);
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2FSA1 : Combination2FSA
+    {
+        protected Combination2FSA1 (FreeVariable rator, StaticVariable rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (FreeVariable rator, StaticVariable rand0, Argument1 rand1)
+        {
+            return
+                 new Combination2FSA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2FSA1";
+#endif
+            object ev1 = environment.Argument1Value;
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
 
             object evop;
 
@@ -1628,6 +2116,7 @@ namespace Microcode
             return
                 (rand0 is Argument0) ? Combination2TA0.Make (rator, (Argument0) rand0, rand1) :
                 (rand0 is Argument1) ? Combination2TA1.Make (rator, (Argument1) rand0, rand1) :
+                (rand1 is Argument) ? Combination2TAA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is Quotation) ? new Combination2TAQ (rator, rand0, (Quotation) rand1) :
                 (rand1 is StaticVariable) ? new Combination2TAS (rator, rand0, (StaticVariable) rand1) :
                  new Combination2TA (rator, rand0, rand1);
@@ -1883,7 +2372,7 @@ namespace Microcode
         public static SCode Make (TopLevelVariable rator, Argument1 rand0, SCode rand1)
         {
             return
-               // (rand1 is Argument) ? Combination2TA1A.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Argument) ? Combination2TA1A.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is Quotation) ? new Combination2TA1Q (rator, rand0, (Quotation) rand1) :
                 (rand1 is StaticVariable) ? new Combination2TA1S (rator, rand0, (StaticVariable) rand1) :
                  new Combination2TA1 (rator, rand0, rand1);
@@ -1918,6 +2407,107 @@ namespace Microcode
                 throw new NotImplementedException ();
 
             return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2TA1A : Combination2TA1
+    {
+        public readonly int rand1Offset;
+
+        protected Combination2TA1A (TopLevelVariable rator, Argument1 rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (TopLevelVariable rator, Argument1 rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2TA1A0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2TA1A1.Make (rator, rand0, (Argument1) rand1) :
+                 new Combination2TA1A (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2TA1A";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0 = environment.Argument1Value;
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2TA1A0 : Combination2TA1A
+    {
+        protected Combination2TA1A0 (TopLevelVariable rator, Argument1 rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable rator, Argument1 rand0, Argument0 rand1)
+        {
+            return
+                 new Combination2TA1A0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2TA1A0";
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object ev0 = environment.Argument1Value;
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2TA1A1 : Combination2TA1A
+    {
+        protected Combination2TA1A1 (TopLevelVariable rator, Argument1 rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable rator, Argument1 rand0, Argument1 rand1)
+        {
+            return
+                 new Combination2TA1A1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2TA1A1";
+#endif
+            //object ev1 = environment.Argument1Value;
+
+            object ev0 = environment.Argument1Value;
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev0);
         }
     }
 
@@ -1981,6 +2571,108 @@ namespace Microcode
             if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
                 throw new NotImplementedException ();
             object ev0 = environment.Argument1Value;
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2TAA : Combination2TA
+    {
+
+        public readonly int rand1Offset;
+
+        protected Combination2TAA (TopLevelVariable rator, Argument rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (TopLevelVariable rator, Argument rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2TAA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2TAA1.Make (rator, rand0, (Argument1) rand1) :
+                 new Combination2TAA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2TAA";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+ 
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2TAA0 : Combination2TAA
+    {
+        protected Combination2TAA0 (TopLevelVariable rator, Argument rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable rator, Argument rand0, Argument0 rand1)
+        {
+            return
+                 new Combination2TAA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2TAA0";
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2TAA1 : Combination2TAA
+    {
+        protected Combination2TAA1 (TopLevelVariable rator, Argument rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable rator, Argument rand0, Argument1 rand1)
+        {
+            return
+                 new Combination2TAA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2TAA1";
+#endif
+            object ev1 = environment.Argument1Value;
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
             object evop;
             if (this.ratorCell.GetValue (out evop))
@@ -2078,6 +2770,7 @@ namespace Microcode
         public static SCode Make (TopLevelVariable rator, Quotation rand0, SCode rand1)
         {
             return
+                (rand1 is Argument) ? Combination2TQA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is Quotation) ? new Combination2TQQ (rator, rand0, (Quotation) rand1) :
                 (rand1 is StaticVariable) ? new Combination2TQS (rator, rand0, (StaticVariable) rand1) :
                  new Combination2TQ (rator, rand0, rand1);
@@ -2104,6 +2797,103 @@ namespace Microcode
                 answer = Interpreter.UnwindStack;
                 return false;
             }
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2TQA : Combination2TQ
+    {
+        public readonly int rand1Offset;
+
+        protected Combination2TQA (TopLevelVariable rator, Quotation rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (TopLevelVariable rator, Quotation rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2TQA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2TQA1.Make (rator, rand0, (Argument1) rand1) :
+                new Combination2TQA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2TQA";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2TQA0 : Combination2TQA
+    {
+
+        protected Combination2TQA0 (TopLevelVariable rator, Quotation rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable rator, Quotation rand0, Argument0 rand1)
+        {
+            return
+                new Combination2TQA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2TQA0";
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2TQA1 : Combination2TQA
+    {
+
+        protected Combination2TQA1 (TopLevelVariable rator, Quotation rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable rator, Quotation rand0, Argument1 rand1)
+        {
+            return
+                new Combination2TQA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2TQA1";
+#endif
+            object ev1 = environment.Argument1Value;
 
             object evop;
             if (this.ratorCell.GetValue (out evop))
@@ -2201,7 +2991,7 @@ namespace Microcode
         public static SCode Make (TopLevelVariable rator, StaticVariable rand0, SCode rand1)
         {
             return
-               // (rand1 is Argument) ? Combination2TSA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Argument) ? Combination2TSA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is StaticVariable) ? new Combination2TSS (rator, rand0, (StaticVariable) rand1) :
                 (rand1 is Quotation) ? new Combination2TSQ (rator, rand0, (Quotation) rand1) :
                  new Combination2TS (rator, rand0, rand1);
@@ -2268,6 +3058,98 @@ namespace Microcode
                 throw new NotImplementedException ();
 
             return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, this.rand1Value);
+        }
+    }
+
+    [Serializable]
+    class Combination2TSA : Combination2TS
+    {
+        public readonly int rand1Offset;
+
+        protected Combination2TSA (TopLevelVariable rator, StaticVariable rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (TopLevelVariable rator, StaticVariable rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? new Combination2TSA0 (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? new Combination2TSA1 (rator, rand0, (Argument1) rand1) :
+                 new Combination2TSA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination2TSA");
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2TSA0 : Combination2TSA
+    {
+        internal Combination2TSA0 (TopLevelVariable rator, StaticVariable rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination2TSA0");
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2TSA1 : Combination2TSA
+    {
+        internal Combination2TSA1 (TopLevelVariable rator, StaticVariable rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination2TSA1");
+#endif
+            object ev1 = environment.Argument1Value;
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+            if (this.ratorCell.GetValue (out evop))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
         }
     }
 
@@ -13713,7 +14595,7 @@ namespace Microcode
         public static SCode Make (SCode rator, StaticVariable rand0, SCode rand1)
         {
             return
-                //(rand1 is Argument) ? Combination2XAA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Argument) ? Combination2XSA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is StaticVariable) ? new Combination2XSS (rator, rand0, (StaticVariable) rand1) :
                 (rand1 is Quotation) ? new Combination2XSQ (rator, rand0, (Quotation) rand1) :
                 new Combination2XS (rator, rand0, rand1);
@@ -13759,6 +14641,144 @@ namespace Microcode
             }
 
             return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2XSA : Combination2XS
+    {
+        protected readonly int rand1Offset;
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        internal Combination2XSA (SCode rator, StaticVariable rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+        public static SCode Make (SCode rator, StaticVariable rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2XSA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? Combination2XSA1.Make (rator, rand0, (Argument1) rand1) :
+                new Combination2XSA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XSA.EvalStep";
+#endif
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.ArgumentValue(this.rand1Offset));
+        }
+    }
+
+       [Serializable]
+    class Combination2XSA0 : Combination2XSA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        internal Combination2XSA0 (SCode rator, StaticVariable rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+        public static SCode Make (SCode rator, StaticVariable rand0, Argument0 rand1)
+        {
+            return
+                new Combination2XSA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XSA0.EvalStep";
+#endif
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+        class Combination2XSA1 : Combination2XSA
+    {
+#if DEBUG
+        static Histogram<Type> ratorTypeHistogram = new Histogram<Type> ();
+#endif
+        internal Combination2XSA1 (SCode rator, StaticVariable rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+        public static SCode Make (SCode rator, StaticVariable rand0, Argument1 rand1)
+        {
+            return
+                new Combination2XSA1 (rator, rand0, rand1);
+        }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            ratorTypeHistogram.Note (this.ratorType);
+            SCode.location = "Combination2XSA1.EvalStep";
+#endif
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+            Environment env = environment;
+            Control unev = this.rator;
+            while (unev.EvalStep (out evop, ref unev, ref env)) { };
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));
+                //environment = env;
+                //answer = Interpreter.Unwind;
+                //return false;
+            }
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
         }
     }
 

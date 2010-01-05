@@ -117,14 +117,14 @@ namespace Microcode
                 //(rator == Primitive.IntIsEq) ? PrimitiveIsIntEq.Make (rator, rand0, rand1) :
                 //(rator == Primitive.IsFixnumEqual) ? PrimitiveIsFixnumEqual.Make (rator, rand0, rand1) :
                 //(rator == Primitive.GeneralCarCdr) ? PrimitiveGeneralCarCdr.Make (rator, rand0, rand1) :
-                (rator == Primitive.GreaterThanFixnum) ? PrimitiveGreaterThanFixnum.Make (rator, rand0, rand1) :
+                //(rator == Primitive.GreaterThanFixnum) ? PrimitiveGreaterThanFixnum.Make (rator, rand0, rand1) :
                // (rator == Primitive.GenericIsLessThan) ? PrimitiveLessThan.Make (rator, rand0, rand1) :
-                (rator == Primitive.LessThanFixnum) ? PrimitiveLessThanFixnum.Make (rator, rand0, rand1) :
+                //(rator == Primitive.LessThanFixnum) ? PrimitiveLessThanFixnum.Make (rator, rand0, rand1) :
                 //(rator == Primitive.PlusFixnum) ? PrimitivePlusFixnum.Make (rator, rand0, rand1) :
-                (rator == Primitive.IsObjectType) ? PrimitiveIsObjectType.Make (rator, rand0, rand1) :
-                (rator == Primitive.RecordRef) ? PrimitiveRecordRef.Make (rator, rand0, rand1) :
+                //(rator == Primitive.IsObjectType) ? PrimitiveIsObjectType.Make (rator, rand0, rand1) :
+                //(rator == Primitive.RecordRef) ? PrimitiveRecordRef.Make (rator, rand0, rand1) :
                 (rator == Primitive.Vector8BRef) ? PrimitiveVector8BRef.Make (rator, rand0, rand1) :
-                (rator == Primitive.VectorRef) ? PrimitiveVectorRef.Make (rator, rand0, rand1) :
+                //(rator == Primitive.VectorRef) ? PrimitiveVectorRef.Make (rator, rand0, rand1) :
                  SpecializedMake (rator, rand0, rand1);
         }
 
@@ -2135,7 +2135,8 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.rator);
-            SCode.location = "PrimitiveCombination2A0A1";
+            Primitive.hotPrimitives.Note (this.rator);
+            SCode.location = this.rator.Name.ToString ();
 #endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.

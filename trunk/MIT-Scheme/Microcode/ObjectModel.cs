@@ -607,7 +607,8 @@ namespace Microcode
                 case TC.PROCEDURE:
                     banswer = arg1 is StandardClosure ||
                         arg1 is StaticClosure ||
-                        arg1 is SimpleClosure;
+                        arg1 is SimpleClosure ||
+                        arg1 is ConstantClosure;
                     break;
 
                 case TC.RATNUM:
@@ -731,7 +732,8 @@ namespace Microcode
         {
             answer = (arg0 is StandardClosure ||
                 arg0 is StaticClosure ||
-                arg0 is SimpleClosure) ? Constant.sharpT : Constant.sharpF;
+                arg0 is SimpleClosure||
+                arg0 is ConstantClosure) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
 

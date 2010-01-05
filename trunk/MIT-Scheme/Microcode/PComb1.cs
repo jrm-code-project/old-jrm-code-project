@@ -517,14 +517,14 @@ namespace Microcode
         static Histogram<Primitive1> ratorHistogram = new Histogram<Primitive1> ();
 #endif
         //public readonly object randValue;
-        readonly Symbol varname;
-        readonly int offset;
+        public readonly Symbol randName;
+        public readonly int randOffset;
 
         PrimitiveCombination1S (Primitive1 procedure, StaticVariable arg0)
             : base (procedure, arg0)
         {
-            this.varname = arg0.Name;
-            this.offset = arg0.Offset;
+            this.randName = arg0.Name;
+            this.randOffset = arg0.Offset;
         }
 
         public static SCode Make (Primitive1 rator, StaticVariable rand)
@@ -539,11 +539,11 @@ namespace Microcode
             Warm ("-");
             ratorHistogram.Note (this.procedure);
             Primitive.hotPrimitives.Note (this.procedure);
-            //SCode.location = this.procedure.Name.ToString ();
-            SCode.location = "PrimitiveCombination1S";
+            SCode.location = this.procedure.Name.ToString ();
+            //SCode.location = "PrimitiveCombination1S";
 #endif
             object randValue;
-            if (environment.StaticValue (out randValue, this.varname, this.offset)) {
+            if (environment.StaticValue (out randValue, this.randName, this.randOffset)) {
                 throw new NotImplementedException ();
             }
 
@@ -2588,15 +2588,14 @@ namespace Microcode
     [Serializable]
     sealed class PrimitiveIsNullS : PrimitiveIsNull
     {
-        //public readonly object randValue;
-        readonly Symbol varname;
-        readonly int offset;
+        public readonly Symbol rand0Name;
+        public readonly int rand0Offset;
 
         PrimitiveIsNullS (Primitive1 procedure, StaticVariable arg0)
             : base (procedure, arg0)
         {
-            this.varname = arg0.Name;
-            this.offset = arg0.Offset;
+            this.rand0Name = arg0.Name;
+            this.rand0Offset = arg0.Offset;
         }
 
         public static SCode Make (Primitive1 rator, StaticVariable rand)
@@ -2611,7 +2610,7 @@ namespace Microcode
             Warm ("PrimitiveIsNullS");
 #endif
             object randValue;
-            if (environment.StaticValue (out randValue, this.varname, this.offset)) {
+            if (environment.StaticValue (out randValue, this.rand0Name, this.rand0Offset)) {
                 throw new NotImplementedException ();
             }
 
@@ -2626,7 +2625,7 @@ namespace Microcode
     [Serializable]
     sealed class PrimitiveIsNullQ : PrimitiveIsNull
     {
-        readonly object randValue;
+        public readonly object randValue;
 
         PrimitiveIsNullQ (Primitive1 procedure, Quotation arg0)
             : base (procedure, arg0)
