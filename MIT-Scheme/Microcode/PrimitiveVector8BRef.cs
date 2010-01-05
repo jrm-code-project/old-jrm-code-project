@@ -21,6 +21,10 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
+                (rand0 is Argument) ? PrimitiveVector8BRefA.Make (rator, (Argument) rand0, rand1) :
+                (rand0 is StaticVariable) ? PrimitiveVector8BRefS.Make (rator, (StaticVariable) rand0, rand1) :
+                (rand1 is Argument) ? PrimitiveVector8BRefXA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is StaticVariable) ? PrimitiveVector8BRefXS.Make (rator, rand0, (StaticVariable) rand1) :
                 new PrimitiveVector8BRef (rator, rand0, rand1);
         }
 
@@ -76,44 +80,8 @@ namespace Microcode
         }
     }
 
-#if NIL
     [Serializable]
-    class PrimitiveVector8BRefL : PrimitiveVector8BRef
-    {
-        public readonly object rand0Name;
-        public readonly int rand0Depth;
-        public readonly int rand0Offset;
-
-        protected PrimitiveVector8BRefL (Primitive2 rator, LexicalVariable rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand0Name = rand0.Name;
-            this.rand0Depth = rand0.Depth;
-            this.rand0Offset = rand0.Offset;
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable rand0, SCode rand1)
-        {
-            return
-                (rand0 is Argument) ? PrimitiveVector8BRefA.Make (rator, (Argument) rand0, rand1)
-                : (rand0 is LexicalVariable1) ? PrimitiveVector8BRefL1.Make (rator, (LexicalVariable1) rand0, rand1)
-                : (rand1 is LexicalVariable) ? PrimitiveVector8BRefLL.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? Unimplemented ()
-                : new PrimitiveVector8BRefL (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefA : PrimitiveVector8BRefL
+    class PrimitiveVector8BRefA : PrimitiveVector8BRef
     {
         protected PrimitiveVector8BRefA (Primitive2 rator, Argument rand0, SCode rand1)
             : base (rator, rand0, rand1)
@@ -123,18 +91,16 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument rand0, SCode rand1)
         {
             return
-                (rand0 is Argument0) ? PrimitiveVector8BRefA0.Make (rator, (Argument0) rand0, rand1)
-                : (rand0 is Argument1) ? PrimitiveVector8BRefA1.Make (rator, (Argument1) rand0, rand1)
-                : (rand1 is LexicalVariable) ? Unimplemented ()
-                : (rand1 is Quotation) ? Unimplemented ()
-                : new PrimitiveVector8BRefA (rator, rand0, rand1);
+                (rand0 is Argument0) ? PrimitiveVector8BRefA0.Make (rator, (Argument0) rand0, rand1) :
+                (rand0 is Argument1) ? PrimitiveVector8BRefA1.Make (rator, (Argument1) rand0, rand1) :
+                new PrimitiveVector8BRefA (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
+            Warm ("PrimitiveVector8BRefA");
+            NoteCalls (this.rand1);
 #endif
             throw new NotImplementedException ();
         }
@@ -151,8 +117,6 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument0 rand0, SCode rand1)
         {
             return
-                (rand1 is LexicalVariable) ? PrimitiveVector8BRefA0L.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? PrimitiveVector8BRefA0Q.Make (rator, rand0, (Quotation) rand1) :
                 new PrimitiveVector8BRefA0 (rator, rand0, rand1);
         }
 
@@ -160,7 +124,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("PrimitiveVector8BRefA0.EvalStep");
-            noteCalls (this.rand1);
+            NoteCalls (this.rand1);
 #endif
             // Eval argument1
             object ev1;
@@ -183,33 +147,7 @@ namespace Microcode
     }
 
     [Serializable]
-    class PrimitiveVector8BRefA0L : PrimitiveVector8BRefA0
-    {
-        protected PrimitiveVector8BRefA0L (Primitive2 rator, Argument0 rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, Argument0 rand0, LexicalVariable rand1)
-        {
-            return
-                (rand1 is Argument) ? PrimitiveVector8BRefA0A.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveVector8BRefA0L1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveVector8BRefA0L (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefA0A : PrimitiveVector8BRefA0L
+    class PrimitiveVector8BRefA0A : PrimitiveVector8BRefA0
     {
         protected PrimitiveVector8BRefA0A (Primitive2 rator, Argument0 rand0, Argument rand1)
             : base (rator, rand0, rand1)
@@ -227,8 +165,8 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
+            Warm ("-");
+            NoteCalls (this.rand1);
 #endif
             throw new NotImplementedException ();
         }
@@ -260,30 +198,6 @@ namespace Microcode
     }
 
     [Serializable]
-    class PrimitiveVector8BRefA0L1 : PrimitiveVector8BRefA0L
-    {
-        protected PrimitiveVector8BRefA0L1 (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, Argument0 rand0, LexicalVariable1 rand1)
-        {
-            return
-                new PrimitiveVector8BRefA0L1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
     class PrimitiveVector8BRefA0Q : PrimitiveVector8BRefA0
     {
         public readonly int rand1Value;
@@ -303,7 +217,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
 #endif
             throw new NotImplementedException ();
         }
@@ -320,16 +234,15 @@ namespace Microcode
         public static SCode Make (Primitive2 rator, Argument1 rand0, SCode rand1)
         {
             return
-                (rand1 is LexicalVariable) ? Unimplemented ()
-                : (rand1 is Quotation) ? PrimitiveVector8BRefA1Q.Make (rator, rand0, (Quotation) rand1)
+                 (rand1 is Quotation) ? PrimitiveVector8BRefA1Q.Make (rator, rand0, (Quotation) rand1)
                 : new PrimitiveVector8BRefA1 (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
+            Warm ("-");
+            NoteCalls (this.rand1);
 #endif
             throw new NotImplementedException ();
         }
@@ -355,365 +268,248 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
+            Warm ("-");
 #endif
             throw new NotImplementedException ();
-        }
-    }
-
-
-    [Serializable]
-    class PrimitiveVector8BRefL1 : PrimitiveVector8BRefL
-    {
-        protected PrimitiveVector8BRefL1 (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable1 rand0, SCode rand1)
-        {
-            return
-                (rand1 is LexicalVariable) ? PrimitiveVector8BRefL1L.Make (rator, rand0, (LexicalVariable) rand1)
-                : (rand1 is Quotation) ? Unimplemented ()
-                : new PrimitiveVector8BRefL1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-            noteCalls (this.rand1);
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefL1L : PrimitiveVector8BRefL1
-    {
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PrimitiveVector8BRefL1L (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable rand1)
-        {
-            return
-                 (rand1 is Argument) ? PrimitiveVector8BRefL1A.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveVector8BRefL1L1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveVector8BRefL1L (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefL1A : PrimitiveVector8BRefL1L
-    {
-        protected PrimitiveVector8BRefL1A (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable1 rand0, Argument rand1)
-        {
-            return
-                 (rand1 is Argument0) ? PrimitiveVector8BRefL1A0.Make (rator, rand0, (Argument0) rand1)
-                : (rand1 is Argument1) ? PrimitiveVector8BRefL1A1.Make (rator, rand0, (Argument1) rand1)
-                : new PrimitiveVector8BRefL1A (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefL1A0 : PrimitiveVector8BRefL1A
-    {
-        protected PrimitiveVector8BRefL1A0 (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable1 rand0, Argument0 rand1)
-        {
-            return
-                 new PrimitiveVector8BRefL1A0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefL1A1 : PrimitiveVector8BRefL1A
-    {
-        protected PrimitiveVector8BRefL1A1 (Primitive2 rator, LexicalVariable1 rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable1 rand0, Argument1 rand1)
-        {
-            return
-                 new PrimitiveVector8BRefL1A1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefL1L1 : PrimitiveVector8BRefL1L
-    {
-        protected PrimitiveVector8BRefL1L1 (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable1 rand0, LexicalVariable1 rand1)
-        {
-            return
-                 new PrimitiveVector8BRefL1L1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveVector8BRefL1L1.EvalStep");
-#endif
-            // Eval argument1
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            // Eval argument0
-            object ev0;
-            if (environment.FastLexicalRef1 (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // Vector-8b-ref
-            answer = (int) ((char []) ev0) [(int) ev1];
-            return false; 
-        }
-    }
-
-
-    [Serializable]
-    class PrimitiveVector8BRefLL : PrimitiveVector8BRefL
-    {
-        public readonly object rand1Name;
-        public readonly int rand1Depth;
-        public readonly int rand1Offset;
-
-        protected PrimitiveVector8BRefLL (Primitive2 rator, LexicalVariable rand0, LexicalVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Depth = rand1.Depth;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable rand0, LexicalVariable rand1)
-        {
-            return
-                 (rand1 is Argument) ? PrimitiveVector8BRefLA.Make (rator, rand0, (Argument) rand1)
-                : (rand1 is LexicalVariable1) ? PrimitiveVector8BRefLL1.Make (rator, rand0, (LexicalVariable1) rand1)
-                : new PrimitiveVector8BRefLL (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveVector8BRefLL.EvalStep");
-#endif
-            // Eval argument1
-            object ev1;
-            if (environment.FastLexicalRef (out ev1, this.rand1Name, this.rand1Depth, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            // Eval argument0
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // Vector-8b-ref
-            answer = (int) ((char []) ev0) [(int) ev1];
-            return false; 
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefLA : PrimitiveVector8BRefLL
-    {
-        protected PrimitiveVector8BRefLA (Primitive2 rator, LexicalVariable rand0, Argument rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable rand0, Argument rand1)
-        {
-            return
-                 (rand1 is Argument0) ? PrimitiveVector8BRefLA0.Make (rator, rand0, (Argument0) rand1)
-                : (rand1 is Argument1) ? PrimitiveVector8BRefLA1.Make (rator, rand0, (Argument1) rand1)
-                : new PrimitiveVector8BRefLA (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveVector8BRefLA0 : PrimitiveVector8BRefLA
-    {
-        PrimitiveVector8BRefLA0 (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable rand0, Argument0 rand1)
-        {
-            return
-                 new PrimitiveVector8BRefLA0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveVector8BRefLA0.EvalStep");
-#endif
-            // Eval argument0
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // Vector-8b-ref
-            answer = (int) ((char []) ev0) [(int) environment.Argument0Value];
-            return false; 
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefLA1 : PrimitiveVector8BRefLA
-    {
-        protected PrimitiveVector8BRefLA1 (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable rand0, Argument1 rand1)
-        {
-            return
-                 new PrimitiveVector8BRefLA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ();
-#endif
-            throw new NotImplementedException ();
-        }
-    }
-
-    [Serializable]
-    class PrimitiveVector8BRefLL1 : PrimitiveVector8BRefLL
-    {
-        protected PrimitiveVector8BRefLL1 (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, LexicalVariable rand0, LexicalVariable1 rand1)
-        {
-            return
-                 new PrimitiveVector8BRefLL1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveVector8BRefLL1.EvalStep");
-#endif
-            // Eval argument1
-            object ev1;
-            if (environment.FastLexicalRef1 (out ev1, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // Eval argument0
-            object ev0;
-            if (environment.FastLexicalRef (out ev0, this.rand0Name, this.rand0Depth, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            // Vector-8b-ref
-            answer = (int) ((char []) ev0) [(int) ev1];
-            return false; 
         }
     }
 
 
     //class PrimitiveVector8BRefQ : PrimitiveVector8BRef { }
 
-    //class PrimitiveVector8BRefSL : PrimitiveVector8BRef { }
-
     [Serializable]
-    class PrimitiveVector8BRefSQ : PrimitiveVector8BRef
+    class PrimitiveVector8BRefS : PrimitiveVector8BRef
     {
-        public readonly int rand1Value;
+        public readonly Symbol rand0Name;
+        public readonly int rand0Offset;
 
-        protected PrimitiveVector8BRefSQ (Primitive2 rator, SCode rand0, Quotation rand1)
+        protected PrimitiveVector8BRefS (Primitive2 rator, StaticVariable rand0, SCode rand1)
             : base (rator, rand0, rand1)
         {
-            this.rand1Value = (int) rand1.Quoted;
+            this.rand0Name = rand0.Name;
+            this.rand0Offset = rand0.Offset;
         }
 
-        public static SCode Make (Primitive2 rator, SCode rand0, Quotation rand1)
+        public static SCode Make (Primitive2 rator, StaticVariable rand0, SCode rand1)
         {
             return
-                new PrimitiveVector8BRefSQ (rator, rand0, rand1);
+                (rand1 is Argument) ? PrimitiveVector8BRefSA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is StaticVariable) ? new PrimitiveVector8BRefSS (rator, rand0, (StaticVariable) rand1) :
+                new PrimitiveVector8BRefS (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ();
-            noteCalls (this.rand0);
+            Warm ("PrimitiveVector8BRefS");
+            NoteCalls (this.rand1);
+#endif
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveVector8BRefSA : PrimitiveVector8BRefS
+    {
+        protected PrimitiveVector8BRefSA (Primitive2 rator, StaticVariable rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, StaticVariable rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? new PrimitiveVector8BRefSA0 (rator, rand0, (Argument0) rand1) :
+                 (rand1 is Argument1) ? PrimitiveVector8BRefSA1.Make (rator, rand0, (Argument1) rand1) :
+                new PrimitiveVector8BRefSA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVector8BRefSA");
+#endif
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveVector8BRefSA0 : PrimitiveVector8BRefSA
+    {
+        internal PrimitiveVector8BRefSA0 (Primitive2 rator, StaticVariable rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVector8BRefSA0");
+#endif
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            // Vector-8b-ref
+            answer = (int) ((char []) ev0) [(int) environment.Argument0Value];
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveVector8BRefSA1 : PrimitiveVector8BRefSA
+    {
+        protected PrimitiveVector8BRefSA1 (Primitive2 rator, StaticVariable rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, StaticVariable rand0, Argument1 rand1)
+        {
+            return
+                new PrimitiveVector8BRefSA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVector8BRefSA1");
+            NoteCalls (this.rand1);
 #endif
             throw new NotImplementedException ();
         }
     }
+
+    [Serializable]
+    sealed class PrimitiveVector8BRefSS : PrimitiveVector8BRefS
+    {
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+
+        internal PrimitiveVector8BRefSS (Primitive2 rator, StaticVariable rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVector8BRefSS");
 #endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+            // Vector-8b-ref
+            answer = (int) ((char []) ev0) [(int) ev1];
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveVector8BRefXA : PrimitiveVector8BRef
+    {
+        protected PrimitiveVector8BRefXA (Primitive2 rator, SCode rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, SCode rand0, Argument rand1)
+        {
+            return
+                new PrimitiveVector8BRefXA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVector8BRefXA");
+            NoteCalls (this.rand1);
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveVector8BRefXA0 : PrimitiveVector8BRefXA
+    {
+        protected PrimitiveVector8BRefXA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, SCode rand0, Argument0 rand1)
+        {
+            return
+                new PrimitiveVector8BRefXA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVector8BRefXA0");
+            NoteCalls (this.rand1);
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+    [Serializable]
+    class PrimitiveVector8BRefXA1 : PrimitiveVector8BRefXA
+    {
+        protected PrimitiveVector8BRefXA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, SCode rand0, Argument1 rand1)
+        {
+            return
+                new PrimitiveVector8BRefXA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVector8BRefXA1");
+            NoteCalls (this.rand1);
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
+        [Serializable]
+    class PrimitiveVector8BRefXS : PrimitiveVector8BRef
+    {
+        protected PrimitiveVector8BRefXS (Primitive2 rator, SCode rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, SCode rand0, StaticVariable rand1)
+        {
+            return
+                new PrimitiveVector8BRefXS (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveVector8BRefXS");
+            NoteCalls (this.rand1);
+#endif
+            throw new NotImplementedException ();
+        }
+    }
+
 }

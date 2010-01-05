@@ -236,6 +236,8 @@ namespace Microcode
                 body.CallsTheEnvironment ()) ? (Lambda) new StandardLambda (name, formals, body, freeVariables, staticMapping) :
                 (Configuration.EnableSimpleLambda &&
                 IsLetrec(formals,body)) ? (Lambda) new SimpleLambda (name, formals, body, freeVariables, staticMapping) :
+                (Configuration.EnableSimpleLambda &&
+                (body is Quotation)) ? (Lambda) new ConstantLambda (name, formals, body, freeVariables, staticMapping) :
                 (! Configuration.EnableSimpleLambda ||
                   body.MutatesAny (formals)) ? (Lambda) new StaticLambda (name, formals, body, freeVariables, staticMapping) :
                 (Lambda) new SimpleLambda (name, formals, body, freeVariables, staticMapping);
@@ -1125,4 +1127,172 @@ SCode body, uint required, uint optional, bool rest, ICollection<Symbol> freeVar
         }
         #endregion
     }
+
+    /// <summary>
+    /// A ConstantLambda creates ConstantClosures.  These aren't technically closures at all.
+    /// </summary>
+    [Serializable]
+    sealed class ConstantLambda : StaticLambdaBase, ISerializable
+    {
+        public readonly object constantValue;
+        public ConstantLambda (Symbol name, Symbol [] formals, SCode body)
+            : base (name, formals, body)
+        {
+            this.constantValue = ((Quotation) body).Quoted;
+        }
+
+        public ConstantLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables)
+            : base (name, formals, body, freeVariables)
+        {
+            this.constantValue = ((Quotation) body).Quoted;
+        }
+
+        public ConstantLambda (Symbol name, Symbol [] formals, SCode body, ICollection<Symbol> freeVariables, StaticMapping staticMapping)
+            : base (name, formals, body, freeVariables, staticMapping)
+        {
+            this.constantValue = ((Quotation) body).Quoted;
+        }
+
+        ConstantClosure memoized;
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("ConstantLambda");
+            if (this.staticMapping == null)
+                throw new NotImplementedException ("Static mapping should not be null.");
+#endif
+            if (this.memoized == null) {
+                this.memoized = new ConstantClosure (this, null, null);
+            }
+            answer = this.memoized;
+//            this.closeCount += 1;
+//            object [] cells = environment.GetValueCells (this.staticMapping);
+//#if DEBUG
+//            SCode.location = "SimpleLambda";
+//#endif
+//            // Use the base environment for lookup.
+//            answer = new SimpleClosure (this, environment.BaseEnvironment, cells);
+
+            return false;
+        }
+
+        internal override PartialResult PartialEval (PartialEnvironment environment)
+        {
+            PartialClosure<ConstantLambda> closure = new PartialClosure<ConstantLambda> (this, environment);
+
+            SCode pbody = this.lambdaBody;
+
+            return new PartialResult (Lambda.Make (this.lambdaName, this.lambdaFormals, pbody, this.lambdaFreeVariables, closure.StaticMap));
+        }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            info.SetType (typeof (ConstantLambdaDeserializer));
+            // We specially handle the maps and formals
+            // in order to ensure that they are available when
+            // we deserialize the lambda.
+            if (this.Name.IsInterned ()) {
+                info.AddValue ("name_interned", true);
+                info.AddValue ("name", this.Name.ToString ());
+            }
+            else {
+                info.AddValue ("name_interned", false);
+                info.AddValue ("name", this.Name);
+            }
+            info.AddValue ("formalCount", this.Formals.Length);
+            for (int i = 0; i < this.Formals.Length; i++) {
+                if (this.Formals [i].IsInterned ()) {
+                    info.AddValue ("arg_" + i + "_interned", true);
+                    info.AddValue ("arg_" + i + "_name", this.Formals [i].ToString ());
+                }
+                else {
+                    info.AddValue ("arg_" + i + "_interned", false);
+                    info.AddValue ("arg_" + i, this.Formals [i]);
+                }
+            }
+            info.AddValue ("freeVariableCount", this.lambdaFreeVariables.Count);
+            int index = 0;
+            if (this.lambdaFreeVariables.Count > 0) {
+                foreach (Symbol freeVariable in this.lambdaFreeVariables) {
+                    if (freeVariable.IsInterned ()) {
+                        info.AddValue ("fv_" + index + "_interned", true);
+                        info.AddValue ("fv_" + index + "_name", freeVariable.ToString ());
+                    }
+                    else {
+                        info.AddValue ("fv_" + index + "_interned", false);
+                        info.AddValue ("fv_" + index, freeVariable);
+                    }
+                    index += 1;
+                }
+            }
+            info.AddValue ("body", this.Body);
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    sealed class ConstantLambdaDeserializer : ISerializable, IObjectReference
+    {
+        [NonSerialized]
+        Symbol name;
+
+        [NonSerialized]
+        Symbol [] formals;
+
+        [NonSerialized]
+        SCode body;
+
+        [NonSerialized]
+        HashSet<Symbol> freeVariables;
+
+        [NonSerialized]
+        ConstantLambda realObject;
+
+        ConstantLambdaDeserializer (SerializationInfo info, StreamingContext context)
+        {
+            this.name = info.GetBoolean ("name_interned") ?
+                Symbol.Make (info.GetString ("name")) :
+                (Symbol) info.GetValue ("name", typeof (Symbol));
+            uint formalCount = info.GetUInt32 ("formalCount");
+            this.formals = new Symbol [formalCount];
+            for (int i = 0; i < formalCount; i++) {
+                formals [i] = info.GetBoolean ("arg_" + i + "_interned") ?
+                    Symbol.Make (info.GetString ("arg_" + i + "_name")) :
+                    (Symbol) info.GetValue ("arg_" + i, typeof (Symbol));
+            }
+            uint freeVariableCount = info.GetUInt32 ("freeVariableCount");
+            this.freeVariables = new HashSet<Symbol> ();
+            for (int i = 0; i < freeVariableCount; i++) {
+                freeVariables.Add (info.GetBoolean ("fv_" + i + "_interned") ?
+                    Symbol.Make (info.GetString ("fv_" + i + "_name")) :
+                    (Symbol) info.GetValue ("fv_" + i, typeof (Symbol)));
+            }
+            this.body = (SCode) info.GetValue ("body", typeof (SCode));
+        }
+
+        #region ISerializable Members
+
+        [SecurityPermissionAttribute (SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+        {
+            throw new NotImplementedException ();
+        }
+        #endregion
+
+        #region IObjectReference Members
+
+        public object GetRealObject (StreamingContext context)
+        {
+            if (this.realObject == null)
+                this.realObject = new ConstantLambda (this.name, this.formals,
+                    this.body, this.freeVariables);
+            return this.realObject;
+        }
+        #endregion
+    }
+
 }

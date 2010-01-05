@@ -42,6 +42,7 @@ namespace Microcode
                 || (value is SimpleClosure)     
                 || (value is StandardClosure)
                 || (value is StaticClosure)
+                || (value is ConstantClosure)
                 || (value is Combination)
                 || (value is Combination0)
                 || (value is Combination1)

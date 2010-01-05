@@ -48,15 +48,17 @@ namespace Microcode
 #endif  
         }
 
-        static public Access Make (SCode env, Symbol name)
+        static public SCode Make (SCode env, Symbol name)
         {
             return
             (!Configuration.EnableAccessOptimization) ? new Access (env, name) :
+            (!Configuration.EnableAccessSpecialization) ? new Access (env, name) :
             (env is Quotation) ? AccessQ.Make ((Quotation) env, name) :
+            (env is StaticVariable) ? AccessS.Make ((StaticVariable) env, name) :
             new Access (env, name);
         }
 
-        static public Access Make (object env, Symbol name)
+        static public SCode Make (object env, Symbol name)
         {
             return Make (EnsureSCode (env), name);
         }
@@ -76,7 +78,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("Access.EvalStep");
+            Warm ("Access");
             NoteCalls (this.env);
 #endif        
             accessedNames.Note (this.var.ToString ());
@@ -230,7 +232,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("AccessQ.EvalStep");
+            Warm ("AccessQ");
 #endif
             if (Environment.Global.DeepSearch (out answer, this.var)) throw new NotImplementedException ();
             return false;
@@ -238,6 +240,39 @@ namespace Microcode
 
         public override bool MutatesAny (Symbol [] formals)
         {
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class AccessS : Access
+    {
+        public readonly Symbol envName;
+        public readonly int envOffset;
+
+        AccessS (StaticVariable env, Symbol name)
+            : base (env, name)
+        {
+            this.envName = env.Name;
+            this.envOffset = env.Offset;
+        }
+
+        static public SCode Make (StaticVariable env, Symbol name)
+        {;
+            return
+                new AccessS (env, name);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AccessS");
+#endif
+            object env;
+            if (environment.StaticValue (out env, this.envName, this.envOffset))
+                throw new NotImplementedException ();
+
+            if (Environment.ToEnvironment(env).DeepSearch (out answer, this.var)) throw new NotImplementedException ();
             return false;
         }
     }
@@ -377,14 +412,14 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.value);
             valueTypeHistogram.Note (this.valueType);
-            SCode.location = "Assignment.EvalStep";
+            SCode.location = "Assignment";
 #endif
             Control expr = this.value;
             Environment env = environment;
             object newValue;
             while (expr.EvalStep (out newValue, ref expr, ref env)) { };
 #if DEBUG
-            SCode.location = "Assignment.EvalStep.1";
+            SCode.location = "Assignment";
 #endif
             if (newValue == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
@@ -524,14 +559,14 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.value);
             valueTypeHistogram.Note (this.valueType);
-            SCode.location = "AssignmentA.EvalStep";
+            SCode.location = "AssignmentA";
 #endif
             Control expr = this.value;
             Environment env = environment;
             object newValue;
             while (expr.EvalStep (out newValue, ref expr, ref env)) { };
 #if DEBUG
-            SCode.location = "AssignmentA.EvalStep.1";
+            SCode.location = "AssignmentA";
 #endif
             if (newValue == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
@@ -573,14 +608,14 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.value);
             valueTypeHistogram.Note (this.valueType);
-            SCode.location = "AssignmentA0.EvalStep";
+            SCode.location = "AssignmentA0";
 #endif
             Control expr = this.value;
             Environment env = environment;
             object newValue;
             while (expr.EvalStep (out newValue, ref expr, ref env)) { };
 #if DEBUG
-            SCode.location = "AssignmentA0.EvalStep0";
+            SCode.location = "AssignmentA0";
 #endif
             if (newValue == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
@@ -737,14 +772,14 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.value);
             valueTypeHistogram.Note (this.valueType);
-            SCode.location = "AssignmentG.EvalStep";
+            SCode.location = "AssignmentG";
 #endif
             Control expr = this.value;
             Environment env = environment;
             object newValue;
             while (expr.EvalStep (out newValue, ref expr, ref env)) { };
 #if DEBUG
-            SCode.location = "AssignmentG.EvalStep.1";
+            SCode.location = "AssignmentG";
 #endif
             if (newValue == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
@@ -785,14 +820,14 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.value);
             valueTypeHistogram.Note (this.valueType);
-            SCode.location = "AssignmentS.EvalStep";
+            SCode.location = "AssignmentS";
 #endif
             Control expr = this.value;
             Environment env = environment;
             object newValue;
             while (expr.EvalStep (out newValue, ref expr, ref env)) { };
 #if DEBUG
-            SCode.location = "AssignmentS.EvalStep.1";
+            SCode.location = "AssignmentS";
 #endif
             if (newValue == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
@@ -813,11 +848,11 @@ namespace Microcode
     [Serializable]
     class AssignmentT : Assignment
     {
-        readonly ValueCell cell;
+        public readonly ValueCell cell;
 #if DEBUG
         static Histogram<Type> valueTypeHistogram = new Histogram<Type> ();
 #endif
-        AssignmentT (TopLevelVariable target, SCode value)
+        protected AssignmentT (TopLevelVariable target, SCode value)
             : base (target, value)
         {
             this.cell = target.valueCell;
@@ -825,7 +860,9 @@ namespace Microcode
 
         public static SCode Make (TopLevelVariable target, SCode value)
         {
-            return new AssignmentT (target, value);
+            return 
+                (value is Quotation) ? new AssignmentTQ (target, (Quotation) value) :
+                new AssignmentT (target, value);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -834,14 +871,14 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.value);
             valueTypeHistogram.Note (this.valueType);
-            SCode.location = "AssignmentT.EvalStep";
+            SCode.location = "AssignmentT";
 #endif
             Control expr = this.value;
             Environment env = environment;
             object newValue;
             while (expr.EvalStep (out newValue, ref expr, ref env)) { };
 #if DEBUG
-            SCode.location = "AssignmentT.EvalStep.1";
+            SCode.location = "AssignmentT";
 #endif
             if (newValue == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
@@ -855,6 +892,29 @@ namespace Microcode
             }
 #endif
             return this.cell.Assign (out answer, newValue);
+        }
+    }
+
+    [Serializable]
+    sealed class AssignmentTQ : AssignmentT
+    {
+        public readonly object valueToAssign;
+
+        internal AssignmentTQ (TopLevelVariable target, Quotation value)
+            : base (target, value)
+        {
+            this.valueToAssign = value.Quoted;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentTQ");
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            return this.cell.Assign (out answer, this.valueToAssign);
         }
     }
 
@@ -988,7 +1048,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("Variable.EvalStep");
+            Warm ("Variable");
             if (this.breakOnReference) {
                 Debugger.Break ();
             }

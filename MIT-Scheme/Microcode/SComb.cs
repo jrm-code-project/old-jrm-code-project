@@ -134,7 +134,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             combinationSizeHistogram.Note (this.components.Length);
-            SCode.location = "Combination.EvalStep";
+            SCode.location = "Combination";
 #endif
             object rator = null;
             object [] evaluated = new object [this.components.Length - 1];
@@ -148,7 +148,7 @@ namespace Microcode
 #endif
                 while (expr.EvalStep (out ev, ref expr, ref env)) { };
 #if DEBUG
-                SCode.location = "Combination.EvalStep";
+                SCode.location = "Combination";
 #endif
                 if (ev == Interpreter.UnwindStack) {
                     ((UnwinderState) env).AddFrame (new CombinationFrame (this, environment, evaluated, counter));
@@ -389,14 +389,21 @@ namespace Microcode
 
         public static SCode Make (object rator)
         {
-            return 
+            return Make (EnsureSCode (rator));
+        }
+
+        public static SCode Make (SCode rator)
+        {
+            return
                 //(! Configuration.EnableCombination0Optimization) ? new Combination0 (rator) :
                 ////// Combination of no arguments simply applied, just insert the lambdaBody.
                 ////// This confuses the pretty printer, though.
                 //////: (rator is StaticLambda && ((Lambda) rator).Formals.Length == 0) ? SpecialMake ((StaticLambda) rator)
                 ////: (rator is StaticLambda && ((Lambda) rator).Formals.Length == 0) ? SpecialCombination0.Make ((StaticLambda) rator)
                 ////: 
+                (rator is Argument) ? Combination0A.Make ((Argument) rator) :
                 (rator is StaticVariable) ? Combination0S.Make ((StaticVariable) rator) :
+                (rator is Quotation) ? Combination0Q.Make ((Quotation) rator) :
                 new Combination0 (rator);
         }
 
@@ -508,6 +515,79 @@ namespace Microcode
     }
 
     [Serializable]
+    class Combination0A : Combination0
+    {
+        public readonly int ratorOffset;
+        protected Combination0A (Argument rator)
+            : base (rator)
+        {
+            this.ratorOffset = rator.Offset;
+        }
+
+        public static SCode Make (Argument rator)
+        {
+            return
+                (rator is Argument0) ? Combination0A0.Make ((Argument0) rator) :
+                (rator is Argument1) ? Combination0A1.Make ((Argument1) rator) :
+                new Combination0A (rator);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination0A");
+#endif
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset));
+        }
+    }
+
+    [Serializable]
+    class Combination0A0 : Combination0A
+    {
+        Combination0A0 (Argument0 rator)
+            : base (rator)
+        {
+        }
+
+        public static SCode Make (Argument0 rator)
+        {
+            return
+                new Combination0A0 (rator);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination0A0");
+#endif
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+    class Combination0A1 : Combination0A
+    {
+        Combination0A1 (Argument1 rator)
+            : base (rator)
+        {
+        }
+
+        public static SCode Make (Argument1 rator)
+        {
+            return
+                new Combination0A1 (rator);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination0A1");
+#endif
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value);
+        }
+    }
+
+    [Serializable]
     sealed class Combination0S : Combination0
     {
         public readonly Symbol ratorName;
@@ -538,6 +618,31 @@ namespace Microcode
         }
     }
 
+    [Serializable]
+    sealed class Combination0Q : Combination0
+    {
+        public readonly IApplicable ratorValue;
+        Combination0Q (Quotation rator)
+            : base (rator)
+        {
+            this.ratorValue = (IApplicable) rator.Quoted;
+        }
+
+        public static SCode Make (Quotation rator)
+        {
+            return
+                new Combination0Q (rator);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination0Q");
+#endif
+            return this.ratorValue.Call (out answer, ref expression, ref environment);
+        }
+    }
+
 //    class SpecialCombination0 : Combination0
 //    {
 //        Symbol name;
@@ -560,80 +665,11 @@ namespace Microcode
 //        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
 //        {
 //#if DEBUG
-//            Warm ("SpecialCombination0.EvalStep");
+//            Warm ("SpecialCombination0");
 //#endif
 //            expression = this.body;
 //            answer = null;
 //            return true;
-//        }
-//    }
-
-
-//    [Serializable]
-//    class Combination0A : Combination0
-//    {
-//        protected Combination0A (Argument rator)
-//            : base (rator)
-//        {
-//        }
-
-//        public static SCode Make (Argument rator)
-//        {
-//            return (rator is Argument0) ? Combination0A0.Make ((Argument0)rator)
-//                : (rator is Argument1) ? Combination0A1.Make ((Argument1)rator)
-//                : new Combination0A (rator);
-//        }
-        
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("Combination0A.EvalStep");
-//#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, closureEnvironment.ArgumentValue (this.ratorAddress.Offset));
-//        }
-//    }
-
-//    [Serializable]
-//    class Combination0A0 : Combination0A
-//    {
-//        protected Combination0A0 (Argument0 rator)
-//            : base (rator)
-//        {
-//        }
-
-//        public static SCode Make (Argument0 rator)
-//        {
-//            return  new Combination0A0 (rator);
-//        }
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("Combination0A0.EvalStep");
-//#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, closureEnvironment.Argument0Value);
-//        }
-//    }
-
-//    [Serializable]
-//    class Combination0A1 : Combination0A
-//    {
-//        protected Combination0A1 (Argument1 rator)
-//            : base (rator)
-//        {
-//        }
-
-//        public static SCode Make (Argument1 rator)
-//        {
-//            return new Combination0A1 (rator);
-//        }
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("Combination0A1.EvalStep");
-//#endif
-//            return Interpreter.Call (out answer, ref expression, ref closureEnvironment, closureEnvironment.Argument1Value);
 //        }
 //    }
 
@@ -642,7 +678,6 @@ namespace Microcode
     {
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         public override TC TypeCode { get { return TC.PCOMB0; } }
-
 
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         readonly Primitive0 procedure;

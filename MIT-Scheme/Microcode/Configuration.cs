@@ -7,15 +7,21 @@ namespace Microcode
 {
     static class Configuration
     {
+        #region Access
         /// <summary>
         /// If true, allow Access to be optimized.
         /// </summary>
-        public const bool EnableAccessOptimization = false;
+        public const bool EnableAccessOptimization = true;
+        public const bool EnableAccessSpecialization = true;
+        #endregion
+
+        #region Assignment
         public const bool EnableAssignmentOptimization = false;
+        #endregion
 
         #region Combination
-        public const bool EnableCombinationOptimization = false;
-        public const bool EnableCombination0 = false;
+        public const bool EnableCombinationOptimization = true;
+        public const bool EnableCombination0 = true;
         public const bool EnableCombination3 = false;
         #endregion
 
@@ -46,7 +52,9 @@ namespace Microcode
         /// If true, certain primitive predicates are handled directly
         /// by the conditional.
         /// </summary>
-        public const bool EnablePrimitiveConditional1 = false;
+        public const bool EnablePrimitiveConditional1 = true;
+        public const bool EnableInlinePCond1 = true;
+
         public const bool EnablePrimitiveConditional2 = false;
         #endregion
 
@@ -54,10 +62,10 @@ namespace Microcode
         public const bool EnableDelayOptimization = false;
 
         #region Disjunction
-        public const bool EnableDisjunctionOptimization = false;
+        public const bool EnableDisjunctionOptimization = true;
         public const bool EnablePrimitiveDisjunction1 = false;
         public const bool EnablePrimitiveDisjunction2 = false;
-        public const bool EnableDisjunctionSpecialization = false;
+        public const bool EnableDisjunctionSpecialization = true;
         #endregion
 
         #region Lambda
@@ -77,9 +85,13 @@ namespace Microcode
         /// </summary>
         public const bool EnablePrimitiveCombination1Optimization = true;
         /// <summary>
-        /// Allow Primitive1Combinations to specialize on the type of argument.
+        /// Allow PrimitiveCombination1 to specialize on the type of argument.
         /// </summary>
         public const bool EnablePrimitive1Specialization = true;
+        /// <summary>
+        /// Allow selected PrimitiveCombination1 to directly execute on
+        /// the arguments.
+        /// </summary>
         public const bool EnableInlinePrimitive1 = true;
         #endregion
 
@@ -89,18 +101,27 @@ namespace Microcode
         /// </summary>
         public const bool EnablePrimitiveCombination2Optimization = true;
         public const bool EnablePrimitive2Specialization = true;
-        public const bool EnableInlinePrimitive2 = false;
+        public const bool EnableInlinePrimitive2 = true;
         #endregion
 
+        #region PrimitiveCombination3
         public const bool EnablePrimitiveCombination3Optimization = true;
         public const bool EnablePrimitive3Specialization = true;
         public const bool EnableInlinePrimitive3 = false;
+        #endregion
 
         public const bool EnableQuotationOptimization = false;
-        public const bool EnableSequence2Optimization = false;
-        public const bool EnableSequence2Specialization = false;
-        public const bool EnableSequence3Optimization = false;
-        public const bool EnableSequence3Specialization = false;
+
+        #region Sequence2
+        public const bool EnableSequence2Optimization = true;
+        public const bool EnableSequence2Specialization = true;
+        #endregion
+
+        #region Sequence3
+        public const bool EnableSequence3Optimization = true;
+        public const bool EnableSequence3Specialization = true;
+        #endregion
+
         public const bool EnableTheEnvironmentOptimization = false;
 
         #region Variable

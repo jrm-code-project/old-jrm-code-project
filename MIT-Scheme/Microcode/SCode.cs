@@ -65,24 +65,24 @@ namespace Microcode
         }
 
         [DebuggerStepThrough]
-        protected void NoteCalls (SCode callee)
+        public static void NoteCalls (object caller, SCode callee)
         {
             string oldLocation = SCode.location;
             SCode.location = "-";
 
-            Type callerType = this.GetType ();
+            Type callerType = caller.GetType ();
             Type calleeType = callee.GetType ();
-//            if (callee is Argument0
-//                && ! (this is Assignment)
-//                && ! (this is Combination)
-//                && ! (this is Combination1L)
-//                && ! (this is ConditionalL)
-//&& ! (this is Disjunction)
-//                && ! (this is PrimitiveCombination3)
-//                && ! (this is Sequence3)
-//                                && !(this is SimpleLet1)
-//                    )
-//                Debugger.Break ();
+            //            if (callee is Argument0
+            //                && ! (this is Assignment)
+            //                && ! (this is Combination)
+            //                && ! (this is Combination1L)
+            //                && ! (this is ConditionalL)
+            //                && ! (this is Disjunction)
+            //                && ! (this is PrimitiveCombination3)
+            //                && ! (this is Sequence3)
+            //                                && !(this is SimpleLet1)
+            //                    )
+            //                Debugger.Break ();
             Histogram<Type> histogram;
             if (!callerTable.TryGetValue (calleeType, out histogram)) {
                 histogram = new Histogram<Type> ();
@@ -93,7 +93,40 @@ namespace Microcode
             SCode.location = oldLocation;
         }
 
+        [DebuggerStepThrough]
+        protected void NoteCalls (SCode callee)
+        {
+            NoteCalls (this, callee);
+//            string oldLocation = SCode.location;
+//            SCode.location = "-";
+
+//            Type callerType = this.GetType ();
+//            Type calleeType = callee.GetType ();
+////            if (callee is Argument0
+////                && ! (this is Assignment)
+////                && ! (this is Combination)
+////                && ! (this is Combination1L)
+////                && ! (this is ConditionalL)
+////                && ! (this is Disjunction)
+////                && ! (this is PrimitiveCombination3)
+////                && ! (this is Sequence3)
+////                                && !(this is SimpleLet1)
+////                    )
+////                Debugger.Break ();
+//            Histogram<Type> histogram;
+//            if (!callerTable.TryGetValue (calleeType, out histogram)) {
+//                histogram = new Histogram<Type> ();
+//                callerTable.Add (calleeType, histogram);
+//            }
+//            histogram.Note (callerType);
+//            callTable.Note (TypePair.Make (callerType, calleeType));
+//            SCode.location = oldLocation;
+        }
+
         static long warm_break = 10000000;
+
+        public static String location1;
+        public static String location2;
 
         [DebuggerStepThrough]
         protected void Warm (String location)
@@ -107,6 +140,11 @@ namespace Microcode
             hotSCode.Note (this);
             //Type t = this.GetType ();
             scodeHistogram.Note (this.GetType());
+            if (location != "-") {
+                location2 = location1;
+                location1 = location;
+            }
+
             SCode.location = location;
         }
 #endif
@@ -243,7 +281,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("Comment.EvalStep");
+            Warm ("Comment");
             NoteCalls (this.code);
 #endif
             expression = this.code;
@@ -345,7 +383,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("Definition.EvalStep");
+            Warm ("Definition");
             NoteCalls (this.value);
 #endif
             object value;    
@@ -353,7 +391,7 @@ namespace Microcode
             Environment env = environment;
             while (expr.EvalStep (out value, ref expr, ref env)) { };
 #if DEBUG
-            SCode.location = "Definition.EvalStep";
+            SCode.location = "Definition";
 #endif
             if (value == Interpreter.UnwindStack) throw new NotImplementedException();
             if (environment.Define (this.name, value)) throw new NotImplementedException ();
@@ -454,7 +492,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-             Warm ("Delay.EvalStep");
+             Warm ("Delay");
 #endif
             answer = new Promise (this.body, environment);
             return false;
@@ -612,8 +650,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            
-            Warm ("Quotation.EvalStep");
+            Warm ("Quotation");
 #endif
             answer = this.item;
             return false;
@@ -762,20 +799,14 @@ namespace Microcode
                // first is Sequence2) ? Flatten ((Sequence2) first, second) :
                //(Configuration.EnableCodeRewriting &&
                // first is Sequence3) ? Flatten ((Sequence3) first, second) :
-               (Configuration.EnableSequence2Specialization &&
-               first is Argument) ? second :
-               (Configuration.EnableSequence2Specialization &&
-               first is Quotation) ? Sequence2Q.Make ((Quotation) first, second) :
-               (Configuration.EnableSequence2Specialization &&
-               first is AssignmentA0SimpleLambda) ? Sequence2AssignmentA0SimpleLambda.Make ((AssignmentA0SimpleLambda) first, second) :
-               (Configuration.EnableSequence2Specialization &&
-                 second is Argument) ? Sequence2XA.Make (first, (Argument) second) :
-               (Configuration.EnableSequence2Specialization &&
-                second is Quotation) ? Sequence2XQ.Make (first, (Quotation) second) :
-               // (Configuration.EnableCodeRewriting &&
-               // second is Sequence2) ? Flatten (first, (Sequence2) second) :
-
-                new Sequence2 (first, second);
+               (!Configuration.EnableSequence2Specialization) ? new Sequence2 (first, second) :
+               (first is Argument) ? second :
+               (first is Quotation) ? Sequence2Q.Make ((Quotation) first, second) :
+               (first is AssignmentA0SimpleLambda) ? Sequence2AssignmentA0SimpleLambda.Make ((AssignmentA0SimpleLambda) first, second) :
+               (second is Argument) ? Sequence2XA.Make (first, (Argument) second) :
+               (second is Quotation) ? Sequence2XQ.Make (first, (Quotation) second) :
+               (second is StaticVariable) ? Sequence2XS.Make (first, (StaticVariable) second) :
+               new Sequence2 (first, second);
         }
 
         static public SCode Make (object first, object second)
@@ -822,14 +853,14 @@ namespace Microcode
             firstTypeHistogram.Note (this.firstType);
             NoteCalls (this.second);
             secondTypeHistogram.Note (this.secondType);
-            SCode.location = "Sequence2.EvalStep";
+            SCode.location = "Sequence2";
 #endif
             Object ev;
             Control first = this.first;
             Environment env = environment;
             while (first.EvalStep (out ev, ref first, ref env)) { };
 #if DEBUG
-            SCode.location = "Sequence2.EvalStep";
+            SCode.location = "Sequence2";
 #endif
             if (ev == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, environment));
@@ -954,7 +985,7 @@ namespace Microcode
 //#if DEBUG
 //            Warm ("-");
 //            NoteCalls (this.second);
-//            SCode.location = "Sequence2L.EvalStep";
+//            SCode.location = "Sequence2L";
 //#endif
 //            expression = this.second;
 //            answer = null;
@@ -984,7 +1015,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             NoteCalls (this.second);
-            SCode.location = "Sequence2Q.EvalStep";
+            SCode.location = "Sequence2Q";
 #endif
             expression = this.second;
             answer = null;
@@ -1017,7 +1048,7 @@ namespace Microcode
 //#if DEBUG
 //            Warm ("-");
 //            NoteCalls (this.first);
-//            SCode.location = "Sequence2SL.EvalStep";
+//            SCode.location = "Sequence2SL";
 //#endif
 //            Control first = this.first;
 //            Environment env = closureEnvironment;
@@ -1261,40 +1292,54 @@ namespace Microcode
         }
     }
 
-//    sealed class Sequence2SL1 : Sequence2SL
-//    {
-//        Sequence2SL1 (SCode first, LexicalVariable1 second)
-//            : base (first, second)
-//        {
-//        }
+    [Serializable]
+    sealed class Sequence2XS : Sequence2
+    {
+#if DEBUG
+        static public new Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly Symbol secondName;
+        public readonly int secondOffset;
 
-//        static public SCode Make (SCode first, LexicalVariable1 second)
-//        {
-//            return new Sequence2SL1 (first, second);
-//        }
+        Sequence2XS (SCode first, StaticVariable second)
+            : base (first, second)
+        {
+            this.secondName = second.Name;
+            this.secondOffset = second.Offset;
+        }
 
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("Sequence2SL1.EvalStep");
-//            NoteCalls (this.first);
-//#endif
-//            Control first = this.first;
-//            Environment env = closureEnvironment;
-//            while (first.EvalStep (out answer, ref first, ref env)) { };
-//            if (answer == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
+        static public SCode Make (SCode first, StaticVariable second)
+        {
+            return
+                new Sequence2XS (first, second);
+        }
 
-//            if (closureEnvironment.FastLexicalRef1 (out answer, this.secondName, this.secondOffset))
-//                throw new NotImplementedException ();
-//            return false;
-//        }
-//    }
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.first);
+            firstTypeHistogram.Note (this.firstType);
+            SCode.location = "Sequence2XS";
+#endif
+            Control first = this.first;
+            Environment env = closureEnvironment;
+            while (first.EvalStep (out answer, ref first, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence2XS";
+#endif
+            if (answer == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
+                closureEnvironment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            if (closureEnvironment.StaticValue (out answer, this.secondName, this.secondOffset))
+                throw new NotImplementedException();
+            return false;
+        }
+    }
 
     [Serializable]
     sealed class Sequence2XQ : Sequence2
@@ -1570,6 +1615,7 @@ namespace Microcode
                  second is Quotation) ? Sequence3B.Make (first, second, third) :
                  (third is Argument) ? Sequence3A.Make (first, second, (Argument) third) :
                  (third is Quotation) ? Sequence3Q.Make (first, second, (Quotation) third) :
+                 (third is StaticVariable) ? Sequence3XXS.Make (first, second, (StaticVariable) third) :
                 // (Configuration.EnableCodeRewriting &&
                 // Configuration.EnableFlattenSequence &&
                 // third is Sequence2) ? Flatten (first, second, (Sequence2) third) :
@@ -2160,6 +2206,73 @@ namespace Microcode
     }
 
     [Serializable]
+    class Sequence3XXS : Sequence3
+    {
+#if DEBUG
+        static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
+        static public Histogram<Type> secondTypeHistogram = new Histogram<Type> ();
+#endif
+        protected readonly Symbol thirdName;
+        public readonly int thirdOffset;
+        protected Sequence3XXS (SCode first, SCode second, StaticVariable third)
+            : base (first, second, third)
+        {
+            this.thirdName = third.Name;
+            this.thirdOffset = third.Offset;
+        }
+
+        public static SCode Make (SCode first, SCode second, StaticVariable third)
+        {
+            return
+                new Sequence3XXS (first, second, third);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.first);
+            NoteCalls (this.second);
+            firstTypeHistogram.Note (this.firstType);
+            secondTypeHistogram.Note (this.secondType);
+            SCode.location = "Sequence3XSS";
+#endif
+            object ev;
+            Control expr = this.first;
+            Environment env = environment;
+
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3XSS";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            expr = this.second;
+            env = environment;
+            while (expr.EvalStep (out ev, ref expr, ref env)) { };
+#if DEBUG
+            SCode.location = "Sequence3XXS";
+#endif
+            if (ev == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            if (environment.StaticValue (out answer, this.thirdName, this.thirdOffset))
+                throw new NotImplementedException ();
+            return false;
+        }
+
+    }
+
+    [Serializable]
     class Sequence3B : Sequence3
     {
         #if DEBUG
@@ -2250,7 +2363,7 @@ namespace Microcode
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("TheEnvironment.EvalStep");
+            Warm ("TheEnvironment");
 #endif
             answer = environment;
             return false;
