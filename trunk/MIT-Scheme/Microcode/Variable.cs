@@ -537,7 +537,7 @@ namespace Microcode
 #if DEBUG
         static Histogram<Type> valueTypeHistogram = new Histogram<Type>();
 #endif
-        readonly int offset;
+        public readonly int offset;
 
         protected AssignmentA (Argument target, SCode value)
             : base (target, value)
@@ -550,6 +550,7 @@ namespace Microcode
             return
                 (target is Argument0) ? AssignmentA0.Make ((Argument0) target, value) :
                 (target is Argument1) ? AssignmentA1.Make ((Argument1) target, value) :
+                (value is Quotation) ? AssignmentAQ.Make (target, (Quotation) value) :
                 new AssignmentA (target, value);
         }
 
@@ -599,6 +600,7 @@ namespace Microcode
         {
             return
                 (value is SimpleLambda) ? AssignmentA0SimpleLambda.Make(target, (SimpleLambda) value) :
+                (value is Quotation) ? AssignmentA0Q.Make (target, (Quotation) value) :
                 new AssignmentA0 (target, value);
         }
 
@@ -629,6 +631,37 @@ namespace Microcode
             }
 #endif
             if (environment.AssignArgument0 (out answer, newValue)) throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentA0Q : AssignmentA0
+    {
+        public readonly object valueToAssign;
+
+        protected AssignmentA0Q (Argument0 target, Quotation value)
+            : base (target, value)
+        {
+            this.valueToAssign = value.Quoted;
+        }
+
+        public static SCode Make (Argument0 target, Quotation value)
+        {
+            return
+                new AssignmentA0Q (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentA0Q");
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.AssignArgument0 (out answer, this.valueToAssign)) throw new NotImplementedException ();
             return false;
         }
     }
@@ -682,6 +715,7 @@ namespace Microcode
         {
             return
                 (value is SimpleLambda) ? AssignmentA1SimpleLambda.Make (target, (SimpleLambda) value) :
+                (value is Quotation) ? AssignmentA1Q.Make (target, (Quotation) value) :
                 new AssignmentA1 (target, value);
         }
 
@@ -717,6 +751,37 @@ namespace Microcode
     }
 
     [Serializable]
+    class AssignmentA1Q : AssignmentA1
+    {
+        public readonly object valueToAssign;
+
+        protected AssignmentA1Q (Argument1 target, Quotation value)
+            : base (target, value)
+        {
+            this.valueToAssign = value.Quoted;
+        }
+
+        public static SCode Make (Argument1 target, Quotation value)
+        {
+            return
+                new AssignmentA1Q (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentA1Q");
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.AssignArgument (out answer, 1, this.valueToAssign)) throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
     class AssignmentA1SimpleLambda : AssignmentA1
     {
         public readonly SimpleLambda lambda;
@@ -746,6 +811,37 @@ namespace Microcode
             SimpleClosure newValue = new SimpleClosure (this.lambda, environment.BaseEnvironment, staticCells);
 
             if (environment.AssignArgument (out answer, 1, newValue)) throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentAQ : AssignmentA
+    {
+        public readonly object valueToAssign;
+
+        protected AssignmentAQ (Argument target, Quotation value)
+            : base (target, value)
+        {
+            this.valueToAssign = value.Quoted;
+        }
+
+        public static SCode Make (Argument target, Quotation value)
+        {
+            return
+                new AssignmentAQ (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentAQ");
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.AssignArgument (out answer, this.offset, this.valueToAssign)) throw new NotImplementedException ();
             return false;
         }
     }
@@ -799,11 +895,11 @@ namespace Microcode
     [Serializable]
     class AssignmentS : Assignment
     {
-        readonly int offset;
+        public readonly int offset;
 #if DEBUG
         static Histogram<Type> valueTypeHistogram = new Histogram<Type> ();
 #endif
-        AssignmentS (StaticVariable target, SCode value)
+        protected AssignmentS (StaticVariable target, SCode value)
             : base (target, value)
         {
             this.offset = target.Offset;
@@ -811,7 +907,9 @@ namespace Microcode
 
         public static SCode Make (StaticVariable target, SCode value)
         {
-            return new AssignmentS (target, value);
+            return
+                (value is Quotation) ? AssignmentSQ.Make (target, (Quotation) value) :
+                new AssignmentS (target, value);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -841,6 +939,37 @@ namespace Microcode
             }
 #endif
             if (environment.AssignStatic (out answer, this.offset, newValue)) throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentSQ : AssignmentS
+    {
+        public readonly object valueToAssign;
+
+        protected AssignmentSQ (StaticVariable target, Quotation value)
+            : base (target, value)
+        {
+            this.valueToAssign = value.Quoted;
+        }
+
+        public static SCode Make (StaticVariable target, Quotation  value)
+        {
+            return
+                new AssignmentSQ (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentSQ");
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.AssignStatic (out answer, this.offset, this.valueToAssign)) throw new NotImplementedException ();
             return false;
         }
     }
@@ -945,6 +1074,7 @@ namespace Microcode
                ((name.ToString()) == "no symbol has this name") ||
                ((name.ToString()) == "%record?") ||
                ((name.ToString()) == "for-each-symbol-in-obarray") ||
+               //((name.ToString()) == "primitive-definition") ||
                //((name.ToString()) == "unscan-defines") ||
                //((name.ToString()) == "%char-set-member?") ||
                //((name.ToString()) == "the-console-port") ||

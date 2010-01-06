@@ -87,6 +87,7 @@ namespace Microcode
             return
                 (rand0 is Argument0) ? PrimitiveRecordRefA0.Make (rator, (Argument0) rand0, rand1) :
                 (rand0 is Argument1) ? PrimitiveRecordRefA1.Make (rator, (Argument1) rand0, rand1) :
+                (rand1 is Quotation) ? PrimitiveRecordRefAQ.Make (rator, rand0, (Quotation) rand1) :
                 new PrimitiveRecordRefA (rator, rand0, rand1);
         }
 
@@ -133,6 +134,7 @@ namespace Microcode
         {
             return
                 (rand1 is Quotation) ? PrimitiveRecordRefA0Q.Make (rator, rand0, (Quotation) rand1) :
+                (rand1 is StaticVariable) ? PrimitiveRecordRefA0S.Make (rator, rand0, (StaticVariable) rand1) :
                 new PrimitiveRecordRefA0 (rator, rand0, rand1);
         }
 
@@ -185,6 +187,37 @@ namespace Microcode
             Warm ("PrimitiveRecordRefA0Q");
 #endif
             answer = ((Record) environment.Argument0Value).Ref (this.offset);
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveRecordRefA0S : PrimitiveRecordRefA0
+    {
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+        PrimitiveRecordRefA0S (Primitive2 rator, Argument0 rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, Argument0 rand0, StaticVariable rand1)
+        {
+            return
+                new PrimitiveRecordRefA0S (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveRecordRefA0S");
+#endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+            answer = ((Record) environment.Argument0Value).Ref ((int) ev1);
             return false;
         }
     }
@@ -256,6 +289,32 @@ namespace Microcode
             Warm ("PrimitiveRecordRefA1Q");
 #endif
             answer = ((Record) environment.Argument1Value).Ref (this.offset);
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveRecordRefAQ : PrimitiveRecordRefA
+    {
+        public readonly int offset;
+        PrimitiveRecordRefAQ (Primitive2 rator, Argument rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.offset = (int) rand1.Quoted;
+        }
+
+        public static SCode Make (Primitive2 rator, Argument rand0, Quotation rand1)
+        {
+            return
+                new PrimitiveRecordRefAQ (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveRecordRefAQ");
+#endif
+            answer = ((Record) environment.ArgumentValue(this.rand0Offset)).Ref (this.offset);
             return false;
         }
     }

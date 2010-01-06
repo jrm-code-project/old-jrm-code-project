@@ -184,14 +184,14 @@ namespace Microcode
             ratorTypeHistogram.Note (this.ratorType);
             rand0TypeHistogram.Note (this.rand0Type);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2.EvalStep";
+            SCode.location = "Combination2";
 #endif
             object ev1;
             Environment env = environment;
             Control unev = this.rand1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "Combination2.EvalStep";
+            SCode.location = "Combination2";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
@@ -205,7 +205,7 @@ namespace Microcode
             unev = this.rand0;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "Combination2.EvalStep";
+            SCode.location = "Combination2";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
@@ -219,7 +219,7 @@ namespace Microcode
             unev = this.rator;
             while (unev.EvalStep (out evop, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "Combination2.EvalStep";
+            SCode.location = "Combination2";
 #endif
             if (evop == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination2Frame2 (this, environment, ev0, ev1));

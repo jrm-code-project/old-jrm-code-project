@@ -45,43 +45,43 @@ namespace Microcode
         {
             object [] formals = rator.Formals;
             SCode body = rator.Body;
-            if (body is Disjunction) {
-                HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
-                ((Disjunction) body).Alternative.CollectFreeVariables (freeInArms);
-                if (!freeInArms.Contains ((Symbol) formals [0])) {
-                    return
-                        Disjunction.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Disjunction) body).Predicate), arg0),
-                                      ((Disjunction) body).Alternative);
-                }
-            }
-            if (body is Conditional) {
-                HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
-                ((Conditional) body).Consequent.CollectFreeVariables (freeInArms);
-                ((Conditional) body).Alternative.CollectFreeVariables (freeInArms);
-                if (!freeInArms.Contains ((Symbol) formals [0])) {
-                    return
-                    Conditional.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Conditional) body).Predicate), arg0),
-                                      ((Conditional) body).Consequent,
-                                      ((Conditional) body).Alternative);
-                }
-            }
-            if (body is Sequence2) {
-                HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
-                ((Sequence2) body).Second.CollectFreeVariables (freeInArms);
-                if (!freeInArms.Contains ((Symbol) formals [0])) {
-                   // Debugger.Break ();
-                    return
-                        Sequence2.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Sequence2) body).First), arg0),
-                                        ((Sequence2) body).Second);
-                }
-            }
+            //if (body is Disjunction) {
+            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
+            //    ((Disjunction) body).Alternative.CollectFreeVariables (freeInArms);
+            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
+            //        return
+            //            Disjunction.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Disjunction) body).Predicate), arg0),
+            //                          ((Disjunction) body).Alternative);
+            //    }
+            //}
+            //if (body is Conditional) {
+            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
+            //    ((Conditional) body).Consequent.CollectFreeVariables (freeInArms);
+            //    ((Conditional) body).Alternative.CollectFreeVariables (freeInArms);
+            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
+            //        return
+            //        Conditional.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Conditional) body).Predicate), arg0),
+            //                          ((Conditional) body).Consequent,
+            //                          ((Conditional) body).Alternative);
+            //    }
+            //}
+            //if (body is Sequence2) {
+            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
+            //    ((Sequence2) body).Second.CollectFreeVariables (freeInArms);
+            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
+            //       // Debugger.Break ();
+            //        return
+            //            Sequence2.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Sequence2) body).First), arg0),
+            //                            ((Sequence2) body).Second);
+            //    }
+            //}
 
             return
                 //(body is Variable) ? ((((Variable) body).Name == formals [0]) ? RewriteAsIdentity (arg0) : RewriteAsSequence(arg0, body)) :
                 (rator is SimpleLambda) ? SimpleLet1.Make ((SimpleLambda) rator, arg0) :
                 (rator is StaticLambda) ? StaticLet1.Make ((StaticLambda) rator, arg0) :
                 //(arg0 is LexicalVariable) ? Let1L.Make (rator, (LexicalVariable) arg0) :
-                //(arg0 is Quotation) ? Let1Q.Make (rator, (Quotation) arg0) :
+                (arg0 is Quotation) ? Let1Q.Make (rator, (Quotation) arg0) :
                 new Let1 (rator, arg0);
         }
 
@@ -255,6 +255,156 @@ namespace Microcode
     }
 
     [Serializable]
+    class Let1Q : Let1
+    {
+        protected object [] formals;
+        public SCode body;
+        public readonly object randValue;
+
+        protected Let1Q (Lambda rator, Quotation rand)
+            : base (rator, rand)
+        {
+            formals = rator.Formals;
+            body = rator.Body;
+            this.randValue = rand.Quoted;
+#if DEBUG
+            if (body != null)
+                this.bodyType = body.GetType ();
+#endif
+        }
+
+        static SCode StandardMake (Lambda rator, Quotation arg0)
+        {
+            object [] formals = rator.Formals;
+            SCode body = rator.Body;
+            //if (body is Disjunction) {
+            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
+            //    ((Disjunction) body).Alternative.CollectFreeVariables (freeInArms);
+            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
+            //        return
+            //            Disjunction.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Disjunction) body).Predicate), arg0),
+            //                          ((Disjunction) body).Alternative);
+            //    }
+            //}
+            //if (body is Conditional) {
+            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
+            //    ((Conditional) body).Consequent.CollectFreeVariables (freeInArms);
+            //    ((Conditional) body).Alternative.CollectFreeVariables (freeInArms);
+            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
+            //        return
+            //        Conditional.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Conditional) body).Predicate), arg0),
+            //                          ((Conditional) body).Consequent,
+            //                          ((Conditional) body).Alternative);
+            //    }
+            //}
+            //if (body is Sequence2) {
+            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
+            //    ((Sequence2) body).Second.CollectFreeVariables (freeInArms);
+            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
+            //       // Debugger.Break ();
+            //        return
+            //            Sequence2.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Sequence2) body).First), arg0),
+            //                            ((Sequence2) body).Second);
+            //    }
+            //}
+
+            return
+
+                new Let1Q (rator, arg0);
+        }
+
+        public static SCode Make (Lambda rator, Quotation arg0)
+        {
+            object [] formals = rator.Formals;
+            SCode body = rator.Body;
+
+            //if (!body.Uses (formals [0])) {
+            //    Debug.Write ("\nSimplifying useless let.");
+            //    return Sequence2.Make (arg0, body);
+            //}
+            //if (body is Variable) {
+            //    if (((Variable) body).Name == formals [0]) {
+            //        Debug.Write ("\nEta reduce operator.");
+            //        return arg0;
+            //    }
+            //    else {
+            //        Debugger.Break ();
+            //        return Sequence2.Make (arg0, body);
+            //    }
+            //}
+            //else if (body is Disjunction) {
+            //    SCode pred = ((Disjunction) body).Predicate;
+            //    SCode alt = ((Disjunction) body).Alternative;
+            //    if (!alt.Uses (formals [0])) {
+            //        Debug.Write ("\n; Hoisting disjunction.");
+            //        return Disjunction.Make (Combination1.Make (Lambda.Make (rator.Name, formals, pred), arg0), alt);
+            //    }
+            //}
+            //else if (body is Conditional) {
+            //    SCode pred = ((Conditional) body).Predicate;
+            //    SCode cons = ((Conditional) body).Consequent;
+            //    SCode alt = ((Conditional) body).Alternative;
+            //    if (cons.Uses (formals [0]) || alt.Uses (formals [0]))
+            //        return StandardMake (rator, arg0);
+            //    else {
+            //        Debug.Write ("\n; Hoisting Conditional.");
+            //        return Conditional.Make (Combination1.Make (Lambda.Make (rator.Name, formals, pred), arg0), cons, alt);
+            //    }
+            //}
+            //else if (body is Combination1 &&
+            //    ((Combination1) body).Operator is Lambda &&
+            //    !((Combination1) body).Operator.Uses (formals [0])) {
+            //    Debug.Write ("\n; Drifting LET.");
+            //    return Combination1.Make (((Combination1) body).Operator,
+            //                              Combination1.Make (Lambda.Make (rator.Name, formals, ((Combination1) body).Operand),
+            //                                                              arg0));
+            //}
+            //else if (body is Combination1 &&
+            //         ((Combination1) body).Operator is Lambda &&
+            //         !((Combination1) body).Operand.Uses (formals [0])) {
+            //    //Debugger.Break ();
+            //}
+
+            //else if (body is PrimitiveCombination1) {
+            //    SCode arg = ((PrimitiveCombination1) body).Operand;
+            //    if (arg is Variable && ((Variable) arg).Name == formals [0]) {
+            //        Debug.Write ("\n; Eliding LET");
+            //        return PrimitiveCombination1.Make (((PrimitiveCombination1) body).Operator, arg0);
+            //    }
+            //}
+            return
+                StandardMake (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+
+            SCode.location = "Let1Q";
+#endif
+
+            object evop = null;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Let1Q";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            return ((IApplicable) evop).Call (out answer, ref expression, ref environment, this.randValue);
+        }
+    }
+
+    [Serializable]
     class SimpleLet1 : Let1
     {
 #if DEBUG
@@ -280,6 +430,7 @@ namespace Microcode
                 (arg0 is Argument) ? SimpleLet1A.Make (rator, (Argument) arg0) :
                 (arg0 is SimpleLambda) ? SimpleLet1Lambda.Make (rator, (SimpleLambda) arg0) :
                 (arg0 is StaticVariable) ? SimpleLet1S.Make (rator, (StaticVariable) arg0) :
+                (arg0 is Quotation) ? SimpleLet1Q.Make (rator, (Quotation) arg0) :
                 new SimpleLet1 (rator, arg0);
         }
 
@@ -589,6 +740,70 @@ namespace Microcode
     }
 
     [Serializable]
+    class SimpleLet1Q : SimpleLet1
+    {
+#if DEBUG
+        static Histogram<Type> bodyTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object randValue;
+
+        protected SimpleLet1Q (SimpleLambda rator, Quotation rand)
+            : base (rator, rand)
+        {
+            this.randValue = rand.Quoted;
+
+        }
+
+        public static SCode Make (SimpleLambda rator, Quotation arg0)
+        {
+            //if (arg0 is Argument0) Debugger.Break ();
+            return
+                new SimpleLet1Q (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+            bodyTypeHistogram.Note (this.bodyType);
+            SCode.location = "SimpleLet1Q";
+#endif
+            // this.closeCount += 1;
+            // Use the base environment for lookup.
+            object [] cells = environment.GetValueCells (this.lambda.StaticMapping);
+#if DEBUG
+            SCode.location = "SimpleLet1Q";
+#endif
+            SimpleClosure cl = new SimpleClosure (this.lambda, environment.BaseEnvironment, cells);
+
+
+            //            object evop = null;
+            //            Control unevop = this.rator;
+            //            env = environment;
+            //            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+            //#if DEBUG
+            //            SCode.location = "SimpleLet1";
+            //#endif
+            //            if (evop == Interpreter.UnwindStack) {
+            //                throw new NotImplementedException ();
+            //                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+            //                //answer = Interpreter.UnwindStack;
+            //                //environment = env;
+            //                //return false;
+            //            }
+            expression = this.lambda.Body;
+            environment = new SmallEnvironment1 (cl, this.randValue);
+            answer = null; // keep the compiler happy
+            return true;
+
+            // return cl.Call (out answer, ref expression, ref environment, evarg);
+        }
+
+    }
+
+
+    [Serializable]
     class SimpleLet1S : SimpleLet1
     {
 #if DEBUG
@@ -842,6 +1057,134 @@ namespace Microcode
         #endregion
 
     }
+
+    [Serializable]
+    class StaticLet1A : StaticLet1
+    {
+#if DEBUG
+        static Histogram<Type> bodyTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int rand0Offset;
+
+        protected StaticLet1A (StaticLambda rator, Argument rand)
+            : base (rator, rand)
+        {
+            this.rand0Offset = rand.Offset;
+        }
+
+        public static SCode Make (StaticLambda rator, Argument arg0)
+        {
+            return
+                (arg0 is Argument0) ? SimpleLet1A0.Make (rator, (Argument0) arg0) :
+                (arg0 is Argument1) ? SimpleLet1A1.Make (rator, (Argument1) arg0) :
+                new StaticLet1A (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.body);
+            bodyTypeHistogram.Note (this.bodyType);
+            SCode.location = "StaticLet1A";
+#endif
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+            // StaticClosure cl = new StaticClosure ((StaticLambda) this.rator, environment);
+            object [] valueCells = environment.GetValueCells (this.lambda.StaticMapping);
+#if DEBUG
+            SCode.location = "StaticLet1A";
+#endif
+            StaticClosure cl = new StaticClosure (this.lambda, environment.BaseEnvironment, valueCells);
+
+            expression = this.body;
+            environment = new StaticEnvironment (cl, new object [] { ev0 });
+            answer = null;
+            return true;
+        }
+    }
+
+    [Serializable]
+    class StaticLet1A0 : StaticLet1A
+    {
+#if DEBUG
+        static Histogram<Type> bodyTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected StaticLet1A0 (StaticLambda rator, Argument0 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (StaticLambda rator, Argument0 arg0)
+        {
+            return
+                new StaticLet1A0 (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.body);
+            bodyTypeHistogram.Note (this.bodyType);
+            SCode.location = "StaticLet1A0";
+#endif
+            object ev0 = environment.Argument0Value;
+            // StaticClosure cl = new StaticClosure ((StaticLambda) this.rator, environment);
+            object [] valueCells = environment.GetValueCells (this.lambda.StaticMapping);
+#if DEBUG
+            SCode.location = "StaticLet1A0";
+#endif
+            StaticClosure cl = new StaticClosure (this.lambda, environment.BaseEnvironment, valueCells);
+
+            expression = this.body;
+            environment = new StaticEnvironment (cl, new object [] { ev0 });
+            answer = null;
+            return true;
+        }
+    }
+
+    [Serializable]
+    class StaticLet1A1 : StaticLet1A
+    {
+#if DEBUG
+        static Histogram<Type> bodyTypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected StaticLet1A1 (StaticLambda rator, Argument1 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (StaticLambda rator, Argument1 arg0)
+        {
+            return
+                new StaticLet1A1 (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.body);
+            bodyTypeHistogram.Note (this.bodyType);
+            SCode.location = "StaticLet1A1";
+#endif
+            object ev0 = environment.Argument1Value;
+            // StaticClosure cl = new StaticClosure ((StaticLambda) this.rator, environment);
+            object [] valueCells = environment.GetValueCells (this.lambda.StaticMapping);
+#if DEBUG
+            SCode.location = "StaticLet1A1";
+#endif
+            StaticClosure cl = new StaticClosure (this.lambda, environment.BaseEnvironment, valueCells);
+
+            expression = this.body;
+            environment = new StaticEnvironment (cl, new object [] { ev0 });
+            answer = null;
+            return true;
+        }
+    }
+
 
     [Serializable]
     class StaticLet1Q : StaticLet1

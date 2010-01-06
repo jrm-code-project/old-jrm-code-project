@@ -956,7 +956,7 @@ namespace Microcode
                 return true;
             }
             else {
-                answer = environment.Argument0Value;
+                answer = ev0;
                 return false;
             }
         }

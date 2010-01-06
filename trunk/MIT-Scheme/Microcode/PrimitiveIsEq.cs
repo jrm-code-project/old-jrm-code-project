@@ -22,8 +22,8 @@ namespace Microcode
         {
             return
                 (rand0 is PrimitiveCar) ? PrimitiveIsEqCar.Make (rator, (PrimitiveCar) rand0, rand1) :
-                //(rand0 is PrimitiveCaar) ? PrimitiveIsEqCaar.Make (rator, (PrimitiveCaar) rand0, rand1) :
-                ////(rand0 is PrimitiveRecordRef) ? PrimitiveIsEqRecordRef.Make (rator, (PrimitiveRecordRef) rand0, rand1) :
+                (rand0 is PrimitiveCaar) ? PrimitiveIsEqCaar.Make (rator, (PrimitiveCaar) rand0, rand1) :
+                //(rand0 is PrimitiveRecordRef) ? PrimitiveIsEqRecordRef.Make (rator, (PrimitiveRecordRef) rand0, rand1) :
                 (rand0 is Argument) ? PrimitiveIsEqA.Make (rator, (Argument) rand0, rand1) :
                 (rand0 is StaticVariable) ? PrimitiveIsEqS.Make (rator, (StaticVariable) rand0, rand1) :
                 (rand0 is Quotation) ? PrimitiveIsEqQ.Make (rator, (Quotation) rand0, rand1) :
@@ -54,11 +54,10 @@ namespace Microcode
             SCode.location = "PrimitiveIsEq";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
             }
 
             // Eval argument0
@@ -1787,7 +1786,7 @@ namespace Microcode
                 //return false;
             }
 
-            if (ObjectModel.Eq (out answer, this.rand0Value, (ev1)))
+            if (ObjectModel.Eq (out answer, this.rand0Value, ev1))
                 throw new NotImplementedException();
             return false;
         }
@@ -2458,8 +2457,10 @@ namespace Microcode
                 //environment = env;
                 //return false;
             }
-
-            answer = (ev1 is char) && (this.rand0Value == (char) ev1);
+            //bool x = (ev1 is char);
+            //bool y = (ev1 is Character);
+            //if (x != y) Debugger.Break ();
+            answer = ((ev1 is char) && (this.rand0Value == (char) ev1)) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
     }
@@ -2487,7 +2488,11 @@ namespace Microcode
 #if DEBUG
             Warm ("PrimitiveIsCharEqQA");
 #endif
-            answer = (this.rand0Value == (char) environment.ArgumentValue (this.rand1Offset));
+            object temp = environment.ArgumentValue (this.rand1Offset);
+            bool x = (temp is char);
+            bool y = (temp is Character);
+            if (x != y) Debugger.Break ();
+            answer = (this.rand0Value == (char) temp);
             return false;
         }
     }
@@ -2512,7 +2517,10 @@ namespace Microcode
             Warm ("PrimitiveIsCharEqQA0");
 #endif
             object temp = environment.Argument0Value;
-            answer = (temp is Character && this.rand0Value == (char) temp);
+            //bool x = (temp is char);
+            //bool y = (temp is Character);
+            //if (x != y) Debugger.Break ();
+            answer = ((temp is char) && (this.rand0Value == (char) temp)) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
     }
@@ -2537,7 +2545,10 @@ namespace Microcode
             Warm ("PrimitiveIsCharEqQA1");
 #endif
             object temp = environment.Argument1Value;
-            answer = (temp is Character && this.rand0Value == (char) temp);
+            bool x = (temp is char);
+            bool y = (temp is Character);
+            if (x != y) Debugger.Break ();
+            answer = (temp is char && this.rand0Value == (char) temp);
             return false;
         }
     }
@@ -2568,7 +2579,10 @@ namespace Microcode
             object ev1;
             if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
                 throw new NotImplementedException ();
-            answer = (ev1 is char && this.rand0Value == (char) ev1);
+            //bool x = (ev1 is char);
+            //bool y = (ev1 is Character);
+            //if (x != y) Debugger.Break ();
+            answer = ((ev1 is char) && (this.rand0Value == (char) ev1)) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
     }
