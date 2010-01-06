@@ -383,14 +383,14 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.rand1);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2SA.EvalStep";
+            SCode.location = "Combination2SQ";
 #endif
             object ev1;
             Environment env = environment;
             Control unev = this.rand1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "Combination2SA.EvalStep";
+            SCode.location = "Combination2SQ";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));

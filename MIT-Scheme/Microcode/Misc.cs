@@ -138,6 +138,10 @@ namespace Microcode
         public static bool IsFileExists (out object answer, object arg)
         {
             string filename = new String ((char []) arg);
+#if DEBUG
+            // Don't profile the file system.
+            SCode.location = "-";
+#endif
             answer = System.IO.File.Exists (filename) ||
                      System.IO.Directory.Exists (filename);
             return false;

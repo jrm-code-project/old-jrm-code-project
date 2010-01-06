@@ -184,6 +184,9 @@ namespace Microcode
         [SchemePrimitive ("PAIR?", 1, true)]
         public static bool IsPair (out object answer, object arg0)
         {
+            //if (arg0 != null &&
+            //    !(arg0 is Cons))
+            //    Debug.WriteLine ("Pair? " + arg0.ToString ());
             answer = arg0 is Cons ? Constant.sharpT : Constant.sharpF;
             return false;
         }

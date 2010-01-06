@@ -16,7 +16,7 @@ namespace Microcode
         #endregion
 
         #region Assignment
-        public const bool EnableAssignmentOptimization = false;
+        public const bool EnableAssignmentOptimization = true;
         #endregion
 
         #region Combination
@@ -27,11 +27,11 @@ namespace Microcode
 
         #region Combination1
         public const bool EnableCombination1Optimization = true;
-        public const bool EnableCombination1Specialization =true;
+        public const bool EnableCombination1Specialization = true;
         /// <summary>
         /// Special case combination1.
         /// </summary>
-        public const bool EnableLet1 = false;
+        public const bool EnableLet1 = true;
         #endregion
 
         #region Combination2
@@ -62,7 +62,7 @@ namespace Microcode
         public const bool EnableDelayOptimization = false;
 
         #region Disjunction
-        public const bool EnableDisjunctionOptimization = true;
+        public const bool EnableDisjunctionOptimization = false;
         public const bool EnablePrimitiveDisjunction1 = false;
         public const bool EnablePrimitiveDisjunction2 = false;
         public const bool EnableDisjunctionSpecialization = true;
