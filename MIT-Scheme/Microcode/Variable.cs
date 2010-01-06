@@ -327,11 +327,13 @@ namespace Microcode
         {
             return
                 (!Configuration.EnableAssignmentOptimization) ? new Assignment (target, value) :
-                //(value is Quotation) ? AssignmentQ.Make (target, (Quotation) value) :
+                
                 (target is Argument) ? AssignmentA.Make ((Argument) target, value) :
                 (target is GlobalVariable) ? AssignmentG.Make ((GlobalVariable) target, value) :
                 (target is StaticVariable) ? AssignmentS.Make ((StaticVariable) target, value) :
                 (target is TopLevelVariable) ? AssignmentT.Make ((TopLevelVariable) target, value) :
+                (value is Argument) ? AssignmentXA.Make (target, (Argument) value) :
+                (value is Quotation) ? AssignmentQ.Make (target, (Quotation) value) :
                 new Assignment (target, value);
         }
 
@@ -908,6 +910,7 @@ namespace Microcode
         public static SCode Make (StaticVariable target, SCode value)
         {
             return
+                (value is Argument) ? AssignmentSA.Make (target, (Argument) value) :
                 (value is Quotation) ? AssignmentSQ.Make (target, (Quotation) value) :
                 new AssignmentS (target, value);
         }
@@ -939,6 +942,101 @@ namespace Microcode
             }
 #endif
             if (environment.AssignStatic (out answer, this.offset, newValue)) throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentSA : AssignmentS
+    {
+        public readonly int valueOffset;
+
+        protected AssignmentSA (StaticVariable target, Argument value)
+            : base (target, value)
+        {
+            this.valueOffset = value.Offset;
+        }
+
+        public static SCode Make (StaticVariable target, Argument value)
+        {
+            return
+                (value is Argument0) ? AssignmentSA0.Make (target, (Argument0) value) :
+                (value is Argument1) ? AssignmentSA1.Make (target, (Argument1) value) :
+                new AssignmentSA (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "AssignmentSA";
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.AssignStatic (out answer, this.offset, environment.ArgumentValue(this.valueOffset))) 
+                throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentSA0 : AssignmentSA
+    {
+        protected AssignmentSA0 (StaticVariable target, Argument0 value)
+            : base (target, value)
+        {
+        }
+
+        public static SCode Make (StaticVariable target, Argument0 value)
+        {
+            return
+                new AssignmentSA0 (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "AssignmentSA0";
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.AssignStatic (out answer, this.offset, environment.Argument0Value))
+                throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentSA1 : AssignmentSA
+    {
+        protected AssignmentSA1 (StaticVariable target, Argument1 value)
+            : base (target, value)
+        {
+        }
+
+        public static SCode Make (StaticVariable target, Argument1 value)
+        {
+            return
+                new AssignmentSA1 (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "AssignmentSA1";
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.AssignStatic (out answer, this.offset, environment.Argument1Value))
+                throw new NotImplementedException ();
             return false;
         }
     }
@@ -990,7 +1088,9 @@ namespace Microcode
         public static SCode Make (TopLevelVariable target, SCode value)
         {
             return 
+                (value is Argument) ? AssignmentTA.Make (target, (Argument) value) :
                 (value is Quotation) ? new AssignmentTQ (target, (Quotation) value) :
+                (value is StaticVariable) ? new AssignmentTS (target, (StaticVariable) value) :
                 new AssignmentT (target, value);
         }
 
@@ -1025,6 +1125,92 @@ namespace Microcode
     }
 
     [Serializable]
+    class AssignmentTA : AssignmentT
+    {
+        public readonly int valueOffset;
+
+        protected AssignmentTA (TopLevelVariable target, Argument value)
+            : base (target, value)
+        {
+            this.valueOffset = value.Offset;
+        }
+
+        public static SCode Make (TopLevelVariable target, Argument value)
+        {
+            return
+                (value is Argument0) ? AssignmentTA0.Make (target, (Argument0) value) :
+                (value is Argument1) ? AssignmentTA1.Make (target, (Argument1) value) :
+                new AssignmentTA (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentTA");
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            return this.cell.Assign (out answer, environment.ArgumentValue (this.valueOffset));
+        }
+    }
+
+    [Serializable]
+    class AssignmentTA0 : AssignmentTA
+    {
+        protected AssignmentTA0 (TopLevelVariable target, Argument0 value)
+            : base (target, value)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable target, Argument0 value)
+        {
+            return
+                new AssignmentTA0 (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentTA0");
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            return this.cell.Assign (out answer, environment.Argument0Value);
+        }
+    }
+
+    [Serializable]
+    class AssignmentTA1 : AssignmentTA
+    {
+        protected AssignmentTA1 (TopLevelVariable target, Argument1 value)
+            : base (target, value)
+        {
+        }
+
+        public static SCode Make (TopLevelVariable target, Argument1 value)
+        {
+            return
+                new AssignmentTA1 (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentTA1");
+
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            return this.cell.Assign (out answer, environment.Argument1Value);
+        }
+    }
+
+    [Serializable]
     sealed class AssignmentTQ : AssignmentT
     {
         public readonly object valueToAssign;
@@ -1044,6 +1230,159 @@ namespace Microcode
             }
 #endif
             return this.cell.Assign (out answer, this.valueToAssign);
+        }
+    }
+
+    [Serializable]
+    sealed class AssignmentTS : AssignmentT
+    {
+        public readonly Symbol valueName;
+        public readonly int valueOffset;
+
+        internal AssignmentTS (TopLevelVariable target, StaticVariable value)
+            : base (target, value)
+        {
+            this.valueName = value.Name;
+            this.valueOffset = value.Offset;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("AssignmentTS");
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            object temp;
+            if (environment.StaticValue (out temp, this.valueName, this.valueOffset))
+                throw new NotImplementedException ();
+            return this.cell.Assign (out answer, temp);
+        }
+    }
+
+    [Serializable]
+    class AssignmentXA : Assignment
+    {
+        public readonly int valueOffset;
+
+        protected AssignmentXA (Variable target, Argument value)
+            : base (target, value)
+        {
+            this.valueOffset = value.Offset;
+
+        }
+
+        static public SCode Make (Variable target, Argument value)
+        {
+            return
+                (value is Argument0) ? AssignmentXA0.Make (target, (Argument0) value) :
+                (value is Argument1) ? AssignmentXA1.Make (target, (Argument1) value) :
+                new AssignmentXA (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "AssignmentXA";
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.Assign (out answer, this.target.Name, environment.ArgumentValue (this.valueOffset)))
+                throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentXA0 : AssignmentXA
+    {
+        protected AssignmentXA0 (Variable target, Argument0 value)
+            : base (target, value)
+        {
+        }
+
+        static public SCode Make (Variable target, Argument0 value)
+        {
+            return
+                new AssignmentXA0 (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "AssignmentXA0";
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.Assign (out answer, this.target.Name, environment.Argument0Value))
+                throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentXA1 : AssignmentXA
+    {
+        protected AssignmentXA1 (Variable target, Argument1 value)
+            : base (target, value)
+        {
+        }
+
+        static public SCode Make (Variable target, Argument1 value)
+        {
+            return
+                new AssignmentXA1 (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "AssignmentXA1";
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.Assign (out answer, this.target.Name, environment.Argument1Value))
+                throw new NotImplementedException ();
+            return false;
+        }
+    }
+
+    [Serializable]
+    class AssignmentQ : Assignment
+    {
+        public readonly object valueToAssign;
+
+        protected AssignmentQ (Variable target, Quotation value)
+            : base (target, value)
+        {
+            this.valueToAssign = value.Quoted;
+
+        }
+
+        static public SCode Make (Variable target, Quotation value)
+        {
+            return
+                new AssignmentQ (target, value);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "AssignmentQ";
+            if (this.target.breakOnReference) {
+                Debugger.Break ();
+            }
+#endif
+            if (environment.Assign (out answer, this.target.Name, this.valueToAssign)) throw new NotImplementedException ();
+            return false;
         }
     }
 

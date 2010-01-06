@@ -740,7 +740,7 @@ namespace Microcode
         [SchemePrimitive ("SYMBOL?", 1, true)]
         public static bool IsSymbol (out object answer, object arg)
         {
-            Debug.WriteLine ("SYMBOL? " + ((Symbol) arg).ToString ());
+            //Debug.WriteLine ("SYMBOL? " + ((Symbol) arg).ToString ());
             answer = (arg is Symbol && ((Symbol) arg).TypeCode == TC.INTERNED_SYMBOL) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
@@ -748,7 +748,7 @@ namespace Microcode
         [SchemePrimitive ("UNINTERNED-SYMBOL?", 1, true)]
         public static bool IsUninternedSymbol (out object answer, object arg)
         {
-            Debug.WriteLine ("UNINTERNED-SYMBOL? " + ((Symbol) arg).ToString ());
+            //Debug.WriteLine ("UNINTERNED-SYMBOL? " + ((Symbol) arg).ToString ());
             answer = (arg is Symbol && ((Symbol) arg).TypeCode == TC.UNINTERNED_SYMBOL) ? Constant.sharpT : Constant.sharpF;
             return false;
         }

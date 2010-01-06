@@ -2489,9 +2489,9 @@ namespace Microcode
             Warm ("PrimitiveIsCharEqQA");
 #endif
             object temp = environment.ArgumentValue (this.rand1Offset);
-            bool x = (temp is char);
-            bool y = (temp is Character);
-            if (x != y) Debugger.Break ();
+            //bool x = (temp is char);
+            //bool y = (temp is Character);
+            //if (x != y) Debugger.Break ();
             answer = (this.rand0Value == (char) temp);
             return false;
         }
@@ -2605,6 +2605,7 @@ namespace Microcode
         {
             return
                 (rand1 is Argument) ? PrimitiveIsIntEqQA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is StaticVariable) ? PrimitiveIsIntEqQS.Make (rator, rand0, (StaticVariable) rand1) :
                 new PrimitiveIsIntEqQ (rator, rand0, rand1);
         }
 
@@ -2710,6 +2711,37 @@ namespace Microcode
 #endif
             object temp = environment.Argument1Value;
             answer = (temp is int && this.rand0Value == (int) temp);
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveIsIntEqQS : PrimitiveIsIntEqQ
+    {
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+        protected PrimitiveIsIntEqQS (Primitive2 rator, Quotation rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, Quotation rand0, StaticVariable rand1)
+        {
+            return
+                new PrimitiveIsIntEqQS (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveIsIntEqQS");
+#endif
+            object that;
+            if (environment.StaticValue (out that, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+            answer = ((that is int) && (this.rand0Value == (int) that));
             return false;
         }
     }

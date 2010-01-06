@@ -891,14 +891,12 @@ namespace Microcode
 
         public static SCode Make (Quotation predicate, SCode alternative)
         {
-            throw new NotImplementedException ();
-            //return
-            //    (predicate is Argument0) ? DisjunctionA0.Make ((Argument0) predicate, alternative) :
-            //    (predicate is Argument1) ? DisjunctionA1.Make ((Argument1) predicate, alternative) :
-            //    (alternative is Argument) ? DisjunctionAA.Make (predicate, (Argument) alternative) :
-            //    (alternative is Quotation) ? DisjunctionAQ.Make (predicate, (Quotation) alternative) :
-            //    (alternative is StaticVariable) ? DisjunctionAS.Make (predicate, (StaticVariable) alternative) :
-            //    new DisjunctionA (predicate, alternative);
+            object predicateValue = predicate.Quoted;
+#if DEBUG
+            Debug.WriteLine ("Folding constant disjunction");
+#endif
+            return (predicateValue is bool && (bool) predicateValue == false)
+                ? predicate : alternative;
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
