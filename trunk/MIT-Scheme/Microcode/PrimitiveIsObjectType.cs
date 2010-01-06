@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -8,6 +9,11 @@ namespace Microcode
     [Serializable]
     class PrimitiveIsObjectType : PrimitiveCombination2
     {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type>();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type>();
+#endif
+
         protected PrimitiveIsObjectType (Primitive2 rator, SCode rand0, SCode rand1)
             : base (rator, rand0, rand1)
         {
@@ -18,6 +24,7 @@ namespace Microcode
             return
                 (rand0 is Quotation) ? PrimitiveIsObjectTypeQ.Make (rator, (Quotation) rand0, rand1) :
                 //(rand1 is Quotation) ? PrimitiveIsObjectTypeSQ.Make (rator, rand0, (Quotation) rand1) :
+                (rand1 is Argument) ? PrimitiveIsObjectTypeXA.Make (rator, rand0, (Argument) rand1) :
                 new PrimitiveIsObjectType (rator, rand0, rand1);
         }
 
@@ -27,6 +34,8 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.rand0);
             NoteCalls (this.rand1);
+            rand0TypeHistogram.Note(this.rand0Type);
+            rand1TypeHistogram.Note(this.rand1Type);
             SCode.location = "PrimitiveIsObjectType";
 #endif
             // Eval argument1
@@ -80,6 +89,14 @@ namespace Microcode
             this.rand0Value = (TC) (int) rand0.Quoted;
         }
 
+        public static SCode AlwaysFalse (SCode rand1)
+        {
+#if DEBUG
+            Debug.WriteLine ("Folding compiled-entry? => false");
+#endif
+            return Sequence2.Make (rand1, Quotation.Make (false));
+        }
+
         public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
         {
             TC code = (TC) rand0.Quoted;
@@ -90,7 +107,7 @@ namespace Microcode
                 
                 // There are no compiled entries, so simply eval the operand and return false.
                 // Other optimizations may improve this sequence.
-                (code == TC.COMPILED_ENTRY) ? Sequence2.Make (rand1, Quotation.Make (false)) :
+                (code == TC.COMPILED_ENTRY) ? AlwaysFalse(rand1) :
                 (code == TC.COMPLEX) ? PrimitiveCombination1.Make (Primitive.IsComplex, rand1) :
                 (code == TC.ENTITY) ? PrimitiveCombination1.Make (Primitive.IsEntity, rand1) :
                 (code == TC.FIXNUM) ? PrimitiveCombination1.Make (Primitive.IsFixnum, rand1) :
@@ -170,6 +187,171 @@ namespace Microcode
                 throw new NotImplementedException ();
             return false;
         }
+    }
+
+    [Serializable]
+    class PrimitiveIsObjectTypeXA : PrimitiveIsObjectType
+    {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+
+        public readonly int rand1Offset;
+        protected PrimitiveIsObjectTypeXA (Primitive2 rator, SCode rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (Primitive2 rator, SCode rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? PrimitiveIsObjectTypeXA0.Make (rator, rand0, (Argument0) rand1) :
+                (rand1 is Argument1) ? PrimitiveIsObjectTypeXA1.Make (rator, rand0, (Argument1) rand1) :
+                 new PrimitiveIsObjectTypeXA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "PrimitiveIsObjectTypeXA";
+#endif
+            // Eval argument1
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            // Eval argument0
+            object ev0;
+
+            Control unev = this.rand0;
+            Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsObjectTypeXA";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            if (ObjectModel.IsPrimitiveObjectType (out answer, ev0, ev1))
+                throw new NotImplementedException ();
+            return false;
+        }
+
+    }
+
+    [Serializable]
+    class PrimitiveIsObjectTypeXA0 : PrimitiveIsObjectTypeXA
+    {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+
+
+        protected PrimitiveIsObjectTypeXA0 (Primitive2 rator, SCode rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, SCode rand0, Argument0 rand1)
+        {
+            return
+                 new PrimitiveIsObjectTypeXA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "PrimitiveIsObjectTypeXA0";
+#endif
+            // Eval argument1
+            object ev1 = environment.Argument0Value;
+
+            // Eval argument0
+            object ev0;
+
+            Control unev = this.rand0;
+            Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsObjectTypeXA0";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            if (ObjectModel.IsPrimitiveObjectType (out answer, ev0, ev1))
+                throw new NotImplementedException ();
+            return false;
+        }
+
+    }
+
+    [Serializable]
+    class PrimitiveIsObjectTypeXA1 : PrimitiveIsObjectTypeXA
+    {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+
+
+        protected PrimitiveIsObjectTypeXA1 (Primitive2 rator, SCode rand0, Argument1 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (Primitive2 rator, SCode rand0, Argument1 rand1)
+        {
+            return
+                 new PrimitiveIsObjectTypeXA1 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0);
+            rand0TypeHistogram.Note (this.rand0Type);
+            SCode.location = "PrimitiveIsObjectTypeXA1";
+#endif
+            // Eval argument1
+            object ev1 = environment.Argument1Value;
+
+            // Eval argument0
+            object ev0;
+
+            Control unev = this.rand0;
+            Environment env = environment;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveIsObjectTypeXA1";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            if (ObjectModel.IsPrimitiveObjectType (out answer, ev0, ev1))
+                throw new NotImplementedException ();
+            return false;
+        }
+
     }
 
 #if NIL

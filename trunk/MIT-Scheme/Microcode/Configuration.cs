@@ -62,7 +62,7 @@ namespace Microcode
         public const bool EnableDelayOptimization = false;
 
         #region Disjunction
-        public const bool EnableDisjunctionOptimization = false;
+        public const bool EnableDisjunctionOptimization = true;
         public const bool EnablePrimitiveDisjunction1 = false;
         public const bool EnablePrimitiveDisjunction2 = false;
         public const bool EnableDisjunctionSpecialization = true;

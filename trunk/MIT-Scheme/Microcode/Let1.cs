@@ -80,7 +80,7 @@ namespace Microcode
                 //(body is Variable) ? ((((Variable) body).Name == formals [0]) ? RewriteAsIdentity (arg0) : RewriteAsSequence(arg0, body)) :
                 (rator is SimpleLambda) ? SimpleLet1.Make ((SimpleLambda) rator, arg0) :
                 (rator is StaticLambda) ? StaticLet1.Make ((StaticLambda) rator, arg0) :
-                //(arg0 is LexicalVariable) ? Let1L.Make (rator, (LexicalVariable) arg0) :
+                (arg0 is Argument) ? Let1A.Make (rator, (Argument) arg0) :
                 (arg0 is Quotation) ? Let1Q.Make (rator, (Quotation) arg0) :
                 new Let1 (rator, arg0);
         }
@@ -255,61 +255,153 @@ namespace Microcode
     }
 
     [Serializable]
+    class Let1A : Let1
+    {
+        public readonly int randOffset;
+
+        protected Let1A (Lambda rator, Argument rand)
+            : base (rator, rand)
+        {
+            this.randOffset = rand.Offset;
+        }
+
+        public static SCode Make (Lambda rator, Argument arg0)
+        {
+            return
+                (arg0 is Argument0) ? Let1A0.Make (rator, (Argument0) arg0) :
+                (arg0 is Argument1) ? Let1A1.Make (rator, (Argument1) arg0) :
+                new Let1A (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+
+            SCode.location = "Let1A";
+#endif
+            object ev0 = environment.ArgumentValue (this.randOffset);
+
+            object evop = null;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Let1A";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            return ((IApplicable) evop).Call (out answer, ref expression, ref environment, ev0);
+        }
+    }
+
+    [Serializable]
+    class Let1A0 : Let1A
+    {
+        protected Let1A0 (Lambda rator, Argument0 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (Lambda rator, Argument0 arg0)
+        {
+            return
+                new Let1A0 (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+
+            SCode.location = "Let1A0";
+#endif
+            object ev0 = environment.Argument0Value;
+
+            object evop = null;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Let1A0";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            return ((IApplicable) evop).Call (out answer, ref expression, ref environment, ev0);
+        }
+    }
+
+    [Serializable]
+    class Let1A1 : Let1A
+    {
+        protected Let1A1 (Lambda rator, Argument1 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (Lambda rator, Argument1 arg0)
+        {
+            return
+                new Let1A1 (rator, arg0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rator);
+
+            SCode.location = "Let1A1";
+#endif
+            object ev0 = environment.Argument1Value;
+
+            object evop = null;
+            Control unevop = this.rator;
+            Environment env = environment;
+            while (unevop.EvalStep (out evop, ref unevop, ref env)) { };
+#if DEBUG
+            SCode.location = "Let1A1";
+#endif
+            if (evop == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination1Frame1 (this, environment, evarg));
+                //answer = Interpreter.UnwindStack;
+                //environment = env;
+                //return false;
+            }
+
+            return ((IApplicable) evop).Call (out answer, ref expression, ref environment, ev0);
+        }
+    }
+
+    [Serializable]
     class Let1Q : Let1
     {
-        protected object [] formals;
-        public SCode body;
         public readonly object randValue;
 
         protected Let1Q (Lambda rator, Quotation rand)
             : base (rator, rand)
         {
-            formals = rator.Formals;
-            body = rator.Body;
             this.randValue = rand.Quoted;
-#if DEBUG
-            if (body != null)
-                this.bodyType = body.GetType ();
-#endif
         }
 
         static SCode StandardMake (Lambda rator, Quotation arg0)
         {
-            object [] formals = rator.Formals;
-            SCode body = rator.Body;
-            //if (body is Disjunction) {
-            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
-            //    ((Disjunction) body).Alternative.CollectFreeVariables (freeInArms);
-            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
-            //        return
-            //            Disjunction.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Disjunction) body).Predicate), arg0),
-            //                          ((Disjunction) body).Alternative);
-            //    }
-            //}
-            //if (body is Conditional) {
-            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
-            //    ((Conditional) body).Consequent.CollectFreeVariables (freeInArms);
-            //    ((Conditional) body).Alternative.CollectFreeVariables (freeInArms);
-            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
-            //        return
-            //        Conditional.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Conditional) body).Predicate), arg0),
-            //                          ((Conditional) body).Consequent,
-            //                          ((Conditional) body).Alternative);
-            //    }
-            //}
-            //if (body is Sequence2) {
-            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
-            //    ((Sequence2) body).Second.CollectFreeVariables (freeInArms);
-            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
-            //       // Debugger.Break ();
-            //        return
-            //            Sequence2.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Sequence2) body).First), arg0),
-            //                            ((Sequence2) body).Second);
-            //    }
-            //}
-
             return
-
                 new Let1Q (rator, arg0);
         }
 
@@ -968,10 +1060,10 @@ namespace Microcode
         public static SCode Make (StaticLambda rator, SCode arg0)
         {
             return
-                //(arg0 is LexicalVariable) ? SimpleLet1L.Make (rator, (LexicalVariable) arg0) :
                 //(arg0 is PrimitiveCar) ? SimpleLet1Car.Make (rator, (PrimitiveCar) arg0) :
                 //(arg0 is PrimitiveCdr) ? SimpleLet1Cdr.Make (rator, (PrimitiveCdr) arg0) :
                 //(arg0 is StaticLambda) ? SimpleLet1StaticLambda.Make (rator, (StaticLambda) arg0) :
+                (arg0 is Argument) ? StaticLet1A.Make (rator, (Argument) arg0) :
                 (arg0 is Quotation) ? StaticLet1Q.Make (rator, (Quotation) arg0) :
                 new StaticLet1 (rator, arg0);
         }
@@ -1075,8 +1167,8 @@ namespace Microcode
         public static SCode Make (StaticLambda rator, Argument arg0)
         {
             return
-                (arg0 is Argument0) ? SimpleLet1A0.Make (rator, (Argument0) arg0) :
-                (arg0 is Argument1) ? SimpleLet1A1.Make (rator, (Argument1) arg0) :
+                (arg0 is Argument0) ? StaticLet1A0.Make (rator, (Argument0) arg0) :
+                (arg0 is Argument1) ? StaticLet1A1.Make (rator, (Argument1) arg0) :
                 new StaticLet1A (rator, arg0);
         }
 

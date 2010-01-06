@@ -1647,7 +1647,9 @@ namespace Microcode
 
         public static SCode Make (Quotation predicate, SCode consequent, SCode alternative)
         {
-            Debugger.Break ();
+#if DEBUG
+            Debug.WriteLine ("Folding constant conditional.");
+#endif
             object pred = predicate.Quoted;
             return (pred is Boolean && (bool) pred == false)
                 ? alternative
