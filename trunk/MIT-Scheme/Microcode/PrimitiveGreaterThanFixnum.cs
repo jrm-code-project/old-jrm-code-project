@@ -93,12 +93,9 @@ namespace Microcode
         public static new SCode Make (Primitive2 rator, Argument rand0, SCode rand1)
         {
             return
-                //(rand0 is LexicalVariable) ? PrimitiveGreaterThanFixnumL.Make (rator, (LexicalVariable) rand0, rand1) :
                 //(rand0 is Quotation) ? PrimitiveGreaterThanFixnumQ.Make (rator, (Quotation) rand0, rand1) :
-                //(rand1 is LexicalVariable) ? PrimitiveGreaterThanFixnumSL.Make (rator, rand0, (LexicalVariable) rand1) :
                 //(rand1 is Quotation) ? PrimitiveGreaterThanFixnumSQ.Make (rator, rand0, (Quotation) rand1) :
                 (rand0 is Argument0) ? PrimitiveGreaterThanFixnumA0.Make (rator, (Argument0) rand0, rand1) :
-                (rand0 is Argument1) ? PrimitiveGreaterThanFixnumA1.Make (rator, (Argument1) rand0, rand1) :
                 new PrimitiveGreaterThanFixnumA (rator, rand0, rand1);
         }
 
@@ -256,83 +253,6 @@ namespace Microcode
     }
 
     [Serializable]
-    class PrimitiveGreaterThanFixnumA1 : PrimitiveGreaterThanFixnumA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveGreaterThanFixnumA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static new SCode Make (Primitive2 rator, Argument1 rand0, SCode rand1)
-        {
-            return
-                //(rand0 is LexicalVariable) ? PrimitiveGreaterThanFixnumL.Make (rator, (LexicalVariable) rand0, rand1) :
-                //(rand0 is Quotation) ? PrimitiveGreaterThanFixnumQ.Make (rator, (Quotation) rand0, rand1) :
-                //(rand1 is LexicalVariable) ? PrimitiveGreaterThanFixnumSL.Make (rator, rand0, (LexicalVariable) rand1) :
-                (rand1 is Quotation) ? new PrimitiveGreaterThanFixnumA1Q (rator, rand0, (Quotation) rand1) :
-                new PrimitiveGreaterThanFixnumA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveGreaterThanFixnumA1";
-#endif
-            // Eval argument1
-            object ev1;
-
-            Control unev = this.rand1;
-            Environment env = environment;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveGreaterThanFixnumA1";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            // Eval argument0
-            object ev0 = environment.Argument1Value;
-
-            // Greater-than-fixnum?
-            answer = (int) ev0 > (int) ev1 ? Constant.sharpT : Constant.sharpF;
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveGreaterThanFixnumA1Q : PrimitiveGreaterThanFixnumA1
-    {
-        public readonly int rand1Value;
-        internal PrimitiveGreaterThanFixnumA1Q (Primitive2 rator, Argument1 rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Value = (int) rand1.Quoted;
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveGreaterThanFixnumA1Q");
-#endif
-            // Greater-than-fixnum?
-            answer = (int) environment.Argument1Value > this.rand1Value ? Constant.sharpT : Constant.sharpF;
-            return false;
-        }
-    }
-
-    [Serializable]
     class PrimitiveGreaterThanFixnumS : PrimitiveGreaterThanFixnum
     {
 #if DEBUG
@@ -454,7 +374,6 @@ namespace Microcode
         {
             return
                 (rand1 is Argument0) ? new PrimitiveGreaterThanFixnumQA0 (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? new PrimitiveGreaterThanFixnumQA1 (rator, rand0, (Argument1) rand1) :
                 new PrimitiveGreaterThanFixnumQA (rator, rand0, rand1);
         }
 
@@ -488,25 +407,6 @@ namespace Microcode
 #endif
             // Greater-than-fixnum?
             answer = this.rand0Value > (int) environment.Argument0Value ? Constant.sharpT : Constant.sharpF;
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveGreaterThanFixnumQA1 : PrimitiveGreaterThanFixnumQA
-    {
-        internal PrimitiveGreaterThanFixnumQA1 (Primitive2 rator, Quotation rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveGreaterThanFixnumQA1");
-#endif
-            // Greater-than-fixnum?
-            answer = this.rand0Value > (int) environment.Argument1Value ? Constant.sharpT : Constant.sharpF;
             return false;
         }
     }

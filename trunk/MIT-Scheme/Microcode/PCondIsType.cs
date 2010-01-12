@@ -84,9 +84,12 @@ namespace Microcode
         {
             return
                 (predicate.Operand is Argument0) ? PCondIsTypeA0<SType>.Make (predicate, consequent, alternative) :
-                (predicate.Operand is Argument1) ? PCondIsTypeA1<SType>.Make (predicate, consequent, alternative) :
+                (consequent is Argument) ? PCondIsTypeAA<SType>.Make (predicate, (Argument) consequent, alternative) :
                 (consequent is Quotation) ? PCondIsTypeAQ<SType>.Make (predicate, (Quotation) consequent, alternative) :
-                (alternative is Quotation) ? PCondIsTypeAXQ<SType>.Make (predicate, consequent, (Quotation) alternative) :
+                (consequent is StaticVariable) ? PCondIsTypeAS<SType>.Make (predicate, (StaticVariable) consequent, alternative) :
+                (alternative is Argument) ? PCondIsTypeAXA<SType>.Make (predicate, consequent, (Argument) alternative) :
+                (alternative is Quotation) ? new PCondIsTypeAXQ<SType> (predicate, consequent, (Quotation) alternative) :
+                (alternative is StaticVariable) ? new PCondIsTypeAXS<SType> (predicate, consequent, (StaticVariable) alternative) :
                 new PCondIsTypeA<SType> (predicate, consequent, alternative);
         }
 
@@ -156,7 +159,6 @@ namespace Microcode
         {
             return
                 (consequent is Argument0) ? PCondIsTypeA0A0<SType>.Make (predicate, (Argument0) consequent, alternative) :
-                (consequent is Argument1) ? PCondIsTypeA0A1<SType>.Make (predicate, (Argument1) consequent, alternative) :
                new PCondIsTypeA0A<SType> (predicate, consequent, alternative);
         }
 
@@ -204,41 +206,6 @@ namespace Microcode
 
             if (obj is SType) {
                 answer = obj;
-                return false;
-            }
-            else {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls ((SCode) this.alternative);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeA0A1<SType> : PCondIsTypeA0A<SType>
-    {
-        protected PCondIsTypeA0A1 (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
-        {
-            return
-               new PCondIsTypeA0A1<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA0A1");
-#endif
-            if (environment.Argument0Value is SType) {
-                answer = environment.Argument1Value;
                 return false;
             }
             else {
@@ -305,7 +272,6 @@ namespace Microcode
         {
             return
                (alternative is Argument0) ? PCondIsTypeA0XA0<SType>.Make (predicate, consequent, (Argument0) alternative) :
-               (alternative is Argument1) ? PCondIsTypeA0XA1<SType>.Make (predicate, consequent, (Argument1) alternative) :
                new PCondIsTypeA0XA<SType> (predicate, consequent, alternative);
         }
 
@@ -369,43 +335,6 @@ namespace Microcode
     }
    
     [Serializable]
-    sealed class PCondIsTypeA0XA1<SType> : PCondIsTypeA0XA<SType>
-    {
-        public readonly object alternativeOffset;
-        PCondIsTypeA0XA1 (PrimitiveIsType<SType> predicate, SCode consequent, Argument1 alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Argument1 alternative)
-        {
-            return
-               new PCondIsTypeA0XA1<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA0XA1");
-#endif
-            if (environment.Argument0Value is SType) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls ((SCode) this.consequent);
-                SCode.location = "PCondIsTypeA0XA1";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-                answer = environment.Argument1Value;
-                return false;
-            }
-        }
-    }
-
-    [Serializable]
     class PCondIsTypeA0XS<SType> : PCondIsTypeA0<SType>
     {
         public readonly Symbol alternativeName;
@@ -445,6 +374,7 @@ namespace Microcode
             }
         }
     }
+
     [Serializable]
     class PCondIsTypeA0XQ<SType> : PCondIsTypeA0<SType>
     {
@@ -484,114 +414,25 @@ namespace Microcode
     }
 
     [Serializable]
-    class PCondIsTypeA1<SType> : PCondIsTypeA<SType>
+    class PCondIsTypeAA0<SType> : PCondIsTypeAA<SType>
     {
-        protected PCondIsTypeA1(PrimitiveIsType<SType> predicate, SCode consequent, SCode alternative)
-            : base(predicate, consequent, alternative)
-        {
-        }
-
-        internal static SCode Make(PrimitiveIsType<SType> predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (consequent is Argument) ? PCondIsTypeA1A<SType>.Make (predicate, (Argument) consequent, alternative) :
-                (consequent is Quotation) ? PCondIsTypeA1Q<SType>.Make (predicate, (Quotation) consequent, alternative) :
-                (consequent is StaticVariable) ? PCondIsTypeA1S<SType>.Make (predicate, (StaticVariable) consequent, alternative) :
-                (alternative is Argument) ? PCondIsTypeA1XA<SType>.Make (predicate, consequent, (Argument) alternative) :
-                (alternative is Quotation) ? PCondIsTypeA1XQ<SType>.Make (predicate,  consequent, (Quotation) alternative) :
-                (alternative is StaticVariable) ? PCondIsTypeA1XS<SType>.Make (predicate, consequent, (StaticVariable) alternative) :
-                new PCondIsTypeA1<SType>(predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep(out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm("PCondIsTypeA1");
-#endif
-            if (environment.Argument1Value is SType)
-            {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls(this.consequent);
-                SCode.location = "PCondIsTypeA1";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else
-            {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls(this.alternative);
-                SCode.location = "PCondIsTypeA1";
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeA1A<SType> : PCondIsTypeA1<SType>
-    {
-        public readonly int consequentOffset;
-        protected PCondIsTypeA1A (PrimitiveIsType<SType> predicate, Argument consequent, SCode alternative)
+        protected PCondIsTypeAA0 (PrimitiveIsType<SType> predicate, Argument0 consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-            this.consequentOffset = consequent.Offset;
         }
 
-        internal static SCode Make (PrimitiveIsType<SType> predicate, Argument consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsType<SType> predicate, Argument0 consequent, SCode alternative)
         {
             return
-                (consequent is Argument0) ? PCondIsTypeA1A0<SType>.Make (predicate, (Argument0) consequent, alternative) :
-                (consequent is Argument1) ? PCondIsTypeA1A1<SType>.Make (predicate, (Argument1) consequent, alternative) :
-               new PCondIsTypeA1A<SType> (predicate, consequent, alternative);
+               new PCondIsTypeAA0<SType> (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsTypeA1A");
+            Warm ("PCondIsTypeAA0");
 #endif
-            if (environment.Argument1Value is SType) {
-                answer = environment.ArgumentValue (this.consequentOffset);
-                return false;
-            }
-            else {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls ((SCode) this.alternative);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeA1A0<SType> : PCondIsTypeA1A<SType>
-    {
-        protected PCondIsTypeA1A0 (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
-        {
-            return
-               new PCondIsTypeA1A0<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA1A0");
-#endif
-            object obj = environment.Argument1Value;
+            object obj = environment.ArgumentValue (this.predicateOffset);
 
             if (obj is SType) {
                 answer = environment.Argument0Value;
@@ -610,26 +451,28 @@ namespace Microcode
     }
 
     [Serializable]
-    class PCondIsTypeA1A1<SType> : PCondIsTypeA1A<SType>
+    class PCondIsTypeAA<SType> : PCondIsTypeA<SType>
     {
-        protected PCondIsTypeA1A1 (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
+        public readonly int consequentOffset;
+        protected PCondIsTypeAA (PrimitiveIsType<SType> predicate, Argument consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
+            this.consequentOffset = consequent.Offset;
         }
 
-        internal static SCode Make (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
+        internal static SCode Make (PrimitiveIsType<SType> predicate, Argument consequent, SCode alternative)
         {
             return
-               new PCondIsTypeA1A1<SType> (predicate, consequent, alternative);
+               new PCondIsTypeAA<SType> (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("PCondIsTypeA1A1");
+            Warm ("PCondIsTypeAA");
 #endif
-            if (environment.Argument1Value is SType) {
-                answer = environment.Argument1Value;
+            if (environment.ArgumentValue (this.predicateOffset) is SType) {
+                answer = environment.ArgumentValue (this.consequentOffset);
                 return false;
             }
             else {
@@ -640,281 +483,6 @@ namespace Microcode
                 expression = this.alternative;
                 answer = null;
                 return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeA1Q<SType> : PCondIsTypeA1<SType>
-    {
-        public readonly object consequentValue;
-        protected PCondIsTypeA1Q (PrimitiveIsType<SType> predicate, Quotation consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.consequentValue = consequent.Quoted;
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, Quotation consequent, SCode alternative)
-        {
-            return
-                new PCondIsTypeA1Q<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA1Q");
-#endif
-            if (environment.Argument1Value is SType) {
-                answer = this.consequentValue;
-                return false;
-            }
-            else {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.alternative);
-                SCode.location = "PCondIsTypeA1Q";
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeA1S<SType> : PCondIsTypeA1<SType>
-    {
-        public readonly Symbol consequentName;
-        public readonly int consequentOffset;
-
-        protected PCondIsTypeA1S (PrimitiveIsType<SType> predicate, StaticVariable consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.consequentName = consequent.Name;
-            this.consequentOffset = consequent.Offset;
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, StaticVariable consequent, SCode alternative)
-        {
-            return
-                new PCondIsTypeA1S<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA1S");
-#endif
-            if (environment.Argument1Value is SType) {
-                if (environment.StaticValue (out answer, this.consequentName, this.consequentOffset))
-                    throw new NotImplementedException ();
-                return false;
-            }
-            else {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.alternative);
-                SCode.location = "PCondIsTypeA1S";
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeA1XA<SType> : PCondIsTypeA1<SType>
-    {
-        public readonly int alternativeOffset;
-        protected PCondIsTypeA1XA (PrimitiveIsType<SType> predicate, SCode consequent, Argument alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeOffset = alternative.Offset;
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Argument alternative)
-        {
-            return
-               (alternative is Argument0) ? PCondIsTypeA1XA0<SType>.Make (predicate, consequent, (Argument0) alternative) :
-               (alternative is Argument1) ? PCondIsTypeA1XA1<SType>.Make (predicate, consequent, (Argument1) alternative) :
-               new PCondIsTypeA1XA<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA1XA");
-#endif
-            if (environment.Argument1Value is SType) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls ((SCode) this.consequent);
-                SCode.location = "PCondIsTypeA0XA";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-                answer = environment.ArgumentValue (this.alternativeOffset);
-                return false;
-            }
-        }
-    }
-
-    [Serializable]
-    sealed class PCondIsTypeA1XA0<SType> : PCondIsTypeA1XA<SType>
-    {
-        public readonly object alternativeOffset;
-        PCondIsTypeA1XA0 (PrimitiveIsType<SType> predicate, SCode consequent, Argument0 alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Argument0 alternative)
-        {
-            return
-               new PCondIsTypeA1XA0<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA1XA0");
-#endif
-            if (environment.Argument1Value is SType) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls ((SCode) this.consequent);
-                SCode.location = "PCondIsTypeA1XA";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-                answer = environment.Argument0Value;
-                return false;
-            }
-        }
-    }
-
-    [Serializable]
-    sealed class PCondIsTypeA1XA1<SType> : PCondIsTypeA0XA<SType>
-    {
-        public readonly object alternativeOffset;
-        PCondIsTypeA1XA1 (PrimitiveIsType<SType> predicate, SCode consequent, Argument1 alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Argument1 alternative)
-        {
-            return
-               new PCondIsTypeA1XA1<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA1XA1");
-#endif
-            object evp = environment.Argument1Value;
-            if (evp is SType) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls ((SCode) this.consequent);
-                SCode.location = "PCondIsTypeA1XA1";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-                answer = evp;
-                return false;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeA1XQ<SType> : PCondIsTypeA1<SType>
-    {
-        public readonly object alternativeValue;
-        protected PCondIsTypeA1XQ (PrimitiveIsType<SType> predicate, SCode consequent, Quotation alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeValue = alternative.Quoted;
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Quotation alternative)
-        {
-            return
-                new PCondIsTypeA1XQ<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA1XQ");
-#endif
-            if (environment.Argument1Value is SType) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.consequent);
-                SCode.location = "PCondIsTypeA1XQ";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-                answer = this.alternativeValue;
-                return false;
-            } 
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeA1XS<SType> : PCondIsTypeA1<SType>
-    {
-        public readonly Symbol alternativeName;
-        public readonly int alternativeOffset;
-
-        protected PCondIsTypeA1XS (PrimitiveIsType<SType> predicate, SCode consequent, StaticVariable alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.alternativeName = alternative.Name;
-            this.alternativeOffset = alternative.Offset;
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, StaticVariable alternative)
-        {
-            return
-                new PCondIsTypeA1XS<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeA1XS");
-#endif
-            if (environment.Argument1Value is SType) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.consequent);
-                SCode.location = "PCondIsTypeA1XS";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-                if (environment.StaticValue (out answer, this.alternativeName, this.alternativeOffset))
-                    throw new NotImplementedException ();
-                return false;
             }
         }
     }
@@ -940,7 +508,7 @@ namespace Microcode
 #if DEBUG
             Warm ("PCondIsTypeAQ");
 #endif
-            if (environment.ArgumentValue(this.predicateOffset) is SType) {
+            if (environment.ArgumentValue (this.predicateOffset) is SType) {
                 answer = this.consequentValue;
                 return false;
             }
@@ -958,19 +526,131 @@ namespace Microcode
     }
 
     [Serializable]
-    class PCondIsTypeAXQ<SType> : PCondIsTypeA<SType>
+    class PCondIsTypeAS<SType> : PCondIsTypeA<SType>
+    {
+        public readonly Symbol consequentName;
+        public readonly int consequentOffset;
+
+        protected PCondIsTypeAS (PrimitiveIsType<SType> predicate, StaticVariable consequent, SCode alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.consequentName = consequent.Name;
+            this.consequentOffset = consequent.Offset;
+        }
+
+        internal static SCode Make (PrimitiveIsType<SType> predicate, StaticVariable consequent, SCode alternative)
+        {
+            return
+                new PCondIsTypeAS<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeAS");
+#endif
+            if (environment.ArgumentValue (this.predicateOffset) is SType) {
+                if (environment.StaticValue (out answer, this.consequentName, this.consequentOffset))
+                    throw new NotImplementedException ();
+                return false;
+            }
+            else {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.alternative);
+                SCode.location = "PCondIsTypeAS";
+#endif
+                expression = this.alternative;
+                answer = null;
+                return true;
+            }
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeAXA<SType> : PCondIsTypeA<SType>
+    {
+        public readonly int alternativeOffset;
+        protected PCondIsTypeAXA (PrimitiveIsType<SType> predicate, SCode consequent, Argument alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Argument alternative)
+        {
+            return
+               (alternative is Argument0) ? PCondIsTypeAXA0<SType>.Make (predicate, consequent, (Argument0) alternative) :
+               new PCondIsTypeAXA<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeAXA");
+#endif
+            if (environment.ArgumentValue (this.predicateOffset) is SType) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.consequent);
+                SCode.location = "PCondIsTypeA0XA";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.ArgumentValue (this.alternativeOffset);
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    sealed class PCondIsTypeAXA0<SType> : PCondIsTypeAXA<SType>
+    {
+        public readonly object alternativeOffset;
+        PCondIsTypeAXA0 (PrimitiveIsType<SType> predicate, SCode consequent, Argument0 alternative)
+            : base (predicate, consequent, alternative)
+        {
+        }
+
+        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Argument0 alternative)
+        {
+            return
+               new PCondIsTypeAXA0<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeAXA0");
+#endif
+            if (environment.ArgumentValue (this.predicateOffset) is SType) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls ((SCode) this.consequent);
+                SCode.location = "PCondIsTypeAXA";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                answer = environment.Argument0Value;
+                return false;
+            }
+        }
+    }
+
+    [Serializable]
+    sealed class PCondIsTypeAXQ<SType> : PCondIsTypeA<SType>
     {
         public readonly object alternativeValue;
-        protected PCondIsTypeAXQ (PrimitiveIsType<SType> predicate, SCode consequent, Quotation alternative)
+        internal  PCondIsTypeAXQ (PrimitiveIsType<SType> predicate, SCode consequent, Quotation alternative)
             : base (predicate, consequent, alternative)
         {
             this.alternativeValue = alternative.Quoted;
-        }
-
-        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Quotation alternative)
-        {
-            return
-                new PCondIsTypeAXQ<SType> (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -978,7 +658,7 @@ namespace Microcode
 #if DEBUG
             Warm ("PCondIsTypeAXQ");
 #endif
-            if (environment.ArgumentValue(this.predicateOffset) is SType) {
+            if (environment.ArgumentValue (this.predicateOffset) is SType) {
 #if DEBUG
                 SCode.location = "-";
                 NoteCalls (this.consequent);
@@ -991,9 +671,52 @@ namespace Microcode
             else {
                 answer = this.alternativeValue;
                 return false;
+            } 
+        }
+    }
+
+    [Serializable]
+    class PCondIsTypeAXS<SType> : PCondIsTypeA<SType>
+    {
+        public readonly Symbol alternativeName;
+        public readonly int alternativeOffset;
+
+        internal PCondIsTypeAXS (PrimitiveIsType<SType> predicate, SCode consequent, StaticVariable alternative)
+            : base (predicate, consequent, alternative)
+        {
+            this.alternativeName = alternative.Name;
+            this.alternativeOffset = alternative.Offset;
+        }
+
+        internal static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, StaticVariable alternative)
+        {
+            return
+                new PCondIsTypeAXS<SType> (predicate, consequent, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PCondIsTypeAXS");
+#endif
+            if (environment.ArgumentValue (this.predicateOffset) is SType) {
+#if DEBUG
+                SCode.location = "-";
+                NoteCalls (this.consequent);
+                SCode.location = "PCondIsTypeAXS";
+#endif
+                expression = this.consequent;
+                answer = null;
+                return true;
+            }
+            else {
+                if (environment.StaticValue (out answer, this.alternativeName, this.alternativeOffset))
+                    throw new NotImplementedException ();
+                return false;
             }
         }
     }
+
     [Serializable]
     class PCondIsTypeCar<SType> : PCondIsType<SType>
     {
@@ -1067,8 +790,7 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveIsTypeCarA0<SType>) ? PCondIsTypeCarA0<SType>.Make ((PrimitiveIsTypeCarA0<SType>) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsTypeCarA1<SType>) ? PCondIsTypeCarA1<SType>.Make ((PrimitiveIsTypeCarA1<SType>) predicate, consequent, alternative) :
-                new PCondIsTypeCarA<SType> (predicate, consequent, alternative);
+                 new PCondIsTypeCarA<SType> (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1165,46 +887,6 @@ namespace Microcode
             if (((Cons) ev0).Car is SType) {
                 answer = this.consequent;
                 return false;
-            }
-            else {
-#if DEBUG
-                NoteCalls (this.alternative);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeCarA1<SType> : PCondIsTypeCarA<SType>
-    {
-        protected PCondIsTypeCarA1 (PrimitiveIsTypeCarA1<SType> predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static new SCode Make (PrimitiveIsTypeCarA1<SType> predicate, SCode consequent, SCode alternative)
-        {
-            return
-                new PCondIsTypeCarA1<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeCarA1");
-#endif
-            object ev0 = environment.Argument1Value;
-
-            if (((Cons) ev0).Car is SType) {
-#if DEBUG
-                NoteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
             }
             else {
 #if DEBUG
@@ -1321,7 +1003,6 @@ namespace Microcode
         {
             return
                 (consequent is Argument0) ? PCondIsTypeSA0<SType>.Make (predicate, (Argument0) consequent, alternative) :
-                (consequent is Argument1) ? PCondIsTypeSA1<SType>.Make (predicate, (Argument1) consequent, alternative) :
                 new PCondIsTypeSA<SType> (predicate, consequent, alternative);
         }
 
@@ -1374,44 +1055,6 @@ namespace Microcode
 
             if (evpred is SType) {
                 answer = environment.Argument0Value;
-                return false;
-            }
-            else {
-#if DEBUG
-                NoteCalls (this.alternative);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondIsTypeSA1<SType> : PCondIsTypeSA<SType>
-    {
-        protected PCondIsTypeSA1 (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static new SCode Make (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
-        {
-            return
-                new PCondIsTypeSA1<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeSA1");
-#endif
-            object evpred;
-            if (environment.StaticValue (out evpred, this.predicateName, this.predicateOffset))
-                throw new NotImplementedException ();
-
-            if (evpred is SType) {
-                answer = environment.Argument1Value;
                 return false;
             }
             else {
@@ -1525,7 +1168,6 @@ namespace Microcode
         {
             return
                 (alternative is Argument0)? PCondIsTypeSXA0<SType>.Make (predicate, consequent, (Argument0) alternative) :
-                 (alternative is Argument1) ? PCondIsTypeSXA1<SType>.Make (predicate, consequent, (Argument0) alternative) :
                 new PCondIsTypeSXA<SType> (predicate, consequent, alternative);
         }
 
@@ -1595,45 +1237,6 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    class PCondIsTypeSXA1<SType> : PCondIsTypeSXA<SType>
-    {
-        protected PCondIsTypeSXA1 (PrimitiveIsType<SType> predicate, SCode consequent, Argument1 alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static new SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Argument1 alternative)
-        {
-            return
-                new PCondIsTypeSXA1<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondIsTypeSXA1");
-#endif
-            object evpred;
-            if (environment.StaticValue (out evpred, this.predicateName, this.predicateOffset))
-                throw new NotImplementedException ();
-
-            if (evpred is SType) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.consequent);
-                SCode.location = "PCondIsTypeSXA1";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-                answer = environment.Argument1Value;
-                return false;
-            }
-        }
-    }
     [Serializable]
     class PCondIsTypeSXQ<SType> : PCondIsTypeS<SType>
     {
@@ -1738,7 +1341,6 @@ namespace Microcode
         {
             return
                 (consequent is Argument0) ? PCondIsTypeXA0<SType>.Make (predicate, (Argument0) consequent, alternative) :
-                (consequent is Argument1) ? PCondIsTypeXA1<SType>.Make (predicate, (Argument1) consequent, alternative) :
                 new PCondIsTypeXA<SType> (predicate, consequent, alternative);
         }
 
@@ -1817,58 +1419,6 @@ namespace Microcode
 #endif
             if (ev0 is SType) {
                 answer = environment.Argument0Value ;
-                return false;
-            }
-            else {
-#if DEBUG
-                NoteCalls (this.alternative);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-
-    }
-
-    [Serializable]
-    class PCondIsTypeXA1<SType> : PCondIsTypeA<SType>
-    {
-
-        protected PCondIsTypeXA1 (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static new SCode Make (PrimitiveIsType<SType> predicate, Argument1 consequent, SCode alternative)
-        {
-            return
-                new PCondIsTypeXA1<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg0);
-            SCode.location = "PCondIsTypeXA1";
-#endif
-            Control unev0 = this.arg0;
-            Environment env = environment;
-            object ev0;
-            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsTypeFrame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-#if DEBUG
-            SCode.location = "PCondIsTypeXA1";
-#endif
-            if (ev0 is SType) {
-                answer = environment.Argument1Value;
                 return false;
             }
             else {
@@ -2012,7 +1562,6 @@ namespace Microcode
         {
             return
                 (alternative is Argument0) ? PCondIsTypeXXA0<SType>.Make (predicate, consequent, (Argument0) alternative) :
-                (alternative is Argument1) ? PCondIsTypeXXA1<SType>.Make (predicate, consequent, (Argument1) alternative) :
                 new PCondIsTypeXXA<SType> (predicate, consequent, alternative);
         }
 
@@ -2104,56 +1653,6 @@ namespace Microcode
 
     }
 
-    [Serializable]
-    class PCondIsTypeXXA1<SType> : PCondIsTypeXXA<SType>
-    {
-        protected PCondIsTypeXXA1 (PrimitiveIsType<SType> predicate, SCode consequent, Argument1 alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static new SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, Argument1 alternative)
-        {
-            return
-                new PCondIsTypeXXA1<SType> (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg0);
-            SCode.location = "PCondIsTypeXXA1";
-#endif
-            Control unev0 = this.arg0;
-            Environment env = environment;
-            object ev0;
-            while (unev0.EvalStep (out ev0, ref unev0, ref env)) { };
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsTypeFrame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-#if DEBUG
-            SCode.location = "PCondIsTypeXXA1";
-#endif
-            if (ev0 is SType) {
-#if DEBUG
-                NoteCalls (this.consequent);
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-                answer = environment.Argument1Value;
-                return false;
-            }
-        }
-
-    }
     [Serializable]
     class PCondIsTypeXXQ<SType> : PCondIsType<SType>
     {

@@ -107,8 +107,7 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveGreaterThanFixnumA0) ? PCondGreaterThanFixnumA0.Make ((PrimitiveGreaterThanFixnumA0) predicate, consequent, alternative) :
-                (predicate is PrimitiveGreaterThanFixnumA1) ? PCondGreaterThanFixnumA1.Make ((PrimitiveGreaterThanFixnumA1) predicate, consequent, alternative) :
-                new PCondGreaterThanFixnumA (predicate, consequent, alternative);
+                 new PCondGreaterThanFixnumA (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -275,118 +274,6 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    class PCondGreaterThanFixnumA1 : PCondGreaterThanFixnumA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondGreaterThanFixnumA1 (PrimitiveGreaterThanFixnumA1 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-
-        }
-
-        public static SCode Make (PrimitiveGreaterThanFixnumA1 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                (predicate is PrimitiveGreaterThanFixnumA1Q) ? PCondGreaterThanFixnumA1Q.Make ((PrimitiveGreaterThanFixnumA1Q) predicate, consequent, alternative) :
-                new PCondGreaterThanFixnumA1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand0);
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PCondGreaterThanFixnumA1";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PCondGreaterThanFixnumA1";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0 = environment.Argument1Value;
-
-            if ((int) ev0 > (int) ev1) {
-#if DEBUG
-                NoteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-#if DEBUG
-                NoteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondGreaterThanFixnumA1Q : PCondGreaterThanFixnumA1
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly int rand1Value;
-        protected PCondGreaterThanFixnumA1Q (PrimitiveGreaterThanFixnumA1Q predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-            this.rand1Value = predicate.rand1Value;
-        }
-
-        public static SCode Make (PrimitiveGreaterThanFixnumA1Q predicate, SCode consequent, SCode alternative)
-        {
-            return
-                new PCondGreaterThanFixnumA1Q (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondGreaterThanFixnumA1Q");
-#endif
-
-            if ((int) environment.Argument1Value > this.rand1Value) {
-#if DEBUG
-                NoteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-#if DEBUG
-                NoteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
 
     [Serializable]
     class PCondGreaterThanFixnumS : PCondGreaterThanFixnum
@@ -543,8 +430,7 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveGreaterThanFixnumQA0) ? PCondGreaterThanFixnumQA0.Make ((PrimitiveGreaterThanFixnumQA0) predicate, consequent, alternative) :
-                                (predicate is PrimitiveGreaterThanFixnumQA1) ? PCondGreaterThanFixnumQA1.Make ((PrimitiveGreaterThanFixnumQA1) predicate, consequent, alternative) :
-                new PCondGreaterThanFixnumQA (predicate, consequent, alternative);
+               new PCondGreaterThanFixnumQA (predicate, consequent, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -621,54 +507,6 @@ namespace Microcode
                 NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
                 SCode.location = "PCondGreaterThanFixnumQA0";
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-        }
-    }
-    class PCondGreaterThanFixnumQA1 : PCondGreaterThanFixnumQA
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        protected PCondGreaterThanFixnumQA1 (PrimitiveGreaterThanFixnumQA1 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveGreaterThanFixnumQA1 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                 new PCondGreaterThanFixnumQA1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "PCondGreaterThanFixnumQA1";
-#endif
-
-            if (this.rand0Value > (int) environment.Argument1Value) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-                SCode.location = "PCondGreaterThanFixnumQA1";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-            else {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-                SCode.location = "PCondGreaterThanFixnumQA1";
 #endif
                 expression = this.alternative;
                 answer = null;

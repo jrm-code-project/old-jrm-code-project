@@ -77,7 +77,6 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveIsTypeA0<SType>) ? POrIsTypeA0<SType>.Make((PrimitiveIsTypeA0<SType>)predicate, alternative) :
-                (predicate is PrimitiveIsTypeA1<SType>) ? POrIsTypeA1<SType>.Make((PrimitiveIsTypeA1<SType>)predicate, alternative) :
                 new POrIsTypeA<SType>(predicate, alternative);
         }
 
@@ -140,49 +139,6 @@ namespace Microcode
 #endif
                 expression = this.alternative;
                 answer = null;   
-                return true;
-            }
-        }
-    }
-
-
-    [Serializable]
-    class POrIsTypeA1<SType> : POrIsTypeA<SType>
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type>();
-#endif
-        protected POrIsTypeA1(PrimitiveIsTypeA1<SType> predicate, SCode alternative)
-            : base(predicate, alternative)
-        {
-        }
-
-        internal static SCode Make(PrimitiveIsTypeA1<SType> predicate, SCode alternative)
-        {
-            return
-                new POrIsTypeA1<SType>(predicate, alternative);
-        }
-
-        public override bool EvalStep(out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm("POrIsTypeA1");
-#endif
-            if (environment.Argument1Value is SType)
-            {
-                answer = Constant.sharpT;
-                return false;
-            }
-            else
-            {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls(this.alternative);
-                alternativeTypeHistogram.Note(this.alternativeType);
-                SCode.location = "POrIsTypeA1";
-#endif
-                expression = this.alternative;
-                answer = null;
                 return true;
             }
         }

@@ -7826,3 +7826,28 @@ PComb1.predicate
 +		[7]	{[#<PRIMITIVE INTEGER-ZERO? 1>, 565347]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive1,long>
 +		[8]	{[#<PRIMITIVE SYSTEM-PAIR-CAR 1>, 138036]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive1,long>
 +		[9]	{[#<PRIMITIVE ZERO? 1>, 118364]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive1,long>
+
+----------------------------------------------------------------
+(current-time-string)"Mon Jan 11 18:38:18 2010"
++		[0]	{[PrimitiveCombination2SS, 3087]}	System.Collections.Generic.KeyValuePair<string,long>
++		[1]	{[SimpleClosure.Call2, 1687]}	System.Collections.Generic.KeyValuePair<string,long>
++		[2]	{[Combination, 1124]}	System.Collections.Generic.KeyValuePair<string,long>
++		[3]	{[SimpleLet1, 1004]}	System.Collections.Generic.KeyValuePair<string,long>
++		[4]	{[Disjunction, 670]}	System.Collections.Generic.KeyValuePair<string,long>
++		[5]	{[SmallEnvironment2.GetValueCells, 584]}	System.Collections.Generic.KeyValuePair<string,long>
++		[6]	{[ConditionalXXQ, 447]}	System.Collections.Generic.KeyValuePair<string,long>
++		[7]	{[StaticLet1Q, 436]}	System.Collections.Generic.KeyValuePair<string,long>
++		[8]	{[Combination2SCarA0.EvalStep, 417]}	System.Collections.Generic.KeyValuePair<string,long>
++		[9]	{[Conditional, 414]}	System.Collections.Generic.KeyValuePair<string,long>
++		[10]	{[SimpleClosure.Call1, 390]}	System.Collections.Generic.KeyValuePair<string,long>
++		[11]	{[SimpleLambda, 386]}	System.Collections.Generic.KeyValuePair<string,long>
++		[12]	{[SmallEnvironment3.GetValueCells, 382]}	System.Collections.Generic.KeyValuePair<string,long>
++		[13]	{[Sequence2AssignmentA0SimpleLambda, 358]}	System.Collections.Generic.KeyValuePair<string,long>
++		[14]	{[Combination1SCdrA0, 327]}	System.Collections.Generic.KeyValuePair<string,long>
++		[15]	{[PCond2XXXQ, 326]}	System.Collections.Generic.KeyValuePair<string,long>
++		[16]	{[PCond2XA, 310]}	System.Collections.Generic.KeyValuePair<string,long>
++		[17]	{[SimpleLet1A0, 302]}	System.Collections.Generic.KeyValuePair<string,long>
++		[18]	{[PCond2A0Q, 295]}	System.Collections.Generic.KeyValuePair<string,long>
++		[19]	{[SimpleClosure.Call3, 283]}	System.Collections.Generic.KeyValuePair<string,long>
++		[20]	{[PrimitiveCarA, 283]}	System.Collections.Generic.KeyValuePair<string,long>
+

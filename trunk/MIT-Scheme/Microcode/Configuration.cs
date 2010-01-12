@@ -22,7 +22,7 @@ namespace Microcode
         #region Combination
         public const bool EnableCombinationOptimization = true;
         public const bool EnableCombination0 = true;
-        public const bool EnableCombination3 = false;
+        public const bool EnableCombination3 = true;
         #endregion
 
         #region Combination1
@@ -55,7 +55,7 @@ namespace Microcode
         public const bool EnablePrimitiveConditional1 = true;
         public const bool EnableInlinePCond1 = true;
 
-        public const bool EnablePrimitiveConditional2 = false;
+        public const bool EnablePrimitiveConditional2 = true;
         #endregion
 
         public const bool EnableDefinitionOptimization = false;
@@ -131,7 +131,7 @@ namespace Microcode
         /// </summary>
         public const bool EnableVariableOptimization = true;
         public const bool EnableArgumentBinding = true;
-        public const bool EnableArgument0And1 = true;
+        public const bool EnableArgument0 = true;
         public const bool EnableStaticBinding = true;
         #endregion
 

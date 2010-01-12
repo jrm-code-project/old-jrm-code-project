@@ -551,7 +551,6 @@ namespace Microcode
         {
             return
                 (target is Argument0) ? AssignmentA0.Make ((Argument0) target, value) :
-                (target is Argument1) ? AssignmentA1.Make ((Argument1) target, value) :
                 (value is Quotation) ? AssignmentAQ.Make (target, (Quotation) value) :
                 new AssignmentA (target, value);
         }
@@ -703,121 +702,6 @@ namespace Microcode
     }
 
     [Serializable]
-    class AssignmentA1 : AssignmentA
-    {
-#if DEBUG
-        static Histogram<Type> valueTypeHistogram = new Histogram<Type> ();
-#endif
-        protected AssignmentA1 (Argument1 target, SCode value)
-            : base (target, value)
-        {
-        }
-
-        public static SCode Make (Argument1 target, SCode value)
-        {
-            return
-                (value is SimpleLambda) ? AssignmentA1SimpleLambda.Make (target, (SimpleLambda) value) :
-                (value is Quotation) ? AssignmentA1Q.Make (target, (Quotation) value) :
-                new AssignmentA1 (target, value);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.value);
-            valueTypeHistogram.Note (this.valueType);
-            SCode.location = "AssignmentA1";
-#endif
-            Control expr = this.value;
-            Environment env = environment;
-            object newValue;
-            while (expr.EvalStep (out newValue, ref expr, ref env)) { };
-#if DEBUG
-            SCode.location = "AssignmentA1";
-#endif
-            if (newValue == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new AssignmentFrame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-#if DEBUG
-            if (this.target.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            if (environment.AssignArgument (out answer, 1, newValue)) throw new NotImplementedException ();
-            return false;
-        }
-    }
-
-    [Serializable]
-    class AssignmentA1Q : AssignmentA1
-    {
-        public readonly object valueToAssign;
-
-        protected AssignmentA1Q (Argument1 target, Quotation value)
-            : base (target, value)
-        {
-            this.valueToAssign = value.Quoted;
-        }
-
-        public static SCode Make (Argument1 target, Quotation value)
-        {
-            return
-                new AssignmentA1Q (target, value);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("AssignmentA1Q");
-
-            if (this.target.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            if (environment.AssignArgument (out answer, 1, this.valueToAssign)) throw new NotImplementedException ();
-            return false;
-        }
-    }
-
-    [Serializable]
-    class AssignmentA1SimpleLambda : AssignmentA1
-    {
-        public readonly SimpleLambda lambda;
-        AssignmentA1SimpleLambda (Argument1 target, SimpleLambda value)
-            : base (target, value)
-        {
-            this.lambda = value;
-        }
-
-        public static SCode Make (Argument1 target, SimpleLambda value)
-        {
-            return
-                new AssignmentA1SimpleLambda (target, value);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("AssignmentA1SimpleLambda");
-#endif
-            this.lambda.closeCount += 1;
-            object [] staticCells = environment.GetValueCells (this.lambda.StaticMapping);
-#if DEBUG
-            SCode.location = "AssignmentA1SimpleLambda";
-#endif
-            // Use the base environment for lookup.
-            SimpleClosure newValue = new SimpleClosure (this.lambda, environment.BaseEnvironment, staticCells);
-
-            if (environment.AssignArgument (out answer, 1, newValue)) throw new NotImplementedException ();
-            return false;
-        }
-    }
-
-    [Serializable]
     class AssignmentAQ : AssignmentA
     {
         public readonly object valueToAssign;
@@ -961,7 +845,6 @@ namespace Microcode
         {
             return
                 (value is Argument0) ? AssignmentSA0.Make (target, (Argument0) value) :
-                (value is Argument1) ? AssignmentSA1.Make (target, (Argument1) value) :
                 new AssignmentSA (target, value);
         }
 
@@ -1006,36 +889,6 @@ namespace Microcode
             }
 #endif
             if (environment.AssignStatic (out answer, this.offset, environment.Argument0Value))
-                throw new NotImplementedException ();
-            return false;
-        }
-    }
-
-    [Serializable]
-    class AssignmentSA1 : AssignmentSA
-    {
-        protected AssignmentSA1 (StaticVariable target, Argument1 value)
-            : base (target, value)
-        {
-        }
-
-        public static SCode Make (StaticVariable target, Argument1 value)
-        {
-            return
-                new AssignmentSA1 (target, value);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "AssignmentSA1";
-
-            if (this.target.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            if (environment.AssignStatic (out answer, this.offset, environment.Argument1Value))
                 throw new NotImplementedException ();
             return false;
         }
@@ -1139,7 +992,6 @@ namespace Microcode
         {
             return
                 (value is Argument0) ? AssignmentTA0.Make (target, (Argument0) value) :
-                (value is Argument1) ? AssignmentTA1.Make (target, (Argument1) value) :
                 new AssignmentTA (target, value);
         }
 
@@ -1180,33 +1032,6 @@ namespace Microcode
             }
 #endif
             return this.cell.Assign (out answer, environment.Argument0Value);
-        }
-    }
-
-    [Serializable]
-    class AssignmentTA1 : AssignmentTA
-    {
-        protected AssignmentTA1 (TopLevelVariable target, Argument1 value)
-            : base (target, value)
-        {
-        }
-
-        public static SCode Make (TopLevelVariable target, Argument1 value)
-        {
-            return
-                new AssignmentTA1 (target, value);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("AssignmentTA1");
-
-            if (this.target.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            return this.cell.Assign (out answer, environment.Argument1Value);
         }
     }
 
@@ -1277,7 +1102,6 @@ namespace Microcode
         {
             return
                 (value is Argument0) ? AssignmentXA0.Make (target, (Argument0) value) :
-                (value is Argument1) ? AssignmentXA1.Make (target, (Argument1) value) :
                 new AssignmentXA (target, value);
         }
 
@@ -1320,35 +1144,6 @@ namespace Microcode
             }
 #endif
             if (environment.Assign (out answer, this.target.Name, environment.Argument0Value))
-                throw new NotImplementedException ();
-            return false;
-        }
-    }
-
-    [Serializable]
-    class AssignmentXA1 : AssignmentXA
-    {
-        protected AssignmentXA1 (Variable target, Argument1 value)
-            : base (target, value)
-        {
-        }
-
-        static public SCode Make (Variable target, Argument1 value)
-        {
-            return
-                new AssignmentXA1 (target, value);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "AssignmentXA1";
-            if (this.target.breakOnReference) {
-                Debugger.Break ();
-            }
-#endif
-            if (environment.Assign (out answer, this.target.Name, environment.Argument1Value))
                 throw new NotImplementedException ();
             return false;
         }
@@ -1646,14 +1441,7 @@ namespace Microcode
 
         static public Argument Make (Symbol name, int offset)
         {
-            if (Configuration.EnableArgument0And1)
-                switch (offset) {
-                    case 0: return new Argument0 (name);
-                    case 1: return new Argument1 (name);
-                    default: return new Argument (name, offset);
-                }
-            else
-                return new Argument (name, offset);
+            return (offset == 0 && Configuration.EnableArgument0) ? new Argument0 (name) : new Argument (name, offset);
         }
 
         public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
@@ -1677,7 +1465,7 @@ namespace Microcode
     }
 
     /// <summary>
-    /// Argument zero is the most popular argument.
+    /// Argument zero is the most popular argument by far, and just barely worth special casing.
     /// </summary>
     [Serializable]
     sealed class Argument0 : Argument
@@ -1697,31 +1485,6 @@ namespace Microcode
             SCode.location = "Argument0";
 #endif
             value = environment.Argument0Value;
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Argument1 is the second most popular argument.
-    /// </summary>
-    [Serializable]
-    sealed class Argument1 : Argument
-    {
-        internal Argument1 (Symbol name)
-            : base (name, 1)
-        {
-        }
-
-        public override bool EvalStep (out object value, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            if (this.breakOnReference) {
-                Debugger.Break ();
-            }
-            SCode.location = "Argument1";
-#endif
-            value = environment.Argument1Value;
             return false;
         }
     }

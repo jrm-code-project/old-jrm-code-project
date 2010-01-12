@@ -430,7 +430,7 @@ namespace Microcode
                 answer =  (int) TC.CONSTANT;
             else if (arg is object [])
                 answer = (int) TC.VECTOR;
-            else if (arg is Boolean)
+            else if (arg is bool)
                 answer = (bool) arg == false ? (int) TC.NULL : (int) TC.CONSTANT;
             else if (arg is char)
                 answer = (int) TC.CHARACTER;

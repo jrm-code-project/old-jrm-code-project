@@ -10,8 +10,21 @@
 (define-integrable (10log10 x)
   (flo:10log10 (exact->inexact x)))
 
+(define-syntax dotimes
+  (syntax-rules ()
+     ((dotimes (var ntimes return-value) form0 . forms)
+      (do ((var 0 (fix:+ var 1)))
+	  ((fix:>= var ntimes) return-value)
+        form0 . forms))
+     ((dotimes (var ntimes) form0 . forms)
+      (dotimes (var ntimes #f) form0 . forms))))
+
 (define (finish-cold-load)
   (define (time-phase phase thunk)
+    (display "; Start phase ")
+    (display phase)
+    (newline)
+    (flush-output)
     (let ((start-time (runtime)))
       (let ((answer (thunk)))
 	(for-each write-string 
@@ -22,30 +35,84 @@
 			 (10log10 (- (runtime) start-time)))
 			")."))
 	(newline)
+	(flush-output)
 	answer)))
 
   (display "\\BootstrapLib\\runtime\\site")
 
   (time-phase
-   "Load rb-tree"
-   (lambda () (load-option 'rb-tree)))
-
-  (time-phase
-   "Load sf"
-   (lambda () (load-option 'sf)))
-
-  (time-phase
-   "Load star-parser"
-   (lambda () (load-option '*parser)))
-
-  (time-phase
-   "Load cref"
-   (lambda () (load-option 'cref)))
-
-  (with-working-directory-pathname
-   "C:\\Home\\Jrm\\Larceny\\Testsuite\\GC\\"
+   "Initial timing"
    (lambda ()
-     (time-phase "Load dynamic" (lambda () (load "dynamic.bin")))))
+
+     (time-phase
+      "Load rb-tree"
+      (lambda () (load-option 'rb-tree)))
+
+     (time-phase
+      "Load sf"
+      (lambda () (load-option 'sf)))
+
+     (time-phase
+      "Load star-parser"
+      (lambda () (load-option '*parser)))
+
+     (time-phase
+      "Load cref"
+      (lambda () (load-option 'cref)))
+
+     (with-working-directory-pathname
+      "C:\\Home\\Jrm\\Larceny\\Testsuite\\GC\\"
+      (lambda ()
+	(time-phase 
+	 "Load everything"
+	 (lambda () 
+	   (load "dynamic.bin")
+	   (load "sboyer.bin")
+	   (load "lattice.bin")))))
+
+     (time-phase
+      "Setup and Run everything once."
+      (lambda ()
+	(display "; Setup boyer...") (flush-output)
+	((access setup-boyer user-initial-environment))
+	(newline) (display "; Test boyer...") (flush-output)
+	((access test-boyer user-initial-environment) 1)
+	(newline) (display "; dynamic...") (flush-output)
+	((access doit user-initial-environment))
+	(newline) (display "; lattice...") (flush-output)
+	((access lb3 user-initial-environment))
+	(newline)))
+
+     (let ()
+       (define (boyer)
+	 (time-phase
+	  "SBoyer>"
+	  (lambda ()
+	    ((access test-boyer user-initial-environment) 1))))
+       (define (dynamic)
+	 (time-phase
+	  "dynamic>"
+	  (lambda ()
+	    (dotimes (i 5)
+	      ((access doit user-initial-environment))))))
+       (define (lattice)
+	 (time-phase
+	  "lattice lb3>"
+	  (lambda ()
+	    (dotimes (i 25)
+	      ((access lb3 user-initial-environment))))))
+       (let* ((benchmarks
+	       (append (make-list 100 boyer)
+		       (make-list 100 dynamic)
+		       (make-list 100 lattice)))
+	      (noted (map (lambda (x)
+			    (cons (random 100000) x))
+			  benchmarks))
+	      (sorted (sort noted (lambda (l r) (< (car l) (car r)))))
+	      (stripped (map cdr sorted)))
+	 (for-each (lambda (b) (b)) stripped)))
+
+     ))
 
   (with-working-directory-pathname 
    "C:\\jrm-code-project\\Mit-scheme\\StagingLib\\Runtime\\"

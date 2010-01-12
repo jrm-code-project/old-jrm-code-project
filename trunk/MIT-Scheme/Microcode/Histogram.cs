@@ -14,14 +14,29 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
         Dictionary<T, long> entries = new Dictionary<T, long> ();
 
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+        bool isNoisy;
+
+        public Histogram ()
+        {
+        }
+
+        public Histogram (bool isNoisy)
+        {
+            this.isNoisy = true;
+        }
+
         [DebuggerStepThrough]
         public void Note (T item)
         {
             lock (this.lockObject) {
                 if (entries.ContainsKey (item))
                     entries [item] += 1;
-                else
+                else {
+                    if (this.isNoisy)
+                        Debug.WriteLine ("Histogram: first entry for " + item.ToString ());
                     entries [item] = 1;
+                }
             }
         }
 
