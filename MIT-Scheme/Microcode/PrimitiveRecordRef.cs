@@ -86,8 +86,8 @@ namespace Microcode
         {
             return
                 (rand0 is Argument0) ? PrimitiveRecordRefA0.Make (rator, (Argument0) rand0, rand1) :
-                (rand0 is Argument1) ? PrimitiveRecordRefA1.Make (rator, (Argument1) rand0, rand1) :
                 (rand1 is Quotation) ? PrimitiveRecordRefAQ.Make (rator, rand0, (Quotation) rand1) :
+                (rand1 is StaticVariable) ? new PrimitiveRecordRefAS (rator, rand0, (StaticVariable) rand1) :
                 new PrimitiveRecordRefA (rator, rand0, rand1);
         }
 
@@ -223,77 +223,6 @@ namespace Microcode
     }
 
     [Serializable]
-    class PrimitiveRecordRefA1 : PrimitiveRecordRefA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        protected PrimitiveRecordRefA1 (Primitive2 rator, Argument1 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Primitive2 rator, Argument1 rand0, SCode rand1)
-        {
-            return
-                (rand1 is Quotation) ? PrimitiveRecordRefA1Q.Make (rator, rand0, (Quotation) rand1) :
-                new PrimitiveRecordRefA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveRecordRefA1";
-#endif
-            // Eval argument1
-            object ev1;
-
-            Control unev = this.rand1;
-            Environment env = environment;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveCombination2Frame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            answer = ((Record) environment.Argument1Value).Ref ((int) ev1);
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveRecordRefA1Q : PrimitiveRecordRefA1
-    {
-        public readonly int offset;
-        PrimitiveRecordRefA1Q (Primitive2 rator, Argument1 rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.offset = (int) rand1.Quoted;
-        }
-
-        public static SCode Make (Primitive2 rator, Argument1 rand0, Quotation rand1)
-        {
-            return
-                new PrimitiveRecordRefA1Q (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PrimitiveRecordRefA1Q");
-#endif
-            answer = ((Record) environment.Argument1Value).Ref (this.offset);
-            return false;
-        }
-    }
-
-    [Serializable]
     sealed class PrimitiveRecordRefAQ : PrimitiveRecordRefA
     {
         public readonly int offset;
@@ -315,6 +244,31 @@ namespace Microcode
             Warm ("PrimitiveRecordRefAQ");
 #endif
             answer = ((Record) environment.ArgumentValue(this.rand0Offset)).Ref (this.offset);
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveRecordRefAS : PrimitiveRecordRefA
+    {
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+        internal PrimitiveRecordRefAS (Primitive2 rator, Argument rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("PrimitiveRecordRefAS");
+#endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+            answer = ((Record) environment.ArgumentValue(this.rand0Offset)).Ref ((int) ev1);
             return false;
         }
     }

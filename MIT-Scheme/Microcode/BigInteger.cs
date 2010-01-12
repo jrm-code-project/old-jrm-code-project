@@ -1287,21 +1287,21 @@ internal struct Bignum : IFormattable, IEquatable<Bignum>, IComparable<Bignum>, 
                 }
                 while (num9 < 0x100000000L);
                 long num12 = 0L;
-                long num13 = 0L;
+                ulong num13 = 0L;
                 int index = 0;
                 while (index < l)
                 {
                     ulong num14 = numArray2[index] * num10;
 
-                        num13 = ((long) un [index + j] - ((long) (uint) num14)) - num12;
+                        num13 = ((ulong) un [index + j] - ((ulong) (uint) num14)) - (ulong) num12;
                     
                     un[index + j] = (uint) (num13 & 0xFFFFFFFF);
                     num14 = num14 >> 0x20;
                     num13 = num13 >> 0x20;
-                    num12 = ((long) num14) - num13;
+                    num12 =  (long) ( num14 - num13);
                     index++;
                 }
-                num13 = un[j + l] - num12;
+                num13 = (ulong) (un[j + l] - num12);
                 un[j + l] = (uint) num13;
                 q[j] = (uint) num10;
                 if (num13 < 0L)

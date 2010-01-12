@@ -67,7 +67,6 @@ namespace Microcode
         // Grab the variable at randOffset in frame.  Must be int.
         public abstract object ArgumentValue (int offset);
         public abstract object Argument0Value { get; }
-        public abstract object Argument1Value { get; }
 
         // Deep search for variable location and smash the value.
         public abstract bool Assign (out object oldValue, object name, object newValue);
@@ -308,13 +307,6 @@ namespace Microcode
                 throw new NotImplementedException ();
             }
         }
-        public override object Argument1Value
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-        }
 
         internal override bool UnbindVariable (out object answer, object name)
         {
@@ -525,14 +517,6 @@ namespace Microcode
         }
 
         public override object Argument0Value
-        {
-            get
-            {
-                throw new NotImplementedException ();
-            }
-        }
-
-        public override object Argument1Value
         {
             get
             {
@@ -784,16 +768,6 @@ namespace Microcode
             {
                 object answer;
                 if (bindings [0].GetValue (out answer)) throw new NotImplementedException ();
-                return answer;
-            }
-        }
-
-        public override object Argument1Value
-        {
-            get
-            {
-                object answer;
-                if (bindings [1].GetValue (out answer)) throw new NotImplementedException ();
                 return answer;
             }
         }
@@ -1179,16 +1153,6 @@ namespace Microcode
             }
         }
 
-        public override object Argument1Value
-        {
-            get
-            {
-                object answer;
-                if (bindings [1].GetValue (out answer)) throw new NotImplementedException ();
-                return answer;
-            }
-        }
-
         public override bool Assign (out object oldValue, object name, object newValue)
         {
             int offset = this.envClosure.FormalOffset (name);
@@ -1422,14 +1386,6 @@ namespace Microcode
             }
         }
 
-        public override object Argument1Value
-        {
-            get
-            {
-                return bindings [1];
-            }
-        }
-
         public override bool Assign (out object oldValue, object name, object newValue)
         {
             int offset = this.envClosure.FormalOffset (name);
@@ -1619,14 +1575,6 @@ namespace Microcode
             }
         }
 
-        public override object Argument1Value
-        {
-            get
-            {
-                throw new NotImplementedException ("Argument1Value in SimpleEnvironment1");
-            }
-        }
-
         public override bool Assign (out object oldValue, object name, object newValue)
         {
             int offset = this.envClosure.FormalOffset (name);
@@ -1795,14 +1743,6 @@ namespace Microcode
             get
             {
                 return this.binding0;
-            }
-        }
-
-        public override object Argument1Value
-        {
-            get
-            {
-                throw new NotImplementedException ("Argument1Value in SimpleEnvironment1");
             }
         }
 
@@ -2094,14 +2034,6 @@ namespace Microcode
             }
         }
 
-        public override object Argument1Value
-        {
-            get
-            {
-                return this.binding1;
-            }
-        }
-
         public override bool Assign (out object oldValue, object name, object newValue)
         {
             int offset = this.envClosure.FormalOffset (name);
@@ -2376,14 +2308,6 @@ namespace Microcode
             }
         }
 
-        public override object Argument1Value
-        {
-            get
-            {
-                return this.binding1;
-            }
-        }
-
         public override bool Assign (out object oldValue, object name, object newValue)
         {
             int offset = this.envClosure.FormalOffset (name);
@@ -2585,11 +2509,6 @@ namespace Microcode
         }
 
         public override object Argument0Value
-        {
-            get { throw new NotImplementedException (); }
-        }
-
-        public override object Argument1Value
         {
             get { throw new NotImplementedException (); }
         }

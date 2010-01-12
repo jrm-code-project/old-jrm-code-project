@@ -106,7 +106,6 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveIsEqA0) ? POrIsEqA0.Make ((PrimitiveIsEqA0) predicate, alternative) :
-                (predicate is PrimitiveIsEqA1) ? POrIsEqA1.Make ((PrimitiveIsEqA1) predicate, alternative) :
                  new POrIsEqA (predicate, alternative);
         }
 
@@ -250,67 +249,6 @@ namespace Microcode
                 NoteCalls (this.alternative);
                 alternativeTypeHistogram.Note (this.alternativeType);
                 SCode.location = "POrIsEqA0Q";
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-    }
-
-    [Serializable]
-    class POrIsEqA1 : POrIsEqA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        protected POrIsEqA1 (PrimitiveIsEqA1 predicate, SCode alternative)
-            : base (predicate, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsEqA1 predicate, SCode alternative)
-        {
-            return
-                 new POrIsEqA1 (predicate, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "POrIsEqA1";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "POrIsEqA1";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new PrimitiveIsTypeFrame0 (this, environment));
-                //answer = Interpreter.UnwindStack;
-                //environment = env;
-                //return false;
-            }
-
-            object ev0 = environment.Argument1Value;
-
-            ObjectModel.Eq (out answer, ev0, ev1);
-            if ((answer is Boolean) && ((bool) answer) == false) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-                SCode.location = "POrIsEqA1";
 #endif
                 expression = this.alternative;
                 answer = null;

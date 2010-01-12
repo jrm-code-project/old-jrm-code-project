@@ -37,11 +37,6 @@ namespace Microcode
 #endif
         }
 
-        //static SCode SpecialMake (PrimitiveCarL predicate, SCode SCode alternative)
-        //{
-        //    return
-        //         POr1L.Make ((PrimitiveCombination1L) PrimitiveCombination1L.Make (predicate.Operator, (LexicalVariable) predicate.Operand), alternative);
-        //}
 
         //static SCode InvertConditional (PrimitiveNot predicate, SCode SCode alternative)
         //{
@@ -70,9 +65,7 @@ namespace Microcode
                 (predicate is PrimitiveIsType<object []>) ? POrIsType<object []>.Make ((PrimitiveIsType<object[]>) predicate, alternative) :
                 //(predicate is PrimitiveCombination1L) ? POr1L.Make ((PrimitiveCombination1L) predicate, alternative) :
                 //(predicate is PrimitiveCombination1Q) ? Unimplemented () :
-                //(consequent is LexicalVariable) ? POr1SL.Make (predicate, (LexicalVariable) alternative) :
                 //(consequent is Quotation) ? POr1SQ.Make (predicate, (Quotation) alternative) :
-                //(alternative is LexicalVariable) ? POr1SSL.Make (predicate, (LexicalVariable) alternative) :
                 //(alternative is Quotation) ? POr1SSQ.Make (predicate, (Quotation) alternative) :
                 new POr1 (predicate, alternative);
         }
@@ -199,8 +192,7 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveIsSymbolA0) ? POrIsSymbolA0.Make ((PrimitiveIsSymbolA0) predicate, alternative) :
-                (predicate is PrimitiveIsSymbolA1) ? POrIsSymbolA1.Make ((PrimitiveIsSymbolA1) predicate, alternative) :
-                new POrIsSymbolA (predicate, alternative);
+               new POrIsSymbolA (predicate, alternative);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -248,45 +240,6 @@ namespace Microcode
             Warm ("POrIsSymbolA0");
 #endif
             Symbol ev0sym = environment.Argument0Value as Symbol;
-            if (ev0sym != null && ev0sym.IsInterned ()) {
-                answer = Constant.sharpT;
-                return false;
-            }
-            else {
-#if DEBUG
-                NoteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-#endif
-                answer = null;
-                expression = this.alternative;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class POrIsSymbolA1 : POrIsSymbolA
-    {
-#if DEBUG
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-        protected POrIsSymbolA1 (PrimitiveIsSymbolA1 predicate, SCode alternative)
-            : base (predicate, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveIsSymbolA1 predicate, SCode alternative)
-        {
-            return
-                new POrIsSymbolA1 (predicate, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("POrIsSymbolA1");
-#endif
-            Symbol ev0sym = environment.Argument1Value as Symbol;
             if (ev0sym != null && ev0sym.IsInterned ()) {
                 answer = Constant.sharpT;
                 return false;

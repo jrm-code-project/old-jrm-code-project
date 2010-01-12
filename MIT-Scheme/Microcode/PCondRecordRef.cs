@@ -111,7 +111,6 @@ namespace Microcode
         {
             return
                 (predicate is PrimitiveRecordRefA0) ? PCondRecordRefA0.Make ((PrimitiveRecordRefA0) predicate, consequent, alternative) :
-                (predicate is PrimitiveRecordRefA1) ? PCondRecordRefA1.Make ((PrimitiveRecordRefA1) predicate, consequent, alternative) :
                 new PCondRecordRefA (predicate, consequent, alternative);
         }
 
@@ -223,74 +222,6 @@ namespace Microcode
                 NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
                 SCode.location = "PCondRecordRefA0";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    class PCondRecordRefA1 : PCondRecordRefA
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PCondRecordRefA1 (PrimitiveRecordRefA1 predicate, SCode consequent, SCode alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public static SCode Make (PrimitiveRecordRefA1 predicate, SCode consequent, SCode alternative)
-        {
-            return
-                new PCondRecordRefA1 (predicate, consequent, alternative);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PCondRecordRefA1";
-#endif
-            Control unev = this.rand1;
-            Environment env = environment;
-            object ev1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PCondRecordRefA1";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-            }
-
-            object ev0 = environment.Argument1Value;
-
-            object result = ((Record) ev0).Ref ((int) ev1);
-
-            if (result is Boolean && (((bool) result) == false)) {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.alternative);
-                alternativeTypeHistogram.Note (this.alternativeType);
-                SCode.location = "PCondRecordRefA1";
-#endif
-                expression = this.alternative;
-                answer = null;
-                return true;
-            }
-            else {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-                SCode.location = "PCondRecordRefA1";
 #endif
                 expression = this.consequent;
                 answer = null;
@@ -451,7 +382,6 @@ namespace Microcode
         {
             return
                 (alternative is Argument0) ? new PCondRecordRefSQXA0 (predicate, consequent, (Argument0) alternative) :
-                (alternative is Argument1) ? new PCondRecordRefSQXA1 (predicate, consequent, (Argument1) alternative) :
                 new PCondRecordRefSQXA (predicate, consequent, alternative);
         }
 
@@ -518,47 +448,6 @@ namespace Microcode
                 NoteCalls (this.consequent);
                 consequentTypeHistogram.Note (this.consequentType);
                 SCode.location = "PCondRecordRefSQXA0";
-#endif
-                expression = this.consequent;
-                answer = null;
-                return true;
-            }
-        }
-    }
-
-    [Serializable]
-    sealed class PCondRecordRefSQXA1 : PCondRecordRefSQXA
-    {
-#if DEBUG
-        static Histogram<Type> consequentTypeHistogram = new Histogram<Type> ();
-#endif
-        internal PCondRecordRefSQXA1 (PrimitiveRecordRefSQ predicate, SCode consequent, Argument1 alternative)
-            : base (predicate, consequent, alternative)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("PCondRecordRefSQXA1");
-#endif
-
-            object ev0;
-            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            object result = ((Record) ev0).Ref (this.rand1Value);
-
-            if (result is Boolean && (((bool) result) == false)) {
-                answer = environment.Argument1Value;
-                return false;
-            }
-            else {
-#if DEBUG
-                SCode.location = "-";
-                NoteCalls (this.consequent);
-                consequentTypeHistogram.Note (this.consequentType);
-                SCode.location = "PCondRecordRefSQXA1";
 #endif
                 expression = this.consequent;
                 answer = null;

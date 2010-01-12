@@ -13,6 +13,8 @@ namespace Microcode
         public override TC TypeCode { get { return TC.COMBINATION; } }
 
 #if DEBUG
+        static Histogram<string> histogram = new Histogram<String> ();
+        protected readonly string histogramKey;
         static Histogram<int> combinationSizeHistogram = new Histogram<int> ();
 #endif
         [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -22,6 +24,11 @@ namespace Microcode
             : base ()
         {
             this.components = components;
+#if DEBUG
+            this.histogramKey = this.components[0].GetType ().ToString ();
+            for (int i = 1; i < this.components.Length; i++)
+                this.histogramKey = this.histogramKey + " " + this.components [i].GetType ().ToString ();
+#endif
         }
 
         Combination (object [] components)
@@ -31,6 +38,11 @@ namespace Microcode
             for (int i = 0; i < components.Length; i++)
                 comps [i] = EnsureSCode (components [i]);
             this.components = comps;
+#if DEBUG
+            this.histogramKey = this.components [0].GetType ().ToString ();
+            for (int i = 1; i < this.components.Length; i++)
+                this.histogramKey = this.histogramKey + " " + this.components [i].GetType ().ToString ();
+#endif
         }
 
         Combination (Cons components)
@@ -45,6 +57,11 @@ namespace Microcode
                 j += 1;
             }
             this.components = comps;
+#if DEBUG
+            this.histogramKey = this.components [0].GetType ().ToString ();
+            for (int i = 1; i < this.components.Length; i++)
+                this.histogramKey = this.histogramKey + " " + this.components [i].GetType ().ToString ();
+#endif
         }
 
         public static SCode Make (object [] components)
@@ -52,7 +69,7 @@ namespace Microcode
             return
                 (!Configuration.EnableCombinationOptimization) ? new Combination(components) :
                 (Configuration.EnableCombination0 && components.Length == 1) ? Combination0.Make(components[0]) :
-                (Configuration.EnableCombination3 && components.Length == 4) ? Combination3.Make(EnsureSCode(components[0]), EnsureSCode(components[1]), EnsureSCode(components[2]), EnsureSCode(components[3])):
+                (Configuration.EnableCombination3 && components.Length == 4) ? Combination3.Make(components[0], components[1], components[2], components[3]) :
                 new Combination(components);
 
             //if (Configuration.EnableSuperOperators) {
@@ -133,6 +150,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
+            histogram.Note (this.histogramKey);
             combinationSizeHistogram.Note (this.components.Length);
             SCode.location = "Combination";
 #endif
@@ -528,7 +546,6 @@ namespace Microcode
         {
             return
                 (rator is Argument0) ? Combination0A0.Make ((Argument0) rator) :
-                (rator is Argument1) ? Combination0A1.Make ((Argument1) rator) :
                 new Combination0A (rator);
         }
 
@@ -561,29 +578,6 @@ namespace Microcode
             Warm ("Combination0A0");
 #endif
             return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument0Value);
-        }
-    }
-
-    [Serializable]
-    class Combination0A1 : Combination0A
-    {
-        Combination0A1 (Argument1 rator)
-            : base (rator)
-        {
-        }
-
-        public static SCode Make (Argument1 rator)
-        {
-            return
-                new Combination0A1 (rator);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("Combination0A1");
-#endif
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value);
         }
     }
 

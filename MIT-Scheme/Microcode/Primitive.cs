@@ -57,6 +57,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive1 IsBigFixnum;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive1 IsBigFlonum;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive1 IsChar;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive1 IsCompiledEntry;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive1 IsComplex;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive1 IsEntity;
         //internal static Primitive1 IsExtendedProcedure;
@@ -196,6 +197,7 @@ namespace Microcode
             IsBigFixnum = (Primitive1) Find ("BIG-FIXNUM?", 1);
             IsBigFlonum = (Primitive1) Find ("BIG-FLONUM?", 1);
             IsChar = (Primitive1) Find ("CHAR?", 1);
+            IsCompiledEntry = (Primitive1) Find ("COMPILED-ENTRY?", 1);
             IsComplex = (Primitive1) Find ("COMPLEX?", 1);
             IsEntity = (Primitive1) Find ("ENTITY?", 1);
             //IsExtendedProcedure = (Primitive1) Find ("EXTENDED-PROCEDURE?", 1);

@@ -624,12 +624,12 @@ namespace Microcode
 #if DEBUG
             SCode.location = "-";
             this.BumpCallCount ();
-            SCode.location = "SimpleClosure.Call2";
             SCode.NoteCalls (this, this.lambdaBody);
+            SCode.location = "SimpleClosure.Call2";
 #endif
             if (this.arity != 2)
                 return Error.WrongNumberOfArguments (out answer, ref expression, ref environment);
-            if (callCount++ == Configuration.OptimizeThreshold  && this.StaticCells.Length != 0) this.XXOptimize ();
+            //if (callCount++ == Configuration.OptimizeThreshold  && this.StaticCells.Length != 0) this.XXOptimize ();
 
             expression = this.lambdaBody;
             environment = new SmallEnvironment2 (this, arg0, arg1);

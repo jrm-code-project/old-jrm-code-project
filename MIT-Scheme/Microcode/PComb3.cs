@@ -458,8 +458,12 @@ namespace Microcode
         {
             return
                 (arg0 is Argument0) ? PrimitiveCombination3A0.Make (procedure, (Argument0) arg0, arg1, arg2) :
-                (arg0 is Argument1) ? PrimitiveCombination3A1.Make (procedure, (Argument1) arg0, arg1, arg2) :
+                (arg1 is Argument) ? PrimitiveCombination3AA.Make (procedure, arg0, (Argument) arg1, arg2) :
                 (arg1 is Quotation) ? PrimitiveCombination3AQ.Make (procedure, arg0, (Quotation) arg1, arg2) :
+                (arg1 is StaticVariable) ? PrimitiveCombination3AS.Make (procedure, arg0, (StaticVariable) arg1, arg2) :
+                (arg2 is Argument) ? PrimitiveCombination3AXA.Make (procedure, arg0, arg1, (Argument) arg2) :
+                (arg2 is Quotation) ? new PrimitiveCombination3AXQ (procedure, arg0, arg1, (Quotation) arg2) :
+                (arg2 is StaticVariable) ? new PrimitiveCombination3AXS (procedure, arg0, arg1, (StaticVariable) arg2) :
                 new PrimitiveCombination3A (procedure, arg0, arg1, arg2);
         }
 
@@ -609,7 +613,6 @@ namespace Microcode
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
         static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
 #endif
-
         public readonly int rand1Offset;
         protected PrimitiveCombination3A0A (Primitive3 procedure, Argument0 arg0, Argument arg1, SCode arg2)
             : base (procedure, arg0, arg1, arg2)
@@ -621,7 +624,7 @@ namespace Microcode
         {
             return
                 (arg1 is Argument0) ? PrimitiveCombination3A0A0.Make (procedure, arg0, (Argument0) arg1, arg2) :
-                (arg1 is Argument1) ? PrimitiveCombination3A0A1.Make (procedure, arg0, (Argument1) arg1, arg2) :
+                (arg2 is Argument) ? PrimitiveCombination3A0AA.Make (procedure, arg0, arg1, (Argument) arg2) :
                new PrimitiveCombination3A0A (procedure, arg0, arg1, arg2);
         }
 
@@ -726,101 +729,36 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    class PrimitiveCombination3A0A1 : PrimitiveCombination3A0A
+    class PrimitiveCombination3A0AA : PrimitiveCombination3A0A
     {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination3A0A1 (Primitive3 procedure, Argument0 arg0, Argument1 arg1, SCode arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public static SCode Make (Primitive3 procedure, Argument0 arg0, Argument1 arg1, SCode arg2)
-        {
-            return
-                (arg2 is Argument) ? PrimitiveCombination3A0A1A.Make (procedure, arg0, arg1, (Argument) arg2) :
-               new PrimitiveCombination3A0A1 (procedure, arg0, arg1, arg2);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg2);
-            ratorHistogram.Note (this.procedure);
-            rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3A0A1";
-#endif
-            object ev2;
-            Environment env = environment;
-            Control unev = this.arg2;
-            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3A0A1";
-#endif
-            if (ev2 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument0Value, environment.Argument1Value, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination3A0A1A : PrimitiveCombination3A0A1
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-#endif
         public readonly int rand2Offset;
-        protected PrimitiveCombination3A0A1A (Primitive3 procedure, Argument0 arg0, Argument1 arg1, Argument arg2)
+        protected PrimitiveCombination3A0AA (Primitive3 procedure, Argument0 arg0, Argument arg1, Argument arg2)
             : base (procedure, arg0, arg1, arg2)
         {
-        this.rand2Offset = arg2.Offset;
+            this.rand2Offset = arg2.Offset;
         }
 
-        public static SCode Make (Primitive3 procedure, Argument0 arg0, Argument1 arg1, Argument arg2)
+        public static SCode Make (Primitive3 procedure, Argument0 arg0, Argument arg1, Argument arg2)
         {
             return
-                (arg2 is Argument0) ? new PrimitiveCombination3A0A1A0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3A0A1A1 (procedure, arg0, arg1, (Argument1) arg2) :
-               new PrimitiveCombination3A0A1A (procedure, arg0, arg1, arg2);
+                (arg1 is Argument0) ? PrimitiveCombination3A0AA0.Make (procedure, arg0, (Argument0) arg1, arg2) :
+               new PrimitiveCombination3A0AA (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3A0A1A";
+            SCode.location = "PrimitiveCombination3A0AA";
 #endif
+            object ev2 = environment.ArgumentValue (this.rand2Offset);
+
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, environment.Argument0Value, environment.Argument1Value, environment.ArgumentValue(this.rand2Offset))) {
+            if (this.method (out answer, environment.Argument0Value, environment.ArgumentValue (this.rand1Offset), ev2)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -834,67 +772,34 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    sealed class PrimitiveCombination3A0A1A0 : PrimitiveCombination3A0A1A
+    class PrimitiveCombination3A0AA0 : PrimitiveCombination3A0A
     {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-#endif
-        internal PrimitiveCombination3A0A1A0 (Primitive3 procedure, Argument0 arg0, Argument1 arg1, Argument0 arg2)
+        public readonly int rand2Offset;
+        protected PrimitiveCombination3A0AA0 (Primitive3 procedure, Argument0 arg0, Argument arg1, Argument0 arg2)
             : base (procedure, arg0, arg1, arg2)
         {
+        }
+
+        public static SCode Make (Primitive3 procedure, Argument0 arg0, Argument arg1, Argument0 arg2)
+        {
+            return
+               new PrimitiveCombination3A0AA0 (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3A0A1A0";
+            SCode.location = "PrimitiveCombination3A0AA0";
 #endif
+            object ev2 = environment.Argument0Value;
+
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, environment.Argument0Value, environment.Argument1Value, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3A0A1A1 : PrimitiveCombination3A0A1A
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-#endif
-        internal PrimitiveCombination3A0A1A1 (Primitive3 procedure, Argument0 arg0, Argument1 arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3A0A1A1";
-#endif
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument0Value, environment.Argument1Value, environment.Argument1Value)) {
+            if (this.method (out answer, ev2, environment.ArgumentValue (this.rand1Offset), ev2)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -989,7 +894,6 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3A0QA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3A0QA1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3A0QA (procedure, arg0, arg1, arg2);
         }
 
@@ -1043,43 +947,6 @@ namespace Microcode
             SCode.location = this.procedure.Name.ToString ();
 #endif
             if (this.method (out answer, environment.Argument0Value, this.rand1Value, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3A0QA1 : PrimitiveCombination3A0QA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-#endif
-        internal PrimitiveCombination3A0QA1 (Primitive3 procedure, Argument0 arg0, Quotation arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3A0QA0";
-#endif
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument0Value, this.rand1Value, environment.Argument1Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -1262,8 +1129,7 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3A0SA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3A0SA1 (procedure, arg0, arg1, (Argument1) arg2) :
-               new PrimitiveCombination3A0SA (procedure, arg0, arg1, arg2);
+              new PrimitiveCombination3A0SA (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1337,47 +1203,6 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3A0SA1 : PrimitiveCombination3A0SA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-#endif
-
-        internal PrimitiveCombination3A0SA1 (Primitive3 procedure, Argument0 arg0, StaticVariable arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3A0SA1";
-#endif
-
-            object ev1;
-            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument0Value, ev1, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
     class PrimitiveCombination3A0XA : PrimitiveCombination3A0
     {
 #if DEBUG
@@ -1396,7 +1221,6 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3A0XA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3A0XA1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3A0XA (procedure, arg0, arg1, arg2);
         }
 
@@ -1500,62 +1324,6 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3A0XA1 : PrimitiveCombination3A0XA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        internal PrimitiveCombination3A0XA1 (Primitive3 procedure, Argument0 arg0, SCode arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg1);
-            ratorHistogram.Note (this.procedure);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination3A0XA1";
-#endif
-            object ev2 = environment.Argument1Value;
-
-            object ev1;
-            Environment env = environment;
-            Control unev = this.arg1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3A0XA1";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame1 (this, environment, ev2));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument0Value, ev1, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
     sealed class PrimitiveCombination3A0XQ : PrimitiveCombination3A0
     {
 #if DEBUG
@@ -1613,108 +1381,27 @@ namespace Microcode
     }
 
     [Serializable]
-    class PrimitiveCombination3A1 : PrimitiveCombination3A
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination3A1 (Primitive3 procedure, Argument1 arg0, SCode arg1, SCode arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public static SCode Make (Primitive3 procedure, Argument1 arg0, SCode arg1, SCode arg2)
-        {
-            return
-                (arg1 is Argument) ? PrimitiveCombination3A1A.Make (procedure, arg0, (Argument) arg1, arg2) :
-                (arg1 is Quotation) ? PrimitiveCombination3A1Q.Make (procedure, arg0, (Quotation) arg1, arg2) :
-                (arg1 is StaticVariable) ? PrimitiveCombination3A1S.Make (procedure, arg0, (StaticVariable) arg1, arg2) :
-                (arg2 is StaticVariable) ? new PrimitiveCombination3A1XS (procedure, arg0, arg1, (StaticVariable) arg2) :
-                new PrimitiveCombination3A1 (procedure, arg0, arg1, arg2);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg1);
-            NoteCalls (this.arg2);
-            ratorHistogram.Note (this.procedure);
-            rand1TypeHistogram.Note (this.rand1Type);
-            rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3A1";
-#endif
-            object ev2;
-            Environment env = environment;
-            Control unev = this.arg2;
-            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3A1";
-#endif
-            if (ev2 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev1;
-            env = environment;
-            unev = this.arg1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3A1";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame1 (this, environment, ev2));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument1Value, ev1, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination3A1A : PrimitiveCombination3A1
+    class PrimitiveCombination3AA : PrimitiveCombination3A
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
         static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
 #endif
+
         public readonly int rand1Offset;
-
-        protected PrimitiveCombination3A1A (Primitive3 procedure, Argument1 arg0, Argument arg1, SCode arg2)
+        protected PrimitiveCombination3AA (Primitive3 procedure, Argument arg0, Argument arg1, SCode arg2)
             : base (procedure, arg0, arg1, arg2)
         {
             this.rand1Offset = arg1.Offset;
         }
 
-        public static SCode Make (Primitive3 procedure, Argument1 arg0, Argument arg1, SCode arg2)
+        public static SCode Make (Primitive3 procedure, Argument arg0, Argument arg1, SCode arg2)
         {
             return
-                (arg1 is Argument0) ? PrimitiveCombination3A1A0.Make (procedure, arg0, (Argument0) arg1, arg2) :
-                (arg1 is Argument1) ? PrimitiveCombination3A1A1.Make (procedure, arg0, (Argument1) arg1, arg2) :
-                (arg2 is Argument) ? PrimitiveCombination3A1AA.Make (procedure, arg0, arg1, (Argument) arg2) :
-                new PrimitiveCombination3A1A (procedure, arg0, arg1, arg2);
+                //(arg1 is Argument0) ? PrimitiveCombination3AA0.Make (procedure, arg0, (Argument0) arg1, arg2) :
+               // (arg1 is Argument1) ? PrimitiveCombination3AA1.Make (procedure, arg0, (Argument1) arg1, arg2) :
+               (arg2 is Argument) ? PrimitiveCombination3AAA.Make (procedure, arg0, arg1, (Argument) arg2) :
+               new PrimitiveCombination3AA (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1724,14 +1411,14 @@ namespace Microcode
             NoteCalls (this.arg2);
             ratorHistogram.Note (this.procedure);
             rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3A1A";
+            SCode.location = "PrimitiveCombination3AA";
 #endif
             object ev2;
             Environment env = environment;
             Control unev = this.arg2;
             while (unev.EvalStep (out ev2, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "PrimitiveCombination3A1A";
+            SCode.location = "PrimitiveCombination3AA";
 #endif
             if (ev2 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
@@ -1744,7 +1431,7 @@ namespace Microcode
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, environment.Argument1Value, environment.ArgumentValue(this.rand1Offset), ev2)) {
+            if (this.method (out answer, environment.ArgumentValue(this.rand0Offset), environment.ArgumentValue (this.rand1Offset), ev2)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -1759,25 +1446,24 @@ namespace Microcode
     }
 
     [Serializable]
-    class PrimitiveCombination3A1AA : PrimitiveCombination3A1A
+    class PrimitiveCombination3AAA : PrimitiveCombination3AA
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
 #endif
         public readonly int rand2Offset;
 
-        protected PrimitiveCombination3A1AA (Primitive3 procedure, Argument1 arg0, Argument arg1, Argument arg2)
+        protected PrimitiveCombination3AAA (Primitive3 procedure, Argument arg0, Argument arg1, Argument arg2)
             : base (procedure, arg0, arg1, arg2)
         {
             this.rand2Offset = arg2.Offset;
         }
 
-        public static SCode Make (Primitive3 procedure, Argument1 arg0, Argument arg1, Argument arg2)
+        public static SCode Make (Primitive3 procedure, Argument arg0, Argument arg1, Argument arg2)
         {
             return
-                (arg2 is Argument0) ? new PrimitiveCombination3A1AA0 (procedure, arg0,  arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3A1AA1 (procedure, arg0,  arg1, (Argument1) arg2) :
-                new PrimitiveCombination3A1AA (procedure, arg0, arg1, arg2);
+                (arg2 is Argument0) ? new PrimitiveCombination3AAA0 (procedure, arg0, arg1, (Argument0) arg2) :
+                new PrimitiveCombination3AAA (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1785,14 +1471,14 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3A1AA";
+            SCode.location = "PrimitiveCombination3AAA";
 #endif
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, environment.Argument1Value, environment.ArgumentValue (this.rand1Offset), environment.ArgumentValue(this.rand2Offset))) {
+            if (this.method (out answer, environment.ArgumentValue(this.rand0Offset), environment.ArgumentValue (this.rand1Offset), environment.ArgumentValue (this.rand2Offset))) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -1807,383 +1493,36 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3A1AA0 : PrimitiveCombination3A1AA
+    class PrimitiveCombination3AAA0 : PrimitiveCombination3AAA
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
 #endif
 
-        internal PrimitiveCombination3A1AA0 (Primitive3 procedure, Argument1 arg0, Argument arg1, Argument0 arg2)
+        internal PrimitiveCombination3AAA0 (Primitive3 procedure, Argument arg0, Argument arg1, Argument0 arg2)
             : base (procedure, arg0, arg1, arg2)
         {
         }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3A1AA0";
-#endif
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument1Value, environment.ArgumentValue (this.rand1Offset), environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3A1AA1 : PrimitiveCombination3A1AA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-#endif
-
-        internal PrimitiveCombination3A1AA1 (Primitive3 procedure, Argument1 arg0, Argument arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3A1AA1";
-#endif
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument1Value, environment.ArgumentValue (this.rand1Offset), environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination3A1A0 : PrimitiveCombination3A1A
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination3A1A0 (Primitive3 procedure, Argument1 arg0, Argument0 arg1, SCode arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public static SCode Make (Primitive3 procedure, Argument1 arg0, Argument0 arg1, SCode arg2)
+        public static SCode Make (Primitive3 procedure, Argument arg0, Argument arg1, Argument0 arg2)
         {
             return
-                new PrimitiveCombination3A1A0 (procedure, arg0, arg1, arg2);
+                new PrimitiveCombination3AAA0 (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            NoteCalls (this.arg2);
             ratorHistogram.Note (this.procedure);
-            rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3A1A0";
+            SCode.location = "PrimitiveCombination3AAA0";
 #endif
-            object ev2;
-            Environment env = environment;
-            Control unev = this.arg2;
-            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3A1A0";
-#endif
-            if (ev2 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, environment.Argument1Value, environment.Argument0Value, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination3A1A1 : PrimitiveCombination3A1A
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination3A1A1 (Primitive3 procedure, Argument1 arg0, Argument1 arg1, SCode arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public static SCode Make (Primitive3 procedure, Argument1 arg0, Argument1 arg1, SCode arg2)
-        {
-            return
-                new PrimitiveCombination3A1A1 (procedure, arg0, arg1, arg2);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg2);
-            ratorHistogram.Note (this.procedure);
-            rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3A1A1";
-#endif
-            object ev2;
-            Environment env = environment;
-            Control unev = this.arg2;
-            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3A1A1";
-#endif
-            if (ev2 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument1Value, environment.Argument1Value, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination3A1Q : PrimitiveCombination3A1
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-#endif
-
-        public readonly object rand1Value;
-        protected PrimitiveCombination3A1Q (Primitive3 procedure, Argument1 arg0, Quotation arg1, SCode arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-            this.rand1Value = arg1.Quoted;
-        }
-
-        public static SCode Make (Primitive3 procedure, Argument1 arg0, Quotation arg1, SCode arg2)
-        {
-            return
-                new PrimitiveCombination3A1Q (procedure, arg0, arg1, arg2);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg2);
-            ratorHistogram.Note (this.procedure);
-            rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3A1Q";
-#endif
-            object ev2;
-            Environment env = environment;
-            Control unev = this.arg2;
-            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3A1Q";
-#endif
-            if (ev2 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument1Value, this.rand1Value, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination3A1S : PrimitiveCombination3A1
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-#endif
-
-        public readonly Symbol rand1Name;
-        public readonly int rand1Offset;
-
-        protected PrimitiveCombination3A1S (Primitive3 procedure, Argument1 arg0, StaticVariable arg1, SCode arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-            this.rand1Name = arg1.Name;
-            this.rand1Offset = arg1.Offset;
-        }
-
-        public static SCode Make (Primitive3 procedure, Argument1 arg0, StaticVariable arg1, SCode arg2)
-        {
-            return
-                new PrimitiveCombination3A1S (procedure, arg0, arg1, arg2);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg2);
-            ratorHistogram.Note (this.procedure);
-            rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3A1S";
-#endif
-            object ev2;
-            Environment env = environment;
-            Control unev = this.arg2;
-            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3A1Q";
-#endif
-            if (ev2 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev1;
-            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument1Value, ev1, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3A1XS : PrimitiveCombination3A1
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        public readonly Symbol rand2Name;
-        public readonly int rand2Offset;
-
-        internal PrimitiveCombination3A1XS (Primitive3 procedure, Argument1 arg0, SCode arg1, StaticVariable arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-            this.rand2Name = arg2.Name;
-            this.rand2Offset = arg2.Offset;
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg1);
-            ratorHistogram.Note (this.procedure);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination3A1XS";
-#endif
-
-            object ev2;
-            if (environment.StaticValue (out ev2, this.rand2Name, this.rand2Offset))
-                throw new NotImplementedException ();
-
-            object ev1;
-            Environment env = environment;
-            Control unev = this.arg1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3A1XS";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, environment.Argument1Value, ev1, ev2)) {
+            if (this.method (out answer, environment.ArgumentValue (this.rand0Offset), environment.ArgumentValue (this.rand1Offset), environment.Argument0Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -2216,6 +1555,8 @@ namespace Microcode
         {
             return
                 (arg2 is Argument) ? PrimitiveCombination3AQA.Make (procedure, arg0, arg1, (Argument) arg2) :
+                (arg2 is Quotation) ? new PrimitiveCombination3AQQ (procedure, arg0, arg1, (Quotation) arg2) :
+                (arg2 is StaticVariable) ? new PrimitiveCombination3AQS (procedure, arg0, arg1, (StaticVariable) arg2) :
                 new PrimitiveCombination3AQ (procedure, arg0, arg1, arg2);
         }
 
@@ -2278,7 +1619,6 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3AQA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3AQA1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3AQA (procedure, arg0, arg1, arg2);
         }
 
@@ -2347,15 +1687,17 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3AQA1 : PrimitiveCombination3AQA
+    sealed class PrimitiveCombination3AQQ : PrimitiveCombination3AQ
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
 #endif
 
-        internal PrimitiveCombination3AQA1 (Primitive3 procedure, Argument arg0, Quotation arg1, Argument1 arg2)
+        public readonly object rand2Value;
+        internal PrimitiveCombination3AQQ (Primitive3 procedure, Argument arg0, Quotation arg1, Quotation arg2)
             : base (procedure, arg0, arg1, arg2)
         {
+            this.rand2Value = arg2.Quoted;
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -2363,14 +1705,14 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3AQA1";
+            SCode.location = "PrimitiveCombination3AQQ";
 #endif
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, environment.ArgumentValue (this.rand0Offset), this.rand1Value, environment.Argument1Value)) {
+            if (this.method (out answer, environment.ArgumentValue(this.rand0Offset), this.rand1Value, this.rand2Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -2383,6 +1725,400 @@ namespace Microcode
             return false;
         }
     }
+
+    [Serializable]
+    class PrimitiveCombination3AS : PrimitiveCombination3A
+    {
+#if DEBUG
+        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
+        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
+#endif
+
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+        protected PrimitiveCombination3AS (Primitive3 procedure, Argument arg0, StaticVariable arg1, SCode arg2)
+            : base (procedure, arg0, arg1, arg2)
+        {
+            this.rand1Name = arg1.Name;
+            this.rand1Offset = arg1.Offset;
+        }
+
+        public static SCode Make (Primitive3 procedure, Argument arg0, StaticVariable arg1, SCode arg2)
+        {
+            return
+                (arg2 is Argument) ? PrimitiveCombination3ASA.Make (procedure, arg0, arg1, (Argument) arg2) :
+               new PrimitiveCombination3AS (procedure, arg0, arg1, arg2);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg2);
+            ratorHistogram.Note (this.procedure);
+            rand2TypeHistogram.Note (this.rand2Type);
+            SCode.location = "PrimitiveCombination3AS";
+#endif
+            object ev2;
+            Environment env = environment;
+            Control unev = this.arg2;
+            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination3AS";
+#endif
+            if (ev2 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+#if DEBUG
+            Primitive.hotPrimitives.Note (this.procedure);
+            SCode.location = this.procedure.Name.ToString ();
+#endif
+            if (this.method (out answer, environment.ArgumentValue(this.rand0Offset), ev1, ev2)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    expression = tci.Expression;
+                    environment = tci.Environment;
+                    answer = null;
+                    return true;
+                }
+                throw new NotImplementedException ();
+            }
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveCombination3ASA : PrimitiveCombination3AS
+    {
+#if DEBUG
+        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
+#endif
+
+        public readonly int rand2Offset;
+        protected PrimitiveCombination3ASA (Primitive3 procedure, Argument arg0, StaticVariable arg1, Argument arg2)
+            : base (procedure, arg0, arg1, arg2)
+        {
+            this.rand2Offset = arg2.Offset;
+        }
+
+        public static SCode Make (Primitive3 procedure, Argument arg0, StaticVariable arg1, Argument arg2)
+        {
+            return
+                (arg2 is Argument0) ? new PrimitiveCombination3ASA0 (procedure, arg0, arg1, (Argument0) arg2) :
+                new PrimitiveCombination3ASA (procedure, arg0, arg1, arg2);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            ratorHistogram.Note (this.procedure);
+            SCode.location = "PrimitiveCombination3ASA";
+#endif
+
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+#if DEBUG
+            Primitive.hotPrimitives.Note (this.procedure);
+            SCode.location = this.procedure.Name.ToString ();
+#endif
+            if (this.method (out answer, environment.ArgumentValue(this.rand0Offset), ev1, environment.ArgumentValue (this.rand2Offset))) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    expression = tci.Expression;
+                    environment = tci.Environment;
+                    answer = null;
+                    return true;
+                }
+                throw new NotImplementedException ();
+            }
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveCombination3ASA0 : PrimitiveCombination3ASA
+    {
+#if DEBUG
+        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
+#endif
+
+        internal PrimitiveCombination3ASA0 (Primitive3 procedure, Argument arg0, StaticVariable arg1, Argument0 arg2)
+            : base (procedure, arg0, arg1, arg2)
+        {
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            ratorHistogram.Note (this.procedure);
+            SCode.location = "PrimitiveCombination3ASA0";
+#endif
+
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+#if DEBUG
+            Primitive.hotPrimitives.Note (this.procedure);
+            SCode.location = this.procedure.Name.ToString ();
+#endif
+            if (this.method (out answer, environment.ArgumentValue(this.rand0Offset), ev1, environment.Argument0Value)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    expression = tci.Expression;
+                    environment = tci.Environment;
+                    answer = null;
+                    return true;
+                }
+                throw new NotImplementedException ();
+            }
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveCombination3AQS : PrimitiveCombination3AQ
+    {
+#if DEBUG
+        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
+#endif
+
+        public readonly Symbol rand2Name;
+        public readonly int rand2Offset;
+        internal PrimitiveCombination3AQS (Primitive3 procedure, Argument arg0, Quotation arg1, StaticVariable arg2)
+            : base (procedure, arg0, arg1, arg2)
+        {
+            this.rand2Name = arg2.Name;
+            this.rand2Offset = arg2.Offset;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            ratorHistogram.Note (this.procedure);
+            SCode.location = "PrimitiveCombination3AQS";
+#endif
+            object ev2;
+            if (environment.StaticValue (out ev2, this.rand2Name, this.rand2Offset))
+                throw new NotImplementedException ();
+#if DEBUG
+            Primitive.hotPrimitives.Note (this.procedure);
+            SCode.location = this.procedure.Name.ToString ();
+#endif
+            if (this.method (out answer, environment.ArgumentValue(this.rand0Offset), this.rand1Value, ev2)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    expression = tci.Expression;
+                    environment = tci.Environment;
+                    answer = null;
+                    return true;
+                }
+                throw new NotImplementedException ();
+            }
+            return false;
+        }
+    }
+
+    [Serializable]
+    sealed class PrimitiveCombination3AXS : PrimitiveCombination3A
+    {
+#if DEBUG
+        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+
+        public readonly Symbol rand2Name;
+        public readonly int rand2Offset;
+
+        internal PrimitiveCombination3AXS (Primitive3 procedure, Argument arg0, SCode arg1, StaticVariable arg2)
+            : base (procedure, arg0, arg1, arg2)
+        {
+            this.rand2Name = arg2.Name;
+            this.rand2Offset = arg2.Offset;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg1);
+            ratorHistogram.Note (this.procedure);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveCombination3AXS";
+#endif
+
+            object ev2;
+            if (environment.StaticValue (out ev2, this.rand2Name, this.rand2Offset))
+                throw new NotImplementedException ();
+
+            object ev1;
+            Environment env = environment;
+            Control unev = this.arg1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination3AXS";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame1 (this, environment, ev2));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+#if DEBUG
+            Primitive.hotPrimitives.Note (this.procedure);
+            SCode.location = this.procedure.Name.ToString ();
+#endif
+            if (this.method (out answer, environment.ArgumentValue(this.rand0Offset), ev1, ev2)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    expression = tci.Expression;
+                    environment = tci.Environment;
+                    answer = null;
+                    return true;
+                }
+                throw new NotImplementedException ();
+            }
+            return false;
+        }
+    }
+
+    [Serializable]
+    class PrimitiveCombination3AXA : PrimitiveCombination3A
+    {
+#if DEBUG
+        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+
+        public readonly int rand2Offset;
+
+        internal PrimitiveCombination3AXA (Primitive3 procedure, Argument arg0, SCode arg1, Argument arg2)
+            : base (procedure, arg0, arg1, arg2)
+        {
+            this.rand2Offset = arg2.Offset;
+        }
+
+        static public SCode Make (Primitive3 procedure, Argument arg0, SCode arg1, Argument arg2)
+        {
+            return
+                new PrimitiveCombination3AXA (procedure, arg0, arg1, arg2);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg1);
+            ratorHistogram.Note (this.procedure);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveCombination3AXA";
+#endif
+
+            object ev2 = environment.ArgumentValue (this.rand2Offset);
+
+            object ev1;
+            Environment env = environment;
+            Control unev = this.arg1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination3AXA";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame1 (this, environment, ev2));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+#if DEBUG
+            Primitive.hotPrimitives.Note (this.procedure);
+            SCode.location = this.procedure.Name.ToString ();
+#endif
+            if (this.method (out answer, environment.ArgumentValue (this.rand0Offset), ev1, ev2)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    expression = tci.Expression;
+                    environment = tci.Environment;
+                    answer = null;
+                    return true;
+                }
+                throw new NotImplementedException ();
+            }
+            return false;
+        }
+    }
+
+
+    [Serializable]
+    sealed class PrimitiveCombination3AXQ : PrimitiveCombination3A
+    {
+#if DEBUG
+        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+
+        public readonly object rand2Value;
+
+        internal PrimitiveCombination3AXQ (Primitive3 procedure, Argument arg0, SCode arg1, Quotation arg2)
+            : base (procedure, arg0, arg1, arg2)
+        {
+            this.rand2Value = arg2.Quoted;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.arg1);
+            ratorHistogram.Note (this.procedure);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "PrimitiveCombination3AXQ";
+#endif
+
+            object ev2 = this.rand2Value;
+
+            object ev1;
+            Environment env = environment;
+            Control unev = this.arg1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "PrimitiveCombination3AXQ";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame1 (this, environment, ev2));
+                answer = Interpreter.UnwindStack;
+                environment = env;
+                return false;
+            }
+
+#if DEBUG
+            Primitive.hotPrimitives.Note (this.procedure);
+            SCode.location = this.procedure.Name.ToString ();
+#endif
+            if (this.method (out answer, environment.ArgumentValue (this.rand0Offset), ev1, ev2)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    expression = tci.Expression;
+                    environment = tci.Environment;
+                    answer = null;
+                    return true;
+                }
+                throw new NotImplementedException ();
+            }
+            return false;
+        }
+    }
+
 
     [Serializable]
     class PrimitiveCombination3Q : PrimitiveCombination3
@@ -2487,7 +2223,7 @@ namespace Microcode
         {
             return
                 (arg1 is Argument0) ? PrimitiveCombination3QA0.Make (procedure, arg0, (Argument0) arg1, arg2) :
-                (arg1 is Argument1) ? PrimitiveCombination3QA1.Make (procedure, arg0, (Argument1) arg1, arg2) :
+                (arg2 is Argument) ? PrimitiveCombination3QAA.Make (procedure, arg0, arg1, (Argument) arg2) :
                 new PrimitiveCombination3QA (procedure, arg0, arg1, arg2);
         }
 
@@ -2609,7 +2345,6 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3QA0A0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3QA0A1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3QA0A (procedure, arg0, arg1, arg2);
         }
 
@@ -2676,89 +2411,39 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    sealed class PrimitiveCombination3QA0A1 : PrimitiveCombination3QA0A
+    class PrimitiveCombination3QAA : PrimitiveCombination3QA
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
 #endif
-        internal PrimitiveCombination3QA0A1 (Primitive3 procedure, Quotation arg0, Argument0 arg1, Argument1 arg2)
+        public readonly int rand2Offset;
+
+        protected PrimitiveCombination3QAA (Primitive3 procedure, Quotation arg0, Argument arg1, Argument arg2)
             : base (procedure, arg0, arg1, arg2)
         {
+            this.rand2Offset = arg2.Offset;
         }
 
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3QA0A1";
-#endif
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, this.rand0Value, environment.Argument0Value, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination3QA1 : PrimitiveCombination3QA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-#endif
-        protected PrimitiveCombination3QA1 (Primitive3 procedure, Quotation arg0, Argument1 arg1, SCode arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public static SCode Make (Primitive3 procedure, Quotation arg0, Argument1 arg1, SCode arg2)
+        public static SCode Make (Primitive3 procedure, Quotation arg0, Argument arg1, Argument arg2)
         {
             return
-                new PrimitiveCombination3QA1 (procedure, arg0, arg1, arg2);
+                new PrimitiveCombination3QAA (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            NoteCalls (this.arg2);
             ratorHistogram.Note (this.procedure);
-            rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3QA1";
+            SCode.location = "PrimitiveCombination3QAA";
 #endif
-            object ev2;
-            Environment env = environment;
-            Control unev = this.arg2;
-            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3QA1";
-#endif
-            if (ev2 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
+            object ev2 = environment.ArgumentValue (this.rand2Offset);
 
 #if DEBUG
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, this.rand0Value, environment.Argument1Value, ev2)) {
+            if (this.method (out answer, this.rand0Value, environment.ArgumentValue (this.rand1Offset), ev2)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -2854,8 +2539,7 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3QQA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3QQA1 (procedure, arg0, arg1, (Argument1) arg2) :
-                new PrimitiveCombination3QQA (procedure, arg0, arg1, arg2);
+               new PrimitiveCombination3QQA (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -2909,44 +2593,6 @@ namespace Microcode
             SCode.location = this.procedure.Name.ToString ();
 #endif
             if (this.method (out answer, this.rand0Value, this.rand1Value, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3QQA1 : PrimitiveCombination3QQA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-#endif
-
-        internal PrimitiveCombination3QQA1 (Primitive3 procedure, Quotation arg0, Quotation arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3QQA1";
-#endif
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, this.rand0Value, this.rand1Value, environment.Argument1Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -3133,7 +2779,6 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3QXA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3QXA1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3QXA (procedure, arg0, arg1, arg2);
         }
 
@@ -3209,61 +2854,6 @@ namespace Microcode
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
             SCode.location = "PrimitiveCombination3QXA0";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame1 (this, environment, ev2));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, this.rand0Value, ev1, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3QXA1 : PrimitiveCombination3QXA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        internal PrimitiveCombination3QXA1 (Primitive3 procedure, Quotation arg0, SCode arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg1);
-            ratorHistogram.Note (this.procedure);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination3QXA1";
-#endif
-            object ev2 = environment.Argument1Value;
-
-            object ev1;
-            Environment env = environment;
-            Control unev = this.arg1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3QXA1";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame1 (this, environment, ev2));
@@ -3467,7 +3057,8 @@ namespace Microcode
         {
             return
                 (arg1 is Argument0) ? PrimitiveCombination3SA0.Make (procedure, arg0, (Argument0) arg1, arg2) :
-                (arg1 is Argument1) ? PrimitiveCombination3SA1.Make (procedure, arg0, (Argument1) arg1, arg2) :
+                (arg2 is Argument) ? PrimitiveCombination3SAA.Make (procedure, arg0, arg1, (Argument) arg2) :
+                (arg2 is StaticVariable) ? new PrimitiveCombination3SAS (procedure, arg0, arg1, (StaticVariable) arg2) :
                 new PrimitiveCombination3SA (procedure, arg0, arg1, arg2);
         }
 
@@ -3627,97 +3218,31 @@ namespace Microcode
     }
 
     [Serializable]
-    class PrimitiveCombination3SA1 : PrimitiveCombination3SA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination3SA1 (Primitive3 procedure, StaticVariable arg0, Argument1 arg1, SCode arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public static SCode Make (Primitive3 procedure, StaticVariable arg0, Argument1 arg1, SCode arg2)
-        {
-            return
-                (arg2 is Argument) ? PrimitiveCombination3SA1A.Make (procedure, arg0, arg1, (Argument) arg2) :
-                new PrimitiveCombination3SA1 (procedure, arg0, arg1, arg2);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg2);
-            ratorHistogram.Note (this.procedure);
-            rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3SA1";
-#endif
-            object ev2;
-            Environment env = environment;
-            Control unev = this.arg2;
-            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3SA1";
-#endif
-            if (ev2 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev0;
-            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, ev0, environment.Argument1Value, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination3SA1A : PrimitiveCombination3SA1
+    class PrimitiveCombination3SAA : PrimitiveCombination3SA
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
 #endif
         public readonly int rand2Offset;
-        protected PrimitiveCombination3SA1A (Primitive3 procedure, StaticVariable arg0, Argument1 arg1, Argument arg2)
+        protected PrimitiveCombination3SAA (Primitive3 procedure, StaticVariable arg0, Argument arg1, Argument arg2)
             : base (procedure, arg0, arg1, arg2)
         {
-        this.rand2Offset = arg2.Offset;
+            this.rand2Offset = arg2.Offset;
         }
 
-        public static SCode Make (Primitive3 procedure, StaticVariable arg0, Argument1 arg1, Argument arg2)
+        public static SCode Make (Primitive3 procedure, StaticVariable arg0, Argument arg1, Argument arg2)
         {
             return
-                (arg2 is Argument0) ? new PrimitiveCombination3SA1A0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3SA1A1 (procedure, arg0, arg1, (Argument1) arg2) :
-                new PrimitiveCombination3SA1A (procedure, arg0, arg1, arg2);
+                (arg2 is Argument0) ? new PrimitiveCombination3SAA0 (procedure, arg0, arg1, (Argument0) arg2) :
+                new PrimitiveCombination3SAA (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            NoteCalls (this.arg2);
             ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3SA1A";
+            SCode.location = "PrimitiveCombination3SAA";
 #endif
 
             object ev0;
@@ -3727,7 +3252,7 @@ namespace Microcode
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, ev0, environment.Argument1Value, environment.ArgumentValue(this.rand2Offset))) {
+            if (this.method (out answer, ev0, environment.ArgumentValue(this.rand1Offset), environment.ArgumentValue (this.rand2Offset))) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -3742,13 +3267,13 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3SA1A0 : PrimitiveCombination3SA1A
+    sealed class PrimitiveCombination3SAA0 : PrimitiveCombination3SAA
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
 #endif
 
-        internal PrimitiveCombination3SA1A0 (Primitive3 procedure, StaticVariable arg0, Argument1 arg1, Argument0 arg2)
+        internal PrimitiveCombination3SAA0 (Primitive3 procedure, StaticVariable arg0, Argument arg1, Argument0 arg2)
             : base (procedure, arg0, arg1, arg2)
         {
         }
@@ -3758,7 +3283,7 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3SA1A0";
+            SCode.location = "PrimitiveCombination3SAA0";
 #endif
 
             object ev0;
@@ -3768,7 +3293,7 @@ namespace Microcode
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, ev0, environment.Argument1Value, environment.Argument0Value)) {
+            if (this.method (out answer, ev0, environment.ArgumentValue(this.rand1Offset), environment.Argument0Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -3783,25 +3308,30 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3SA1A1 : PrimitiveCombination3SA1A
+    class PrimitiveCombination3SAS : PrimitiveCombination3SA
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
 #endif
-
-        internal PrimitiveCombination3SA1A1 (Primitive3 procedure, StaticVariable arg0, Argument1 arg1, Argument1 arg2)
+        public readonly Symbol rand2Name;
+        public readonly int rand2Offset;
+        internal PrimitiveCombination3SAS (Primitive3 procedure, StaticVariable arg0, Argument arg1, StaticVariable arg2)
             : base (procedure, arg0, arg1, arg2)
         {
+            this.rand2Name = arg2.Name;
+            this.rand2Offset = arg2.Offset;
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            NoteCalls (this.arg2);
             ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3SA1A1";
+            SCode.location = "PrimitiveCombination3SAS";
 #endif
+            object ev2;
+            if (environment.StaticValue (out ev2, this.rand2Name, this.rand2Offset))
+                throw new NotImplementedException ();
 
             object ev0;
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
@@ -3810,7 +3340,7 @@ namespace Microcode
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, ev0, environment.Argument1Value, environment.Argument1Value)) {
+            if (this.method (out answer, ev0, environment.ArgumentValue(this.rand1Offset), ev2)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -3910,7 +3440,6 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3SQA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3SQA1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3SQA (procedure, arg0, arg1, arg2);
         }
 
@@ -3969,45 +3498,6 @@ namespace Microcode
             SCode.location = this.procedure.Name.ToString ();
 #endif
             if (this.method (out answer, ev0, this.rand1Value, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3SQA1 : PrimitiveCombination3SQA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-#endif
-        internal PrimitiveCombination3SQA1 (Primitive3 procedure, StaticVariable arg0, Quotation arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3SQA1";
-#endif
-            object ev0;
-            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, ev0, this.rand1Value, environment.Argument1Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -4202,7 +3692,6 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3SSA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3SSA1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3SSA (procedure, arg0, arg1, arg2);
         }
 
@@ -4259,51 +3748,6 @@ namespace Microcode
             SCode.location = "PrimitiveCombination3SSA0";
 #endif
             object ev2 = environment.Argument0Value;
-
-            object ev1;
-            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            object ev0;
-            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, ev0, ev1, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3SSA1 : PrimitiveCombination3SSA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-#endif
-        internal PrimitiveCombination3SSA1 (Primitive3 procedure, StaticVariable arg0, StaticVariable arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            ratorHistogram.Note (this.procedure);
-            SCode.location = "PrimitiveCombination3SSA1";
-#endif
-            object ev2 = environment.Argument1Value;
 
             object ev1;
             if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
@@ -4401,7 +3845,6 @@ namespace Microcode
         {
            return
                 (arg2 is Argument0) ? new PrimitiveCombination3SXA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3SXA1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3SXA (procedure, arg0, arg1, arg2);
         }
 
@@ -4493,63 +3936,6 @@ namespace Microcode
             SCode.location = this.procedure.Name.ToString ();
 #endif
             if (this.method (out answer, ev0, ev1, environment.Argument0Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3SXA1 : PrimitiveCombination3SXA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        internal PrimitiveCombination3SXA1 (Primitive3 procedure, StaticVariable arg0, SCode arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg1);
-            ratorHistogram.Note (this.procedure);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "PrimitiveCombination3SXA1";
-#endif
-            object ev1;
-            Environment env = environment;
-            Control unev = this.arg1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3SXA1";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame1 (this, environment, environment.Argument1Value));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev0;
-            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, ev0, ev1, environment.Argument1Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -4707,7 +4093,8 @@ namespace Microcode
         {
             return
                 (arg1 is Argument0) ? PrimitiveCombination3XA0.Make (procedure, arg0, (Argument0) arg1, arg2) :
-                                (arg1 is Argument1) ? PrimitiveCombination3XA1.Make (procedure, arg0, (Argument1) arg1, arg2) :
+                (arg2 is Argument) ? PrimitiveCombination3XAA.Make (procedure, arg0, arg1, (Argument) arg2) :
+                (arg2 is Quotation) ? new PrimitiveCombination3XAQ (procedure, arg0, arg1, (Quotation) arg2) :
                 new PrimitiveCombination3XA (procedure, arg0, arg1, arg2);
         }
 
@@ -4858,7 +4245,6 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3XA0A0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3XA0A1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3XA0A (procedure, arg0, arg1, arg2);
         }
 
@@ -4951,55 +4337,6 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3XA0A1 : PrimitiveCombination3XA0A
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-#endif
-        internal PrimitiveCombination3XA0A1 (Primitive3 procedure, SCode arg0, Argument0 arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg0);
-            ratorHistogram.Note (this.procedure);
-            rand0TypeHistogram.Note (this.rand0Type);
-            SCode.location = "PrimitiveCombination3XA0A1";
-#endif
-            object ev0;
-            Environment env = environment;
-            Control unev = this.arg0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-
-#if DEBUG
-            SCode.location = "PrimitiveCombination3XA0A1";
-#endif
-            if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, ev0, environment.Argument0Value, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
     sealed class PrimitiveCombination3XA0Q : PrimitiveCombination3XA0
     {
 #if DEBUG
@@ -5052,99 +4389,24 @@ namespace Microcode
     }
 
     [Serializable]
-    class PrimitiveCombination3XA1 : PrimitiveCombination3XA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> rand2TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected PrimitiveCombination3XA1 (Primitive3 procedure, SCode arg0, Argument1 arg1, SCode arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public static SCode Make (Primitive3 procedure, SCode arg0, Argument1 arg1, SCode arg2)
-        {
-            return
-                (arg2 is Argument) ? PrimitiveCombination3XA1A.Make (procedure, arg0, arg1, (Argument) arg2) :
-                new PrimitiveCombination3XA1 (procedure, arg0, arg1, arg2);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg0);
-            NoteCalls (this.arg2);
-            ratorHistogram.Note (this.procedure);
-            rand0TypeHistogram.Note (this.rand0Type);
-            rand2TypeHistogram.Note (this.rand2Type);
-            SCode.location = "PrimitiveCombination3XA1";
-#endif
-            object ev2;
-            Environment env = environment;
-            Control unev = this.arg2;
-            while (unev.EvalStep (out ev2, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3XA1";
-#endif
-            if (ev2 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame0 (this, environment));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev0;
-            env = environment;
-            unev = this.arg0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-
-#if DEBUG
-            SCode.location = "PrimitiveCombination3XA1";
-#endif
-            if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, ev0, environment.Argument1Value, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    class PrimitiveCombination3XA1A : PrimitiveCombination3XA1
+    class PrimitiveCombination3XAA : PrimitiveCombination3XA
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
         static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
 #endif
         public readonly int rand2Offset;
-        protected PrimitiveCombination3XA1A (Primitive3 procedure, SCode arg0, Argument1 arg1, Argument arg2)
+        protected PrimitiveCombination3XAA (Primitive3 procedure, SCode arg0, Argument arg1, Argument arg2)
             : base (procedure, arg0, arg1, arg2)
         {
             this.rand2Offset = arg2.Offset;
         }
 
-        public static SCode Make (Primitive3 procedure, SCode arg0, Argument1 arg1, Argument arg2)
+        public static SCode Make (Primitive3 procedure, SCode arg0, Argument arg1, Argument arg2)
         {
             return
-                (arg2 is Argument0) ? new PrimitiveCombination3XA1A0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3XA1A1 (procedure, arg0, arg1, (Argument1) arg2) :
-                new PrimitiveCombination3XA1A (procedure, arg0, arg1, arg2);
+                (arg2 is Argument0) ? new PrimitiveCombination3XAA0 (procedure, arg0, arg1, (Argument0) arg2) :
+                new PrimitiveCombination3XAA (procedure, arg0, arg1, arg2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -5154,7 +4416,7 @@ namespace Microcode
             NoteCalls (this.arg0);
             ratorHistogram.Note (this.procedure);
             rand0TypeHistogram.Note (this.rand0Type);
-            SCode.location = "PrimitiveCombination3XA1A";
+            SCode.location = "PrimitiveCombination3XAA";
 #endif
 
             object ev0;
@@ -5163,7 +4425,7 @@ namespace Microcode
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 
 #if DEBUG
-            SCode.location = "PrimitiveCombination3XA1A";
+            SCode.location = "PrimitiveCombination3XAA";
 #endif
             if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
 
@@ -5171,7 +4433,7 @@ namespace Microcode
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, ev0, environment.Argument1Value, environment.ArgumentValue(this.rand2Offset))) {
+            if (this.method (out answer, ev0, environment.ArgumentValue(this.rand1Offset), environment.ArgumentValue (this.rand2Offset))) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -5186,13 +4448,13 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3XA1A0 : PrimitiveCombination3XA1A
+    sealed class PrimitiveCombination3XAA0 : PrimitiveCombination3XAA
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
         static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
 #endif
-        internal PrimitiveCombination3XA1A0 (Primitive3 procedure, SCode arg0, Argument1 arg1, Argument0 arg2)
+        internal PrimitiveCombination3XAA0 (Primitive3 procedure, SCode arg0, Argument arg1, Argument0 arg2)
             : base (procedure, arg0, arg1, arg2)
         {
         }
@@ -5204,7 +4466,7 @@ namespace Microcode
             NoteCalls (this.arg0);
             ratorHistogram.Note (this.procedure);
             rand0TypeHistogram.Note (this.rand0Type);
-            SCode.location = "PrimitiveCombination3XA1A0";
+            SCode.location = "PrimitiveCombination3XAA0";
 #endif
 
             object ev0;
@@ -5213,7 +4475,7 @@ namespace Microcode
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 
 #if DEBUG
-            SCode.location = "PrimitiveCombination3XA1A0";
+            SCode.location = "PrimitiveCombination3XAA0";
 #endif
             if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
 
@@ -5221,7 +4483,7 @@ namespace Microcode
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, ev0, environment.Argument1Value, environment.Argument0Value)) {
+            if (this.method (out answer, ev0, environment.ArgumentValue(this.rand1Offset), environment.Argument0Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -5236,15 +4498,17 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3XA1A1 : PrimitiveCombination3XA1A
+    sealed class PrimitiveCombination3XAQ : PrimitiveCombination3XA
     {
 #if DEBUG
         static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
         static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
 #endif
-        internal PrimitiveCombination3XA1A1 (Primitive3 procedure, SCode arg0, Argument1 arg1, Argument1 arg2)
+        public readonly object rand2Value;
+        internal PrimitiveCombination3XAQ (Primitive3 procedure, SCode arg0, Argument arg1, Quotation arg2)
             : base (procedure, arg0, arg1, arg2)
         {
+            this.rand2Value = arg2.Quoted;
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -5254,7 +4518,7 @@ namespace Microcode
             NoteCalls (this.arg0);
             ratorHistogram.Note (this.procedure);
             rand0TypeHistogram.Note (this.rand0Type);
-            SCode.location = "PrimitiveCombination3XA1A1";
+            SCode.location = "PrimitiveCombination3XAQ";
 #endif
 
             object ev0;
@@ -5263,7 +4527,7 @@ namespace Microcode
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 
 #if DEBUG
-            SCode.location = "PrimitiveCombination3XA1A1";
+            SCode.location = "PrimitiveCombination3XAQ";
 #endif
             if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
 
@@ -5271,7 +4535,7 @@ namespace Microcode
             Primitive.hotPrimitives.Note (this.procedure);
             SCode.location = this.procedure.Name.ToString ();
 #endif
-            if (this.method (out answer, ev0, environment.Argument1Value, environment.Argument1Value)) {
+            if (this.method (out answer, ev0, environment.ArgumentValue (this.rand1Offset), this.rand2Value)) {
                 TailCallInterpreter tci = answer as TailCallInterpreter;
                 if (tci != null) {
                     expression = tci.Expression;
@@ -5384,7 +4648,6 @@ namespace Microcode
         {
             return
                 (rand2 is Argument0) ? new PrimitiveCombination3XQA0 (procedure, arg0, arg1, (Argument0) rand2) :
-                (rand2 is Argument1) ? new PrimitiveCombination3XQA1 (procedure, arg0, arg1, (Argument1) rand2) :
                 new PrimitiveCombination3XQA (procedure, arg0, arg1, rand2);
         }
 
@@ -5463,61 +4726,6 @@ namespace Microcode
 
 #if DEBUG
             SCode.location = "PrimitiveCombination3XQA0";
-#endif
-            if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, ev0, this.rand1Value, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3XQA1 : PrimitiveCombination3XQA
-    {
-
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-#endif
-
-        internal PrimitiveCombination3XQA1 (Primitive3 procedure, SCode arg0, Quotation arg1, Argument1 rand2)
-            : base (procedure, arg0, arg1, rand2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg0);
-
-            ratorHistogram.Note (this.procedure);
-            rand0TypeHistogram.Note (this.rand0Type);
-
-            SCode.location = "PrimitiveCombination3XQA1";
-#endif
-            object ev2 = environment.Argument1Value;
-
-            object ev0;
-            Environment env = environment;
-            Control unev = this.arg0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-
-#if DEBUG
-            SCode.location = "PrimitiveCombination3XQA1";
 #endif
             if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
 
@@ -5769,7 +4977,6 @@ namespace Microcode
         {
             return
                 (arg2 is Argument0) ? new PrimitiveCombination3XSA0 (procedure, arg0, arg1, (Argument0) arg2) :
-                (arg2 is Argument1) ? new PrimitiveCombination3XSA1 (procedure, arg0, arg1, (Argument1) arg2) :
                 new PrimitiveCombination3XSA (procedure, arg0, arg1, arg2);
         }
 
@@ -5870,60 +5077,6 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveCombination3XSA1 : PrimitiveCombination3XSA
-    {
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-#endif
-        internal PrimitiveCombination3XSA1 (Primitive3 procedure, SCode arg0, StaticVariable arg1, Argument1 arg2)
-            : base (procedure, arg0, arg1, arg2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg0);
-            ratorHistogram.Note (this.procedure);
-            rand0TypeHistogram.Note (this.rand0Type);
-            SCode.location = "PrimitiveCombination3XSA1";
-#endif
-
-            object ev1;
-            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            object ev0;
-            Environment env = environment;
-            Control unev = this.arg0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-
-#if DEBUG
-            SCode.location = "PrimitiveCombination3XSA1";
-#endif
-            if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, ev0, ev1, environment.Argument1Value)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
     class PrimitiveCombination3XXA : PrimitiveCombination3
     {
 
@@ -5945,8 +5098,7 @@ namespace Microcode
         {
             return
                 (rand2 is Argument0) ? new PrimitiveCombination3XXA0 (procedure, arg0, arg1, (Argument0) rand2) :
-                (rand2 is Argument1) ? new PrimitiveCombination3XXA1 (procedure, arg0, arg1, (Argument1) rand2) :
-                new PrimitiveCombination3XXA (procedure, arg0, arg1, rand2);
+                 new PrimitiveCombination3XXA (procedure, arg0, arg1, rand2);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -6057,78 +5209,6 @@ namespace Microcode
 
 #if DEBUG
             SCode.location = "PrimitiveCombination3XXA0";
-#endif
-            if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
-
-#if DEBUG
-            Primitive.hotPrimitives.Note (this.procedure);
-            SCode.location = this.procedure.Name.ToString ();
-#endif
-            if (this.method (out answer, ev0, ev1, ev2)) {
-                TailCallInterpreter tci = answer as TailCallInterpreter;
-                if (tci != null) {
-                    expression = tci.Expression;
-                    environment = tci.Environment;
-                    answer = null;
-                    return true;
-                }
-                throw new NotImplementedException ();
-            }
-            return false;
-        }
-    }
-
-    [Serializable]
-    sealed class PrimitiveCombination3XXA1 : PrimitiveCombination3XXA
-    {
-
-#if DEBUG
-        static Histogram<Primitive3> ratorHistogram = new Histogram<Primitive3> ();
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        internal PrimitiveCombination3XXA1 (Primitive3 procedure, SCode arg0, SCode arg1, Argument1 rand2)
-            : base (procedure, arg0, arg1, rand2)
-        {
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.arg0);
-            NoteCalls (this.arg1);
-
-            ratorHistogram.Note (this.procedure);
-            rand0TypeHistogram.Note (this.rand0Type);
-            rand1TypeHistogram.Note (this.rand1Type);
-
-            SCode.location = "PrimitiveCombination3XXA1";
-#endif
-            object ev2 = environment.Argument1Value;
-
-            object ev1;
-            Environment env = environment;
-            Control unev = this.arg1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "PrimitiveCombination3XXA1";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new PrimitiveCombination3Frame1 (this, environment, ev2));
-                answer = Interpreter.UnwindStack;
-                environment = env;
-                return false;
-            }
-
-            object ev0;
-            env = environment;
-            unev = this.arg0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-
-#if DEBUG
-            SCode.location = "PrimitiveCombination3XXA1";
 #endif
             if (ev0 == Interpreter.UnwindStack) throw new NotImplementedException ();
 

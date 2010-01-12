@@ -27,6 +27,8 @@ namespace Microcode
         {
             return
                 (rand0 is Argument) ? Combination2SA.Make (rator, (Argument) rand0, rand1) :
+                (rand0 is PrimitiveCar) ? Combination2SCar.Make (rator, (PrimitiveCar) rand0, rand1) :
+                (rand0 is PrimitiveCdr) ? Combination2SCdr.Make (rator, (PrimitiveCdr) rand0, rand1) :
                 (rand0 is Quotation) ? Combination2SQ.Make (rator, (Quotation) rand0, rand1) :
                 (rand0 is StaticVariable) ? Combination2SS.Make (rator, (StaticVariable) rand0, rand1) :
                 (rand1 is Argument) ? Combination2SXA.Make (rator, rand0, (Argument) rand1) :
@@ -99,7 +101,9 @@ namespace Microcode
         {
             return
                 (rand0 is Argument0) ? Combination2SA0.Make (rator, (Argument0) rand0, rand1) :
-                (rand0 is Argument1) ? Combination2SA1.Make (rator, (Argument1) rand0, rand1) :
+                (rand1 is Argument) ? Combination2SAA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Quotation) ? new Combination2SAQ (rator, rand0, (Quotation) rand1) :
+                (rand1 is StaticVariable) ? new Combination2SAS (rator, rand0, (StaticVariable) rand1) :
                 new Combination2SA (rator, rand0, rand1);
         }
 
@@ -201,7 +205,6 @@ namespace Microcode
         public static SCode Make (StaticVariable rator, Argument0 rand0, Argument rand1)
         {
             return
-                (rand1 is Argument1) ? Combination2SA0A1.Make (rator, rand0, (Argument1) rand1) :
                 new Combination2SA0A (rator, rand0, rand1);
         }
 
@@ -211,37 +214,6 @@ namespace Microcode
             Warm ("Combination2SA0A.EvalStep");
 #endif
             object ev1 = environment.ArgumentValue (this.rand1Offset);
-
-            object ev0 = environment.Argument0Value;
-
-            object evop;
-            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
-                throw new NotImplementedException ();
-
-            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
-        }
-    }
-
-    [Serializable]
-    class Combination2SA0A1 : Combination2SA0A
-    {
-        protected Combination2SA0A1 (StaticVariable rator, Argument0 rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (StaticVariable rator, Argument0 rand0, Argument1 rand1)
-        {
-            return
-                new Combination2SA0A1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("Combination2SA0A1.EvalStep");
-#endif
-            object ev1 = environment.Argument1Value;
 
             object ev0 = environment.Argument0Value;
 
@@ -307,45 +279,31 @@ namespace Microcode
     }
 
     [Serializable]
-    class Combination2SA1 : Combination2SA
+    class Combination2SAA : Combination2SA
     {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        protected Combination2SA1 (StaticVariable rator, Argument1 rand0, SCode rand1)
+        public readonly int rand1Offset;
+
+        protected Combination2SAA (StaticVariable rator, Argument rand0, Argument rand1)
             : base (rator, rand0, rand1)
         {
+            this.rand1Offset = rand1.Offset;
         }
 
-        public static SCode Make (StaticVariable rator, Argument1 rand0, SCode rand1)
+        public static SCode Make (StaticVariable rator, Argument rand0, Argument rand1)
         {
             return
-                new Combination2SA1 (rator, rand0, rand1);
+                (rand1 is Argument0) ? new Combination2SAA0 (rator, rand0, (Argument0) rand1) :
+                new Combination2SAA (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2SA1.EvalStep";
+            Warm ("Combination2SAA.EvalStep");
 #endif
-            object ev1;
-            Environment env = environment;
-            Control unev = this.rand1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2SA1.EvalStep";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
 
-            object ev0 = environment.Argument1Value;
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
 
             object evop;
             if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
@@ -354,6 +312,857 @@ namespace Microcode
             return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
         }
     }
+
+    [Serializable]
+    sealed class Combination2SAA0 : Combination2SAA
+    {
+        internal Combination2SAA0 (StaticVariable rator, Argument rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination2SAA0.EvalStep");
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2SAQ : Combination2SA
+    {
+        public readonly object rand1Value;
+        internal Combination2SAQ (StaticVariable rator, Argument rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination2SAQ");
+#endif
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue(this.rand0Offset), this.rand1Value);
+        }
+    }
+
+    [Serializable]
+    sealed class Combination2SAS : Combination2SA
+    {
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+        internal Combination2SAS (StaticVariable rator, Argument rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination2SAS");
+#endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, environment.ArgumentValue(this.rand0Offset), ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCar : Combination2S
+    {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        protected readonly Type rand0ArgType;
+#endif
+        public readonly SCode rand0Arg;
+
+        protected Combination2SCar (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+#if DEBUG
+            this.rand0ArgType = rand0.Operand.GetType();
+#endif
+            this.rand0Arg = rand0.Operand;        
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+        {
+            return
+                (rand0.Operand is Argument) ? Combination2SCarA.Make (rator, rand0, rand1) :
+                (rand0.Operand is StaticVariable) ? Combination2SCarS.Make (rator, rand0, rand1) :
+                (rand1 is Quotation) ? Combination2SCarXQ.Make (rator, rand0, (Quotation) rand1) :
+                new Combination2SCar (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0Arg);
+            NoteCalls (this.rand1);
+            rand0TypeHistogram.Note (this.rand0ArgType);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2SCar.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCar.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0;
+            env = environment;
+            unev = this.rand0Arg;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCar.EvalStep";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+            }
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCarA : Combination2SCar
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int rand0Offset;
+
+        protected Combination2SCarA (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Offset = ((Argument) rand0.Operand).Offset;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+        {
+            return
+                (rand0.Operand is Argument0) ? Combination2SCarA0.Make (rator, rand0, rand1) :
+                (rand1 is Argument) ? Combination2SCarAA.Make (rator, rand0, (Argument) rand1) :
+                new Combination2SCarA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2SCarA.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCarA.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCarA0 : Combination2SCarA
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected Combination2SCarA0 (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+        {
+            return
+                //(rand1 is PrimitiveCar) ? Combination2SCarA0Car.Make (rator, rand0, (PrimitiveCar) rand1) :
+                (rand1 is StaticVariable) ? Combination2SCarA0S.Make (rator, rand0, (StaticVariable) rand1) :
+                new Combination2SCarA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2SCarA0.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCarA0.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0 = environment.Argument0Value;
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCarA0S : Combination2SCarA0
+    {
+
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+        protected Combination2SCarA0S (StaticVariable rator, PrimitiveCar rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, StaticVariable rand1)
+        {
+            return
+                new Combination2SCarA0S (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2SCarA0S.EvalStep";
+#endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+
+            object ev0 = environment.Argument0Value;
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ev1);
+        }
+    }
+
+
+    [Serializable]
+    class Combination2SCarAA : Combination2SCarA
+    {
+        public readonly int rand1Offset;
+
+        protected Combination2SCarAA (StaticVariable rator, PrimitiveCar rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2SCarAA0.Make (rator, rand0, (Argument0) rand1) :
+                new Combination2SCarAA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2SCarAA.EvalStep";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCarAA0 : Combination2SCarAA
+    {
+        protected Combination2SCarAA0 (StaticVariable rator, PrimitiveCar rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, Argument0 rand1)
+        {
+            return
+                new Combination2SCarAA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2SCarAA0.EvalStep";
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCarS : Combination2SCar
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly Symbol rand0Name;
+        public readonly int rand0Offset;
+
+        protected Combination2SCarS (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Name = ((StaticVariable) rand0.Operand).Name;
+            this.rand0Offset = ((StaticVariable) rand0.Operand).Offset;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+        {
+            return
+                new Combination2SCarS (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2SCarS.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCarS.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException();
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCarXQ : Combination2SCar
+    {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly object rand1Value;
+
+        protected Combination2SCarXQ (StaticVariable rator, PrimitiveCar rand0, Quotation rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, Quotation rand1)
+        {
+            return
+                new Combination2SCarXQ (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0Arg);
+            rand0TypeHistogram.Note (this.rand0ArgType);
+            SCode.location = "Combination2SCarXQ.EvalStep";
+#endif
+            object ev1 = this.rand1Value;
+
+            object ev0;
+            Environment env = environment;
+            Control unev = this.rand0Arg;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCar.EvalStep";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+            }
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ev1);
+        }
+    }
+
+
+    [Serializable]
+    class Combination2SCdr : Combination2S
+    {
+#if DEBUG
+        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+        protected readonly Type rand0ArgType;
+#endif
+        public readonly SCode rand0Arg;
+
+        protected Combination2SCdr (StaticVariable rator, PrimitiveCdr rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+#if DEBUG
+            this.rand0ArgType = rand0.Operand.GetType ();
+#endif
+            this.rand0Arg = rand0.Operand;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCdr rand0, SCode rand1)
+        {
+            return
+                (rand0.Operand is Argument) ? Combination2SCdrA.Make (rator, rand0, rand1) :
+                (rand0.Operand is StaticVariable) ? Combination2SCdrS.Make (rator, rand0, rand1) :
+                new Combination2SCdr (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand0Arg);
+            NoteCalls (this.rand1);
+            rand0TypeHistogram.Note (this.rand0ArgType);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2SCdr.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCdr.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0;
+            env = environment;
+            unev = this.rand0Arg;
+            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCdr.EvalStep";
+#endif
+            if (ev0 == Interpreter.UnwindStack) {
+                throw new NotImplementedException ();
+                //((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
+                //environment = env;
+                //answer = Interpreter.UnwindStack;
+                //return false;
+            }
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Cdr, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCdrA : Combination2SCdr
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int rand0Offset;
+
+        protected Combination2SCdrA (StaticVariable rator, PrimitiveCdr rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Offset = ((Argument) rand0.Operand).Offset;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCdr rand0, SCode rand1)
+        {
+            return
+                (rand0.Operand is Argument0) ? Combination2SCdrA0.Make (rator, rand0, rand1) :
+                new Combination2SCdrA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2SCdrA.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCdrA.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0 = environment.ArgumentValue (this.rand0Offset);
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Cdr, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCdrA0 : Combination2SCdrA
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+
+        protected Combination2SCdrA0 (StaticVariable rator, PrimitiveCdr rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCdr rand0, SCode rand1)
+        {
+            return
+                (rand1 is Argument) ? Combination2SCdrA0A.Make (rator, rand0, (Argument) rand1) :
+                new Combination2SCdrA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2SCdrA0.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCdrA0.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0 = environment.Argument0Value;
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Cdr, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCdrA0A : Combination2SCdrA0
+    {
+
+        public readonly int rand1Offset;
+        protected Combination2SCdrA0A (StaticVariable rator, PrimitiveCdr rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCdr rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2SCdrA0A0.Make (rator, rand0, (Argument0) rand1) :
+                new Combination2SCdrA0A (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2SCdrA0A.EvalStep";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0 = environment.Argument0Value;
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Cdr, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCdrA0A0 : Combination2SCdrA0A
+    {
+
+        protected Combination2SCdrA0A0 (StaticVariable rator, PrimitiveCdr rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCdr rand0, Argument0 rand1)
+        {
+            return
+                new Combination2SCdrA0A0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2SCdrA0A0.EvalStep";
+#endif
+
+            object ev0 = environment.Argument0Value;
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Cdr, ev0);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCdrS : Combination2SCdr
+    {
+#if DEBUG
+        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly Symbol rand0Name;
+        public readonly int rand0Offset;
+
+        protected Combination2SCdrS (StaticVariable rator, PrimitiveCdr rand0, SCode rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand0Name = ((StaticVariable) rand0.Operand).Name;
+            this.rand0Offset = ((StaticVariable) rand0.Operand).Offset;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCdr rand0, SCode rand1)
+        {
+            return
+                (rand1 is Argument) ? Combination2SCdrSA.Make (rator, rand0, (Argument) rand1) :
+                new Combination2SCdrS (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1);
+            rand1TypeHistogram.Note (this.rand1Type);
+            SCode.location = "Combination2SCdrS.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCdrS.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Cdr, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCdrSA : Combination2SCdrS
+    {
+        public readonly int rand1Offset;
+
+        protected Combination2SCdrSA (StaticVariable rator, PrimitiveCdr rand0, Argument rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCdr rand0, Argument rand1)
+        {
+            return
+                (rand1 is Argument0) ? Combination2SCdrSA0.Make (rator, rand0, (Argument0) rand1) :
+                new Combination2SCdrSA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2SCdrSA.EvalStep";
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1Offset);
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Cdr, ev1);
+        }
+    }
+
+    [Serializable]
+    class Combination2SCdrSA0 : Combination2SCdrSA
+    {
+        protected Combination2SCdrSA0 (StaticVariable rator, PrimitiveCdr rand0, Argument0 rand1)
+            : base (rator, rand0, rand1)
+        {
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCdr rand0, Argument0 rand1)
+        {
+            return
+                new Combination2SCdrSA0 (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2SCdrSA0.EvalStep";
+#endif
+            object ev1 = environment.Argument0Value;
+
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Cdr, ev1);
+        }
+    }
+
 
     [Serializable]
     class Combination2SQ : Combination2S
@@ -423,7 +1232,6 @@ namespace Microcode
         {
             return
                 (rand1 is Argument0) ? Combination2SQA0.Make (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? Combination2SQA1.Make (rator, rand0, (Argument1) rand1) :
                 new Combination2SQA (rator, rand0, rand1);
         }
 
@@ -472,38 +1280,6 @@ namespace Microcode
                 throw new NotImplementedException ();
 
             return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument0Value);
-        }
-    }
-
-    [Serializable]
-    class Combination2SQA1 : Combination2SQA
-    {
-
-        protected Combination2SQA1 (StaticVariable rator, Quotation rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (StaticVariable rator, Quotation rand0, Argument1 rand1)
-        {
-            return
-
-                new Combination2SQA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "Combination2SQA1.EvalStep";
-#endif
-
-
-            object evop;
-            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
-                throw new NotImplementedException ();
-
-            return Interpreter.Call (out answer, ref expression, ref environment, evop, this.rand0Value, environment.Argument1Value);
         }
     }
 
@@ -614,7 +1390,6 @@ namespace Microcode
         {
             return
                 (rand1 is Argument0) ? Combination2SSA0.Make (rator, rand0, (Argument0) rand1) :
-                   (rand1 is Argument1) ? Combination2SSA1.Make (rator, rand0, (Argument1) rand1) :
                 new Combination2SSA (rator, rand0, rand1);
         }
 
@@ -673,43 +1448,6 @@ namespace Microcode
                 throw new NotImplementedException ();
 
             return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument0Value);
-        }
-    }
-
-    [Serializable]
-    class Combination2SSA1 : Combination2SSA
-    {
-
-
-        protected Combination2SSA1 (StaticVariable rator, StaticVariable rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (StaticVariable rator, StaticVariable rand0, Argument1 rand1)
-        {
-            return
-                new Combination2SSA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-
-            SCode.location = "Combination2SSA1.EvalStep";
-#endif
-
-
-            object ev0;
-            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
-
-            object evop;
-            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
-                throw new NotImplementedException ();
-
-            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, environment.Argument1Value);
         }
     }
 
@@ -793,7 +1531,6 @@ namespace Microcode
         {
             return
                 (rand1 is Argument0) ? Combination2SXA0.Make (rator,  rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? Combination2SXA1.Make (rator,  rand0, (Argument1) rand1) :
                 new Combination2SXA (rator, rand0, rand1);
         }
 
@@ -853,44 +1590,6 @@ namespace Microcode
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 #if DEBUG
             SCode.location = "Combination2SXA0";
-#endif
-            object evop;
-            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
-                throw new NotImplementedException ();
-
-            return Interpreter.Call (out answer, ref expression, ref environment, evop, ev0, ev1);
-        }
-    }
-
-    [Serializable]
-    class Combination2SXA1 : Combination2SXA
-    {
-        protected Combination2SXA1 (StaticVariable rator, SCode rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (StaticVariable rator, SCode rand0, Argument1 rand1)
-        {
-            return
-                new Combination2SXA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand0);
-            SCode.location = "Combination2SXA1";
-#endif
-            object ev1 = environment.Argument1Value;
-
-            object ev0;
-            Environment env = environment;
-            Control unev = this.rand0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2SXA1";
 #endif
             object evop;
             if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
@@ -1013,9 +1712,9 @@ namespace Microcode
         {
             return
                 (rator is Argument0) ? Combination2A0.Make ((Argument0) rator, rand0, rand1) :
-                (rator is Argument1) ? Combination2A1.Make ((Argument1) rator, rand0, rand1) :
                 (rand0 is Argument) ? Combination2AA.Make (rator, (Argument) rand0, rand1) :
                 (rand0 is Quotation) ? Combination2AQ.Make (rator, (Quotation) rand0, rand1) :
+                (rand0 is StaticVariable) ? Combination2AS.Make (rator, (StaticVariable) rand0, rand1) :
                 (rand1 is Argument) ? Combination2AXA.Make (rator, rand0, (Argument) rand1):
                 (rand1 is Quotation) ? new Combination2AXQ (rator, rand0, (Quotation) rand1) :
                 (rand1 is StaticVariable) ? new Combination2AXS (rator, rand0, (StaticVariable) rand1) :
@@ -1082,6 +1781,7 @@ namespace Microcode
                 (rand0 is Quotation) ? Combination2A0Q.Make (rator, (Quotation) rand0, rand1) :
                 (rand0 is StaticVariable) ? Combination2A0S.Make (rator, (StaticVariable) rand0, rand1) :
                 (rand1 is Quotation) ? new Combination2A0XQ (rator, rand0, (Quotation) rand1) :
+                (rand1 is StaticVariable) ? new Combination2A0XS (rator, rand0, (StaticVariable) rand1) :
                 new Combination2A0 (rator, rand0, rand1);
         }
 
@@ -1376,26 +2076,18 @@ namespace Microcode
     }
 
     [Serializable]
-    class Combination2A1 : Combination2A
+    sealed class Combination2A0XS : Combination2A0
     {
 #if DEBUG
         static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
 #endif
-        protected Combination2A1 (Argument1 rator, SCode rand0, SCode rand1)
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+        internal Combination2A0XS (Argument0 rator, SCode rand0, StaticVariable rand1)
             : base (rator, rand0, rand1)
         {
-        }
-
-        public static SCode Make (Argument1 rator, SCode rand0, SCode rand1)
-        {
-            return
-                (rand0 is Argument) ? Combination2A1A.Make (rator, (Argument) rand0, rand1) :
-                (rand0 is Quotation) ? Combination2A1Q.Make (rator, (Quotation) rand0, rand1) :
-                (rand0 is StaticVariable) ? Combination2A1S.Make (rator, (StaticVariable) rand0, rand1) :
-                (rand1 is Quotation) ? new Combination2A1XQ (rator, rand0, (Quotation) rand1) :
-                (rand1 is StaticVariable) ? new Combination2A1XS (rator,rand0,(StaticVariable) rand1) :
-                new Combination2A1 (rator, rand0, rand1);
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1403,31 +2095,19 @@ namespace Microcode
 #if DEBUG
             Warm ("-");
             NoteCalls (this.rand0);
-            NoteCalls (this.rand1);
             rand0TypeHistogram.Note (this.rand0Type);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2A1.EvalStep";
+            SCode.location = "Combination2A0XS.EvalStep";
 #endif
             object ev1;
-            Environment env = environment;
-            Control unev = this.rand1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2A1.EvalStep";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
 
             object ev0;
-            env = environment;
-            unev = this.rand0;
+            Environment env = environment;
+            Control unev = this.rand0;
             while (unev.EvalStep (out ev0, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "Combination2A1.EvalStep";
+            SCode.location = "Combination2A0XS.EvalStep";
 #endif
             if (ev0 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
@@ -1436,266 +2116,31 @@ namespace Microcode
                 return false;
             }
 
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, ev0, ev1);
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument0Value, ev0, ev1);
         }
     }
 
     [Serializable]
-    class Combination2A1A : Combination2A1
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly int rand0Offset;
-        protected Combination2A1A (Argument1 rator, Argument rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand0Offset = rand0.Offset;
-        }
-
-        public static SCode Make (Argument1 rator, Argument rand0, SCode rand1)
-        {
-            return
-                (rand0 is Argument0) ? Combination2A1A0.Make (rator, (Argument0) rand0, rand1) :
-                (rand0 is Argument1) ? Combination2A1A1.Make (rator, (Argument1) rand0, rand1) :
-                new Combination2A1A (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2A1A";
-#endif
-            object ev1;
-            Environment env = environment;
-            Control unev = this.rand1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2A1A";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, environment.ArgumentValue(this.rand0Offset), ev1);
-        }
-    }
-
-    [Serializable]
-    class Combination2A1A0 : Combination2A1A
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected Combination2A1A0 (Argument1 rator, Argument0 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Argument1 rator, Argument0 rand0, SCode rand1)
-        {
-            return
-                (rand1 is StaticVariable) ? Combination2A1A0S.Make (rator, rand0, (StaticVariable) rand1) :
-                new Combination2A1A0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2A1A0";
-#endif
-            object ev1;
-            Environment env = environment;
-            Control unev = this.rand1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2A1A0";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, environment.Argument0Value, ev1);
-        }
-    }
-
-    [Serializable]
-    class Combination2A1A0S : Combination2A1A0
-    {
-        public readonly Symbol rand1Name;
-        public readonly int rand1Offset;
-
-        protected Combination2A1A0S (Argument1 rator, Argument0 rand0, StaticVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public static SCode Make (Argument1 rator, Argument0 rand0, StaticVariable rand1)
-        {
-            return
-                new Combination2A1A0S (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "Combination2A1A0S";
-#endif
-            object ev1;
-            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, environment.Argument0Value, ev1);
-        }
-    }
-
-    [Serializable]
-    class Combination2A1A1 : Combination2A1A
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-
-        protected Combination2A1A1 (Argument1 rator, Argument1 rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Argument1 rator, Argument1 rand0, SCode rand1)
-        {
-            return
-                new Combination2A1A1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2A1A1";
-#endif
-            object ev1;
-            Environment env = environment;
-            Control unev = this.rand1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2A1A1";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, environment.Argument1Value, ev1);
-        }
-    }
-
-    [Serializable]
-    class Combination2A1Q : Combination2A1
-    {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly object rand0Value;
-        protected Combination2A1Q (Argument1 rator, Quotation rand0, SCode rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand0Value = rand0.Quoted;
-        }
-
-        public static SCode Make (Argument1 rator, Quotation rand0, SCode rand1)
-        {
-            return
-                (rand1 is Quotation) ? new Combination2A1QQ (rator, rand0, (Quotation) rand1) :
-                new Combination2A1Q (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2A1Q.EvalStep";
-#endif
-            object ev1;
-            Environment env = environment;
-            Control unev = this.rand1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2A1Q.EvalStep";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, this.rand0Value, ev1);
-        }
-    }
-
-    [Serializable]
-    sealed class Combination2A1QQ : Combination2A1Q
-    {
-        public readonly object rand1Value;
-        internal Combination2A1QQ (Argument1 rator, Quotation rand0, Quotation rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Value = rand1.Quoted;
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "Combination2A1QQ.EvalStep";
-#endif
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, this.rand0Value, this.rand1Value);
-        }
-    }
-
-    [Serializable]
-    class Combination2A1S : Combination2A1
+    class Combination2AS : Combination2A
     {
 #if DEBUG
         static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
 #endif
         public readonly Symbol rand0Name;
         public readonly int rand0Offset;
-        protected Combination2A1S (Argument1 rator, StaticVariable rand0, SCode rand1)
+        protected Combination2AS (Argument rator, StaticVariable rand0, SCode rand1)
             : base (rator, rand0, rand1)
         {
             this.rand0Name = rand0.Name;
             this.rand0Offset = rand0.Offset;
         }
 
-        public static SCode Make (Argument1 rator, StaticVariable rand0, SCode rand1)
+        public static SCode Make (Argument rator, StaticVariable rand0, SCode rand1)
         {
             return
-                (rand1 is StaticVariable) ? new Combination2A1SS (rator, rand0, (StaticVariable) rand1) :
-                new Combination2A1S (rator, rand0, rand1);
+                (rand1 is StaticVariable) ? new Combination2ASS (rator, rand0, (StaticVariable) rand1) :
+                (rand1 is Quotation) ? new Combination2ASQ (rator, rand0, (Quotation) rand1) :
+                new Combination2AS (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1704,18 +2149,15 @@ namespace Microcode
             Warm ("-");
             NoteCalls (this.rand1);
             rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2A1S.EvalStep";
+            SCode.location = "Combination2AS.EvalStep";
 #endif
-            object ev0;
-            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
-                throw new NotImplementedException ();
 
             object ev1;
             Environment env = environment;
             Control unev = this.rand1;
             while (unev.EvalStep (out ev1, ref unev, ref env)) { };
 #if DEBUG
-            SCode.location = "Combination2A1Q.EvalStep";
+            SCode.location = "Combination2AS.EvalStep";
 #endif
             if (ev1 == Interpreter.UnwindStack) {
                 ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
@@ -1724,17 +2166,21 @@ namespace Microcode
                 return false;
             }
 
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, ev0, ev1);
+            object ev0;
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue(this.ratorOffset), ev0, ev1);
         }
     }
 
     [Serializable]
-    sealed class Combination2A1SS : Combination2A1S
+    sealed class Combination2ASS : Combination2AS
     {
         public readonly Symbol rand1Name;
         public readonly int rand1Offset;
 
-        internal Combination2A1SS (Argument1 rator, StaticVariable rand0, StaticVariable rand1)
+        internal Combination2ASS (Argument rator, StaticVariable rand0, StaticVariable rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Name = rand1.Name;
@@ -1745,7 +2191,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            SCode.location = "Combination2A1SS";
+            SCode.location = "Combination2ASS";
 #endif
             object ev1;
             if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
@@ -1755,18 +2201,16 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, ev0, ev1);
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue(this.ratorOffset), ev0, ev1);
         }
     }
 
     [Serializable]
-    sealed class Combination2A1XQ : Combination2A1
+    sealed class Combination2ASQ : Combination2AS
     {
-#if DEBUG
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-#endif
         public readonly object rand1Value;
-        internal Combination2A1XQ (Argument1 rator, SCode rand0, Quotation rand1)
+
+        internal Combination2ASQ (Argument rator, StaticVariable rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value = rand1.Quoted;
@@ -1776,74 +2220,18 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("-");
-            NoteCalls (this.rand0);
-            rand0TypeHistogram.Note (this.rand0Type);
-            SCode.location = "Combination2A1XQ.EvalStep";
+            SCode.location = "Combination2ASQ";
 #endif
+            object ev1 = this.rand1Value;
 
             object ev0;
-            Environment env = environment;
-            Control unev = this.rand0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2A1XQ.EvalStep";
-#endif
-            if (ev0 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, this.rand1Value));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
+            if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
+                throw new NotImplementedException ();
 
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, ev0, this.rand1Value);
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), ev0, ev1);
         }
     }
 
-    [Serializable]
-    sealed class Combination2A1XS : Combination2A1
-    {
-#if DEBUG
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-#endif
-        public readonly Symbol rand1Name;
-        public readonly int rand1Offset;
-        internal Combination2A1XS (Argument1 rator, SCode rand0, StaticVariable rand1)
-            : base (rator, rand0, rand1)
-        {
-            this.rand1Name = rand1.Name;
-            this.rand1Offset = rand1.Offset;
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand0);
-            rand0TypeHistogram.Note (this.rand0Type);
-            SCode.location = "Combination2A1XS.EvalStep";
-#endif
-            object ev1;
-            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
-                throw new NotImplementedException ();
-
-            object ev0;
-            Environment env = environment;
-            Control unev = this.rand0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2A1XS.EvalStep";
-#endif
-            if (ev0 == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.Argument1Value, ev0, ev1);
-        }
-    }
 
     [Serializable]
     class Combination2AA : Combination2A
@@ -1863,7 +2251,8 @@ namespace Microcode
         {
             return
                 (rand0 is Argument0) ? Combination2AA0.Make (rator, (Argument0) rand0, rand1) :
-                (rand0 is Argument1) ? Combination2AA1.Make (rator, (Argument1) rand0, rand1) :
+                (rand1 is Quotation) ? new Combination2AAQ (rator, rand0, (Quotation) rand1) :
+                (rand1 is StaticVariable) ? new Combination2AAS (rator, rand0, (StaticVariable) rand1) :
                 new Combination2AA (rator, rand0, rand1);
         }
 
@@ -1993,32 +2382,6 @@ namespace Microcode
     }
 
     [Serializable]
-    class Combination2AA0A1 : Combination2AA0A
-    {
-        protected Combination2AA0A1 (Argument rator, Argument0 rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Argument rator, Argument0 rand0, Argument1 rand1)
-        {
-            return
-                new Combination2AA0A1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "Combination2AA0A1.EvalStep";
-#endif
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), environment.Argument0Value, environment.Argument1Value);
-        }
-    }
-
-
-    [Serializable]
     class Combination2AA0Q : Combination2AA0
     {
         public readonly object rand1Value;
@@ -2077,129 +2440,56 @@ namespace Microcode
         }
     }
 
-
-
     [Serializable]
-    class Combination2AA1 : Combination2AA
+    sealed class Combination2AAQ : Combination2AA
     {
-#if DEBUG
-        static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
-#endif
-        protected Combination2AA1 (Argument rator, Argument1 rand0, SCode rand1)
+        public readonly object rand1Value;
+        internal Combination2AAQ (Argument rator, Argument rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
-        }
-
-        public static SCode Make (Argument rator, Argument1 rand0, SCode rand1)
-        {
-            return
-                (rand1 is Argument) ? Combination2AA1A.Make (rator, rand0, (Argument) rand1) :
-                new Combination2AA1 (rator, rand0, rand1);
+            this.rand1Value = rand1.Quoted;
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            NoteCalls (this.rand1);
-            rand1TypeHistogram.Note (this.rand1Type);
-            SCode.location = "Combination2AA1.EvalStep";
+            SCode.location = "Combination2AAQ.EvalStep";
 #endif
-            object ev1;
-            Environment env = environment;
-            Control unev = this.rand1;
-            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2AA1.EvalStep";
-#endif
-            if (ev1 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
 
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), environment.Argument1Value, ev1);
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), environment.ArgumentValue(this.rand0Offset), this.rand1Value);
         }
     }
 
     [Serializable]
-    class Combination2AA1A : Combination2AA1
+    class Combination2AAS : Combination2AA
     {
+        public readonly Symbol rand1Name;
         public readonly int rand1Offset;
 
-        protected Combination2AA1A (Argument rator, Argument1 rand0, Argument rand1)
+        internal Combination2AAS (Argument rator, Argument rand0, StaticVariable rand1)
             : base (rator, rand0, rand1)
         {
+            this.rand1Name = rand1.Name;
             this.rand1Offset = rand1.Offset;
         }
 
-        public static SCode Make (Argument rator, Argument1 rand0, Argument rand1)
+        public static SCode Make (Argument rator, Argument rand0, StaticVariable rand1)
         {
             return
-                (rand1 is Argument0) ? Combination2AA1A0.Make (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? Combination2AA1A1.Make (rator, rand0, (Argument1) rand1) :
-                new Combination2AA1A (rator, rand0, rand1);
+                new Combination2AAS (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            SCode.location = "Combination2AA1A.EvalStep";
+            SCode.location = "Combination2AAS.EvalStep";
 #endif
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), environment.Argument1Value, environment.ArgumentValue (this.rand1Offset));
-        }
-    }
-
-    [Serializable]
-    class Combination2AA1A0 : Combination2AA1A
-    {
-        protected Combination2AA1A0 (Argument rator, Argument1 rand0, Argument0 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Argument rator, Argument1 rand0, Argument0 rand1)
-        {
-            return
-                new Combination2AA1A0 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "Combination2AA1A0.EvalStep";
-#endif
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), environment.Argument1Value, environment.Argument0Value);
-        }
-    }
-
-    [Serializable]
-    class Combination2AA1A1 : Combination2AA1A
-    {
-        protected Combination2AA1A1 (Argument rator, Argument1 rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Argument rator, Argument1 rand0, Argument1 rand1)
-        {
-            return
-                new Combination2AA1A1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "Combination2AA1A1.EvalStep";
-#endif
-            object ev01 = environment.Argument1Value;
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), ev01, ev01);
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), environment.ArgumentValue(this.rand0Offset), ev1);
         }
     }
 
@@ -2222,6 +2512,7 @@ namespace Microcode
             return
                 (rand1 is Argument) ? Combination2AQA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is Quotation) ? new Combination2AQQ (rator, rand0, (Quotation) rand1) :
+                (rand1 is StaticVariable) ? new Combination2AQS (rator, rand0, (StaticVariable) rand1) :
                 new Combination2AQ (rator, rand0, rand1);
         }
 
@@ -2266,7 +2557,6 @@ namespace Microcode
         {
             return
                 (rand1 is Argument0) ? Combination2AQA0.Make (rator, rand0, (Argument0) rand1) :
-                 (rand1 is Argument1) ? Combination2AQA1.Make (rator, rand0, (Argument1) rand1) :
                 new Combination2AQA (rator, rand0, rand1);
         }
 
@@ -2309,32 +2599,6 @@ namespace Microcode
     }
 
     [Serializable]
-    class Combination2AQA1 : Combination2AQA
-    {
-        protected Combination2AQA1 (Argument rator, Quotation rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Argument rator, Quotation rand0, Argument1 rand1)
-        {
-            return
-                new Combination2AQA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "Combination2AQA1.EvalStep";
-#endif
-
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), this.rand0Value, environment.Argument1Value);
-        }
-    }
-
-    [Serializable]
     sealed class Combination2AQQ : Combination2AQ
     {
         public readonly object rand1Value;
@@ -2356,6 +2620,33 @@ namespace Microcode
     }
 
     [Serializable]
+    sealed class Combination2AQS : Combination2AQ
+    {
+        public readonly Symbol rand1Name;
+        public readonly int rand1Offset;
+
+        internal Combination2AQS (Argument rator, Quotation rand0, StaticVariable rand1)
+            : base (rator, rand0, rand1)
+        {
+            this.rand1Name = rand1.Name;
+            this.rand1Offset = rand1.Offset;
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            SCode.location = "Combination2AQS.EvalStep";
+#endif
+            object ev1;
+            if (environment.StaticValue (out ev1, this.rand1Name, this.rand1Offset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue(this.ratorOffset), this.rand0Value, ev1);
+        }
+    }
+
+    [Serializable]
     class Combination2AXA : Combination2A
     {
 #if DEBUG
@@ -2373,8 +2664,7 @@ namespace Microcode
         {
             return
                 (rand1 is Argument0) ? Combination2AXA0.Make (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? Combination2AXA1.Make (rator, rand0, (Argument1) rand1) :
-                new Combination2AXA (rator, rand0, rand1);
+               new Combination2AXA (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -2452,55 +2742,7 @@ namespace Microcode
         }
     }
 
-    [Serializable]
-    class Combination2AXA1 : Combination2AXA
-    {
-#if DEBUG
-        static Histogram<Type> rand0TypeHistogram = new Histogram<Type> ();
-#endif
-
-
-        internal Combination2AXA1 (Argument rator, SCode rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Argument rator, SCode rand0, Argument1 rand1)
-        {
-            return
-                new Combination2AXA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.rand0);
-            rand0TypeHistogram.Note (this.rand0Type);
-            SCode.location = "Combination2AXA1.EvalStep";
-#endif
-            object ev1 = environment.Argument1Value;
-
-            object ev0;
-            Environment env = environment;
-            Control unev = this.rand0;
-            while (unev.EvalStep (out ev0, ref unev, ref env)) { };
-#if DEBUG
-            SCode.location = "Combination2AXA1.EvalStep";
-#endif
-            if (ev0 == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Combination2Frame1 (this, environment, ev1));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
-
-            return Interpreter.Call (out answer, ref expression, ref environment, environment.ArgumentValue (this.ratorOffset), ev0, ev1);
-        }
-    }
-
-
-    [Serializable]
+     [Serializable]
     sealed class Combination2AXQ : Combination2A
     {
 #if DEBUG
@@ -2716,7 +2958,6 @@ namespace Microcode
         {
             return
                 (rand1 is Argument0) ? Combination2QQA0.Make (rator, rand0, (Argument0) rand1) :
-    (rand1 is Argument1) ? Combination2QQA1.Make (rator, rand0, (Argument1) rand1) :
                 new Combination2QQA (rator, rand0, rand1);
         }
 
@@ -2761,34 +3002,6 @@ namespace Microcode
     }
 
     [Serializable]
-    class Combination2QQA1 : Combination2QQA
-    {
-
-
-        protected Combination2QQA1 (Quotation rator, Quotation rand0, Argument1 rand1)
-            : base (rator, rand0, rand1)
-        {
-        }
-
-        public static SCode Make (Quotation rator, Quotation rand0, Argument1 rand1)
-        {
-            return
-                new Combination2QQA1 (rator, rand0, rand1);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            SCode.location = "Combination2QQA1";
-#endif
-
-
-            return this.ratorValue.Call (out answer, ref expression, ref environment, this.rand0Value, environment.Argument1Value);
-        }
-    }
-
-    [Serializable]
     class Combination2QS : Combination2Q
     {
 #if DEBUG
@@ -2810,6 +3023,7 @@ namespace Microcode
                 //(rand0 is Quotation) ? Combination2QQ.Make (rator, (Quotation) rand0, rand1) :
                 //(rand0 is StaticVariable) ? Combination2QS.Make (rator, (StaticVariable) rand0, rand1) :
                 (rand1 is Argument) ? Combination2QSA.Make (rator, rand0, (Argument) rand1) :
+                (rand1 is Quotation) ? Combination2QSQ.Make (rator, rand0, (Quotation) rand1) :
                 new Combination2QS (rator, rand0, rand1);
         }
 
@@ -2850,14 +3064,13 @@ namespace Microcode
         protected Combination2QSA (Quotation rator, StaticVariable rand0, Argument rand1)
             : base (rator, rand0, rand1)
         {
-            this.rand1Offset = rand0.Offset;
+            this.rand1Offset = rand1.Offset;
         }
 
         public static SCode Make (Quotation rator, StaticVariable rand0, Argument rand1)
         {
             return
                 (rand1 is Argument0) ? new Combination2QSA0 (rator, rand0, (Argument0) rand1) :
-                (rand1 is Argument1) ? new Combination2QSA1 (rator, rand0, (Argument1) rand1) :
                 new Combination2QSA (rator, rand0, rand1);
         }
 
@@ -2898,24 +3111,33 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class Combination2QSA1 : Combination2QSA
+    class Combination2QSQ : Combination2QS
     {
-        internal Combination2QSA1 (Quotation rator, StaticVariable rand0, Argument1 rand1)
+        public readonly object rand1Value;
+
+        protected Combination2QSQ (Quotation rator, StaticVariable rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
+            this.rand1Value = rand1.Quoted;
+        }
+
+        public static SCode Make (Quotation rator, StaticVariable rand0, Quotation rand1)
+        {
+            return
+                new Combination2QSQ (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
         {
 #if DEBUG
             Warm ("-");
-            SCode.location = "Combination2QSA1";
+            SCode.location = "Combination2QSQ";
 #endif
             object ev0;
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
-            return this.ratorValue.Call (out answer, ref expression, ref environment, ev0, environment.Argument1Value);
+            return this.ratorValue.Call (out answer, ref expression, ref environment, ev0, this.rand1Value);
         }
     }
 

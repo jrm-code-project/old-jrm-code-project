@@ -790,11 +790,6 @@ namespace Microcode
                // (Configuration.EnableCodeRewriting &&
                //  Configuration.EnableSequenceConditionalSwap &&
                //  first is Conditional) ? SwapConditional ((Conditional) first, second) :
-               // (Configuration.EnableSuperOperators && 
-               //  first is LexicalVariable) ? Sequence2L.Make ((LexicalVariable) first, second) :
-               // (Configuration.EnableSuperOperators && 
-               //  Configuration.EnableSequenceSpecialization &&
-               //  first is Quotation) ? Sequence2Q.Make ((Quotation) first, second) :
                //(Configuration.EnableCodeRewriting &&
                // first is Sequence2) ? Flatten ((Sequence2) first, second) :
                //(Configuration.EnableCodeRewriting &&
@@ -954,44 +949,6 @@ namespace Microcode
         public void SetSecond (SCode value) { this.second = value; }
     }
 
-//    /// <summary>
-//    /// This one is odd, but it signals that the variable is intended
-//    /// to be ignored.
-//    /// </summary>
-//    [Serializable]
-//    class Sequence2L : Sequence2
-//    {
-//        protected Sequence2L (LexicalVariable first, SCode second)
-//            : base (first, second)
-//        {
-//        }
-
-//        static SCode Simplify (SCode second)
-//        {
-//            //Debug.Write ("\n; Sequence2L.Simplify");
-//            return second;
-//        }
-
-//        static public SCode Make (LexicalVariable first, SCode second)
-//        {
-//            return
-//                (Configuration.EnableCodeRewriting &&
-//                 Configuration.EnableSequenceSimplification) ? Simplify(second) :
-//                new Sequence2L (first, second);
-//        }
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.second);
-//            SCode.location = "Sequence2L";
-//#endif
-//            expression = this.second;
-//            answer = null;
-//            return true;
-//        }
-//    }
 
     /// <summary>
     /// This one is weird, but we sometimes see declarations.
@@ -1022,53 +979,6 @@ namespace Microcode
             return true;
         }
     }
-
-//    class Sequence2SL : Sequence2
-//    {
-//        public readonly object secondName;
-//        public readonly LexicalAddress secondAddress;
-
-//        protected Sequence2SL (SCode first, LexicalVariable second)
-//            : base (first, second)
-//        {
-//            this.secondName = second.Name;
-//            this.secondAddress = second.Address;
-//        }
-
-//        static public SCode Make (SCode first, LexicalVariable second)
-//        {
-//            return 
-//                (second is Argument) ? Sequence2SA.Make (first, (Argument) second) :
-//                (second is LexicalVariable1) ? Sequence2SL1.Make (first, (LexicalVariable1) second) :
-//                new Sequence2SL (first, second);
-//        }
-
-//        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-//        {
-//#if DEBUG
-//            Warm ("-");
-//            NoteCalls (this.first);
-//            SCode.location = "Sequence2SL";
-//#endif
-//            Control first = this.first;
-//            Environment env = closureEnvironment;
-//            while (first.EvalStep (out answer, ref first, ref env)) { };
-//#if DEBUG
-//                        SCode.location = "Sequence2SL.EvalStep.1";
-//#endif
-//            if (answer == Interpreter.Unwind) {
-//                throw new NotImplementedException ();
-//                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
-//                //closureEnvironment = env;
-//                //answer = Interpreter.Unwind;
-//                //return false;
-//            }
-
-//            if (closureEnvironment.FastLexicalRef (out answer, this.secondName, this.secondAddress))
-//                throw new NotImplementedException ();
-//            return false;
-//        }
-//    }
 
     class Sequence2AssignmentA0SimpleLambda : Sequence2
     {
@@ -1156,7 +1066,6 @@ namespace Microcode
         {
             return
                 (second is Argument0) ? Sequence2XA0.Make (first, (Argument0) second) :
-                (second is Argument1) ? Sequence2XA1.Make (first, (Argument1) second) :
                 new Sequence2XA (first, second);
         }
 
@@ -1170,11 +1079,10 @@ namespace Microcode
             Environment env = closureEnvironment;
             while (first.EvalStep (out answer, ref first, ref env)) { };
             if (answer == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
-                //closureEnvironment = env;
-                //answer = Interpreter.Unwind;
-                //return false;
+                ((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
+                closureEnvironment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
             }
 
             answer = closureEnvironment.ArgumentValue (this.secondOffset);
@@ -1256,40 +1164,6 @@ namespace Microcode
         }
 
         #endregion
-    }
-
-    sealed class Sequence2XA1 : Sequence2XA
-    {
-        Sequence2XA1 (SCode first, Argument1 second)
-            : base (first, second)
-        {
-        }
-
-        static public SCode Make (SCode first, Argument1 second)
-        {
-            return new Sequence2XA1 (first, second);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment closureEnvironment)
-        {
-#if DEBUG
-            Warm ("Sequence2XA1");
-            NoteCalls (this.first);
-#endif
-            Control first = this.first;
-            Environment env = closureEnvironment;
-            while (first.EvalStep (out answer, ref first, ref env)) { };
-            if (answer == Interpreter.UnwindStack) {
-                throw new NotImplementedException ();
-                //((UnwinderState) env).AddFrame (new Sequence2Frame0 (this, closureEnvironment));
-                //closureEnvironment = env;
-                //answer = Interpreter.Unwind;
-                //return false;
-            }
-
-            answer = closureEnvironment.Argument1Value;
-            return false;
-        }
     }
 
     [Serializable]
@@ -1969,7 +1843,6 @@ namespace Microcode
         {
             return
                 (third is Argument0) ? Sequence3A0.Make (first, second, (Argument0) third) :
-                (third is Argument1) ? Sequence3A1.Make (first, second, (Argument1) third) :
                 new Sequence3A (first, second, third);
         }
 
@@ -2074,68 +1947,6 @@ namespace Microcode
             }
 
             answer = environment.Argument0Value;
-            return false;
-        }
-
-    }
-
-    [Serializable]
-    class Sequence3A1 : Sequence3A
-    {
-#if DEBUG
-        static public Histogram<Type> firstTypeHistogram = new Histogram<Type> ();
-        static public Histogram<Type> secondTypeHistogram = new Histogram<Type> ();
-#endif
-        protected Sequence3A1 (SCode first, SCode second, Argument1 third)
-            : base (first, second, third)
-        {
-        }
-
-        public static SCode Make (SCode first, SCode second, Argument1 third)
-        {
-            return
-                new Sequence3A1 (first, second, third);
-        }
-
-        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
-        {
-#if DEBUG
-            Warm ("-");
-            NoteCalls (this.first);
-            NoteCalls (this.second);
-            firstTypeHistogram.Note (this.firstType);
-            secondTypeHistogram.Note (this.secondType);
-            SCode.location = "Sequence3A1";
-#endif
-            object ev;
-            Control expr = this.first;
-            Environment env = environment;
-
-            while (expr.EvalStep (out ev, ref expr, ref env)) { };
-#if DEBUG
-            SCode.location = "Sequence3A1";
-#endif
-            if (ev == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Sequence3Frame0 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
-
-            expr = this.second;
-            env = environment;
-            while (expr.EvalStep (out ev, ref expr, ref env)) { };
-#if DEBUG
-            SCode.location = "Sequence3A0";
-#endif
-            if (ev == Interpreter.UnwindStack) {
-                ((UnwinderState) env).AddFrame (new Sequence3Frame1 (this, environment));
-                environment = env;
-                answer = Interpreter.UnwindStack;
-                return false;
-            }
-
-            answer = environment.Argument1Value;
             return false;
         }
 
