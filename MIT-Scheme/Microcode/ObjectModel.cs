@@ -164,18 +164,27 @@ namespace Microcode
             return false;
         }
 
+        /// <summary>
+        /// Canonical version of EQ for scheme usage.
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static bool SchemeEq (object left, object right)
+        {
+            return 
+                (left == null) ? (right == null) :
+                                 (right != null &&
+                                  (left == right ||
+                                   (left is bool && right is bool && (bool) left == (bool) right) ||
+                                   (left is char && right is char && (char) left == (char) right) ||
+                                   (left is int  && right is int  && (int) left == (int) right)));
+        }
+
         [SchemePrimitive ("EQ?", 2, true)]
         public static bool Eq (out object answer, object arg0, object arg1)
         {
-            answer =
-                ((arg0 == null) && (arg1 == null))
-                || ((arg1 != null) &&
-                    ((arg0 == arg1)
-                     || ((arg0 is Int32 && arg1 is Int32) && ((int) arg0 == (int) arg1))
-                     || ((arg0 is char && arg1 is char) && ((char) arg0 == (char) arg1))
-                     || ((arg0 is bool && arg1 is bool) && ((bool) arg0 == (bool) arg1))))
-                     ? Constant.sharpT
-                     : Constant.sharpF;
+            answer = SchemeEq (arg0, arg1) ? Constant.sharpT : Constant.sharpF;
             return false;
         }
 
@@ -447,11 +456,69 @@ namespace Microcode
             return false;
         }
 
+        [SchemePrimitive ("IS-SAME-TYPE?", 2, true)]
+        public static bool IsSameType (out object answer, object arg0, object arg1)
+        {
+            if (arg0 == null) {
+                answer = (arg1 == null) ? Constant.sharpT : Constant.sharpF;
+            }
+            else if (arg1 == null) {
+                answer = Constant.sharpF;
+            }
+            else if (arg0 is bool) {
+                answer = (arg1 is bool) ? Constant.sharpT : Constant.sharpF;
+            }
+            else if (arg0 is char) {
+                answer = (arg1 is char) ? Constant.sharpT : Constant.sharpF;
+            }
+            else if (arg0 is int) {
+                answer = (arg1 is int) ? Constant.sharpT : Constant.sharpF;
+            }
+            else if (arg0 is char []) {
+                answer = (arg1 is char []) ? Constant.sharpT : Constant.sharpF;
+            }
+            else {
+                SchemeObject l = arg0 as SchemeObject;
+                if (l == null)
+                    throw new NotImplementedException ();
+                SchemeObject r = arg1 as SchemeObject;
+                if (r == null) {
+                    answer = Constant.sharpF;
+                }
+                else {
+                    Symbol ls = l as Symbol;
 
+                    if (ls == null) {
+                        if (r is Symbol) {
+                            answer = Constant.sharpF;
+                        }
+                        else {
+                            answer = (l.TypeCode == r.TypeCode) ? Constant.sharpT : Constant.sharpF;
+                        }
+                    }
+                    else {
+                        Symbol rs = r as Symbol;
+                        if (rs == null) {
+                            answer = Constant.sharpF;
+                        }
+                        else if (ls.IsInterned ()) {
+                            answer = rs.IsInterned () ? Constant.sharpT : Constant.sharpF;
+                        }
+                        else {
+                            answer = rs.IsInterned () ? Constant.sharpF : Constant.sharpT;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static Histogram<TC> objectTypeHistogram = new Histogram<TC> ();
         [SchemePrimitive ("PRIMITIVE-OBJECT-TYPE?", 2, false)]
         public static bool IsPrimitiveObjectType (out object answer, object arg0, object arg1)
         {
             TC targetType = (TC) arg0;
+            objectTypeHistogram.Note (targetType);
             bool banswer;
             switch (targetType) {
                 case TC.ACCESS:

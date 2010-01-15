@@ -63,8 +63,8 @@ namespace Microcode
 
         #region Disjunction
         public const bool EnableDisjunctionOptimization = true;
-        public const bool EnablePrimitiveDisjunction1 = false;
-        public const bool EnablePrimitiveDisjunction2 = false;
+        public const bool EnablePrimitiveDisjunction1 = true;
+        public const bool EnablePrimitiveDisjunction2 = true;
         public const bool EnableDisjunctionSpecialization = true;
         #endregion
 
@@ -141,8 +141,6 @@ namespace Microcode
         /// </summary>
         public const bool EnableObjectTypePrimitives = true;
 
-        public const bool EnableCombination3Specialization = false;
-
         // When closure call count reaches this, walk the code
         // and substitute the static variables.  Set to -1 to disable
         // optimization.
@@ -152,7 +150,12 @@ namespace Microcode
         /// <summary>
         /// If true, allow interpreter to rewrite code to improve performance.
         /// </summary>
-        public const bool EnableCodeRewriting = false;
+        public const bool EnableCodeRewriting = true;
+
+// EQ rewriting
+        public const bool EnableEqNullRewrite = true;
+        public const bool EnableEqFalseRewrite = true;
+
 
         /// <summary>
         /// If true, allow interpreter to flatten sequences by rewriting.
@@ -178,13 +181,13 @@ namespace Microcode
         /// <summary>
         /// Enable conversion of (if (not ...)  to if.
         /// </summary>
-        public const bool EnableInvertConditional = false;
+        public const bool EnableInvertConditional = true;
 
         /// <summary>
         /// Enable conversion of conditionals to disjunctions if predicate
         /// and consequent are the same.
         /// </summary>
-        public const bool EnableDisjunctionConversion = false;
+        public const bool EnableDisjunctionConversion = true;
 
         /// <summary>
         /// Enable conditional folding if predicate is compile-time constant.
@@ -200,7 +203,7 @@ namespace Microcode
         /// Enable conversion of conditional to sequence2 if both branches
         /// produce the same constant answer.
         /// </summary>
-        public const bool EnableMergeConditionalResult = false;
+        public const bool EnableMergeConditionalResult = true;
 
         // If true, literal unspecific values may be replaced
         // by arbitrary convenient values.

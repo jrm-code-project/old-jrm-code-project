@@ -19,9 +19,16 @@ namespace Microcode
         {
         }
 
+        static SCode RewriteAsSameType (PrimitiveObjectType left, SCode right)
+        {
+            return PrimitiveCombination2.Make (Primitive.IsSameType, left.Operand, right);
+        }
+
         public static new SCode Make (Primitive2 rator, SCode rand0, SCode rand1)
         {
             return
+                (rand0 is PrimitiveObjectType &&
+                Configuration.EnableObjectTypePrimitives) ? RewriteAsSameType ((PrimitiveObjectType) rand0, rand1) :
                 (rand0 is Quotation) ? PrimitiveIsObjectTypeQ.Make (rator, (Quotation) rand0, rand1) :
                 //(rand1 is Quotation) ? PrimitiveIsObjectTypeSQ.Make (rator, rand0, (Quotation) rand1) :
                 (rand1 is Argument) ? PrimitiveIsObjectTypeXA.Make (rator, rand0, (Argument) rand1) :

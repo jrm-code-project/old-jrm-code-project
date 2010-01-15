@@ -1990,6 +1990,15 @@ namespace Microcode
             answer = ((Cons) ev0).Car is SType ? Constant.sharpT : Constant.sharpF;
             return false;
         }
+
+        public SCode InnerOperand
+        {
+            [DebuggerStepThrough]
+            get
+            {
+                return this.randArg;
+            }
+        }
     }
 
     /// <summary>

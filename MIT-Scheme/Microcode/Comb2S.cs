@@ -411,7 +411,7 @@ namespace Microcode
         public static SCode Make (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
         {
             return
-                (rand0.Operand is Argument) ? Combination2SCarA.Make (rator, rand0, rand1) :
+                (rand0.Operand is Argument) ? Combination2SCarA.Make (rator, (PrimitiveCarA) rand0, rand1) :
                 (rand0.Operand is StaticVariable) ? Combination2SCarS.Make (rator, rand0, rand1) :
                 (rand1 is Quotation) ? Combination2SCarXQ.Make (rator, rand0, (Quotation) rand1) :
                 new Combination2SCar (rator, rand0, rand1);
@@ -472,16 +472,16 @@ namespace Microcode
 #endif
         public readonly int rand0Offset;
 
-        protected Combination2SCarA (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+        protected Combination2SCarA (StaticVariable rator, PrimitiveCarA rand0, SCode rand1)
             : base (rator, rand0, rand1)
         {
             this.rand0Offset = ((Argument) rand0.Operand).Offset;
         }
 
-        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+        public static SCode Make (StaticVariable rator, PrimitiveCarA rand0, SCode rand1)
         {
             return
-                (rand0.Operand is Argument0) ? Combination2SCarA0.Make (rator, rand0, rand1) :
+                (rand0.Operand is Argument0) ? Combination2SCarA0.Make (rator, (PrimitiveCarA0) rand0, rand1) :
                 (rand1 is Argument) ? Combination2SCarAA.Make (rator, rand0, (Argument) rand1) :
                 new Combination2SCarA (rator, rand0, rand1);
         }
@@ -525,15 +525,15 @@ namespace Microcode
         static Histogram<Type> rand1TypeHistogram = new Histogram<Type> ();
 #endif
 
-        protected Combination2SCarA0 (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+        protected Combination2SCarA0 (StaticVariable rator, PrimitiveCarA0 rand0, SCode rand1)
             : base (rator, rand0, rand1)
         {
         }
 
-        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, SCode rand1)
+        public static SCode Make (StaticVariable rator, PrimitiveCarA0 rand0, SCode rand1)
         {
             return
-                //(rand1 is PrimitiveCar) ? Combination2SCarA0Car.Make (rator, rand0, (PrimitiveCar) rand1) :
+                (rand1 is PrimitiveCar) ? Combination2SCarA0Car.Make (rator, rand0, (PrimitiveCar) rand1) :
                 (rand1 is StaticVariable) ? Combination2SCarA0S.Make (rator, rand0, (StaticVariable) rand1) :
                 new Combination2SCarA0 (rator, rand0, rand1);
         }
@@ -570,20 +570,102 @@ namespace Microcode
         }
     }
 
+    class Combination2SCarA0Car : Combination2SCarA0
+    {
+        public readonly SCode rand1Inner;
+
+        protected Combination2SCarA0Car (StaticVariable rator, PrimitiveCarA0 rand0, PrimitiveCar rand1)
+            : base (rator, rand0, rand1)
+        {
+            rand1Inner = rand1.Operand;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCarA0 rand0, PrimitiveCar rand1)
+        {
+            return
+                (rand1.Operand is Argument) ? Combination2SCarA0CarA.Make (rator, rand0, rand1) :
+                new Combination2SCarA0Car (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            NoteCalls (this.rand1Inner);
+            SCode.location = "Combination2SCarA0Car.EvalStep";
+#endif
+            object ev1;
+            Environment env = environment;
+            Control unev = this.rand1Inner;
+            while (unev.EvalStep (out ev1, ref unev, ref env)) { };
+#if DEBUG
+            SCode.location = "Combination2SCarA0Car.EvalStep";
+#endif
+            if (ev1 == Interpreter.UnwindStack) {
+                ((UnwinderState) env).AddFrame (new Combination2Frame0 (this, environment));
+                environment = env;
+                answer = Interpreter.UnwindStack;
+                return false;
+            }
+
+            object ev0 = environment.Argument0Value;
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ((Cons)ev1).Car);
+        }
+    }
+
+    class Combination2SCarA0CarA : Combination2SCarA0Car
+    {
+        public readonly int rand1InnerOffset;
+
+        protected Combination2SCarA0CarA (StaticVariable rator, PrimitiveCarA0 rand0, PrimitiveCar rand1)
+            : base (rator, rand0, rand1)
+        {
+            rand1InnerOffset = ((Argument) rand1.Operand).Offset;
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCarA0 rand0, PrimitiveCar rand1)
+        {
+            return
+                new Combination2SCarA0CarA (rator, rand0, rand1);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination2SCarA0CarA.EvalStep");
+#endif
+            object ev1 = environment.ArgumentValue (this.rand1InnerOffset);
+
+            object ev0 = environment.Argument0Value;
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            return Interpreter.Call (out answer, ref expression, ref environment, evop, ((Cons) ev0).Car, ((Cons) ev1).Car);
+        }
+    }
+
+
     [Serializable]
     class Combination2SCarA0S : Combination2SCarA0
     {
 
         public readonly Symbol rand1Name;
         public readonly int rand1Offset;
-        protected Combination2SCarA0S (StaticVariable rator, PrimitiveCar rand0, StaticVariable rand1)
+        protected Combination2SCarA0S (StaticVariable rator, PrimitiveCarA0 rand0, StaticVariable rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Name = rand1.Name;
             this.rand1Offset = rand1.Offset;
         }
 
-        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, StaticVariable rand1)
+        public static SCode Make (StaticVariable rator, PrimitiveCarA0 rand0, StaticVariable rand1)
         {
             return
                 new Combination2SCarA0S (rator, rand0, rand1);
@@ -615,13 +697,13 @@ namespace Microcode
     {
         public readonly int rand1Offset;
 
-        protected Combination2SCarAA (StaticVariable rator, PrimitiveCar rand0, Argument rand1)
+        protected Combination2SCarAA (StaticVariable rator, PrimitiveCarA rand0, Argument rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Offset = rand1.Offset;
         }
 
-        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, Argument rand1)
+        public static SCode Make (StaticVariable rator, PrimitiveCarA rand0, Argument rand1)
         {
             return
                 (rand1 is Argument0) ? Combination2SCarAA0.Make (rator, rand0, (Argument0) rand1) :
@@ -649,12 +731,12 @@ namespace Microcode
     [Serializable]
     class Combination2SCarAA0 : Combination2SCarAA
     {
-        protected Combination2SCarAA0 (StaticVariable rator, PrimitiveCar rand0, Argument0 rand1)
+        protected Combination2SCarAA0 (StaticVariable rator, PrimitiveCarA rand0, Argument0 rand1)
             : base (rator, rand0, rand1)
         {
         }
 
-        public static SCode Make (StaticVariable rator, PrimitiveCar rand0, Argument0 rand1)
+        public static SCode Make (StaticVariable rator, PrimitiveCarA rand0, Argument0 rand1)
         {
             return
                 new Combination2SCarAA0 (rator, rand0, rand1);

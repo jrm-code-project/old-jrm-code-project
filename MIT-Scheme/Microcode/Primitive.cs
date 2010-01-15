@@ -135,6 +135,7 @@ namespace Microcode
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive2 IsEq;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive2 IsFixnumEqual;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive2 IsObjectType;
+        [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive2 IsSameType;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive2 LessThanFixnum;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive2 LexicalReference;
         [DebuggerBrowsable (DebuggerBrowsableState.Never)] internal static Primitive2 LexicalUnreferenceable;
@@ -275,6 +276,7 @@ namespace Microcode
             IntegerToFlonum = (Primitive2) Find ("INTEGER->FLONUM", 2);
             IsEq = (Primitive2) Find ("EQ?", 2);
             IsFixnumEqual = (Primitive2) Find ("EQUAL-FIXNUM?", 2);
+            IsSameType = (Primitive2) Find ("IS-SAME-TYPE?", 2);
             IsObjectType = (Primitive2) Find ("OBJECT-TYPE?", 2);
             LessThanFixnum = (Primitive2) Find ("LESS-THAN-FIXNUM?", 2);
             LexicalReference = (Primitive2) Find ("LEXICAL-REFERENCE", 2);
@@ -283,7 +285,6 @@ namespace Microcode
             MapCodeToMachineAddress = (Primitive2) Find ("MAP-CODE-TO-MACHINE-ADDRESS", 2);
             MapMachineAddressToCode = (Primitive2) Find ("MAP-MACHINE-ADDRESS-TO-CODE", 2);
             ObjectIsEq = (Primitive2) Find ("OBJECT-EQ?", 2);
-            ObjectSetType = (Primitive2) Find ("OBJECT-SET-TYPE", 2);
             ObjectSetType = (Primitive2) Find ("OBJECT-SET-TYPE", 2);
             PlusFixnum = (Primitive2) Find ("PLUS-FIXNUM", 2);
             PrimitiveAddress = (Primitive2) Find ("GET-PRIMITIVE-ADDRESS", 2);

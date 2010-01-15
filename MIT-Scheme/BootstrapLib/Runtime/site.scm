@@ -44,23 +44,7 @@
    "Initial timing"
    (lambda ()
 
-     (time-phase
-      "Load rb-tree"
-      (lambda () (load-option 'rb-tree)))
-
-     (time-phase
-      "Load sf"
-      (lambda () (load-option 'sf)))
-
-     (time-phase
-      "Load star-parser"
-      (lambda () (load-option '*parser)))
-
-     (time-phase
-      "Load cref"
-      (lambda () (load-option 'cref)))
-
-     (with-working-directory-pathname
+          (with-working-directory-pathname
       "C:\\Home\\Jrm\\Larceny\\Testsuite\\GC\\"
       (lambda ()
 	(time-phase 
@@ -77,11 +61,30 @@
 	((access setup-boyer user-initial-environment))
 	(newline) (display "; Test boyer...") (flush-output)
 	((access test-boyer user-initial-environment) 1)
-	(newline) (display "; dynamic...") (flush-output)
-	((access doit user-initial-environment))
-	(newline) (display "; lattice...") (flush-output)
-	((access lb3 user-initial-environment))
+	(dotimes (i 5)
+	  (newline) (display "; dynamic...") (flush-output)
+	  ((access doit user-initial-environment))
+	  (dotimes (i 5)
+  	    (newline) (display "; lattice...") (flush-output)
+	    ((access lb3 user-initial-environment))))
 	(newline)))
+
+     (time-phase
+      "Load rb-tree"
+      (lambda () (load-option 'rb-tree)))
+
+     (time-phase
+      "Load sf"
+      (lambda () (load-option 'sf)))
+
+     (time-phase
+      "Load star-parser"
+      (lambda () (load-option '*parser)))
+
+     (time-phase
+      "Load cref"
+      (lambda () (load-option 'cref)))
+
 
      (let ()
        (define (boyer)

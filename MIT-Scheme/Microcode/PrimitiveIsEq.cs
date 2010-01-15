@@ -331,9 +331,34 @@ namespace Microcode
             this.rand1Value = rand1.Quoted;
         }
 
+
+        static SCode RewriteEqNull (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... null)");
+            return PrimitiveCombination1.Make (Primitive.IsNull, rand0);
+        }
+
+        static SCode RewriteEqFalse (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... #f)");
+            return PrimitiveCombination1.Make (Primitive.Not, rand0);
+        }
+
         public static SCode Make (Primitive2 rator, PrimitiveCarA0 rand0, Quotation rand1)
         {
+#if DEBUG
+            if (rand1.Quoted == null)
+                Debugger.Break ();
+#endif
+
             return
+                               (rand1.Quoted == null &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqNullRewrite) ? RewriteEqNull (rator, rand0, rand1) :
+                (rand1.Quoted is bool &&
+                ((bool) rand1.Quoted) == false &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqFalseRewrite) ? RewriteEqFalse (rator, rand0, rand1) :
                 new PrimitiveIsEqCarA0Q (rator, rand0, rand1);
         }
 
@@ -358,9 +383,28 @@ namespace Microcode
             this.rand1Value = rand1.Quoted;
         }
 
+        static SCode RewriteEqNull (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... null)");
+            return PrimitiveCombination1.Make (Primitive.IsNull, rand0);
+        }
+
+        static SCode RewriteEqFalse (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... #f)");
+            return PrimitiveCombination1.Make (Primitive.Not, rand0);
+        }
+
         public static SCode Make (Primitive2 rator, PrimitiveCarA rand0, Quotation rand1)
         {
             return
+               (rand1.Quoted == null &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqNullRewrite) ? RewriteEqNull (rator, rand0, rand1) :
+                (rand1.Quoted is bool &&
+                ((bool) rand1.Quoted) == false &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqFalseRewrite) ? RewriteEqFalse (rator, rand0, rand1) :
                 new PrimitiveIsEqCarAQ (rator, rand0, rand1);
         }
 
@@ -484,9 +528,28 @@ namespace Microcode
             this.rand1Value = rand1.Quoted;
         }
 
+        static SCode RewriteEqNull (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... null)");
+            return PrimitiveCombination1.Make (Primitive.IsNull, rand0);
+        }
+
+        static SCode RewriteEqFalse (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... #f)");
+            return PrimitiveCombination1.Make (Primitive.Not, rand0);
+        }
+
         public static SCode Make (Primitive2 rator, PrimitiveCarS rand0, Quotation rand1)
         {
             return
+                               (rand1.Quoted == null &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqNullRewrite) ? RewriteEqNull (rator, rand0, rand1) :
+                (rand1.Quoted is bool &&
+                ((bool) rand1.Quoted) == false &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqFalseRewrite) ? RewriteEqFalse (rator, rand0, rand1) :
                 new PrimitiveIsEqCarSQ (rator, rand0, rand1);
         }
 
@@ -1265,6 +1328,9 @@ namespace Microcode
     [Serializable]
     sealed class PrimitiveIsEqA0Q : PrimitiveIsEqA0
     {
+#if DEBUG
+        static Histogram<object> objectHistogram = new Histogram<object> ();
+#endif
         public readonly object rand1Value;
         protected PrimitiveIsEqA0Q (Primitive2 rator, Argument0 rand0, Quotation rand1)
             : base (rator, rand0, rand1)
@@ -1272,9 +1338,28 @@ namespace Microcode
             this.rand1Value = rand1.Quoted;
         }
 
+        static SCode RewriteEqNull (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... null)");
+            return PrimitiveCombination1.Make (Primitive.IsNull, rand0);
+        }
+
+        static SCode RewriteEqFalse (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... #f)");
+            return PrimitiveCombination1.Make (Primitive.Not, rand0);
+        }
+
         public static SCode Make (Primitive2 rator, Argument0 rand0, Quotation rand1)
         {
             return
+                (rand1.Quoted == null &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqNullRewrite) ? RewriteEqNull (rator, rand0, rand1) :
+                (rand1.Quoted is bool &&
+                ((bool) rand1.Quoted) == false &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqFalseRewrite) ? RewriteEqFalse (rator, rand0, rand1) :
                 new PrimitiveIsEqA0Q (rator, rand0, rand1);
         }
 
@@ -1282,6 +1367,7 @@ namespace Microcode
         {
 #if DEBUG
             Warm ("PrimitiveIsEqA0Q");
+            objectHistogram.Note (this.rand1Value);
 #endif
             if (ObjectModel.Eq (out answer, environment.Argument0Value, this.rand1Value))
                 throw new NotImplementedException ();
@@ -1406,10 +1492,29 @@ namespace Microcode
             this.rand1Value = rand1.Quoted;
         }
 
+        static SCode RewriteEqNull (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... null)");
+            return PrimitiveCombination1.Make (Primitive.IsNull, rand0);
+        }
+
+        static SCode RewriteEqFalse (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... #f)");
+            return PrimitiveCombination1.Make (Primitive.Not, rand0);
+        }
+
         public static SCode Make (Primitive2 rator, Argument rand0, Quotation rand1)
         {
             return
-                new PrimitiveIsEqAQ (rator, rand0, (Quotation) rand1);
+                (rand1.Quoted == null &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqNullRewrite) ? RewriteEqNull (rator, rand0, rand1) :
+                (rand1.Quoted is bool &&
+                ((bool) rand1.Quoted) == false &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqFalseRewrite) ? RewriteEqFalse (rator, rand0, rand1) :
+                new PrimitiveIsEqAQ (rator, rand0, rand1);
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1477,7 +1582,7 @@ namespace Microcode
             return
                 (rand1 is Argument) ? PrimitiveIsEqSA.Make (rator, rand0, (Argument) rand1) :
                 (rand1 is StaticVariable) ? new PrimitiveIsEqSS (rator, rand0, (StaticVariable) rand1) :
-                (rand1 is Quotation) ? new PrimitiveIsEqSQ (rator, rand0, (Quotation) rand1) :
+                (rand1 is Quotation) ? PrimitiveIsEqSQ.Make (rator, rand0, (Quotation) rand1) :
                 new PrimitiveIsEqS (rator, rand0, rand1);
         }
 
@@ -1516,14 +1621,40 @@ namespace Microcode
     }
 
     [Serializable]
-    sealed class PrimitiveIsEqSQ : PrimitiveIsEqS
+    class PrimitiveIsEqSQ : PrimitiveIsEqS
     {
         public readonly object rand1Value;
 
-        internal PrimitiveIsEqSQ (Primitive2 rator, StaticVariable rand0, Quotation rand1)
+        protected PrimitiveIsEqSQ (Primitive2 rator, StaticVariable rand0, Quotation rand1)
             : base (rator, rand0, rand1)
         {
             this.rand1Value = rand1.Quoted;
+        }
+
+        static SCode RewriteEqNull (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... null)");
+            return PrimitiveCombination1.Make (Primitive.IsNull, rand0);
+        }
+
+        static SCode RewriteEqFalse (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... #f)");
+            return PrimitiveCombination1.Make (Primitive.Not, rand0);
+        }
+
+        public static SCode Make (Primitive2 rator, StaticVariable rand0, Quotation rand1)
+        {
+            return
+                               (rand1.Quoted == null &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqNullRewrite) ? RewriteEqNull (rator, rand0, rand1) :
+                (rand1.Quoted is bool &&
+                ((bool) rand1.Quoted) == false &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqFalseRewrite) ? RewriteEqFalse (rator, rand0, rand1) :
+                new PrimitiveIsEqSQ (rator, rand0, rand1);
+
         }
 
         public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
@@ -1590,9 +1721,28 @@ namespace Microcode
             this.rand0Value = rand0.Quoted;
         }
 
+        static SCode RewriteEqNull (Primitive2 rator, Quotation rand0, SCode rand1)
+        {
+                Debug.WriteLine ("(eq? null ...)");
+                return PrimitiveCombination1.Make (Primitive.IsNull, rand1);
+        }
+
+        static SCode RewriteEqFalse (Primitive2 rator, Quotation rand0, SCode rand1)
+        {
+            Debug.WriteLine ("(eq? #f ...)");
+            return PrimitiveCombination1.Make (Primitive.Not, rand1);
+        }
+
         public static SCode Make (Primitive2 rator, Quotation rand0, SCode rand1)
         {
             return
+                (rand0.Quoted == null &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqNullRewrite) ? RewriteEqNull (rator, rand0, rand1) :
+                (rand0.Quoted is bool &&
+                ((bool) rand0.Quoted) == false &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqFalseRewrite) ? RewriteEqFalse (rator, rand0, rand1) :
                 (rand0.Quoted is char) ? PrimitiveIsCharEqQ.Make (rator, rand0, rand1) :
                 (rand0.Quoted is int) ? PrimitiveIsIntEqQ.Make (rator, rand0, rand1) :
                 (rand0.Quoted is Cons ||
@@ -1984,9 +2134,28 @@ namespace Microcode
             this.rand1Value = rand1.Quoted;
         }
 
+        static SCode RewriteEqNull (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... null)");
+            return PrimitiveCombination1.Make (Primitive.IsNull, rand0);
+        }
+
+        static SCode RewriteEqFalse (Primitive2 rator, SCode rand0, Quotation rand1)
+        {
+            Debug.WriteLine ("(eq? ... #f)");
+            return PrimitiveCombination1.Make (Primitive.Not, rand0);
+        }
+
         public static SCode Make (Primitive2 rator, SCode rand0, Quotation rand1)
         {
             return
+               (rand1.Quoted == null &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqNullRewrite) ? RewriteEqNull (rator, rand0, rand1) :
+                (rand1.Quoted is bool &&
+                ((bool) rand1.Quoted) == false &&
+                Configuration.EnableCodeRewriting &&
+                Configuration.EnableEqFalseRewrite) ? RewriteEqFalse (rator, rand0, rand1) :
                 (rand1.Quoted is char) ? PrimitiveIsEqXChar.Make (rator, rand0, rand1) :
                 (rand1.Quoted is int) ? PrimitiveIsEqXFixnum.Make (rator, rand0, rand1) :
                 (rand1.Quoted is Symbol ||

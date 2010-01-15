@@ -921,6 +921,7 @@ namespace Microcode
         public static SCode Make (StaticVariable rator, SCode rand0)
         {
             return
+                (rand0 is PrimitiveCarA0) ? Combination1SCarA0.Make (rator, (PrimitiveCarA0) rand0) :
                 (rand0 is PrimitiveCdrA0) ? Combination1SCdrA0.Make (rator, (PrimitiveCdrA0) rand0) :
                 (rand0 is Argument) ? Combination1SA.Make (rator, (Argument) rand0) :
                 (rand0 is Quotation) ? new Combination1SQ (rator, (Quotation) rand0) :
@@ -957,6 +958,41 @@ namespace Microcode
             return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg);
         }
     }
+
+    [Serializable]
+    sealed class Combination1SCarA0 : Combination1S
+    {
+        Combination1SCarA0 (StaticVariable rator, PrimitiveCarA0 rand)
+            : base (rator, rand)
+        {
+        }
+
+        public static SCode Make (StaticVariable rator, PrimitiveCarA0 rand0)
+        {
+            return
+                new Combination1SCarA0 (rator, rand0);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("Combination1SCarA0");
+#endif
+            Cons evarg = environment.Argument0Value as Cons;
+            if (evarg == null)
+                throw new NotImplementedException ();
+
+            object evop;
+            if (environment.StaticValue (out evop, this.ratorName, this.ratorOffset))
+                throw new NotImplementedException ();
+
+            //return Interpreter.Call (out answer, ref expression, ref environment, evop, evarg.Cdr);
+            IApplicable op = evop as IApplicable;
+            if (op == null) throw new NotImplementedException ("Application of non-procedure object.");
+            return op.Call (out answer, ref expression, ref environment, evarg.Car);
+        }
+    }
+
 
     [Serializable]
     sealed class Combination1SCdrA0 : Combination1S
