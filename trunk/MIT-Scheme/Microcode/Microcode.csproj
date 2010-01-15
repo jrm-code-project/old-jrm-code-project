@@ -19,6 +19,8 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>3.5</OldToolsVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -110,6 +112,7 @@
     <Compile Include="PCond2.cs" />
     <Compile Include="PCondGreaterThanFixnum.cs" />
     <Compile Include="PCondIsEq.cs" />
+    <Compile Include="PCondIsEqCar.cs" />
     <Compile Include="PCondIsNull.cs" />
     <Compile Include="PCondIsObjectType.cs" />
     <Compile Include="PCondIsType.cs" />

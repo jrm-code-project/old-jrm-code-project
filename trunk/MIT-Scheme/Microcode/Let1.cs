@@ -54,17 +54,17 @@ namespace Microcode
             //                          ((Disjunction) body).Alternative);
             //    }
             //}
-            //if (body is Conditional) {
-            //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
-            //    ((Conditional) body).Consequent.CollectFreeVariables (freeInArms);
-            //    ((Conditional) body).Alternative.CollectFreeVariables (freeInArms);
-            //    if (!freeInArms.Contains ((Symbol) formals [0])) {
-            //        return
-            //        Conditional.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Conditional) body).Predicate), arg0),
-            //                          ((Conditional) body).Consequent,
-            //                          ((Conditional) body).Alternative);
-            //    }
-            //}
+            if (body is Conditional) {
+                HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
+                ((Conditional) body).Consequent.CollectFreeVariables (freeInArms);
+                ((Conditional) body).Alternative.CollectFreeVariables (freeInArms);
+                if (!freeInArms.Contains ((Symbol) formals [0])) {
+                    return
+                    Conditional.Make (Combination1.Make (Lambda.Make (rator.Name, rator.Formals, ((Conditional) body).Predicate), arg0),
+                                      ((Conditional) body).Consequent,
+                                      ((Conditional) body).Alternative);
+                }
+            }
             //if (body is Sequence2) {
             //    HashSet<Symbol> freeInArms = new HashSet<Symbol> ();
             //    ((Sequence2) body).Second.CollectFreeVariables (freeInArms);

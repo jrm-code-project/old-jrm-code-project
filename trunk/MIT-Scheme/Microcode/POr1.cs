@@ -47,24 +47,32 @@ namespace Microcode
         public static SCode Make (PrimitiveCombination1 predicate, SCode alternative)
         {
             return
+                (predicate.Operator == Primitive.IsBigFixnum) ? POrIsType<long>.Make (predicate, alternative) :
+                (predicate.Operator == Primitive.IsBigFlonum) ? POrIsType<double>.Make (predicate, alternative) :
+                (predicate.Operator == Primitive.IsComplex) ? POrIsType<Complex>.Make (predicate, alternative) :
+                (predicate.Operator == Primitive.IsFixnum) ? POrIsType<int>.Make (predicate, alternative) :
+                (predicate.Operator == Primitive.IsPair) ? POrIsType<Cons>.Make (predicate, alternative) :
+                (predicate.Operator == Primitive.IsRatnum) ? POrIsType<Ratnum>.Make (predicate, alternative) :
+                (predicate.Operator == Primitive.IsString) ? POrIsType<char []>.Make (predicate, alternative) :
                 //(Configuration.EnableInvertConditional && predicate is PrimitiveNot) ? InvertConditional ((PrimitiveNot) predicate, alternative) :
-                //(predicate is PrimitiveCarL) ? SpecialMake ((PrimitiveCarL) predicate, alternative) :
                 //(predicate is PrimitiveCdr) ? Unimplemented() :
-                (predicate is PrimitiveIsSymbol) ? POrIsSymbol.Make ((PrimitiveIsSymbol) predicate, alternative) :
-                (predicate is PrimitiveIsType<long>) ? POrIsType<long>.Make ((PrimitiveIsType<long>) predicate, alternative) :
-                (predicate is PrimitiveIsType<double>) ? POrIsType<double>.Make ((PrimitiveIsType<double>) predicate, alternative) :
-                (predicate is PrimitiveIsType<Complex>) ? POrIsType<Complex>.Make ((PrimitiveIsType<Complex>) predicate, alternative) :
-                (predicate is PrimitiveIsType<char>) ? POrIsType<char>.Make ((PrimitiveIsType<char>) predicate, alternative) :
-                (predicate is PrimitiveIsType<int>) ? POrIsType<int>.Make ((PrimitiveIsType<int>) predicate, alternative) :
+                //(predicate is PrimitiveIsSymbol) ? POrIsSymbol.Make ((PrimitiveIsSymbol) predicate, alternative) :
+                //(predicate is PrimitiveIsType<long>) ? POrIsType<long>.Make ((PrimitiveIsType<long>) predicate, alternative) :
+                //(predicate is PrimitiveIsType<double>) ? POrIsType<double>.Make ((PrimitiveIsType<double>) predicate, alternative) :
+                //(predicate is PrimitiveIsType<Complex>) ? POrIsType<Complex>.Make ((PrimitiveIsType<Complex>) predicate, alternative) :
+                //(predicate is PrimitiveIsType<char>) ? POrIsType<char>.Make ((PrimitiveIsType<char>) predicate, alternative) :
+                //(predicate is PrimitiveIsType<int>) ? POrIsType<int>.Make ((PrimitiveIsType<int>) predicate, alternative) :
                 //(predicate is PrimitiveIsNegative) ? POrIsNegative.Make ((PrimitiveIsNegative) predicate, alternative) :
                 //(predicate is PrimitiveIsNull) ? POrIsNull.Make ((PrimitiveIsNull) predicate, alternative) :
-                (predicate is PrimitiveIsType<Cons>) ? POrIsType<Cons>.Make ((PrimitiveIsType<Cons>) predicate, alternative) :
-                (predicate is PrimitiveIsType<Primitive>) ? POrIsType<Primitive>.Make ((PrimitiveIsType<Primitive>) predicate, alternative) :
-                (predicate is PrimitiveIsType<Ratnum>) ? POrIsType<Ratnum>.Make ((PrimitiveIsType<Ratnum>) predicate, alternative) :
-                (predicate is PrimitiveIsType<Record>) ? POrIsType<Record>.Make ((PrimitiveIsType<Record>) predicate, alternative) :
-                (predicate is PrimitiveIsType<object []>) ? POrIsType<object []>.Make ((PrimitiveIsType<object[]>) predicate, alternative) :
-                //(predicate is PrimitiveCombination1L) ? POr1L.Make ((PrimitiveCombination1L) predicate, alternative) :
+                //(predicate is PrimitiveIsType<Cons>) ? POrIsType<Cons>.Make ((PrimitiveIsType<Cons>) predicate, alternative) :
+                //(predicate is PrimitiveIsType<Primitive>) ? POrIsType<Primitive>.Make ((PrimitiveIsType<Primitive>) predicate, alternative) :
+                //(predicate is PrimitiveIsType<Ratnum>) ? POrIsType<Ratnum>.Make ((PrimitiveIsType<Ratnum>) predicate, alternative) :
+                //(predicate is PrimitiveIsType<Record>) ? POrIsType<Record>.Make ((PrimitiveIsType<Record>) predicate, alternative) :
+                //(predicate is PrimitiveIsType<object []>) ? POrIsType<object []>.Make ((PrimitiveIsType<object[]>) predicate, alternative) :
                 //(predicate is PrimitiveCombination1Q) ? Unimplemented () :
+                (predicate.Operand is Argument) ? POr1A.Make (predicate, alternative) :
+                (predicate.Operand is Quotation) ? Unimplemented() :
+                (predicate.Operand is StaticVariable) ? POr1S.Make (predicate, alternative) :
                 //(consequent is Quotation) ? POr1SQ.Make (predicate, (Quotation) alternative) :
                 //(alternative is Quotation) ? POr1SSQ.Make (predicate, (Quotation) alternative) :
                 new POr1 (predicate, alternative);
@@ -90,6 +98,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString();
+            Primitive.hotPrimitives.Note(this.procedure);
+#endif
             //Console.WriteLine ("Procedure: {2} Method: {0}, Arg: {1}", this.method.Method.Name, ev0, this.procedure);
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
@@ -109,6 +121,197 @@ namespace Microcode
 #if DEBUG
                 NoteCalls(this.alternative);
                 alternativeTypeHistogram.Note(this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else
+                return false;
+        }
+    }
+
+    [Serializable]
+    class POr1A : POr1
+    {
+#if DEBUG
+        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly int arg0Offset;
+
+        protected POr1A (PrimitiveCombination1 predicate, SCode alternative)
+            : base (predicate, alternative)
+        {
+            this.arg0Offset = ((Argument) predicate.Operand).Offset;
+        }
+
+        public static SCode Make (PrimitiveCombination1 predicate, SCode alternative)
+        {
+            return
+                (predicate.Operand is Argument0) ? POr1A0.Make (predicate, alternative) :
+                new POr1A (predicate, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            procedureHistogram.Note (this.procedure);
+            SCode.location = "POr1A";
+#endif
+            object ev0 = environment.ArgumentValue (this.arg0Offset);
+
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString();
+            Primitive.hotPrimitives.Note(this.procedure);
+#endif
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+
+#if DEBUG
+            SCode.location = "POr1A";
+#endif
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else
+                return false;
+        }
+    }
+
+    [Serializable]
+    class POr1A0 : POr1A
+    {
+#if DEBUG
+        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        protected POr1A0 (PrimitiveCombination1 predicate, SCode alternative)
+            : base (predicate, alternative)
+        {
+        }
+
+        public static SCode Make (PrimitiveCombination1 predicate, SCode alternative)
+        {
+            return
+                new POr1A0 (predicate, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            procedureHistogram.Note (this.procedure);
+            SCode.location = "POr1A0";
+#endif
+            object ev0 = environment.Argument0Value;
+
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString();
+            Primitive.hotPrimitives.Note(this.procedure);
+#endif
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+
+#if DEBUG
+            SCode.location = "POr1A0";
+#endif
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
+#endif
+                expression = this.alternative;
+                return true;
+            }
+            else
+                return false;
+        }
+    }
+
+    [Serializable]
+    class POr1S : POr1
+    {
+#if DEBUG
+        static Histogram<Primitive1> procedureHistogram = new Histogram<Primitive1> ();
+        static Histogram<Type> alternativeTypeHistogram = new Histogram<Type> ();
+#endif
+        public readonly Symbol arg0Name;
+        public readonly int arg0Offset;
+
+        protected POr1S (PrimitiveCombination1 predicate, SCode alternative)
+            : base (predicate, alternative)
+        {
+            this.arg0Name = ((StaticVariable) predicate.Operand).Name;
+            this.arg0Offset = ((StaticVariable) predicate.Operand).Offset;
+        }
+
+        public static SCode Make (PrimitiveCombination1 predicate, SCode alternative)
+        {
+            return
+                new POr1S (predicate, alternative);
+        }
+
+        public override bool EvalStep (out object answer, ref Control expression, ref Environment environment)
+        {
+#if DEBUG
+            Warm ("-");
+            procedureHistogram.Note (this.procedure);
+            SCode.location = "POr1S";
+#endif
+            object ev0;
+            if (environment.StaticValue (out ev0, this.arg0Name, this.arg0Offset))
+                throw new NotImplementedException ();
+
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString();
+            Primitive.hotPrimitives.Note(this.procedure);
+#endif
+            // It is expensive to bounce down to invoke the procedure
+            // we invoke it directly and pass along the ref args.
+            if (this.method (out answer, ev0)) {
+                TailCallInterpreter tci = answer as TailCallInterpreter;
+                if (tci != null) {
+                    answer = null; // dispose of the evidence
+                    // set up the interpreter for a tail call
+                    Control cExpression = tci.Expression;
+                    Environment cEnvironment = tci.Environment;
+                    while (cExpression.EvalStep (out answer, ref cExpression, ref cEnvironment)) { };
+                }
+            }
+
+#if DEBUG
+            SCode.location = "POr1S";
+#endif
+            if ((answer is bool) && (bool) answer == false) {
+#if DEBUG
+                NoteCalls (this.alternative);
+                alternativeTypeHistogram.Note (this.alternativeType);
 #endif
                 expression = this.alternative;
                 return true;

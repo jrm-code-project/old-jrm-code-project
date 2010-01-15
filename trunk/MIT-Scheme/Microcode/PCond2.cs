@@ -49,7 +49,7 @@ namespace Microcode
         {
             return
                 //(predicate is PrimitiveGreaterThanFixnum) ? PCondGreaterThanFixnum.Make ((PrimitiveGreaterThanFixnum) predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsEq) ? PCondIsEq.Make ((PrimitiveIsEq) predicate, consequent, alternative) :
+                (predicate is PrimitiveIsEq) ? PCondIsEq.Make ((PrimitiveIsEq) predicate, consequent, alternative) :
                 //(predicate is PrimitiveLessThanFixnum) ? PCondLessThanFixnum.Make ((PrimitiveLessThanFixnum) predicate, consequent, alternative) :
                 //(predicate is PrimitiveIsObjectType) ? PCondIsObjectType.Make ((PrimitiveIsObjectType) predicate, consequent, alternative) :
                 //(predicate is PrimitiveRecordRef) ? PCondRecordRef.Make ((PrimitiveRecordRef) predicate, consequent, alternative) :
@@ -106,6 +106,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -195,6 +199,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -281,6 +289,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -355,6 +367,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -424,6 +440,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -486,6 +506,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -547,6 +571,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -604,6 +632,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -658,6 +690,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -718,6 +754,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -780,6 +820,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -854,6 +898,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -926,6 +974,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -991,6 +1043,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1056,6 +1112,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1082,7 +1142,6 @@ namespace Microcode
             }
         }
     }
-
 
     [Serializable]
     class PCond2A0SQ : PCond2A0S
@@ -1122,6 +1181,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1185,6 +1248,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1250,6 +1317,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1317,6 +1388,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1380,6 +1455,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1409,7 +1488,6 @@ namespace Microcode
             }
         }
     }
-
 
     [Serializable]
     class PCond2A0SXQ : PCond2A0S
@@ -1446,6 +1524,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1513,6 +1595,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1592,6 +1678,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1667,6 +1757,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1696,7 +1790,6 @@ namespace Microcode
             }
         }
     }
-
 
     [Serializable]
     class PCond2A0XQ : PCond2A0
@@ -1745,6 +1838,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1819,6 +1916,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1886,6 +1987,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1956,6 +2061,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -1981,7 +2090,6 @@ namespace Microcode
             }
         }
     }
-
 
     [Serializable]
     class PCond2A0Q : PCond2A0
@@ -2020,6 +2128,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2091,6 +2203,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2153,6 +2269,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2214,6 +2334,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2239,7 +2363,6 @@ namespace Microcode
             }
         }
     }
-
 
     [Serializable]
     class PCond2A0QA0Q : PCond2A0QA0
@@ -2269,6 +2392,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2328,6 +2455,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2389,6 +2520,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2441,6 +2576,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2495,6 +2634,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2555,6 +2698,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2618,6 +2765,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2645,7 +2796,6 @@ namespace Microcode
             }
         }
     }
-
 
     [Serializable]
     class PCond2A0QXA : PCond2A0Q
@@ -2678,6 +2828,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2738,6 +2892,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2770,7 +2928,6 @@ namespace Microcode
         }
     }
 
-
     [Serializable]
     class PCond2A0QXQ : PCond2A0Q
     {
@@ -2801,6 +2958,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2865,6 +3026,10 @@ namespace Microcode
 #endif
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -2897,7 +3062,6 @@ namespace Microcode
             }
         }
     }
-
 
     [Serializable]
     class PCond2A0XXA : PCond2A0
@@ -2944,6 +3108,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3018,6 +3186,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3049,7 +3221,6 @@ namespace Microcode
             }
         }
     }
-
 
     [Serializable]
     sealed class PCond2A0XXQ : PCond2A0
@@ -3095,6 +3266,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3173,6 +3348,10 @@ namespace Microcode
 
             object ev0 = environment.Argument0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3245,6 +3424,10 @@ namespace Microcode
             object ev1 = environment.ArgumentValue (this.rand1Offset);
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3319,6 +3502,10 @@ namespace Microcode
             object ev1 = environment.Argument0Value;
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3389,6 +3576,10 @@ namespace Microcode
             object ev1 = environment.Argument0Value;
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3452,6 +3643,10 @@ namespace Microcode
             object ev1 = environment.Argument0Value;
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3517,6 +3712,10 @@ namespace Microcode
             object ev1 = environment.ArgumentValue (this.rand1Offset);
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3581,6 +3780,10 @@ namespace Microcode
             object ev1 = environment.ArgumentValue (this.rand1Offset);
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3645,6 +3848,10 @@ namespace Microcode
             object ev1 = environment.ArgumentValue (this.rand1Offset);
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3677,7 +3884,6 @@ namespace Microcode
         }
     }
 
-
     [Serializable]
     class PCond2AAXQ : PCond2AA
     {
@@ -3709,6 +3915,10 @@ namespace Microcode
             object ev1 = environment.ArgumentValue (this.rand1Offset);
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -3740,7 +3950,6 @@ namespace Microcode
             }
         }
     }
-
 
     [Serializable]
     class PCond2AQ : PCond2A
@@ -3779,6 +3988,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue(this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -3850,6 +4063,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -3912,6 +4129,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -3977,6 +4198,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -4038,6 +4263,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -4090,6 +4319,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -4145,6 +4378,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -4202,6 +4439,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -4234,8 +4475,6 @@ namespace Microcode
         }
     }
 
-
-
     [Serializable]
     class PCond2AQXA0 : PCond2AQXA
     {
@@ -4265,6 +4504,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -4327,6 +4570,10 @@ namespace Microcode
 #endif
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, this.rand1Value)) {
@@ -4402,6 +4649,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue(this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -4477,6 +4728,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -4543,6 +4798,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -4612,6 +4871,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -4677,6 +4940,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -4733,6 +5000,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -4792,6 +5063,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -4853,6 +5128,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -4920,6 +5199,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -4986,6 +5269,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5066,6 +5353,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5141,6 +5432,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5219,6 +5514,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5293,6 +5592,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5360,6 +5663,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5431,6 +5738,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5507,6 +5818,10 @@ namespace Microcode
 
             object ev0 = environment.ArgumentValue (this.rand0Offset);
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5593,6 +5908,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5667,6 +5986,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5738,6 +6061,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5809,6 +6136,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5873,6 +6204,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5936,6 +6271,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -5995,6 +6334,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6117,6 +6460,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6171,6 +6518,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6227,6 +6578,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6291,6 +6646,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6355,6 +6714,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6418,6 +6781,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6483,6 +6850,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6544,6 +6915,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6601,6 +6976,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6665,6 +7044,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6729,6 +7112,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6791,6 +7178,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6864,6 +7255,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6935,6 +7330,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -6997,6 +7396,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7063,6 +7466,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7129,6 +7536,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7207,6 +7618,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7283,6 +7698,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7360,6 +7779,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7434,6 +7857,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7503,6 +7930,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7578,6 +8009,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7654,6 +8089,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7727,6 +8166,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7799,6 +8242,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7874,6 +8321,10 @@ namespace Microcode
 
             object ev0 = this.rand0Value;
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -7963,6 +8414,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8039,6 +8494,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8113,6 +8572,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8186,6 +8649,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8250,6 +8717,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8317,6 +8788,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8379,6 +8854,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8445,6 +8924,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8511,6 +8994,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8573,6 +9060,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8637,6 +9128,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8701,6 +9196,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8774,6 +9273,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8847,6 +9350,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8913,6 +9420,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -8982,6 +9493,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9046,6 +9561,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9108,6 +9627,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9175,6 +9698,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9239,6 +9766,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9303,6 +9834,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9366,6 +9901,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9432,6 +9971,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9499,6 +10042,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9575,6 +10122,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9649,6 +10200,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9716,6 +10271,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9783,6 +10342,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9852,6 +10415,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -9935,6 +10502,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10013,6 +10584,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10088,6 +10663,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10161,6 +10740,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10239,6 +10822,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10320,6 +10907,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10399,6 +10990,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10475,6 +11070,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10552,6 +11151,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10630,6 +11233,10 @@ namespace Microcode
             if (environment.StaticValue (out ev0, this.rand0Name, this.rand0Offset))
                 throw new NotImplementedException ();
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10718,6 +11325,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10808,6 +11419,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10893,6 +11508,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -10978,6 +11597,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11058,6 +11681,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11136,6 +11763,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11214,6 +11845,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11293,6 +11928,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11383,6 +12022,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11471,6 +12114,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11552,6 +12199,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11635,6 +12286,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11714,6 +12369,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11791,6 +12450,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11870,6 +12533,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -11948,6 +12615,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12028,6 +12699,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12117,6 +12792,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12209,6 +12888,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12292,6 +12975,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12372,6 +13059,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12451,6 +13142,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12532,6 +13227,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12613,6 +13312,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12694,6 +13397,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12773,6 +13480,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12853,6 +13564,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -12935,6 +13650,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -13031,6 +13750,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -13122,6 +13845,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -13210,6 +13937,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -13300,6 +14031,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -13389,6 +14124,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -13476,6 +14215,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {
@@ -13567,6 +14310,10 @@ namespace Microcode
                 //return false;
             }
 
+#if DEBUG
+            SCode.location = this.procedure.Name.ToString ();
+            Primitive.hotPrimitives.Note (this.procedure);
+#endif
             // It is expensive to bounce down to invoke the procedure
             // we invoke it directly and pass along the ref args.
             if (this.method (out answer, ev0, ev1)) {

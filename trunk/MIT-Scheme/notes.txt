@@ -7851,3 +7851,64 @@ PComb1.predicate
 +		[19]	{[SimpleClosure.Call3, 283]}	System.Collections.Generic.KeyValuePair<string,long>
 +		[20]	{[PrimitiveCarA, 283]}	System.Collections.Generic.KeyValuePair<string,long>
 
+----------------------------------------------------------------
+(current-time-string)"Thu Jan 14 00:02:45 2010"
+
+top hot primitives
++		[0]	{[#<PRIMITIVE OBJECT-TYPE? 2>, 9861400]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[1]	{[#<PRIMITIVE 1+ 1>, 6545685]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[2]	{[#<PRIMITIVE GENERAL-CAR-CDR 2>, 4618278]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[3]	{[#<PRIMITIVE VECTOR-REF 2>, 4460612]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[4]	{[#<PRIMITIVE CONS 2>, 1508701]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[5]	{[#<PRIMITIVE %RECORD-SET! 3>, 1006030]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[6]	{[#<PRIMITIVE LESS-THAN-FIXNUM? 2>, 945464]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[7]	{[#<PRIMITIVE NULL? 1>, 473448]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[8]	{[#<PRIMITIVE SYMBOL? 1>, 412503]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[9]	{[#<PRIMITIVE &= 2>, 378940]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
++		[10]	{[#<PRIMITIVE %RECORD-REF 2>, 257465]}	System.Collections.Generic.KeyValuePair<Microcode.Primitive,long>
+
+top of stack
++		[0]	{[SimpleClosure.Call2, 1441]}	System.Collections.Generic.KeyValuePair<string,long>
++		[1]	{[SimpleLet1, 872]}	System.Collections.Generic.KeyValuePair<string,long>
++		[2]	{[OBJECT-TYPE?, 590]}	System.Collections.Generic.KeyValuePair<string,long>
++		[3]	{[SmallEnvironment2.GetValueCells, 517]}	System.Collections.Generic.KeyValuePair<string,long>
++		[4]	{[Combination3S, 486]}	System.Collections.Generic.KeyValuePair<string,long>
++		[5]	{[SimpleClosure.Call1, 426]}	System.Collections.Generic.KeyValuePair<string,long>
++		[6]	{[Conditional, 394]}	System.Collections.Generic.KeyValuePair<string,long>
++		[7]	{[Combination1SCdrA0, 388]}	System.Collections.Generic.KeyValuePair<string,long>
++		[8]	{[POrIsEqA0Q.EvalStep, 370]}	System.Collections.Generic.KeyValuePair<string,long>
++		[9]	{[Combination2SCarA0CarA.EvalStep, 353]}	System.Collections.Generic.KeyValuePair<string,long>
++		[10]	{[ConditionalXXQ, 332]}	System.Collections.Generic.KeyValuePair<string,long>
++		[11]	{[POrIsTypeA, 329]}	System.Collections.Generic.KeyValuePair<string,long>
++		[12]	{[PrimitiveObjectTypeA0, 315]}	System.Collections.Generic.KeyValuePair<string,long>
++		[13]	{[SimpleLambda, 313]}	System.Collections.Generic.KeyValuePair<string,long>
++		[14]	{[SmallEnvironment3.GetValueCells, 309]}	System.Collections.Generic.KeyValuePair<string,long>
++		[15]	{[SimpleClosure.Call3, 300]}	System.Collections.Generic.KeyValuePair<string,long>
++		[16]	{[PCondIsEqXXXQ, 248]}	System.Collections.Generic.KeyValuePair<string,long>
++		[17]	{[Sequence2, 238]}	System.Collections.Generic.KeyValuePair<string,long>
++		[18]	{[StaticLet1Q, 238]}	System.Collections.Generic.KeyValuePair<string,long>
++		[19]	{[GENERAL-CAR-CDR, 232]}	System.Collections.Generic.KeyValuePair<string,long>
++		[20]	{[Sequence2AssignmentA0SimpleLambda, 227]}	System.Collections.Generic.KeyValuePair<string,long>
+
+scode histogram
++		[0]	{[Microcode.Conditional, 36645196]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[1]	{[Microcode.PrimitiveCarA0, 30166969]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[2]	{[Microcode.SimpleLet1, 30046192]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[3]	{[Microcode.PrimitiveCdrA, 27009440]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[4]	{[Microcode.Combination1SCdrA0, 25573173]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[5]	{[Microcode.Sequence2, 24536624]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[6]	{[Microcode.PCondIsTypeA0`1[Microcode.Cons], 24004160]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[7]	{[Microcode.PCondIsNullA0Q, 22675218]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[8]	{[Microcode.PCondIsEqA0Q, 20835393]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[9]	{[Microcode.PrimitiveCarA, 19733801]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[10]	{[Microcode.Combination2SCarA0CarA, 18590144]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[11]	{[Microcode.PCondIsEqAQQ, 14234591]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[12]	{[Microcode.PrimitiveCdrS, 14167341]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[13]	{[Microcode.Combination3S, 13785970]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[14]	{[Microcode.PCondIsTypeA`1[Microcode.Cons], 12849359]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[15]	{[Microcode.ConditionalXXQ, 12181837]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[16]	{[Microcode.POrIsEqA0Q, 11237419]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[17]	{[Microcode.PrimitiveCaarA0, 11145502]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[18]	{[Microcode.PCondIsTypeCarA0Q`1[Microcode.Cons], 11042809]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[19]	{[Microcode.Argument0, 10825290]}	System.Collections.Generic.KeyValuePair<System.Type,long>
++		[20]	{[Microcode.PCondIsTypeA0XQ`1[Microcode.Cons], 10445922]}	System.Collections.Generic.KeyValuePair<System.Type,long>

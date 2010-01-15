@@ -17,10 +17,9 @@ namespace Microcode
         public static SCode Make (PrimitiveIsType<SType> predicate, SCode consequent, SCode alternative)
         {
             return
+                (predicate.Operand is PrimitiveCar) ? PCondIsTypeCar<SType>.Make ((PrimitiveIsTypeCar<SType>) predicate, consequent, alternative) :
                 (predicate.Operand is Argument)  ? PCondIsTypeA<SType>.Make (predicate, consequent, alternative) :
                 (predicate.Operand is StaticVariable) ? PCondIsTypeS<SType>.Make (predicate, consequent, alternative) :
-                //(predicate is PrimitiveIsType<SType>) ? PCondIsTypeCar<SType>.Make ((PrimitiveIsType<SType>) predicate, consequent, alternative) :
-                //(predicate.Operand is StaticVariable) ? PCondIsTypeS<SType>.Make (predicate, consequent, alternative) :
                 (consequent is Argument) ? PCondIsTypeXA<SType>.Make (predicate, (Argument) consequent, alternative) :
                 (consequent is Quotation) ? PCondIsTypeXQ<SType>.Make (predicate, (Quotation) consequent, alternative) :
                 (consequent is StaticVariable) ? PCondIsTypeXS<SType>.Make (predicate, (StaticVariable) consequent, alternative):
@@ -724,14 +723,14 @@ namespace Microcode
         protected PCondIsTypeCar (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-            this.operand = predicate.randArg;
+            this.operand = predicate.InnerOperand;
         }
 
         public static new SCode Make (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsTypeCarA<SType>) ? PCondIsTypeCarA<SType>.Make ((PrimitiveIsTypeCarA<SType>) predicate, consequent, alternative) :
-                (predicate is PrimitiveIsTypeCarS<SType>) ? PCondIsTypeCarS<SType>.Make ((PrimitiveIsTypeCarS<SType>) predicate, consequent, alternative) :
+                (predicate.InnerOperand is Argument) ? PCondIsTypeCarA<SType>.Make (predicate, consequent, alternative) :
+                (predicate.InnerOperand is StaticVariable) ? PCondIsTypeCarS<SType>.Make ( predicate, consequent, alternative) :
                 new PCondIsTypeCar<SType> (predicate, consequent, alternative);
         }
 
@@ -759,7 +758,9 @@ namespace Microcode
 
             if (((Cons)ev0).Car is SType) {
 #if DEBUG
+                SCode.location = "-";
                 NoteCalls (this.consequent);
+                SCode.location = "PCondIsTypeCar";
 #endif
                 expression = this.consequent;
                 answer = null;
@@ -767,7 +768,9 @@ namespace Microcode
             }
             else {
 #if DEBUG
+                SCode.location = "-";
                 NoteCalls (this.alternative);
+                SCode.location = "PCondIsTypeCar";
 #endif
                 expression = this.alternative;
                 answer = null;
@@ -780,16 +783,16 @@ namespace Microcode
     class PCondIsTypeCarA<SType> : PCondIsTypeCar<SType>
     {
         public readonly int predicateOffset;
-        protected PCondIsTypeCarA (PrimitiveIsTypeCarA<SType> predicate, SCode consequent, SCode alternative)
+        protected PCondIsTypeCarA (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-            this.predicateOffset = predicate.offset;
+            this.predicateOffset = ((Argument) predicate.InnerOperand).Offset;
         }
 
-        public static new SCode Make (PrimitiveIsTypeCarA<SType> predicate, SCode consequent, SCode alternative)
+        public static new SCode Make (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
         {
             return
-                (predicate is PrimitiveIsTypeCarA0<SType>) ? PCondIsTypeCarA0<SType>.Make ((PrimitiveIsTypeCarA0<SType>) predicate, consequent, alternative) :
+                (predicate.InnerOperand is Argument0) ? PCondIsTypeCarA0<SType>.Make ((PrimitiveIsTypeCar<SType>) predicate, consequent, alternative) :
                  new PCondIsTypeCarA<SType> (predicate, consequent, alternative);
         }
 
@@ -822,12 +825,12 @@ namespace Microcode
     [Serializable]
     class PCondIsTypeCarA0<SType> : PCondIsTypeCarA<SType>
     {
-        protected PCondIsTypeCarA0 (PrimitiveIsTypeCarA0<SType> predicate, SCode consequent, SCode alternative)
+        protected PCondIsTypeCarA0 (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
         }
 
-        public static new SCode Make (PrimitiveIsTypeCarA0<SType> predicate, SCode consequent, SCode alternative)
+        public static new SCode Make (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
         {
             return
                 (consequent is Quotation) ? PCondIsTypeCarA0Q<SType>.Make (predicate, (Quotation) consequent, alternative) :
@@ -865,13 +868,13 @@ namespace Microcode
     {
         public readonly object consequentValue;
 
-        protected PCondIsTypeCarA0Q (PrimitiveIsTypeCarA0<SType> predicate, Quotation consequent, SCode alternative)
+        protected PCondIsTypeCarA0Q (PrimitiveIsTypeCar<SType> predicate, Quotation consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
             this.consequentValue = consequent.Quoted;
         }
 
-        public static new SCode Make (PrimitiveIsTypeCarA0<SType> predicate, Quotation consequent, SCode alternative)
+        public static new SCode Make (PrimitiveIsTypeCar<SType> predicate, Quotation consequent, SCode alternative)
         {
             return
                 new PCondIsTypeCarA0Q<SType> (predicate, consequent, alternative);
@@ -904,14 +907,14 @@ namespace Microcode
     {
         public readonly Symbol predicateName;
         public readonly int predicateOffset;
-        protected PCondIsTypeCarS (PrimitiveIsTypeCarS<SType> predicate, SCode consequent, SCode alternative)
+        protected PCondIsTypeCarS (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
             : base (predicate, consequent, alternative)
         {
-            this.predicateName = predicate.name;
-            this.predicateOffset = predicate.offset;
+            this.predicateName = ((StaticVariable) predicate.InnerOperand).Name;
+            this.predicateOffset = ((StaticVariable) predicate.InnerOperand).Offset;
         }
 
-        public static new SCode Make (PrimitiveIsTypeCarS<SType> predicate, SCode consequent, SCode alternative)
+        public static new SCode Make (PrimitiveIsTypeCar<SType> predicate, SCode consequent, SCode alternative)
         {
             return
                 new PCondIsTypeCarS<SType> (predicate, consequent, alternative);

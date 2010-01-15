@@ -654,7 +654,6 @@ namespace Microcode
         public void SetRand1 (SCode rand1) { this.rand1 = rand1; }
     }
 
-
     [Serializable]
     sealed class PrimitiveCombination2Frame0 : SubproblemContinuation<PrimitiveCombination2>, ISystemVector
     {

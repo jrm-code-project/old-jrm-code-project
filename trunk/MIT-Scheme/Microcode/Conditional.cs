@@ -49,11 +49,29 @@ namespace Microcode
 #endif
         }
 
-        static SCode SpecialMake (Quotation predicate, SCode consequent, SCode alternative)
+        static SCode FoldConditional (Quotation predicate, SCode consequent, SCode alternative)
         {
-            //Debug.Write ("\n; Folding conditional");
+            Debug.Write ("\n; Folding conditional");
             object val = predicate.Quoted;
             return (val is bool && (bool) val == false) ? alternative : consequent;
+        }
+
+        static SCode RewriteConsequentFalse (SCode predicate, bool alternativeValue)
+        {
+            if (alternativeValue) {
+                Debug.Write ("\n Rewrite (if ... #f #t) => (not ...)");
+                return PrimitiveCombination1.Make (Primitive.Not, predicate);
+            }
+            else {
+                Debug.Write ("\n Rewrite (if ... #f #f) => (begin ... #f)");
+                return Sequence2.Make (predicate, Quotation.Make (false));
+            }
+        }
+
+        static SCode RewriteNestedConditional (Conditional predicate, SCode consequent, SCode alternative)
+        {
+            Debug.Write ("Rewrite nested conditional");
+            return Conditional.Make (predicate.predicate, consequent, alternative);
         }
 
         static SCode StandardMake (SCode predicate, SCode consequent, SCode alternative)
@@ -61,12 +79,51 @@ namespace Microcode
             return
                 (! Configuration.EnableConditionalOptimization) ? new Conditional(predicate, consequent, alternative) :
                 (! Configuration.EnableConditionalSpecialization) ? new Conditional (predicate, consequent, alternative) :
+
+                // Rewrite (if x x ...) => (or x ...)
+                (predicate is Variable &&
+                 consequent is Variable &&
+                 ((Variable) predicate).Name == ((Variable) consequent).Name &&
+                 Configuration.EnableCodeRewriting &&
+                 Configuration.EnableDisjunctionConversion) ? RewriteAsDisjunction (predicate, alternative) :
+
+
+                  (predicate is Conditional &&
+                  ((Conditional) predicate).Consequent is Quotation &&
+                  ((Quotation) ((Conditional) predicate).Consequent).Quoted is bool &&
+                  ((bool) ((Quotation) ((Conditional) predicate).Consequent).Quoted == true) &&
+                  ((Conditional) predicate).Alternative is Quotation &&
+                  ((Quotation) ((Conditional) predicate).Alternative).Quoted is bool &&
+                  ((bool) ((Quotation) ((Conditional) predicate).Alternative).Quoted == false) &&
+                  Configuration.EnableCodeRewriting) ? RewriteNestedConditional ((Conditional) predicate, consequent, alternative) :
+
+                  (predicate is Conditional &&
+                  ((Conditional) predicate).Consequent is Quotation &&
+                  ((Quotation) ((Conditional) predicate).Consequent).Quoted is bool &&
+                  ((bool) ((Quotation) ((Conditional) predicate).Consequent).Quoted == false) &&
+                  ((Conditional) predicate).Alternative is Quotation &&
+                  ((Quotation) ((Conditional) predicate).Alternative).Quoted is bool &&
+                  ((bool) ((Quotation) ((Conditional) predicate).Alternative).Quoted == true) &&
+                  Configuration.EnableCodeRewriting) ? RewriteNestedConditional ((Conditional) predicate, alternative, consequent) :
+
+                 // Rewrite (if ... #f #t) => (not ...)
+                 // Rewrite (if ... #f #f) => (begin ... #f)
+                 (consequent is Quotation &&
+                  (((Quotation)consequent).Quoted is bool) &&
+                  ((bool) ((Quotation)consequent).Quoted == false) &&
+                  alternative is Quotation &&
+                  (((Quotation) alternative).Quoted is bool) &&
+                  Configuration.EnableCodeRewriting) ? RewriteConsequentFalse (predicate, (bool)(((Quotation) alternative).Quoted)) :
+
+
                 (Configuration.EnablePrimitiveConditional1 &&
                  predicate is PrimitiveCombination1) ? PCond1.Make ((PrimitiveCombination1) predicate, consequent, alternative) :
                 (Configuration.EnablePrimitiveConditional2 && 
                  predicate is PrimitiveCombination2) ? PCond2.Make ((PrimitiveCombination2) predicate, consequent, alternative) :
                 (predicate is Argument) ? ConditionalA.Make ((Argument) predicate, consequent, alternative) :
-                (predicate is Quotation) ? ConditionalQ.Make ((Quotation) predicate, consequent, alternative) :
+                (predicate is Quotation) ? (Configuration.EnableCodeRewriting ?
+                                            FoldConditional ((Quotation) predicate, consequent, alternative) 
+                                            : ConditionalQ.Make ((Quotation) predicate, consequent, alternative)) :
                 (predicate is StaticVariable) ? ConditionalS.Make ((StaticVariable) predicate, consequent, alternative) :
                 (consequent is Argument) ? ConditionalXA.Make (predicate, (Argument) consequent, alternative) :
                 (consequent is Quotation) ? ConditionalXQ.Make (predicate, (Quotation) consequent, alternative) :
@@ -208,7 +265,7 @@ namespace Microcode
 
         public static SCode RewriteAsDisjunction (SCode predicate, SCode alternative)
         {
-            // Debug.Write ("\n; Rewrite conditonal as disjunction.");
+            Debug.Write ("\n; Rewrite conditonal as disjunction.");
             return Disjunction.Make (predicate, alternative);
         }
 
@@ -1470,6 +1527,7 @@ namespace Microcode
         public static SCode Make (Quotation predicate, SCode consequent, SCode alternative)
         {
 #if DEBUG
+            Debugger.Break();
             Debug.WriteLine ("Folding constant conditional.");
 #endif
             object pred = predicate.Quoted;
@@ -1507,8 +1565,10 @@ namespace Microcode
             return 
                 (consequent is Argument) ? ConditionalSA.Make (predicate, (Argument) consequent, alternative) :
                 (consequent is Quotation) ? ConditionalSQ.Make (predicate, (Quotation) consequent, alternative) :
+                (consequent is StaticVariable) ? Unimplemented () :
                 (alternative is Argument) ? ConditionalSXA.Make (predicate, consequent, (Argument) alternative) :
                 (alternative is Quotation) ? ConditionalSXQ.Make (predicate, consequent, (Quotation) alternative) :
+                (alternative is StaticVariable) ? Unimplemented() :
                 new ConditionalS (predicate, consequent, alternative);
         }
 
@@ -2694,7 +2754,7 @@ namespace Microcode
         public static SCode Make (SCode predicate, StaticVariable consequent, StaticVariable alternative)
         {
             return
-                (Configuration.EnableCodeRewriting) ? Sequence2XS.Make (predicate, consequent) :
+                //(Configuration.EnableCodeRewriting) ? Sequence2XS.Make (predicate, consequent) :
                 new ConditionalXSS (predicate, consequent, alternative);
         }
 

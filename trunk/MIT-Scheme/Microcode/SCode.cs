@@ -123,7 +123,7 @@ namespace Microcode
 //            SCode.location = oldLocation;
         }
 
-        static long warm_break = 10000000;
+        static long warm_break = 100000000;
 
         public static String location1;
         public static String location2;
