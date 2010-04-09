@@ -100,7 +100,9 @@
       (let ((info (deserialize durable-store address)))
 	(if (not (pair? info))
 	    (error "Bad info for persistent-tree.")
-	    (let ((weight (first info)))
+	    (let ((weight (first info))
+		  (object-id (second info))
+		  (object-address (third info)))
 	      (if (= weight 1);; leaf node
 		  (make-persistent-tree 0
 					0
@@ -108,17 +110,18 @@
 					address
 					'()
 					'()
-					(cdr info))
+					(%make-object-map-entry object-id object-address))
 		  (let* ((left-child-address (second info))
 			 (right-child-address (third info))
-			 (object-map-entry (cdddr info)))
+			 (object-id (fourth info))
+			 (object-address (fifth info)))
 		    (make-persistent-tree left-child-address
 					   right-child-address
 					   weight
 					   address
 					   (recover-persistent-tree durable-store left-child-address)
 					   (recover-persistent-tree durable-store right-child-address)
-					   object-map-entry))))))))
+					   (%make-object-map-entry object-id object-address)))))))))
 
 (define (persistent-tree/t-join durable-store left-child right-child entry)
   (let ((l.n (persistent-tree/weight left-child))
@@ -141,7 +144,10 @@
 	 ;; Serialize the weight of this node and the
 	 ;; persistent information from the object-map-entry.
 	 ;; (the object-id and the address).
-	 (address (serialize durable-store (cons weight entry))))
+	 (address (serialize durable-store 
+			     (list weight
+				   (object-map-entry/object-id entry)
+				   (object-map-entry/object-address entry)))))
     (make-persistent-tree 0 0 weight address '() '() entry)))
 
 (define (persistent-tree/n-join durable-store left-child right-child entry)
@@ -158,7 +164,9 @@
 	     ;; from the object-map-entry (the object-id and the address).
 	     (address (serialize 
 		       durable-store
-		       (cons* weight left-child-address right-child-address entry))))
+		       (list weight left-child-address right-child-address
+			     (object-map-entry/object-id entry)
+			     (object-map-entry/object-address entry)))))
 	(make-persistent-tree left-child-address
 			      right-child-address
 			      weight
