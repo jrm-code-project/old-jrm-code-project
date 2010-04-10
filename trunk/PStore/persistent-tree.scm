@@ -4,7 +4,6 @@
 
 ;;; Feel free to copy or adapt this code as you wish.
 
-
 ;;;; A persistent weight-balanced tree abstraction.
 
 (define-structure (persistent-tree
@@ -94,34 +93,46 @@
 (define (recover-persistent-tree durable-store address)
   (if (zero? address)
       '()
-      ;; Deserialize the components of the tree that are persistent.
-      ;; The other slots in the structure are computed.  See how
-      ;; persistent-tree/singleton and persistent-tree/n-join do it.
       (let ((info (deserialize durable-store address)))
-	(if (not (pair? info))
-	    (error "Bad info for persistent-tree.")
-	    (let ((weight (first info))
-		  (object-id (second info))
-		  (object-address (third info)))
-	      (if (= weight 1);; leaf node
-		  (make-persistent-tree 0
-					0
-					weight
-					address
-					'()
-					'()
-					(%make-object-map-entry object-id object-address))
-		  (let* ((left-child-address (second info))
-			 (right-child-address (third info))
-			 (object-id (fourth info))
-			 (object-address (fifth info)))
-		    (make-persistent-tree left-child-address
-					   right-child-address
-					   weight
-					   address
-					   (recover-persistent-tree durable-store left-child-address)
-					   (recover-persistent-tree durable-store right-child-address)
-					   (%make-object-map-entry object-id object-address)))))))))
+	(cond ((not (pair? info)) (error "Bad info."))
+	      ((eq? (car info) 'leaf)
+	       (make-persistent-tree 0
+				     0
+				     1
+				     address
+				     '()
+				     '()
+				     (%make-object-map-entry (second info)
+							     (third info))))
+	      ((eq? (car info) 'branch)
+	       (let* ((weight (second info))
+		      (left-child-address (third info))
+		      (right-child-address (fourth info))
+		      (object-id (fifth info))
+		      (object-address (sixth info)))
+		 (make-persistent-tree left-child-address
+				       right-child-address
+				       weight
+				       address
+				       (recover-persistent-tree durable-store left-child-address)
+				       (recover-persistent-tree durable-store right-child-address)
+				       (%make-object-map-entry object-id object-address))))
+	      (else "Bad info." info)))))
+
+(define (deserialize-ptree-leaf a object-id c address)
+  (if (and (eq? a :object-id)
+	   (eq? c :address))
+      (list 'leaf object-id address)
+      (error "Bad format for ptree leaf.")))
+
+(define (deserialize-ptree-branch k0 weight k1 left-child k2 right-child k3 object-id k4 address)
+  (if (and (eq? k0 :weight)
+	   (eq? k1 :left-child)
+	   (eq? k2 :right-child)
+	   (eq? k3 :object-id)
+	   (eq? k4 :address))
+      (list 'branch weight left-child right-child object-id address)
+      (error "Bad format for ptree branch.")))
 
 (define (persistent-tree/t-join durable-store left-child right-child entry)
   (let ((l.n (persistent-tree/weight left-child))
@@ -141,13 +152,17 @@
 ;;; These next two routines write records in the durable store.
 (define (persistent-tree/singleton durable-store entry)
   (let* ((weight 1)
-	 ;; Serialize the weight of this node and the
-	 ;; persistent information from the object-map-entry.
-	 ;; (the object-id and the address).
-	 (address (serialize durable-store 
-			     (list weight
-				   (object-map-entry/object-id entry)
-				   (object-map-entry/object-address entry)))))
+	 ;; Serialize the persistent information from the
+	 ;; object-map-entry.  (the object-id and the address).
+	 (address 
+	  (call-with-primitive-serialization 
+	   durable-store
+	   (lambda (port)
+	     (write 
+	      (list (list '<ptree-leaf> 1)
+		    :object-id (object-map-entry/object-id entry)
+		    :address (object-map-entry/address entry))
+	      port)))))
     (make-persistent-tree 0 0 weight address '() '() entry)))
 
 (define (persistent-tree/n-join durable-store left-child right-child entry)
@@ -162,11 +177,18 @@
 	     ;; Serialize the weight of this node, the addresses of the
 	     ;; left and right child, and the persistent information 
 	     ;; from the object-map-entry (the object-id and the address).
-	     (address (serialize 
-		       durable-store
-		       (list weight left-child-address right-child-address
-			     (object-map-entry/object-id entry)
-			     (object-map-entry/object-address entry)))))
+	     (address 
+	      (call-with-primitive-serialization
+	       durable-store
+	       (lambda (oport)
+		 (write 
+		  (list (list '<ptree-branch> 1)
+			:weight weight
+			:left-child left-child-address
+			:right-child right-child-address
+			:object-id (object-map-entry/object-id entry)
+			:address (object-map-entry/address entry))
+		  oport)))))
 	(make-persistent-tree left-child-address
 			      right-child-address
 			      weight

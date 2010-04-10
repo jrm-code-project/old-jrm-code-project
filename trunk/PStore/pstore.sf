@@ -1,0 +1,5 @@
+(load-option 'SOS)
+(fluid-let ((sf/default-syntax-table user-initial-environment))
+  (sf-directory "."))
+(load-option 'CREF)
+(cref/generate-constructors "pstore" 'all)

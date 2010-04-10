@@ -1,0 +1,15 @@
+
+(global-definitions "c:\\GitRepository\\mit-scheme\\src\\runtime\\runtime")
+
+(define-package (persistent-store)
+  (files "durable-store"
+         "object-map"	
+         "persistent-tree"
+	 "serialize"
+	 "test"
+	)
+  (parent ())
+  (export ()
+    test-create
+    test-restore))
+
