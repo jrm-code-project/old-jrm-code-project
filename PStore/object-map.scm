@@ -52,7 +52,7 @@
 
 ;;; Returns the durable address at which the object-map was serialized.
 (define (object-map/address object-map)
-  (persistent-tree/tree-address (object-map/root object-map)))
+  (persistent-tree/%address (object-map/root object-map)))
 
 
 ;;; OBJECT-MAP/CREATE durable-store
