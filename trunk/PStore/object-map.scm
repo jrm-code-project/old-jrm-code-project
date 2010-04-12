@@ -10,13 +10,13 @@
 		   (type list)
 		   (conc-name object-map-entry/)
 		   (constructor %make-object-map-entry
-				(object-id address)))
+				(object-id address cached-value)))
   (object-id #f read-only #t)
   (address #f read-only #t)
 
-  ;; *** A slot holding a cached value will greatly improve
+  ;; *** A slot holding the cached value greatly improves
   ;;     performance!
-
+  (cached-value #f read-only #t)
   )
 
 (define-structure (object-map
@@ -40,12 +40,12 @@
 
 (define (object-map/add object-map object-id value)
   (let* ((store (object-map/durable-store object-map))
-	 (object-address (serialize store value)))
+	 (object-address (serialize-object store object-id value)))
     (make-object-map
      store
      (persistent-tree/add store 
 			  (object-map/root object-map)
-			  (%make-object-map-entry object-id object-address)))))
+			  (%make-object-map-entry object-id object-address value)))))
 
 ;;; object-map/address object-map
 ;;;  => a durable address
@@ -81,9 +81,8 @@
   (let ((entry (persistent-tree/find-entry (object-map/root object-map) object-id)))
     (if entry
 	;; *** Rather than deserialize the same object over and over,
-	;;     deserialize it once and cache the value.
-	(deserialize (object-map/durable-store object-map)
-		     (object-map-entry/address entry))
+	;;     we deserialize it once upon restoring and cache the value.
+	(object-map-entry/cached-value entry)
 	(error "Object not found in map." object-id))))
 
 
