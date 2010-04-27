@@ -2,7 +2,8 @@
 (global-definitions "c:\\GitRepository\\mit-scheme\\src\\runtime\\runtime")
 
 (define-package (persistent-store)
-  (files "durable-store"
+  (files "commit"
+ 	 "durable-store"
          "object-map"	
          "persistent-tree"
 	 "serialize"
