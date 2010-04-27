@@ -6,34 +6,25 @@
 (define-generic serialize-object (durable-store object-id object))
 
 (define-method serialize-object (durable-store object-id (object <number>))
-  (primitive-serialize-object durable-store object-id object))
+  (standard-serialize-object durable-store object-id object))
 
 (define-method serialize-object (durable-store object-id (object <string>))
-  (primitive-serialize-object durable-store object-id object))
+  (standard-serialize-object durable-store object-id object))
 
 (define-method serialize-object (durable-store object-id (object <symbol>))
-  (primitive-serialize-object durable-store object-id object))
+  (standard-serialize-object durable-store object-id object))
 
-(define (primitive-serialize-object durable-store object-id object)
-  (call-with-primitive-serialization 
+(define (standard-serialize-object durable-store object-id object)
+  (write-object-record!
    durable-store
-   (lambda (address oport)
-     (declare (ignore address))
-     (write (make-object-record
-	     object-id
-	     (class-name (object-class object))
-	     1
-	     object) oport))))
-
-(define (make-object-record object-id class version object)
-  (list 'object object-id class version object))
-
-(define (call-with-primitive-serialization durable-store receiver)
-  (let* ((oport (durable-store/output-port durable-store))
-	 (address (port-position oport)))
-    (receiver address oport)
-    (newline oport)
-    address))
+   (lambda (port)
+     (write object-id port)
+     (write-char #\space port)
+     (write (class-name (object-class object)) port)
+     (write-char #\space port)			
+     (write 1 port)
+     (write-char #\space port)
+     (write object port))))
 
 ;;; Deserialize
 
@@ -45,17 +36,18 @@
     (let ((record (read iport)))
       (if (pair? record)
 	  (case (car record)
-	    ((object) (deserialize-object-record record))
+	    ((commit) (deserialize-commit address record))
+	    ((branch) (deserialize-ptree-branch address record))
 	    ((leaf) (deserialize-ptree-leaf address record))
-	    ((branch-a) (deserialize-ptree-branch-a address record))
-	    ((branch-b) (deserialize-ptree-branch-b address record))
+	    ((object) (deserialize-object-record record))
 	    (else (error "Unrecognized record" (car record))))
 	  (error "Bad record format, not a list." record)))))
 
 (define (deserialize-object-record record)
-  (let ((object-id (second record))
-	(object-type (third record))
-	(version (fourth record)))
+  (let ((record-version (second record))
+	(object-id (third record))
+	(object-type (fourth record))
+	(version (fifth record)))
     (let ((vector (hash-table/get *deserialiation-registry* 
 				  object-type
 				  #f)))
@@ -63,7 +55,7 @@
 	  (error "No deserializers for" object-type)
 	  (apply (vector-ref vector version)
 		 object-id
-		 (cdddr record))))))
+		 (cddddr record))))))
 
 ;	  (let ((deserializer-spec (car record)))
 ;	    (if (pair? deserializer-spec)

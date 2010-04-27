@@ -126,18 +126,6 @@
 					   (%make-object-map-entry object-id object-address object))))))
 	      (else "Bad info." info)))))
 
-(define (deserialize-ptree-branch-a base-address record)
-  (list 'branch
-	(- base-address (second record))
-	(- base-address (third record))
-	(- base-address (fourth record))))
-
-(define (deserialize-ptree-branch-b base-address record)
-  (list 'branch 
-	(- base-address (third record))
-	(- base-address (second record))
-	(- base-address (fourth record))))
-
 (define (persistent-tree/t-join durable-store left-child right-child entry)
   (let ((l.n (persistent-tree/weight left-child))
         (r.n (persistent-tree/weight right-child)))
@@ -153,7 +141,6 @@
 	  (else
 	   (persistent-tree/make-branch durable-store left-child right-child entry)))))
 
-;;; These next two routines write records in the durable store.
 (define (persistent-tree/make-leaf durable-store entry)
   (let* ((weight 1)
 	 ;; Serialize the persistent information from the
@@ -162,17 +149,14 @@
     (make-persistent-tree 0 0 weight address '() '() entry)))
 
 (define (primitive-serialize-leaf durable-store entry-address)
-  (call-with-primitive-serialization 
+  (write-leaf-record! 
    durable-store
-   (lambda (record-address oport)
+   (lambda (oport)
      ;; store the delta because it is likely to be a small number.
-     (write (make-leaf-record (- record-address entry-address)) oport))))
-
-(define (make-leaf-record delta-to-address)
-  (list 'leaf delta-to-address))
+     (write entry-address oport))))
 
 (define (deserialize-ptree-leaf base-adress record)
-  (list 'leaf (- base-adress (second record))))
+  (list 'leaf (third record)))
 
 (define (persistent-tree/make-branch durable-store left-child right-child entry)
   (if (and (null? left-child)
@@ -203,25 +187,20 @@
 				    left-child-address
 				    right-child-address
 				    entry-address)
-  (call-with-primitive-serialization
+  (write-branch-record!
    durable-store
-   (lambda (record-address oport)
-     (let ((left-delta  (- record-address left-child-address))
-	   (right-delta (- record-address right-child-address))
-	   (entry-delta (- record-address entry-address)))
-       ;; Two kinds of branch records because one branch is almost
-       ;; always near by.  By placing it first, we can compress more.
-       (write
-	(if (< left-delta right-delta)
-	    (make-branch-record left-delta right-delta entry-delta)
-	    (make-reverse-branch-record right-delta left-delta entry-delta))
-	oport)))))
+   (lambda (output-port)
+     (write left-child-address output-port)
+     (write-char #\space output-port)
+     (write right-child-address output-port)
+     (write-char #\space output-port)
+     (write entry-address output-port))))
 
-(define (make-branch-record left-delta right-delta entry-delta)
-  (list 'branch-a left-delta right-delta entry-delta))
-
-(define (make-reverse-branch-record right-delta left-delta entry-delta)
-  (list 'branch-b right-delta left-delta entry-delta)) 
+(define (deserialize-ptree-branch base-address record)
+  (list 'branch
+	(third record)
+	(fourth record)
+	(fifth record)))
 
 (define (persistent-tree/l-join durable-store left-child right-child entry)
   (if (< (persistent-tree/weight (persistent-tree/left-child right-child))
