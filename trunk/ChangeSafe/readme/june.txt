@@ -1,0 +1,1035 @@
+HP Deliverables for June.
+
+				      HIGH PRIORITY
+				      =============
+
+-------------------------------------------	-------	-------
+CLI COMMAND					WHO	STATUS
+-------------------------------------------	-------	------
+
+ADMIN_ALIAS_CREATE				Arol	Done
+
+    (1) Initially only for parameter tags.  There are open issues on
+        this capability, but regardless of how we implement the
+        interface for users, the capability should work with roughly
+        the same code. 
+
+ADMIN_DATABASE_CREATE				Bill	TBD
+
+    (1) Make FULLY spec compliant except for -DESCRIPTION (listed
+        under low priority tasks).  I.e. directory must exist to
+        create database, no check for clean directory is made, and and
+        no checks of any form are made if the database is remote.
+
+ADMIN_DATABASE_ERROR_LOG
+						Arol	Done V0.251
+    (1) Not going to implement as per spec, but need something for
+        deployment which we'll use for support purposes, and logs all
+        warnings/errors to a file, or to console if file I/O should
+        fail.  Needs some discussion about what we want to
+        implement.  Fix other things while I'm on vacation, I want to
+        talk about this before implementing this.  I'm not necessarily
+        planning on being the implementer though.
+	            
+        [-logto -showparam and -stoplog are all that is implemented]
+
+ADMIN_DATABASE_PERFORMANCE_LOG
+						Dave	Done V0.258
+    (1) Not going to implement as per spec, but need something for
+        deployment which we'll use for support purposes, sending
+        performance data to a file that we can use to analyze customer
+        performance complaints.  Needs some discussion about what we
+        want to implement.  Fix other things while I'm on vacation, I
+        want to talk about this before implementing this.  I'm not
+        necessarily planning on being the implementer though.
+
+        [-logto -showparam and -stoplog are all that is implemented]
+
+CO						PWW	Fixed V0.253
+
+    (1) Bug RS03: co->rename->co of file doesn't refresh file as per spec
+
+        Bug text follows: 
+	According to the spec, if I co a file, then rename that file,
+	I should be able to co it again as a method to refresh the
+	contents.
+
+	What I observe is a warning message printed out, but no
+	file re-write.
+
+	In pseudo code:
+	  cd /home/me/ws		# this is root of a workspace
+	  cset_create my_hack
+	  cd C1/src			# now down in a subsys dir
+	  co foo			# this works
+	  mv foo foo.out-of-the-way	# do the rename
+	  co foo
+
+	     You've already checked out
+	     #p"/home/me/ws/C1/src/foo".
+	     File checkout completed with warnings.
+
+CSET_{ADD,REMOVE,FROM_FILE}			Arol	Done (non-issue)
+
+    (1) If csets don't change any subsystems in current product view
+        add the csets anyway to the VPB and during master_change.
+        Don't signal an error, just a warning (i.e. csets don't affect
+        any product subsystems).  This is a bug reported by HP, I
+        haven't thought about higher order ramifications of fixing it,
+        but it seems like it ought to be ok.
+
+        We can't reproduce this, and it seems likely that other fixes
+        fixed this one as well.
+
+						Bill	Queued
+    (2) Bug LE00
+
+        Report: cset_add doesn't work with -class argument
+	Verify that bug still exists and fix if necessary, add a test too,
+	it appears we don't have tests for the -class aspect.  Test-14a does some testing
+	of cset_add.
+
+CSET_ADD/REMOVE
+						PWW	Done V.261
+    (1) Remove a cset which is in the add list of the VPB, and we correctly process the
+	removal bimodally for the cset add list (i.e. remove it from adds, but not add it
+        to removes), but we mistakenly update the workspace as if we hadn't processed it
+	bimodally, by say (in this example) removing the cset from the files in the ws,
+	even though it's active in the baseline and absent instruction from the VPB.
+	[We believe this can occur, still under investigation, Mark is in the middle of it]
+
+CSET_CREATE
+						PWW	Done V.244
+    (1) Files checked out via cset_create do something to the workspace
+        that is incompatible with ws_query (i.e. ws_query will break after
+	a cset_create that checks out files).
+
+						PWW	Done V.248
+    (2) Bug RS09
+
+	When creating a cset and giving a list of files to check out
+	such that at least one of the files isn't a file currently
+	under control in this context, then the specification says
+	the cset should be created.  It is not.
+	Signal a warning, not an error. 
+
+CSET_CLOSE					Harriet	Done
+
+    (1) Was known not to work correctly unless executed from workspace
+        root directory.  Still a problem, reported by HP when doing a
+        cset_close from a subsys directory.  Ensure that test is added
+        to regressions too.  (Needs to be verified, fixed if
+        necessary, verification for a newbie for learning) 
+
+        Harriet has verified that this now works.
+
+						PWW	Done v.245
+
+    (2) allow setting of time/userid via secret parms which are
+        secretly server config'ed.  See also master_change.
+
+        It turns out we will not allow setting of the time.  We
+        allow setting of the userid xor the fully-qualified cset
+        name.  See ts50\documents\secret-args.txt for details.
+
+CSET_UNCREATE					George	Done
+
+    (1) Only works if there is no change in the workspace (needs to be
+        verified, fixed if necessary)
+        
+        This has been verified to work correctly now.
+
+
+MASTER_LOCK/MASTER_CHANGE			Arol	Done
+
+    (1) These commands should fail if you would lock an affected
+        subsystem for which you don't have write permissions.  SEE
+        ALSO the task somewhere in here on general subsystem write
+        permission handling, this is just one case of it.
+
+        
+MASTER_CHANGE
+						PWW	Done V.245
+    (1) allow setting of time/userid via secret parms which are
+        secretly server config'ed.  See also cset_close and
+        miscellaneous work.  May not be supported, may restrict
+	this to cset_close.  Issue pending with HP
+
+        It turns out we will not allow setting of the time.  We
+        allow setting of the userid xor the fully-qualified cset
+        name.  See ts50\documents\secret-args.txt for details.
+
+						Bill	Done V0.246
+    (2) Add a "-update" switch which governs the automatic ws_update
+        (and implement the automatic update).  'no update' behavior is
+        the default, and we signal an error that the workspace isn't
+        up to date if -update wasn't specified and one is required.
+
+						Bill	Done V0.246
+    (3) If update (as part of master_change) alters any subsystem that
+        the user altered in master_change, abort master_change after
+        update.
+
+						TBD	TBD
+    (4) Bug recently discovered internally by Mark
+
+	In workspace 1, create a cset, make changes and do cset_close
+	In workspace 2, cset_add that cset and do other work.
+	In workspace 1, after doing other work, master_change.
+	In workspace 2, master_change ==> failure
+        
+        The error generated is this:
+
+	C:\Content-Integrity\workspaces\home1\ts50>csf master_change -abstract ..\abstract.txt 
+
+	Renaming 0 files.
+	Changing 3 files....
+	Attempt to add change-sets which are already present (one or more of
+	(#<master-satellite-1.CHANGE-SET.82 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.92 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.93 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.94 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.98 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.101 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.102 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.116 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.111 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.124 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.125 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.126 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.127 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.129 most recently named NIL>
+	 #<master-satellite-1.CHANGE-SET.134 most recently named NIL>))
+	An error occurred while attempting master change:
+	Attempt to add change-sets which are already present (one or more of
+	(#<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b11999>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b138f1>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b15759>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b175c1>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b19429>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b1b291>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b1d509>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b1f371>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b211d9>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b23041>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b24ea9>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b26d11>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b29389>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b2b1f1>>>
+	 #<#<Printer Error, obj=#x1000084e: #<ALLEGROSTORE:ALLEGROSTORE-ERROR @ #x12b2d059>>>))
+
+MASTER_UNLOCK_FORCE
+    Bug RS12					Bill	Done V0.247
+
+    [JDT: Ade signed off on this in the May-31 deliverables, apparently he was confused.
+     The tests look somewhat WRONG in use of mixes of products, classes, and subsystems
+     in unlock_force commands.]
+
+    master_unlock -force doesn't handle -product or -class arguments 
+
+        [HP:]
+	I set up two workspaces on the same product, and
+	create work in one of them, and do a master_lock.
+
+	I then go to the other workspace and do a
+		master_unlock_force -product myprod -class C1
+
+	and get a message saying 'no -subsystem specified'.
+
+	The spec lists "-subsystem | -product -class"
+
+PORT						naha	Done v0.262
+
+    (1) -Class support needs to be implemented (reported by HP,
+        confirmed by Mark)
+        
+						naha	Done v0.262
+    (2) -DATE-TIME support needs to be implemented (reported by HP,
+        confirmed by Mark)
+
+						naha	TBD
+    (3) need some port capabilities under regression tests
+
+						naha	done enough
+    (4) Need to complain if workspace is not up to date with respect
+        to baseline and prohibit GUI port.
+
+        Done v0.262: port -act will issue a warning if the workspace
+        is not up to date.
+        
+
+PRODUCT_CREATE
+						Arol	Done
+    (1) -base-product with -date-time implies (requires) -copy-all.
+        Doesn't appear to be enforced, and also comment in
+        cmctl-product-create about branches needing to be implemented
+        should be amended.  Jack has been notified and will update
+        spec with regard to requiring -copy-all.
+
+						PWW	V.240
+    (2) If an implicit subsystem name generated as a result of product_create would
+        conflict with an existing subsystem, automatically generate a name that doesn't
+        conflict, perhaps by appending a number to the generated name.
+	We do this because there's no good way for the user to name new subsystems which
+	are created by this command.
+        (SEE ALSO: subsys_create, which has different semantics.)
+
+PRODUCT_REACTIVATE				Bill	Done
+
+    (1) Currently incorrectly named as product_activate, command needs
+        to be renamed for spec compliance.
+
+RELEASE_FREEZE 					Arol	Done
+
+    (1) subsystems potentially need a 'frozen' bit to safely implement
+        the command in the event that some clueless user somehow
+        shares the subsystem.  Even walls aren't adequate, though they
+        would mostly work if we raised the wall on a subsystem in a
+        branch which is frozen.  Low priority, but it is a hole in the
+        safeguards of a frozen release.  Means all commands which
+        would potentially attempt to modify a subsystem would need to
+        check the frozen bit (namely master_change...)  So we have
+        frozen, locked, walled, all independent.
+
+    [2000-06-27 naha: Arn't other products allowed to modify the
+    subsystem?  If a given product that uses the subsystem wants to
+    cap it, shouldn't it be remembering where it capped it at?]
+
+    JDT: Here are the rules for freezing subsystems: 
+
+	a) release_freeze requires write permissions to every subsystem in the release
+	because it must freeze each subsystem. 
+        AA: EXCEPT if the subsystem is already frozen.
+
+	b) release_freeze will fail if any product other than that of the release has
+	write permission to the subsystem 
+
+	c) upon release_freeze completion, write permissions cannot be re-enabled for the 
+	subsystem under any circumstances
+
+	d) release_freeze removes write permissions from all subsystems as part of freezing 
+	them.
+
+	e) Net effect, even if frozen subsystems are shared, they can never again be altered.
+
+
+SUBSYS_CREATE
+						PWW	Done V.240
+    (1) If an implicit subsystem name for the command would conflict with another
+        subsystem already in existence, generate an error. (See also PRODUCT_CREATE, which
+        has similar issues and different behavior).
+
+        The test for this turned out already to be in the code.  However, in the
+        process of testing it (I modified test-5a), I discovered an assertion
+        that needed to be an error.  This was fixed.
+
+						PWW	Done V.240
+    (2) Verify that we're correctly handling case subsys to be created
+	encounters another subsys of same class on product (see spec
+	for details).
+
+        This means, according to Dave ("for subsys_create, if the name (implicitly
+        generated or explicitly specified) already exists for another subsystem, 
+        subsys_create signals an error.").  The code already does this so we are
+        ok
+
+						Arol	In-Progress
+    (3) -DATE-TIME needs testing.  Looks to be implemented, but at the very least
+        the call to (cmctl-version-spec-not-implemented cm-session-context :release-done t)
+	suggests it isn't tested AT ALL.  This form should be removed.
+
+
+UNCO
+						PWW	Done v.238 
+    (1) UNCO doesn't work, doesn't actually uncheckout the representation in the
+						repository.
+
+        We think this is done but can't really test it until we get the code into the
+        dogfood server.
+
+WS_CREATE					Bill	Done
+
+    (1) Use a -product-directory argument (switch) which signals that
+        this workspace is a product directory and not a workspace for
+        checking out files.  Ensure that that co/unco, file_*, and
+        cset_{add,remove} are not permitted in these types of
+        workspaces.
+
+						TBD	TBD
+    (2) PERFOMANCE:
+
+        Jack reports that a workspce with 66MB in 2500 files across 112 subsystems is
+        taking 29 minutes to create a workspace.  This is a serious problem.  We may not
+        be able to hold up the release for this, but we MUST fix it.
+
+WS_DELETE					PWW	Done v.237
+
+    (1) We need to use dirspecs, read the .csf under the indicated
+        dirspec, and delete the specified workspace associated with
+        that .csf and associated dirspec.  Right now we have some
+        bugs here, like one where Jack requested a ws_delete of one
+        workspace from within another, and we deleted files from the
+        wrong workspace and deleted the semipersistent workspace
+        object for the correct workspace.  Oops!
+        
+    SEE ALSO: WS_MOVE, which has a similar problem in resolving
+    correct disk & repository workspace representations.
+
+
+        The `right' way of doing this is to prohibit the use of the
+        -ws command line flag if we are `in' a workspace.
+
+        WS_DELETE now has two workspace repository transactions 
+        because it needs to resolve info about the workspace before
+        it can delete it.
+
+						Dave	Done/pass/misunderstood
+
+    (2) BUG: If the workspace being deleted has an open change which
+        adds a file and then renames it, the renaming of the file
+        isn't undone when the workspace is removed.
+
+    **** Is this a bug?!
+
+WS_MOVE						PWW	Done v.237
+
+    (1) Should read .csf in ws to be moved and use that in
+        resolution of file targets and update of correctly selected
+        workspace object in the repository.
+
+        The `right' way of doing this is to prohibit the use of the
+        -ws command line flag if we are `in' a workspace.
+
+	See also: WS_DELETE which has similar problems.
+
+WS_QUERY					naha	Done
+
+    (1) Show effects of cset_add/remove
+                                                naha    Done v0.262
+    (1a) Show effects of port on workspace.
+        
+						naha	Done
+    (2) Current form isn't spec compliant (parameter tags not
+        correctly named as per 4.1 spec)
+						PWW	Done v.244
+    (2) -show-work is broken
+        [JDT: broken because cset_create has duplicate and incorrect code for checkout out
+	files.  "co" does it correctly, ws_query broken only if cset_create checks out files]
+
+        e:\ws1\ts50>csf ws_query -show-work
+	the value of CORE::DID is NIL, which is not of type DISTRIBUTED-IDENTIFIER.
+	An error occurred while attempting ws_query:
+	the value of CORE::DID is NIL, which is not of type DISTRIBUTED-IDENTIFIER.
+
+    [2000-07-05 naha: this is because the workspace's persistent
+    change context is broken in that it has a CC-FILE-??? thing that
+    is missing a file or subsystem DID.  It's believed that this can
+    happen when chcking out a file from the csset_create command line,
+    which pww is currently looking in to.]
+
+
+WS_SET						PWW	Done V.250
+    (1) BUG: in subsystem/directory mapped to pcl/src:
+	[JDT: what was I thinking?  This doesn't even have a ws_set...]
+	a) mkdir old, 
+        b) touch old/foo.txt
+        c) add-file old/foo.txt (implies cset)
+        d) master-change, 
+        e) touch old/bar.txt (wild file) 
+        f) cset-create,
+	g) remove-file old/foo.txt (BREAKS)
+
+    (2000-07-09) PWW - I was unable to reproduce the problem above
+    using the steps shown.  Of course the steps shown do not even 
+    include ws_set so I am not sure that I did it correctly.  This
+    has been embodied in conman\test-45a.
+
+    [JDT: why this is classified as ws_set, and where it came from, are both a mystery,
+    however the sequence of commands doesn't seem to cause problems now]
+
+						Bill	Done
+    (2) Product name is supposed to be an optional parameter.
+
+WS_UPDATE					Jrm	Done
+
+    (1) Not picking up product correctly from implicit workspace
+        context?  Get details from Jack Cassidy.
+
+    New update code fixes this.
+
+
+-------------------------------------------	-------	-------
+MISCELLANEOUS					WHO	STATUS
+-------------------------------------------	-------	-------
+
+.CSF-PREFS       				TBD	Deferred
+
+    (1) Default .csf-prefs to not touch date stamps on files, since
+        cset reconfigurations that rewrite files should have latest
+        timestamp rather than last cset timestamp, in
+	order to work with makefiles.
+
+        (Hopefully there's no performance impact because we do NOT
+         have implicit checkout model for changesafe which requires
+         timestamp analysis to minimize diffs.)
+
+   ***** It has been verified that this works correctly, but the
+        `default' version has not been updated.
+
+
+CONCURRENT R/W TRANSACTIONS
+						TBD	TBD
+    (1) Test our production server with two r/w processes and half people using each r/w
+        server. (Just need a second process with different port number).  Could argue for
+        testing with NON-production server first!
+
+						Dave	Deferred
+    (2) Implement and test high level persistent mutex and concurrent
+        server testing. There is a *finish* item in
+        cmctl-master-change, but just about all cmctl entries will
+        need this logic. 
+
+    JDT: Synopsis of issues follows.
+
+    As is, we actually do have lock controls on pages.  However if deadlock occurs
+    and a process is selected for rollback, our code will be not at all graceful in its
+    handling of the situation.
+
+    Examples of how we fail ungracefully include:
+
+    a) server just throws no matter what it's doing, we restart transaction, we haven't
+    tested it, and all sorts of ugly things may result in general on the server side.  But
+    I believe the server will correctly continue to operate.
+
+    b) if we interrupt the FSA operation, right now there is no resynchronization support
+    in the file-system code.  That means that the client will abort, and chances are we
+    can't retry the transaction because the client has probably stopped.  We can fix this,
+    but we need exception handling around socket-file-system primitives (potentially), and
+    we need a handler on the client which is prepared to restart cli/response protocol or
+    fsa protocol.
+    
+    c) If we are actually able to restart the transaction, the user will see actions
+    repeated twice.  So files may be published twice, for instance, along with all the
+    I/O, informational messages, etc.. that go with it.
+
+    d) if merge fails, the user is going to suffer a fair amount of mental anguish.
+
+    I considered a proactive (persistent) locking approach, where we ensure we have high
+    level mutexes sufficient to sustain a given operation before we start an operation in
+    earnest.  This would avoid the repeating of operations from deadlock, and (this type
+    of) interruption of the file-system.  But I couldn't figure out a clean way to do it.
+    If I use a lock database and separate transactions, then I risk having stale locks and
+    have to add lots of cleanup code and commands.  If I use the same transaction is
+    cleanest, but I haven't quite figured out yet the best way to do this with
+    allegrostore.
+
+    Note that much of the downside pain would be avoided (publishing, merging, deadlocks,
+    etc) if we could swap the file system maintenance operations over to the MVCC server.
+    We need to do this anyway and haven't done it yet, so perhaps the whole locking issue
+    is only a minor problem once we get MVCC publishing implemented.
+
+EMAIL						naha	Done
+
+    (1) The documentation in conman-server-prefs.lsp [actually
+    conman/changesafe-server-fonfig.lsp] with respect to email
+    configuration needs to be substantially improved, this information
+    is used by the customer.
+
+						naha	Done
+
+    (2) If no email smtp config, don't send mail (note in code;
+        *finish*: want to log warning to sysadmin log)
+
+						naha	Done
+
+    (3) email being sent to cassidy@content-integrity.com on behalf of
+        "co" and friends.
+
+REPORTS						(naha & Joe & Randy primarily)
+						        
+						naha	In-progress
+    (1) Workspace
+
+						naha	Done v0.262
+    (2) Product & Workspace Comparison
+
+						naha	Done
+    (3) Product Composition & Inheritance
+        
+						naha	TBD
+    (4) Delta 
+
+    The report as implemented doesn't go as deep as which lines changed
+    in each file (there should be another 'file change' page for that)
+    but it does list which files changed and what branches have the
+    cset present.
+
+    Though the files are listed in a section about the class which
+    contains them, their pathnames do not include the class/subsystem
+    directory because I don't know how to determine that given the
+    information that's available.
+
+						Jrm	TBD
+    (5) File
+        Be sure to indicate whether files are text or binary.
+
+						TBD	TBD
+    (6) Observe deactivated product status and don't report on inactive products.
+
+SERVER CONFIG					PWW	Done V.245
+
+    (1) Support secret server configuration file binding for enabling
+        a server to use secret cset_close and master_change parms to
+        set cset date and time.
+
+        See ts50\documents\secret-args.txt for details.
+
+                                                 Arol?  Done?
+    (2) Potential Alias Support work (Issues TBD)
+
+SUBSYSTEM WRITE PERMISSION ENFORCEMENT		Arol	Done
+
+        More write permission enforcement needs to be done, but there
+        are now several places where write permission is now checked.
+
+    (1) We are probably failing to enforce any of the subsystem
+        permissions when it comes to people attempting to change
+        subsystems in products which do not have write access to the
+        subsystem.  At the very least we must modify master_change.
+        Beyond that it might be nice to warn people when they execute
+        file_* or cset_* commands which would affect a subsystem that
+        they don't have write permission on, but that's to be left for
+        later unless it's very quick and easy.  This task is chiefly
+        focused on failing master_change if they don't have
+        prerequisite permissions, it may or may not already be
+        implemented.  (A warning on CO is listed as a low priority
+        task below).  SEE ALSO master_lock/master_change task above
+        which documents a case where we fail to observe write
+        permissions on subsystems.
+
+TEST-42*					PWW/WGD	Done
+
+    This test is breaking spuriously for at least half the development staff.  The author
+    should fix it ASAP.
+
+    PWW: as the prime author (Bill is secondary) I would be happy to fix 
+    this.  However, it has never broken for me and I never get any details 
+    except that it is broken.  Next time it breaks, I would like the *otp 
+    files and anything else that would be useful in determining what is 
+    wrong.  I don't even know if it is 42a or 42b or both that are breaking.
+
+    PWW: investigation showed that Arol & Dave's problems with this test
+    resulted from a weird workspace.  The dates of the conman\test-input files
+    were wrong in their workspaces.  They were the same for several of the
+    files.  We have code in cset_close/master_change that WARNs when the 
+    date of a file to be checked-in is unchanged or the size is unchanged.
+    In this particular case, the contents were different but because they were
+    created via file copy, the dates were persisted over the copy and were the 
+    same.  Recreating the workspaces cured the problem (so that the files had
+    the proper dates).  It is unclear what caused them to have improper dates.
+    If the problem was in ws_create, it was transient and is now ok.  If it 
+    was in ws_update, then we do not know whether it was fixed or not.
+
+    It is also unclear that the WARNing code in cset_close/master_change is
+    worth keeping.  The real test is whether or not the contents have changed,
+    not whether or not the date or file size has changed.
+
+TIME-ZONES					Arol	Done
+
+    (1) Need timezone qualification for date-time specifications.
+	Mark has a reputedly nice spec URL sent by Jack with a way to
+	amend our existing date-time expressions.  The product does
+	NOT currently observe client-relative time-zone
+	interpretations, and we're NOT trying to fix that for V1.
+
+TOUCH						Bill	Done
+
+    (1) Cygnus touch looked for even if commented out in .csf-prefs
+        config file.  Reported by HP on 12-june.  Causes client errors
+        for various commands.  Check with Jack Cassidy for more
+        details.
+
+    HP was using the wrong .csf-prefs file.
+
+
+WARNING CODES POTENTIALLY OVERLAP WITH ERROR CODES
+						Bill	Punt
+
+    (1) The enumeration of warning codes can potentially exceed 100,
+        but we have a hard coded start of the error code enumeragion.
+        This can cause us to inappropriately report status codes.
+        Need to ensure that ranges are not overlapping.  Note that we
+        aren't trying to solve the problem of how we report more codes
+        than a given operating system may be able to report, we're
+        going to resolve that at another time, via another command,
+        which reports the last command's status code in some other
+        way.  This task is to ensure that the codes are always unique,
+        and that they won't change over time.  Perhaps we should just
+        report 4 status codes, OK, INFO, WARNING, ERROR, and leave the
+        actual code report for the secondary and unimplemented
+        mechanism.  Then we can just AND-in the appropriate status bit
+        on potentially large ranges of codes.  (Warnings 10000-20000,
+        errors 30000-40000)  Just thinking out loud.
+
+    [2000-06-27 naha: added a load-time check to make sure 0 <
+    MinWarning < MaxWarning < MinError < MaxError]
+
+WORKSPACE UPDATE IN MVCC SERVERS		TBD	TBD
+
+    (1) For long-running operations which update the user's workspace
+        files against established baselines (like ws_create,
+        ws_update, and ws_set), do whatever r/w activity is required
+        in the R/w server, and redirect the client to resume disk file
+        population from an MVCC R/O server if there is one available.
+
+	This is highly desired, but may be too difficult to achieve
+	for June, approach with scheduling caution.
+
+
+						
+						
+				     MEDIUM PRIORITY
+				     ===============
+
+-------------------------------------------	-------	-------
+CLI COMMAND					WHO	STATUS
+-------------------------------------------	-------	-------
+
+ADMIN_ALIAS_QUERY
+
+						Arol	TBD
+    (1) Documentation string for this command needs fleshing out.
+    Remember that this string is user visible.
+
+ADMIN_ALIAS_UNCREATE
+						Arol	TBD
+    (1) Documentation string for this command needs fleshing out.
+    Remember that this string is user visible.
+
+ADMIN_DATABASE_ERROR_LOG
+						TBD	TBD
+    (1) Ensure that all errors, where possible, are logged to the error log
+	stream if it exists.  Some trickiness here perhaps, and maybe not
+	possible. See next task.
+
+						TBD	TBD
+    (2) Related to but different from (1), want to stop errors and other
+	prints from going to standard output/error streams, or redirect these to the error
+	log if one is established.  It'd be nicer to have these default output/error
+	streams be "last chance" streams, with errors being logged in a controlled fashion
+	to an error stream if one exists.
+
+ADMIN_DATABASE_PERFORMANCE_LOG
+						TBD	TBD
+    (1) Need to add more to performance logging.  In particular, we want to create nested
+        WITH-PERFLOG calls to track file publishing activities and other longer-running
+	subtasks within cmctl.lsp functions, so that we can correlate high-level
+        activities with relative time spent in subtasks.
+
+        Once we do this, we may decide that perflog subtasks shouldn't print their start
+	utime, since it clutters the output.
+			
+CO						Joe	TBD
+
+    (1) Too noisy at default verbosity.  -V2 should be required for
+        all the noise it currently makes.
+
+        See VERBOSITY PARAMETERS (below). 
+
+         I'm deferring this task until we have the general verbosity
+         stuff done.  It would be bad to make an ad-hoc solution for
+         this one case. 
+
+     JDT: I have a quick spec substitute for this, see the aforementioned
+     VERBOSITY PARAMETERS section.
+     
+
+MASTER_UNLOCK					Dave/Arol Done/Permanent Deferral
+
+     (1) Enforce userid constraint (see command specification)
+         [JDT: punted because it isn't complete, no other workspace commands
+	 have userid requirements, and if you require master_unlock it affects
+         master_change (which does unlock), and could have two successive master_locks
+         aquiring two sets of locks under two different userids for same workspace.
+	 Punting with Jack's blessing.]
+
+PRODUCT_DEACTIVATE				TBD	TBD 
+
+     (1) Active bits shouldn't be versioned, no csets should be used
+         to manipulate it.  This is also done for the wall_* commands,
+         but is already correctly implemented there.  (they serve as a
+         reference implementation for non-versioned state). 
+	 See also PRODUCT_DEACTIVATE
+
+PRODUCT_REACTIVATE				TBD	TBD
+
+     (1) Active bit shouldn't be versioned.  See also
+         PRODUCT_DEACTIVATE.
+	
+-------------------------------------------	-------	-------
+MISCELLANEOUS					WHO	STATUS
+-------------------------------------------	-------	-------
+
+COMMAND PARSING					TBD	TBD
+
+    (1) Ws_create fails oddly if you leave off the workspace name.
+        This may or may not be because it picks up stale .csf
+        stuff.  This is a general case falling out
+	of #2 below, I suspect.
+
+						TBD	TBD
+
+    (2) Product code manager and release manager commands shouldn't
+        allow defaulted product specs.  We need to separate what must
+        come from the command line vs. what can come from .csf
+        files.
+
+ERRORS						TBD	TBD
+
+    Need to use conman-specific error signalling routines in *some* of
+    the places we call error which predate the introduction of these
+    routines.  *some* error calls are deliberate however, signalling
+    programming errors as opposed to product-user errors.
+
+MERGING
+						Joe	TBD
+    Use <<<<<<<<< and >>>>>> (like cvs) instead of ------ for conflict region markers.
+    ------ is far more likely to appear as file content (like *this* file), and it is harder
+    to search for conflict with the ---- marker.  The use of <<< and >>> also serves
+    visually note what the text of the markers says (came from repository, came from
+    workspace, etc.) however the text in the csf markers is very nice as is.
+
+PERFORMANCE WORK
+        
+        [PLEASE DO NOT UNDERTAKE THESE THINGS WITHOUT DISCUSSING THEM WITH DAVE FIRST]
+        
+						TBD	TBD
+    (1) Heterogeneous remote cset did lists, as used in subsystems cset mirrors, will become a problem.
+        
+						TBD	TBD
+    (2) Hetero/homo-geneous cid-sets which are relocatable and persist and are efficiently
+        converted to native transient cid-sets will become important.
+	(i.e. cid-object lists in version objects... possibly a difficult thing to fix)
+        
+						TBD	TBD
+    (3) DIDS: persist as PCLOS objects or do the above work, rather than calling
+        encode-in-database which is always a losing prospect. (Low hanging and good fruit
+        I think)
+        
+						TBD	TBD
+    (4) Use Astore 2.0 persistent ftype interfaces after examining object usage on live databases.
+        CVI and SVI representations are probable candidates for this approach.
+        
+REPORTS
+						TBD	TBD
+    (1) Who's Using
+
+						TBD	TBD
+    (2) Class 
+        
+						TBD	TBD
+    (3) Product History
+
+						naha	In-progress
+    (4) Subsystem History        
+
+SYMBOLIC LINKS					GEORGE	Done
+
+    (1) Ensure that we have some reasonable handling of these for
+        attempts at file_add.  First step is to test it to see what
+        happens if you try to add files which are soft links.
+
+  ****  Symbolic links deeply confuse file_add.
+
+
+WARNINGS					TBD	TBD
+    (1) Do not print warnings if -V0 is in effect, only print errors.
+
+						TBD	Being spec'ed
+    (2) Return zero or 1, and arrange for new printing of error codes.
+
+PRODUCTION/RUNTIME BUILD
+						TBD	TBD
+    (1) Set the magic excl:generate-application bit that says this is a production image
+        that doesn't require a development license.
+
+	The bits we need to set (or clear) in deliver.lsp, in the call to
+	excl:generate-application
+	include:
+
+	:runtime :standard
+	:include-devel-env nil
+	:include-compiler nil
+	:load-xref-info nil
+	:record-xref-info nil
+	:discard-xref-info nil
+
+	Chances are good this will break the product.  But legally we're required to do
+	this, so it's time to get this fixed.
+
+				       LOW PRIORITY
+				       ============
+
+-------------------------------------------	-------	-------
+CLI COMMAND					WHO	STATUS
+-------------------------------------------	-------	-------
+
+ADMIN_DATABASE_CREATE				TBD	TBD
+    Implement the -description parameter.
+
+CO						TBD	TBD
+    (1) CO email should probably include product/subsystem information.  
+        
+						TBD	TBD
+    (2) Issue warning if subsystem of a file being checked out is not writable to
+        user(product).
+
+ADMIN_DATABASE_ERROR_LOG			TBD	TBD
+
+    (1) Would be nice to have a regression test for at least parameter processing,
+    even more so for actual operation.  
+
+ADMIN_DATABASE_PERFORMANCE_LOG			TBD	TBD
+
+    (1) Would be nice to have a regression test for at least parameter processing,
+    even more so for actual operation.  
+
+CSET_CREATE					TDB	TBD
+
+	File specifications for initial checkouts give a confusing (though
+	accurate) error message if instead wild files were
+	specified.  Example: 
+
+	conman-366: csf cset_create -name "initial load part 1" *.lsp 
+
+	No such file #p"REPOSITORY:CLOSOPT.LSP" in project "ts50" 
+	An error occurred while attempting cset creation:
+	No such file #p"REPOSITORY:CLOSOPT.LSP" in project "ts50"
+
+	conman-367: csf cset_create -name "initial load part 1" 
+
+	Cset creation completed successfully.  
+
+	conman-368: csf file_add *.lsp
+
+	File addition completed successfully.
+
+DESCRIPTION_{REPLACE,QUERY}
+
+                                                PWW	Done V0.266
+    (1) Add support for workspace objects.
+        
+						TBD	TBD
+
+    (2) Add support for transactions. (Lower priority than #1, more
+        work, since we don't have a name resolver for transactions,
+        only csets).  Note that label and database description
+        processing is not to be supported for V1, we we could
+        potentially punt on this too, though I'd rather fix this one.
+        Given that this is expected to be an infrequent operation, we
+        could just do a linear search rather than complicate the model
+        with another space-consuming and code-maintained hashtable.
+
+RELEASE_FREEZE 					Arol	TBD
+
+    (1) subsystems potentially need a 'frozen' bit to safely implement
+        the command in the event that some clueless user somehow
+        shares the subsystem.  Even walls aren't adequate, though they
+        would mostly work if we raised the wall on a subsystem in a
+	branch which is frozen.  Low priority, but it is a hole in the
+	safeguards of a frozen release.  Means all commands which
+	would potentially attempt to modify a subsystem would need to
+	check the frozen bit (namely master_change...)  So we have
+	frozen, locked, walled, all independent.
+
+UNCO						PWW	TBD
+
+    (1) Doesn't notice when you specifiy files that are not in the
+        repository.
+       (i.e. ignores wild files accidentally typed in unco file list).
+
+WS_CREATE					TBD	TBD
+
+    (1) Warn if baseline for ws is a frozen branch/release.
+
+WS_QUERY					naha	Done
+
+    (1) Report product and release for workspace(s)
+
+
+-------------------------------------------	-------	-------
+MISCELLANEOUS					WHO	STATUS
+-------------------------------------------	-------	-------
+
+COMMAND DOCSTRINGS				TBD	TBD
+
+    (1) Improve descriptions in cm-cli commands for all arguments
+        which have naming restrictions upon them, so that the user can
+        remember what the restrictions are.
+
+CSET/DELTA/CHANGE TERMINOLOGY			TBD	TBD 
+
+    (1) Ensure that all user-visible references to 'deltas' and
+        'changes' (as nouns), are replaced by 'cset' where
+        appropriate.  This isn't a global replace in the case of
+        'change' because there are phrases and situations expressed
+        where 'change' is the nicer thing to say.
+
+DISTRIBUTED DATABASE SUPPORT			TBD	TBD
+
+    (1) Automated Testing, right now there isn't any.
+
+OBJECT Naming					TBD	TBD
+
+    (1) Ensure cset naming conventions enforced for product,
+        subsystem, release, and class names.  Do NOT ensure it for
+        file names at this time.
+
+REPORTS						(Due for July/GA) - not really a June priority
+						TBD	TBD
+    (1) File Diff
+
+						naha	Done v0.262
+    (2) List Deltas
+
+						TBD	TBD
+    (3) List Things
+
+
+USERIDS						TBD	TBD
+    (1) Ensure that we use the userid from the cm-session-context
+        (unless we're zapping userids) rather than whatever userid
+        information may be stored with a persistent workspace object.
+        We want to record the userid of the guy doing the r/w
+        activities, not the userid (possibly stale) of the person who
+        created the workspace.
+	
+VERBOSITY PARAMETERS				Jrm     TBD
+
+    (1) -v0, -v1, and -v2 are not generally observed.  Low priority,
+        though -v0 should minimally stop the 1-liner confirmation
+        message, and easy and centralized change.  Note that we should
+        either pass an "info" stream to commands, perhaps in the
+        session context, or we need a condition-based thing which
+        signals conditions which don't noticeably change flow of
+        control (like WARN).  The former seems less messy in some
+        ways, but affects API's of people wanting to use it.
+
+         JDT: I have a description of how this should be implemented, see me if you
+         undertake it.  It's the discussion joe and I had via AIM, in
+         \\change.content-integrity.com\e$\informational-streams.htm
+
+	 JRM: The conman session context now includes both the verbosity and
+	 a file-system-agent that is connected to the user.  No need to
+	 change the API.  We simply should implement something along the
+	 lines of 
+
+	 (changesafe-message-to-user <verbosity> <cm-session-context> <format-string> <format-args>*)
+
+	 And use it where we currently use other mechanisms.
+
+         JDT: some of the verbose stuff on 'co' and friends come from rfm, and so at the
+         least API changes are needed to communicate whether rfm should or should not
+         present informational progress messages to the existing destination streams that
+         it uses now.
+

@@ -1,0 +1,60 @@
+-*-mode: TEXT; fill-column: 75; auto-fill: T;-*-
+
+The following software kits are required to run e-zchange:
+
+    Allegro 5.0.1 Beta 2
+    Allegrostore 1.3 Beta
+    Objectstore 5.1 (distributed with Allegrostore 1.3 beta)
+
+    NS4.5+ or IE5+
+
+    (NS4.04 will *not* work with DirChooser and it's jdk1.1.2 (nee 1.0.2 I
+    think) jvm.
+
+    WARNING: the IE5 browser can be installed without upgrading the version
+    4 MS VM for Java installed by IE4.  The MS V4 VM for Java is NOT
+    supported, the DirChooser won't work on it.  Be sure to check the
+    appropriate box to upgrade the VM for Java.  IE5 should have a version
+    5 VM for Java in order for e-zchange to work.
+
+    You must set the AS_CONFIG_PATH to the directory containing
+    the ACL5 lisp installation.  We may be able to do this dynamically
+    in the final product (i.e. not require env var at all).
+
+The following software kits are required to develop e-zchange:
+
+    <all of the above kits>
+    GNU emacs 20.3.1+
+    Sun JDK 1.1.8
+    #+windows Microsoft SDK 3.2
+    #+hpux    OS Patch PHSS_17225 dld.sl(5) cumulative patch
+
+    [Microsoft SDK 3.2 SDK VM, msjavx86.exe may be necessary depending on what
+    other things you have installed, like VisualJ++ or VisualInterdev,
+    has msjava.dll and other things necessary for signcode.exe to work]
+
+    It is really impossible to develop in Franz lisp if you don't use
+    emacs.
+
+    The SDK jvc.exe must be in your PATH for the build to work,
+    With a default install location, this might be
+    C:\Program Files\Microsoft SDK for Java 3.2\Bin
+
+    The JDK javac.exe must be your PATH for the build to work, and for
+    regressions to work (which call the java JVM).
+
+    FYI: the ts50 kit includes a version of diff.exe and sed.exe
+    which are required for running regression tests. You no longer need
+    these elsewhere in your path, if you have them (though you're welcome
+    to keep them, the ones in ts50 are explicitly referenced by the
+    regressions, and won't pick up yours accidentally).
+
+The following passwords are used for various key signing activities,
+and may appear when you build/sign the java components during TS-LOAD.
+
+    Generating the NS signing certificate with signtool: 'implementer'
+    (not at build time, only when you must [re]generate a signing key)
+
+    Generating the MS/IE CAB signing stuff, 'foobar'
+    (at build time for signing cab files)
+

@@ -1,0 +1,69 @@
+[Historical memo, to clarify origins and ownership of code which was used
+at TRUE Software Inc. and which is now in use at Content Integrity, Inc.]
+
+This memo describes the nature of some lisp tools authored by me at my own
+expense over a period spanning 12 years, and which are owned by me (Jeffrey
+D. Tenny).  These modules may be used by Content Integrity, Inc, however I
+retain full rights to derivative works as well as the original sources.
+These modules have NOT been granted any use for TRUE Software, Inc, it's
+affiliates, or its assigns, though they were used at TRUE Software to
+facilitate development of the RAD Server prototype software. (TRUE failed
+to execute a license agreement with me).
+
+I have put approximately $17,000 into the development of a game business
+since 1990, which deployed two games written in Lisp.  Both games were
+internet enabled, and there was substantial value in using some of the code
+from that effort the e-zchange products.
+
+The following modules are included in the license agreement:
+
+Module Name		Purpose(s)
+
+utils.lsp		Basic tools of all kinds (described more below)
+utils2.lsp		More utilities.
+inet-headers.lsp	Internet header (RFC 2045) support.
+html-request.lsp	URL encoding/decoding (RFC 1866 and RFC 1738)
+http-server.lsp		HTTP protocol support
+sc.lsp			source compare utility modifications
+pop.lsp			POP3 protocol (RFC 1725) (not yet used)
+smtp.lsp		SMTP protocol (RFC 821) (not yet used)
+[load.lsp]		system build support
+[tests.lsp]      	test harness support
+
+The latter two modules are really driver routines taken out of fuller
+modules from my games.  The test harness is especially useful.  They're not
+necessarily worth licensing on their own, but it's nice to have them in any
+license in case it's ever noted that code in my game looks like code in
+products from Content Integrity or TRUE Software.  I want it to be known
+which technology came from where.
+
+The source compare module was not written by me, but contains many fixes by
+me developed as part of my game effort, and is used in both my games and in
+RAD server (as a backup diff technology).  RAD server has it's own TRUE
+sponsored production diff engine which doesn't have the license
+restrictions of the SC module.  I include sc.lsp here for clarity of code
+origin.
+
+The time to duplicate essential parts of these tools from scratch (which is
+TRUE's alternative) is easily one to two months (if implemented by me).
+I recall the CLOS encapsulation support alone taking me a week to write.
+
+A longer description of the utilities module (from utils*.lsp) follows:
+
+- debugging and compilation environments
+- parsing and tokenization
+- DOS shell interfaces
+- macro development aids
+- generic often-used algorithms including many sequence operations
+- structured print support
+- temporary file, directory management, and other file system/stream utilities
+- flat file persistence support
+- time and date support
+- time stamp support
+- matrix and geometry support (probably not required for rad server)
+- CLOS support (definitely required for RAD server)
+- CLOS slot caching support (required for Allegrostore product)
+- Circular links support
+- Tree traversal routines
+- Dynamic slot support
+

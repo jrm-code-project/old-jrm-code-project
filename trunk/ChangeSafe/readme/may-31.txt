@@ -1,0 +1,651 @@
+Arol: enforce time-product uniqueness of release names, and cset naming conventions.
+
+			    Priority 31-MAY-2000 Deliverables
+			    =================================
+
+-------------------------------------------	-------	-------
+CLI COMMAND					WHO	STATUS
+-------------------------------------------	-------	-------
+
+ADMIN_DATABASE_CREATE
+						Bill	Done
+    (1) Was known to require a trailing "/" on database directory name.  Now fixed???
+						Dave	Done(Jack Notified)
+    (2) Documentation needs to reflect restrictions on existing-directory checks for
+        remote databases, and in fact a considerable amount of documentation needs to be
+        added for remote database management.  Coordinate with Jack.
+	(Have some in conman\remote-databases.html)
+						Bill	TBD (DEFERRED TO JUNE)
+    (3) Make FULLY spec compliant.
+        I.e. directory must exist to create database, no check for clean directory is
+        made, and and no checks of any form are made if the database is remote.
+
+CO						
+						Ade	Done
+    Send email.  Give warnings about other checkouts.  As per spec.
+    From userid is the user who invoked the command.
+						JRM	Done
+    See related performance task specific to CO.
+						JRM	Done.
+    CO is still emitting "no test implemented to ensure file is R/O on disk"
+    Needs to be fixed (presumably need to check r/o status).  First pass: create backup
+    file if not r/o.  Second pass: diff, backup only if not equivalent to repository view.
+						JRM	Partly Done (Deferred to June)
+    CO is way too noisy, for example:						
+	  E:\ws1\ts50>csf co version.txt load.lsp
+	  Ensuring root directory exists.
+	  Composing view of versioned directory structure.
+	  Creating subdirectories..
+	  Publishing files...
+	  Ensuring root directory exists.
+	  Composing view of versioned directory structure.
+	  Creating subdirectories..
+	  Publishing files...
+	  File checkout completed successfully.
+						Ade	TBD (Low priority, Deferred)
+    CO email should probably include product/subsystem information.  
+
+CSET_ADD					Joe    DONE
+    Workspace isn't updated to reflect new cset driven view.
+
+CSET_CREATE
+						JRM	Done
+    (1) Do the automatic ws_update.
+						JRM	DONE
+    (2) cset_create with files to check out doesn't actually check out files
+        NEEDED FOR 12-MAY URGENT DROP TO HP.
+						JRM	Done
+    (3) cset_create with files to check out publishes the whole workspace.
+	(This doesn't happen with CO).   Probably because of some confusion as to the
+	workspace baseline timestamp.
+    (4) appears to leave the workspace in an inconsistent shape if there are checkouts
+	with the cset_create.
+
+CSET_CLOSE
+						Arol	In-Progress
+    (1) Process correct release scope when RELEASE_CREATE is implemented.
+						TBD	TBD
+    (2) Was known not to work correctly unless executed from workspace root directory.
+        Still a problem, reported by HP when doing a cset_close from a subsys directory.
+	Ensure that test is added to regressions too.
+						Peter	In-progress
+    (3) allow setting of time/userid via secret parms which are secretly server config'ed.
+        See also master_change.
+        [this is basically done but there are complications that prevent its use at this 
+        time -- unbound variables on a branch object during a check-out operation.  Dave
+        will talk to HP]
+                                                Peter   Done
+    (4) Disallow two csets which would have the same fully qualified name.
+	Affects master_change too, indirectly.
+						Dave	Done
+    (5) For 12-MAY: don't abort txn if no changes to a file, abort only if no changes period.
+
+CSET_REMOVE					Joe	DONE
+    Workspace isn't updated to reflect new cset driven view.
+
+CSET_UNCREATE					Ade	In-Progress
+    Only works if there is no change in the workspace
+
+CSETS_FROM_FILE					Peter	Done
+    Implement and test.
+
+    NEEDED FOR DATA MIGRATION FOR HP FROM ADC TO CSF
+
+DESCRIPTION_QUERY                               Peter	Done (some deferrals noted)
+    CLASS, CSET, PRODUCT, RELEASE, and SUBSYSTEM Peter	Done
+
+    DATABASE, LABEL, TRANSACTION and WORKSPACE remain to be done.  ABSTRACT files also
+    need to be done.  Not documented at this time.
+
+    Implemented as a test mechanism for DESCRIPTION_REPLACE.
+    Same priority as DESCRIPTION_REPLACE.
+
+DESCRIPTION_REPLACE				Peter	Done
+    DESCRIPTION_REPLACE CLASS, CSET, PRODUCT, SUBSYSTEM    Peter   Done
+    Added RELEASE to the supported list         Peter   Done
+    Implement and test.
+						Peter	Deferred 
+    DATABASE, LABEL, TRANSACTION and WORKSPACE remain to be done.  ABSTRACT files also
+    need to be done.  Documentation may need updating.
+    Low priority, could leave for V2.
+
+FILE_ADD					Dave	Done
+    Documentation (coordinate with Jack)
+    -FORCE parameter needs to be removed from documentation, it isn't going
+    to be supported (a FILE_RESTORE command will be added in V2).
+
+FILE_RENAME					Dave	Done
+    Documentation (coordinate with Jack)
+    -FORCE parameter needs to be removed from documentation, it isn't going
+    to be supported (a FILE_RESTORE command will be added in V2).
+
+MASTER_CHANGE
+						Dave	Done
+    (1) Complete processing of wall processing based on WALL_* release manager commands.
+						Arol	In-Progress
+    (2) Resolve release scope when RELASE_CREATE is supported.
+
+						Bill	Done
+    (3) Yank reference directory updates from this command. see also product_create and subsys_create.
+						Peter	In-progress
+    (4) allow setting of time/userid via secret parms which are secretly server config'ed.
+        See also cset_close and miscellaneous work.
+        [this is basically done but there are complications that prevent its use at this 
+        time -- unbound variables on a branch object during a check-out operation.  Dave
+        will talk to HP]
+						TBD	Deferred to June
+    (5) Add a "-update" switch which governs the automatic ws_update (and implement the
+        automatic update).  'no update' behavior is the default, and we signal an error
+        that the workspace isn't up to date if -update wasn't specified and one is required.
+
+MASTER_UNLOCK_FORCE
+						Ade	Done
+    Looks implemented, needs a test.
+						Ade	Done
+    Send email to locked subsystem owner who just lost his/her lock.
+    From userid is the user who invoked the command.
+
+PORT						Mark	Done
+    (1) Finish back end. 
+    [2000-05-23 naha: Finished.  Difficult to test extensively.
+    Requires further testing.  There are probably bugs.]
+
+						Mark	In-Progress
+    (2) Bug reported by Jack (june 2), ERR_WRITE_DURING-READONLY, whatever.
+
+						Mark	Deferred to June
+    (3) Implement regression driven capability testing    
+
+PRODUCT_CREATE
+						Bill	Done
+    (1) -COPY-FILE <yyyy> not yet supported.
+						TBD	TBD (JDT: Defer?)
+    (2) -DATE-TIME probably isn't semantically correct, (HP question #74 TBR next meeting)
+						Bill	In-Progress
+    (3) -PRODUCT-DIRECTORY path argument goes away
+        Don't create/update the reference directory. See also master_change and subsys_create.
+
+PRODUCT_DEACTIVATE				TBD	TBD (JDT: Defer? Needs investigation)
+    Active bit shouldn't be versioned.  No csets used to manipulate it.
+
+RELEASE_CREATE					Arol	In-Progress
+    (1) Implement this command.
+    (2) Fix the following commands which need to accept release specs:
+	product_create
+	product_directory_move
+	product_directory_regenerate
+	subsys_create
+	subsys_subscriber_list
+	ws_create
+	ws_set
+	+ all new commands which accept release specs in the release manager commands.
+    (3) release names must be unique over time, like product, class, and subsystem names.
+        This is a change from the original implementation.
+    (4) release names should have the same restrictions as cset-names for valid characters
+
+RELEASE_FREEZE					Arol	In-Progress
+    Implement command and test.
+
+
+RELEASE_RENAME					Peter	Done
+    Implement command and test.
+
+SUBSYS_CREATE					
+						Mark	Done
+    (1) -BASE-PRODUCT not implemented.
+	Should be trivial, since it works like source subsystems.
+	[Done.  2000-05-23 naha]
+						TBD	TBD (Defer)
+    (2) -DATE-TIME needs testing.
+						Mark	Done
+    (3) Subsys-name argument is not compliant with spec.
+	Spec calls for optional positional subsystem arguement,
+	whereas we currently require this as a positional argument.
+	*** [2000-06-01 naha] There is an open issue with this and any
+	*** other automatically synthesized naming: what should be
+	*** done if the resulting name is already in use?
+
+						TBD	TBD (Defer)
+    (4) Subsystem cset derivation from pre-existing subsystems needs more tests.
+        I'd like to have a QA person on this...
+	[2000-06-04 naha: much of this is tested in CONMAN::TEST-16A]
+
+						Mark	Done
+    (5) The -SUBDIRECTORY argument isn't yet implemented and tested.
+						Bill	Done
+    (6) Don't update product reference directory, this is now obsolete 'push' behavior.
+
+SUBSYS_SUBSCRIBER_LIST				Bill    Done
+    Don't update product reference area when we add/remove subsystems from subscriber.
+    I'm guessing we were forgetting to do this anyway.  This reflects spec changes which
+    obsolete the 'push' model in favor of a 'pull' model.
+
+UNCO							FIXED
+						Arol	Fixed
+    (1) CO->UNCO->CO again on the same file, the last CO will tell you it's already checked out.
+						Arol	Fixed
+    (2) Backup of file is not made if you UNCO a single file.  UNCO -ALL works (creates backup).
+
+UNDO						Bill	Done
+    (1) FILE_RENAME doesn't work unless the file was just added.
+    (2) FILE_REMOVE not yet supported.
+						Bill	In-Progress (Deferrable, but WAY overdue)
+    (3) Deliver document describing UNDO behaviors.
+
+WALL_HOLE					Dave	Done
+    Implement command and test.  See also MASTER_CHANGE.
+
+WALL_LOWER					Dave	Done
+    Implement command and test.  See also MASTER_CHANGE.
+
+WALL_RAISE					Dave	Done
+    Implement command and test.  See also MASTER_CHANGE.
+
+WS_CREATE					
+						Peter	Done
+    (1) Write .conman file first, before populating rest of workspace,
+    so that other commands like ws_regenerate will work if disk population fails.
+    Particularly important if we keep -ws-id behavior (since that has key to workspace),
+    though we may eliminate ws-id.
+    [1999-05-23 naha: Easier said than done.  There are many chickens
+    that need to be wedged back into their shells as well as eggs that
+    need to be prematurely hatched in order to pull this one off.]
+    [2000-06-05 pww: Only the .conman file is being written earlier.  No attempt has been 
+    made to change the use of ws-id's to pathnames]
+
+						Bill	In-progress
+    (2) Add a -PRODUCT-DIRECTORY argument to WS_CREATE for the reference-area equivalent.
+    The bulk of this implementation in terms of enforcing reference workspaces is left
+    until June.
+						Joe	TBD (Deferred)
+    (3) There is a problem with the attrib settings in the .conman-prefs for some windows users.
+    This appeared to work, but didn't actually give me readonly files after the checkout.
+    This is a sun-jvm specific problem in our implementation, since the ms jvm doesn't use
+    this stuff.
+
+    SET_FILE_READ_ONLY     C:\\WinNT\\System32\\Attrib.exe +R
+    SET_FILE_READ_WRITE    C:\\WinNT\\System32\\Attrib.exe -R
+    This caused massive command failures in shelling out the attrib (error text lost)
+    SET_FILE_READ_ONLY     C:\WinNT\System32\Attrib.exe +R
+    SET_FILE_READ_WRITE    C:\WinNT\System32\Attrib.exe -R
+
+    TO DO:
+
+      a) Sun jvm works for NT and unix command lines.  'conman\csf.bat' is updated to be
+      in a form such that the sun jvm client will work given appropriate program
+      definitions as defined in .conman-prefs, which should also be NT friendly.
+
+      An equivalent test for #1 for MS jvm is up to you, but I definitely want to know the
+      sun jvm works.
+
+      b) Readonly bits and time stamps are set, and if there are problems invoking the
+      programs, we return error codes visible to the user.
+
+      c) At least one regression test ensures that the 'csf' or 'csf.bat' scripts are
+      executed as they would be by the user, and not with the un-user-ish way they're
+      invoked now, so that we can regress this capability once it's working (since we're
+      clearly not detecting broken product behavior in regressions now with respect to
+      file attribute capabilities.)
+
+    (4) Ws_create fails oddly if you leave off the workspace name.  This may or may not
+    be because it picks up stale .conman stuff.
+
+						PWW/JRM	Done
+    (5) ws_create with -date-time now fails according to HP.
+
+						JRM     Done(?)
+    (6) ws_create is creating strangely named zero length files in the parent of the ws directory
+	because some shell quoting or something is messed up in processing the file
+	"ACM Ada Letters XIII, 5 (Sep-Oct 1993), 43-47.htm" in the utility directory.
+
+WS_MOVE						PWW	Done
+    Implement and test.  Lower priority if we don't fix the -WS-ID behavior in favor of
+    pathname-keyed workspaces.
+    Completed with caveats: you can't be in (current directory) thge old workspace, the
+    database transaction is committed before and filesystem rename is done, we are using
+    the Java renameTo function to do the move, so it probably will not work across
+    filesystems.  If anything goes wroong during the filesystem phase, it will be up to
+    the user to fix it by hand.
+
+WS_QUERY					NAHA	DONE
+
+WS_REGENERATE					Bill	In-Progresss (22 May, now 1 June)
+    Implement and test.  Candidate for V2 or June, not as high a priority for may-31.
+
+WS_SET
+						TBD	TBD (Deferrable)
+    (1) Not deleting past product file structure, only adds/updates (low priority)
+						JRM	Done
+    (2) Not handling workspace VPB correctly if change-add/remove effects are present
+        (high priority)
+        [2000-05-23 naha: The behavior is apparently that if you do a
+        ws_set your added and removed csets are lost.  This might well be
+        the correct behavior since it results in the workspace matching
+        its baseline.]
+        [2000-6-4 jdt: WS-SET should blow away VPB, this is the correct behavior.]
+
+						Ade	Done (verified to work)
+    (3) Not creating logical subsystem directory substructure if there are no files
+        present in the subsystem view. (medium priority)
+						Ade	Done (verified to work)
+    (4) Deletes wild files in subsystems and shouldn't. (fixed?)
+						Ade	Implemented but no regression test
+    (5) -FORCE needs to be implemented (high priority)
+						JRM	Done
+    (6) Update workspace baseline time-stamp (high priority)
+						TBD	TBD(MAYBE DEFER)
+    (7) in subsystem mapped to pcl/src:
+	a) mkdir old, b) touch old/foo.txt c) add-file old/foo.txt (implies cset)
+        d) d) master-change, e) touch old/bar.txt (wild file) f) cset-create,
+	g) remove-file old/foo.txt (BREAKS)
+
+WS_UPDATE
+						JRM	Done
+    (1) Handle subsystem additions/removals
+						Arol	In-Progress
+    (2) Process release scope correctly when RELEASE_CREATE is implemented.
+						Mark	Done
+    (3) -DATE-TIME behavior isn't yet implemented.
+						JRM	Done
+    (4) Update the workspace baseline reference time-stamp
+						JRM	Done
+    (5) Don't require a change-context to perform ws_update, it's optional
+
+    (6)        (removing from VPB not done, not sure what to do) (DEFER TO JUNE)
+        When ws_update (and maybe ws_set?, no probably not) add/delete csets to workspace which are
+        reflected in an updated baseline, then we must ensure that those csets are not in
+        the corresponding workspace VPB added/removed cset lists.
+
+        In general, this check is:
+	If the csets in the 'added' VPB list are present in the new baseline, then they
+	may be removed from the added VPB list.
+
+	If the csets in the 'removed' VPB list are not present in the new baseline, then
+	they may be removed from the VPB list.
+	
+        Note, there are some edge cases, which we should probably punt on for now, with
+        regard to the interaction of cset_add and cset_remove when a subsystem is added to
+        the product and reflected in a ws_update.  E.g.  I have subsystems A and B, and
+        did a cset_add of master cset "foo" which altered A, B, and C.  My VPB shows additions for A
+        and B, not C.  An update brings C into my workspace.  One could suggest that it
+        might be appropriate for the C component cset of "foo" to be brought in as well,
+        but for now we'll just take what is appropriate for C in the imported context, and
+        not perform any semantic meta-actions with regard to the overall intent of adding
+        "foo" and later bringing in one of foo's affected subsystems (which may, or may
+        not, contain the C component of "foo" at the time it's brought in and subsequently
+        merged into the workspace.)
+
+	Subsystems that are removed aren't necessarily a problem, only added subsystems.	
+    
+-------------------------------------------	-------	-------
+MISCELLANEOUS					WHO	STATUS
+-------------------------------------------	-------	-------
+
+EMAIL						ADE	TBD
+    (1) The documentation in conman-server-prefs.lsp with respect to email configuration
+    needs to be substantially improved, this information is used by the customer.
+						ADE	TBD (Defer)
+    (2) If no email smtp config, don't send mail (note in code; *finish*: want to log warning
+    to sysadmin log)
+
+SERVER CONFIG					TBD	TBD (Deferred to June)
+
+    Support secret server configuration file binding for enabling a server to use secret
+    cset_close and master_change parms to set cset date and time.
+
+TESTING						George	Done
+        (lost tested configuration information, but formula appears safe)
+    (1) Test HP/UX with OS_CACHE_SIZE sizes from 128->max psr size in 64MB increments.
+        Requires use and documentation of extra OS_XXX variables.  Add information to
+	\ts50\hpux-install-notes.txt.
+	
+VERBOSITY PARAMETERS				TBD	TBD (Deferred, LOW PRIORITY)
+    (1) -v0, -v1, and -v2 are not generally observed.  Low priority, though -v0 should
+        minimally stop the 1-liner confirmation message, and easy and centralized change.
+        Note that we should either pass an "info" stream to commands, perhaps in the
+	session context, or we need a condition-based thing which signals conditions which
+	don't noticeably change flow of control (like WARN).  The former seems less messy
+	in some ways, but affects API's of people wanting to use it.
+						Dave	Done
+    (2) Coordinate with HP fact that "-v1" doesn't always imply a single line of output.
+        Example: ws_create, -v1 might just report progress on a per-subsystem basis,
+	where -v2 might publish all files, or all percentages.
+
+CSET/DELTA/CHANGE TERMINOLOGY			TBD	TBD (Deferred)
+    Ensure that all user-visible references to 'deltas' and 'changes' (as nouns), are
+    replaced by 'cset' where appropriate.  This isn't a global replace in the case of
+    'change' because there are phrases and situations expressed where 'change' is the
+    nicer thing to say.  
+
+FILE PUBLISHING					
+						Joe	Better, not done.
+    (1) Was too noisy in general. 
+        Checkout still too noisy.
+						JRM	DONE
+    (2) Progress indicator should disappear except for -V2 verbosity.
+
+WORKSPACE IDENTIFICATION			Dave    Done
+    The use of ws-ids has benefits (no need for ws-move command), and drawbacks (no ws-id,
+    no service).  Talk with HP, see if its a priority to remove their use for now, and
+    keep them if we can.  Otherwise we have to fix it in resolving workspaces (centrally
+    located code), and implement the ws_move command.
+
+    RESOLUTION: allow ws-ids to drive workspace activities for now, display them in ws_query.
+
+DISTRIBUTED DATABASE SUPPORT			TBD	(Defer - believed to be working,
+							 still needs to be tested more)
+    Feature complete, tested, and supported behavior for multiple databases,
+    multiple database servers, and multiple ChangeSafe servers sharing databases.
+
+    [2000-05-23 naha: I think this works, unless there are more
+    requirements than I'm aware of.  One problem is that because of
+    our limited use of blobs for storing actual datastructure, a
+    repository should not be used by a ChangeSafe running on a
+    different platform than that which created it.]
+
+CONCURRENT R/W TRANSACTIONS			TBD	TBD (JDT: Defer???? Dangerous)
+    Implement and test high level persistent mutex and concurrent server testing.
+    There is a *finish* item in cmctl-master-change, but just about all cmctl entries will need
+    this logic.
+
+PERFORMANCE WORK			
+						Joe	Done
+    (1) Support time-stamps on on files
+        Affects all commands that try to incrementally update directories
+        including ws_update, ws_set, master_change.
+						JRM	Done
+    (2) CO performance is entirely unusable.
+        On the lan it takes 20 secs (on keating).  
+
+PRODUCT NAME					TBD     (??DEFER??)
+    CONMAN, .conman, .conman-prefs, all need to be renamed to ChangeSafe or 'csf'.
+
+WORKSPACE VPB BUGS				MARK	Fixed? (no obvious problem eyeing code,
+								joe may have fixed, needs
+								a test)
+    At least one known to exist, probably more.  This one reported by HP
+    cset_create, add_file, cset_close, cset_create, then co, and it didsn't work.
+
+    [2000-06-05 naha: CONMAN::TEST-39A tests exactly this case.  It now works.
+     The bug was that VPB was ignored in MASTER-CATALOG-FILE-NAMES-RESOLVER.]
+
+WARNINGS					Mark	Done
+    Warnings are not being printed to csf client! Test-34a has one example of this.
+    Done, but see note in version.txt for 0.192. 
+
+
+		   LOW Priority Work, possibly post-dating 31-MAY-2000
+		   ===================================================
+
+-------------------------------------------	-------	-------
+CLI COMMANDS					WHO	STATUS
+-------------------------------------------	-------	-------
+
+ADMIN_DATABASE_CREATE				TBD	TBD
+    Implement the -description parameter.
+
+CSET_CREATE					TBD	TBD
+    File specifications for initial checkouts give a confusing (though
+    accurate) error message if instead wild files were specified. Example:
+    conman-366: csf cset_create -name "initial load part 1" *.lsp
+    No such file #p"REPOSITORY:CLOSOPT.LSP" in project "ts50"
+    An error occurred while attempting cset creation:
+    No such file #p"REPOSITORY:CLOSOPT.LSP" in project "ts50"
+    conman-367: csf cset_create -name "initial load part 1"      
+    Cset creation completed successfully.
+    conman-368: csf file_add *.lsp
+    File addition completed successfully.
+
+UNCO						
+						TBD	TBD
+    (1) Doesn't notice when you specifiy files that are not in the repository.
+       (i.e. ignores wild files accidentally typed in unco file list).
+
+MASTER_CHANGE/CSET_CLOSE			Dave    Done V0.157
+    print file name for files which didn't change when we report no-change condition.
+
+UNDO						Dave    Done
+    Documentation incorrectly says the command takes only one file.  Varies by undo action type.
+    ACTION: confirmed with Jack, should be in next doc rev.
+
+WS_DELETE					TBD	TBD
+    (1) Can't delete a workspace by pathname yet only by ws_id.
+    (This basically means you need to be IN the workspace
+    or nab the ws-id out of its .conman file)  This represents a bigger picture problem,
+    we should probably use pathnames as ws handles instead of ids, which is certainly HP's
+    preference.  I can't remember why we thought this was hard to do.
+
+    (2) If the workspace being deleted has an open change which adds
+    a file and then renames it, the renaming of the file isn't undone 
+    when the workspace is removed.
+
+-------------------------------------------	-------	-------
+MISCELLANEOUS					WHO	STATUS
+-------------------------------------------	-------	-------
+
+ABBREVIATION OF PARAMETER TAGS			AROL	TBD
+    NOTE: part of alias work, to be speced.  Don't do this now.
+
+    In general, switch and keyword argument tokens are supposed to be matched with any
+    suitably non-ambiguous prefix for the command.  There is an exception which says that
+    certain "special" parameter tags have single letter abbreviations which are never
+    considered ambiguous.
+
+CROSS-TRANSACTION WORK DISTRIBUTION		TBD	TBD
+    Support redirection for r/o activities to r/o mvcc server from r/w server.
+
+SYMBOLIC LINKS					TBD
+    Ensure that we have some reasonable handling of these for attempts
+    at file_add.
+
+SOFTWARE AND SCHEMA COMPATIBILITY CHECKS	TBD
+    Ensure that code schema levels are compatible with database schema levels.
+    Some checks are already in, support/qa should test a bit further.
+
+CSF Client					TBD
+    (1) Generally fix argument merging so we don't grab incorrect values from .conman for commands
+    thereby creating workspaces with name "-ws-id" and similar silliness.
+    There's a detailed example in conman\to-do.txt.
+
+    (2) Product code manager and release manager commands shouldn't pick up default
+        .conman context except for master-repository
+
+ERRORS						TBD
+    Need to use conman-specific error signalling routines in *some* of the places we
+    call error which predate the introduction of these routines.  *some* error calls are
+    deliberate however, signalling programming errors as opposed to product-user errors.
+
+PERFORMANCE WORK				TBD	Research
+    * Heterogeneous remote cset did lists, as used in subsystems cset mirrors, will become a problem.
+    * Hetero/homo-geneous cid-sets which are relocatable and persist and are efficiently
+      converted to native transient cid-sets will become important.
+    * DIDS: persist as PCLOS objects or do the above work, rather than calling
+      encode-in-database which is always a losing prospect.
+    
+SUBSYSTEM ADDITION TO PRODUCT			naha	Done
+    Check to make sure there aren't two subsystems in the product which will currently
+    have the same subdirectory mapping.
+
+-------------------------------------------	-------	-------
+REPORTS	 					WHO	STATUS
+-------------------------------------------	-------	-------
+
+The deliverables for reports are not well defined.
+The PORT front-end report/form must be rock solid.
+Above and beyond that, we just need to have enough in the way of reports that we can use
+the product, and we should implement those things as close to the spec as possible, since
+they need to be in "First Form" at the end of June.
+
+================================================================================
+
+JUNE-31: No prefix match (no regexp LCS matching), instead fixed prefixes for args.
+        Use the one-letter prefixes in the spec for now.
+
+JUNE-31: HP REQUEST: Server configuration parameter (secret!) for cset_close and master_change parameters
+     (also secret!) which set cset user and time.
+
+     Needed for end of May 31.
+
+     In progress by PWW
+     This has complications.  Unbound branch objects during check-out.  Dave is talking to HP.
+
+JUNE-31: Binary files, merge considered harmful.  Signal error on ws_update forcing
+    user to uncheckout and recheckout after update. ??
+
+    ANSWER: ws_update will error out, telling user to uncheckout and recheckout after
+    update. 
+
+    Completed by PWW	June 13 2000
+
+JUNE-31 WS_CREATE: use a -product-directory argument (switch) which signals that this workspace is
+    a product directory and not a workspace for checking out files.  Ensure that that
+    co/unco, file_*, and cset_{add,remove} are not permitted in these types of workspaces.
+
+JUNE-31: Binary files, merge considered harmful.  Signal error on ws_update forcing
+    user to uncheckout and recheckout after update.
+
+    Completed by PWW   June 13 2000
+
+LABEL_ASSIGN (JUNE via ALIAS - TBD)					TBD	TBD
+    Zap the alist on the pc for alist/time-stamp pairs.
+    NOTE: may punt on this for V1, based on phonecall with Jack 14-MAY.  See Dave before
+    doing this.
+
+LABEL_CREATE (JUNE via ALIAS - TBD)					TBD	TBD
+    (1) Implement command and test AS PER SPEC.  So these are time-aliases which are product-wide
+        in scope and can be assigned to only one value.
+
+        This is achieved by a non-versioned slot on PC objects which is NOT managed under
+        cset control.  I have many issues with this behavior documented in
+        ts50\labels.txt, which contains what I believe to be a better proposal.
+        This slot is an alist of label/time-stamp pairs, where the initial alist value is
+        NIL for the time-stamp until a label_assign is performed.
+
+    (2) Implement label parameter specs for the following commands:
+	product_create
+	subsys_create
+	ws_create
+	ws_set
+	ws_update
+	+ all new commands which accept release specs in the release manager commands.
+
+						Dave	TBD
+    (3) Notify Jack Cassidy of final form semantics, this was left open in meeting.
+        See HP question #105.
+	
+JULY? Product (reference) directory management commands.
+    Possibly implemented as aliases
+
+    PRODUCT_DIRECTORY_ADD, PRODUCT_DIRECTORY_MOVE, PRODUCT_DIRECTORY_REGENERATE
+    PRODUCT_DIRECTORY_REMOVE, PRODUCT_DIRECTORY_UPDATE
+
+July: .conman-prefs ??
+    Allow platform conditionalization so one can apply to multiple platforms?
+    [2000-05-23 naha: This conditionalization should happen at the
+    time the client is installed, not each time it is run.
+    .conman-prefs is just read using and instance of Java's Properties
+    class so we don't have any control of the syntax of that file.]
+
+    Automatic network server discovery by client?
+
+JUNE: ws_query should show cset_add/remove/port effects.

@@ -1,0 +1,197 @@
+Addendums, things which would make for more efficient and useful life.
+
+1) SLOT-AREF, so that adjustable arrays could be preallocated and
+   EFFECTIVELY used.
+
+2) The foreign structure stuff is good.  But inlining fixnums
+   in PCLOS slots will also save 8 bytes per integer.  Necessary?
+
+Here are some concerns/questions/comments about the Allegrostore product
+based on reading the 1994 dated documentation.  I've marked the status of
+each issue.  If I marked it "answered", I'm just regurgitating the answer to
+make sure I'm clear on the concept.  I've listed the items in descending
+order of importance.  There is no duplication here of concerns discussed
+in other email discussions.
+
+Thanks,
+Dave
+
+- Circular references unsupported.			[Question]
+
+  The documentation only briefly describes a limitation where persistent
+  structures may not have circular references.
+
+  I'm assuming that CLOS object hierarchies may have circular references,
+  and that this restriction applies only to non-CLOS objects.  Beyond that,
+  I'm confused as to the extent of this limitation (clarification requested).
+
+  Say that I want to create a vector or hash table (ignore the special
+  persistent hash table) which references persistent CLOS objects
+  which may ultimately refer back to the vector/hash table.  Is this restricted?
+
+  I may need this feature to implement my own persistent key support.
+  [See next item.]
+
+- Cross transaction persistent object keys & os_reference [Question]
+
+  We're building 3-tier architectures which support stateless connections.
+  This important architectural concept requires that clients of the server
+  be provided with unique keys which are efficiently resolved into server
+  object references.
+
+  In C++/Java, we pass 12-byte os_reference information encoded as integers
+  to clients.  These references may be retained by the clients across connections,
+  and passed to servers at any time to resolve persistent object access.
+
+  There are two advantages to this:
+
+  1) The resolution process is very fast.
+
+  2) The os_references use knowledge of objectstore's architecture to
+     provide persistent object id semantics WITHOUT use of hashtables
+     which are indexed by these persistent keys, removing a major point
+     of potential lock contention in multi-client/multi-server models.
+
+  How can I pass out efficiently resolved unique keys like this using
+  Allegrostore? They must be able to span transactions, lisp sessions,
+  etc..
+
+- Read-only and Read-write transaction support		[Question]
+
+  I understand that the MVCC open call isn't supported, but that this
+  can be easily added [per conversations with Jim].
+
+  However the documentation I read doesn't describe transaction mode
+  arguments for WITH-TRANSACTION. I need to be able to specify
+  read-only or read-write.  Is this currently supported (and omitted
+  in the older documentation)?
+
+  I'll need to run several MVCC read-only transaction servers for
+  every read-write transaction server.  Read/write servers
+  will sometimes perform R/O transactions, despiate opening the
+  database in R/W mode.
+
+- Copying of large persistent sequences.		[Answered]
+
+  In the same way that you have a special persistent hash table class to avoid
+  re-marshalling the data which objectstore has already marshalled into your PSR,
+  I need this for other sequence types, most importantly large vectors.
+
+  I need to create vectors of integers which are large.  I can't have them
+  be copied about multiple times, at 4+ megs a whack.  Most of the numbers
+  in the vector will be fixnums, some may have to be bignums.
+
+  Answer #1: allocate the lisp sequences outside of lisp space using
+  special direct calls allocators.  Should be feasible without additional
+  modifications to current product.  These sequences are still lisp
+  objects, but are allocated outside the view of the garbage collector.
+  Special wrappers may be needed for handles to these objects.
+
+  Answer #2: Use FFI to call my own C code which manages specialized
+  bitmaps or arrays of ints.  FFI object handles may need wrapper too
+  to access persistent foreign structure in next session.
+
+  I'd use #1 for most capabilities in prototype, and #2 for key components
+  in the deployed product.  I really need some sample code to know how to
+  do this, and an assurance that both workarounds are feasible.
+  
+- Speed/Space overhead					[Answered?]
+
+  I need to store millions of objects, and manage multiple physical databases
+  in the logical repository that my product offers.  Two things need to be
+  true for this to happen:
+
+  1) That the speed overhead imposed by enforcing non-circular object references
+     for non-CLOS persistent objects is almost zero.
+
+  2) That the space overhead for tracking persistent references to
+     persistent objects (so that MAP-REFERENCES works) is nothing
+     more than the class extent for every presistent class.  (i.e. the
+     single collection of all instances of a class has stored once, in one place).
+
+     If persistent objects have explicit representations of their referencers
+     besides their referencers, the space overhead would be prohibitive.
+     (i.e.: backpointers == bad, unless I've requested INVERSE slot properties).
+
+-  Shared pointers to big (non-CLOS) objects.		[Answered]
+
+   Since non-CLOS objects are copied so that there is never more than one
+   reference to the object, if we want to achieve shared access to non-CLOS
+   objects, we can just use a shared pointers to a CLOS object which in turn
+   references the logically shared non-CLOS object.
+
+- Nested transactions					[Question]
+
+  The 1994 documentation states that nested WITH-TRANSACTION
+  calls are supported only as PROGNs.  
+
+  Objectstore supports nested transactions. The only purpose for these is
+  to retry portions of a large transaction as part of lock conflict or
+  other exception situation handling.
+
+  Does Allegrostore now support nested transactions with sub-transaction
+  rollback semantics?  If not, will it soon?
+
+- Lisp threads in a global transaction space		[Question]
+
+  Objectstore doesn't currently support concurrent transactions in concurrent
+  threads in a single process.  So my product uses multiple processes which
+  service connections seeking R/W or R/O services.
+
+  One option I have now is that my R/O MVCC servers can process multiple
+  conncetions on different threads in a single process, sharing the same
+  logical Ostore connection.  Can I do this with lightweight lisp threads?
+  The implication is that all lisp threads should be able to have
+  concurrent access to the same database and transaction (as if from a
+  parent thread).  
+
+  FYI: ODI is working on concurrent TXNs for concurrent threads in the same
+  process, and this major feature should be out sometime in 1998.  Astore
+  support for it will greatly enhance scalability of applications (especially
+  if Astore has SMP capable lightweight threads, which it doesn't now, as I
+  understand it).
+
+- Where are the transaction commit() & abort() functions?	[Question]
+
+  The 1994 documentation describes no functions for forcing a transaction
+  rollback or commit.  Are these currently supported?  Or am I left with only
+  the lexical WITH-TRANSACTION macro and catch/throw tricks?
+
+- Lock probe and acquisition capabilities?			[Question]
+
+  In order to control certain operations, it is desirable to acquire
+  and relinguish locks on objects manually, and respond to lock activity.
+
+  Ideally, objectstore::acquire_lock() and objectstore::get_lock_status()
+  on pptrs would be available.  Yes? No?  Maybe so?
+  
+  The workaround is to attempt to read/write slot values and handle transaction
+  rollback.  This is more expensive.  It's also MUCH more difficult if you
+  don't provide access to true nested transactions.
+
+  In order to deploy our product quickly, one of the things we do is
+  acquire locks on high level objects which coordinate access to huge
+  portions of the database.  It limits R/W transaction concurrency, but it
+  also minimizes the amount of deadlock detection and other situations we
+  have to worry about.  I don't necessarily need either of these functions,
+  (acquire_lock(), get_lock_status()), but without them, I need to be able
+  to guarantee that the object being accessed is on it's own unique page
+  (and potentially segment), which requires as-yet-unimplemented clustering
+  support.
+
+- Pptrs, EQO						[Answered]
+
+  I'm told the necessity of EQO has been eliminated in current versions
+  of the product.  This isn't reflected in the documentation I read.
+
+- Cache manager correction				[FYI]
+
+  The 1994 documentation incorrectly states the the Astore cache manager
+  caches objects used by all clients on a single host.  This is not correct.
+  The poorly named cache manager process actually manages locks (or lock
+  permits, I don't remember which).  It doesn't manage any objects visible
+  to the client PSR.
+
+- AIX correction					[FYI]
+
+  The 1994 documentation incorrectly states that you support Astore on AIX.

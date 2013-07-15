@@ -1,0 +1,227 @@
+Dec-31 Deliverable:
+
+Joe:
+
+  undo					(PARTIALLY DONE - see limitations)
+  delta_uncreate			(MOSTLY DONE - see limitations)
+  unco					(MOSTLY DONE - see limitations)
+  ws_delete (in general) and -force	(PARTIALLY DONE by Mark - see limitations)
+  ws_update -report			Done
+  cset_add (update)			(NOT DONE)
+  cset_remove (update)			(NOT DONE)
+  r/o file access			Done, but fails on HP for unknown reasons
+  checkin lisp code to do a cm-checkin of a ts50 hierarchy  Done, again!
+     (Known problem: file_add is slow)
+
+Dave:
+
+  file_* commands, observe metaversion  (DONE, change_close/master_Change need more testing)
+  ws_create, observe timespec						(DONE)
+  master-unlock-force ensure more than just stub			(NOT DONE)
+  master-change - up-to-date-check					(DONE)
+  master-change *finish* items except for holes in subsystem walls.	(NOT DONE)
+  change_close, master_change for back-dated workspaces			(DONE)
+  ws_set -date-time							(MOSTLY DONE, see limitations)
+  ws_set -force				(NOT DONE)
+  product_create -base, -copy-*		(MOSTLY DONE, see limitations)
+  product_create -date-time		(PARTIALLY DONE, see limitations)
+  subsys_create -base-product		(NOT DONE, noticed it was missing late...)
+  subsys_create -date-time		(MOSTLY DONE, needs testing)
+  subsys_rename				(DONE)
+  product_rename			(DONE)
+  product_activate			(DONE)
+  product_deactivate			(DONE)
+  file_add -text -binary		(TIME PERMITTING: NOT DONE)
+
+Mark:
+
+  susbys_inherit_from			(DONE)
+  port					(DONE : needs more testing)
+  subsys_user_list			(DONE)
+  subsys_create -base-subsystem		(DONE)
+  check workspace up to date for cset_create (PARTIALLY DONE, see limitations)
+  Support separate ODI client/server machines		(DONE)
+  Test HP/UX with OS_CACHE_SIZE of at least 128 MB.	(NOT DONE)
+  ws_query						(DONE)
+  Report:  product composition and inheritance		(EXTRA: DONE)
+  Report:  the delta report has been stubbed in.	(EXTRA: STUB)
+  Report:  change history report for products		(EXTRA: STUB)
+
+Harry:
+
+  - -ADC-IMPORT switch for master_change and change_close	(DONE, untested)
+  fix .conman defaulting, restrictions, etc.			(NOT DONE)
+  Command and parameter names made to comply with latest (V3.3) command spec. (DONE)
+
+			      ------------------------------
+
+Deferred to next cycle (and due next cycle, not a complete list of due elements):
+Deferred for one of two reasons:
+(1) Because feature requires release manager commands not yet implemented.
+(2) Because it's creeping featurism, but necessary featurism, and wasn't
+    strictly required per the agreement, but is required to make product 
+    workable.
+
+   ws_update - handle subsystem additions/deletions
+   ws_create -label -release
+   product_create -label -release
+   subsys_create -label -release
+   ws-update -label
+   file_add -force
+   file_rename -force
+   csets_from_file 
+   description_replace
+   ws_regenerate
+   ws_move
+   ws_query 
+   product_directory_move
+   product_directory_regenerate
+
+   + rest of release manager commands.   
+
+			      ------------------------------
+
+			       Miscellaneous Feature Notes.
+
+* PORT
+
+  We support the browser-based product report, but no back end processing of PORT yet.
+  This is the 'first half'.
+
+* REPORTS
+
+  - The PORT report is implemented (but not the back end)
+
+  - The product composition and history report is implemented.
+
+  - The delta report is a stub.
+
+  - The change history report is a stub.
+
+* CSET_CLOSE, MASTER_CHANGE
+
+  - The -ADC-IMPORT switch is not yet operational.
+
+			      ------------------------------
+
+				   General Limitations
+
+* Verbosity settings (-v0, -v1, -v2) generally aren't observed yet
+
+* We don't yet detect inappropriate defaulting of various arguments in .conman
+  (possibly because of workspace context)
+  (particularly important for product code and release manager commands)
+
+* Read-only bit setting isn't handled yet (we've got partial support, but not yet visible
+  to user)
+
+* Subsystem additions/removals to/from a product are not reflected in product reference
+  directories or workspaces in a timely manner.
+
+* The product is way too noisy any time it maintains disk files, we need to quiet the
+  'publish' options for -v0, -v1.  Noise is probably ok for -v2.
+
+* Some error messages still refer to csets as deltas.
+
+			      ------------------------------
+
+			       Command Specific Limitations
+
+* CSET_CLOSE
+
+    - Doesn't find files which were checked out AND renamed in the same change.
+
+    - May not work correctly unless you execute it from the workspace root
+      directory because of some overzealous pathname mangling.
+
+* CSET_CREATE
+
+    - Will signal an error if ws isn't up to date, but won't automatically do a ws_update.
+      JDT is beginning to wonder if this might be the preferred behavior.  
+
+    - -ABSTRACT argument  not yet supported.
+
+    - File specifications for initial checkouts give a confusing (though
+      accurate) error message if instead wild files were specified.
+
+	conman-366: csf cset_create -name "initial load part 1" *.lsp
+	No such file #p"REPOSITORY:CLOSOPT.LSP" in project "ts50"
+	An error occurred while attempting cset creation:
+	No such file #p"REPOSITORY:CLOSOPT.LSP" in project "ts50"
+	conman-367: csf cset_create -name "initial load part 1"      
+	Cset creation completed successfully.
+	conman-368: csf file_add *.lsp
+	File addition completed successfully.
+
+* DATABASE_CREATE
+
+    - In adding support for remote databases, we discovered at the last
+      minute that this command now requires a trailing "/" on the database
+      directory name.  (This will be fixed, as will all limitations)
+
+* FILE_ADD
+
+    - -TEXT, -BINARY switches not yet implemented.  Currently auto-detecting file type.
+
+* PRODUCT_CREATE
+
+    - -BASE-PRODUCT <xxx> not yet supported.
+
+    - -COPY-FILE <yyyy> not yet supported.
+
+    - -TIME probably isn't semantically correct, (HP question #74 TBR next meeting)
+
+* SUBSYS_CREATE
+
+    - Doesn't support the optional positioanl subsystem argument, right now it's required.
+
+    - Doesn't support the -base-product argument, use -base-subsystem instead
+      since they're effectively aliases.  Subsystem cset derivation from preexisting
+      subsystems isn't well tested yet.
+
+    - -date-time processing hasn't been tested.
+
+    - Doesn't yet support the -subdirectory parameter.
+
+* UNCO
+
+    - Doesn't notice when you specifiy files that are not in the repository.
+      (i.e. ignores wild files accidentally typed in unco file list).
+
+* UNDO
+
+    - FILE_RENAME doesn't work unless the file was just added.
+
+    - FILE_REMOVE not yet supported.
+
+* WS_DELETE
+
+    - It can't delete a workspace by pathname yet only by ws_id.
+      (This basically means you need to be IN the workspace
+       or nap the ws-id out of its .conman file)
+
+    - If the workspace being deleted has an open change which adds
+      a file and then renames it, the renaming of the file isn't undone 
+      when the workspace is removed.
+
+* WS_QUERY, WS_REGENERATE, WS_MOVE
+
+    - Not yet implemented.  These user command were added late in the spec cycle. 
+
+* WS_SET
+
+    - Not deleting past product file structure, only adds/updates for now
+
+    - Not handling workspace VPB correctly if change-add/remove effects are present
+
+    - Not creating logical subsystem directory substructure if there are no files
+      present in the subsystem view.
+
+    - Deletes wild files in subsystems
+
+* WS_UPDATE
+
+    - -REPORT isn't complete.
+
+    - -DATE-TIME not yet implemented.
+

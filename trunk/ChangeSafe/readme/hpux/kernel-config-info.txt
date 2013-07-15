@@ -1,0 +1,52 @@
+The following HPUX 10.20 kernel configuration parameters are likely to
+affect ChangeSafe server operation.
+
+------------------------------------------------------------------------------
+
+EQMEMSIZE	  - 400 minimum recommended.
+
+Insufficient EQMEMSIZE is typificed by /usr/sbin/dmesg entries like the
+following:
+
+Pid 10350 got a bus error due to lack of alias pdir entries
+
+It may also cause "recursive signal 10" behavior in the ChangeSafe server.
+
+------------------------------------------------------------------------------
+
+MAXDSIZ, the maximum size of the data segment, recommended minimum value:
+0x30000000 (768 MB). 
+
+MAXSSIZ, the maximum size of the stack segment, recommended minimum value: 
+0x4000000 (64MB)
+
+SHMMAX, the 'max shared memory segment', recommended minimum value: 
+0x10000000 (256 MB).
+
+Inadequate values for these kernel configuration parameters will generally
+result in the HPUX OS killing off both the ChangeSafe application server
+process (which will typically register a recursive signal 10 error), as
+well as the ObjectStore Cache Manager process that runs on the same machine
+as the application server.
+
+------------------------------------------------------------------------------
+
+NFLOCKS should be proportional to at least twice the number databases
+you expect to have open.  Note that every master database has an associated
+semipersistent database, and one database per 'class'.  So a product in use
+with 100 subsystems will have 102 databases open, and you should anticipate
+NFLOCKS value of at least 204.  
+
+MAXFILES should be greater than or equal to NFLOCKS.
+
+Inadequate values for these parameters will cause the database server
+to return exceptions to the application server (which is a client of the
+database server).  When encountered, these exceptions are often reported to
+the user, and may be confusing to the user who may think they have
+too many files open on their client workstation, and not understand that
+the problem really lies with the machine running the database server.
+
+------------------------------------------------------------------------------
+
+
+

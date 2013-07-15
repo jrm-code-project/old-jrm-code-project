@@ -1,0 +1,64 @@
+KEY CONCEPTS (Per Rick)
+
+Any user of a subsystem which is shared will immediately see subsystem changes reflected
+in their master (product configuration) baseline.
+
+All subsys users can read.  The question is can they write, and can they port.
+
+Port permission applies ONLY to subsystems which inherit, and you can port or not port,
+but it does NOT depend on your WRITE permission.
+
+A subsys/class pair define a project-context and its placement in a product configurations
+(master project) file hierarchy.
+==============================================================================
+
+JDT's takes on subsys relationships and inheritance.
+Key thing is that PORT is useful only with inheritance other than NONE.
+READ is implicit.  WRITE & PORT are modifiers.
+
+#  Inheritance Permission Semantics
+1  NONE	       R	  Immediately see effects from writers of subsystem.
+2  NONE	       R+W	  Can write as well, immediately see effects.
+3  NONE	       R+P	  Same as #1, port is useless with inheritance none.
+4  NONE	       R+W+P	  Same as #2, port is useless with inheritance none.
+5  ALL         R	  Same as #1, may not do cm_change_port or create_change affecting subsys.
+6  ALL	       R+W	  Same as #2, may not do cm_change_port, but may write new changes
+7  ALL	       R+P	  Same as #5, but can also port ALL (and only ALL) changes from inherited ancestor.
+8  ALL	       R+W+P	  Same as #6, but may also cm_change_port
+9  ELECTIVE    R	  Not usually used. If used, typically a 3-way where read
+			  a subsys which is write w/port by some other product configuration.
+10 ELECTIVE    R+W	  Same as #6
+11 ELECTIVE    R+P	  Same as #7.  Not good in practice since electing some but not all without
+			  ability to write for conflict resolution will yield problems.
+12 ELECTIVE    R+W+P	  OK, same as #8 except that they may choose which csets are migrated,
+			  and we don't nag them about the ones they say "no" to.
+------------------------------------------------------------------------------
+We hold these truths to be self evident (yeah, right!).
+
+- A subsystem maps directly to a branch in a class.
+
+- All users of a subsystem instance see all changes to the class on the class branch.
+  
+- There are two ways to fork a branch on a product configuration.
+  Rick: a product is a list of subsystems... branching product gets a new list of subsystem.
+  a) product_create with a base product.
+     Creates new branch in product space, reuses/copies subsystems in read-only mode.
+     TBD: this is a source of one of my dilemmas, to branch pc's in product, or
+     copy pc's.
+  b) slush_create
+     Creates a new branch in the pc space, and reuses/copies subsystems in elective,write+port.
+     (Copies, hard to inherit from a different version in application code)
+
+- When a product configuration branches, a new subsystem and class branch is always created
+  which maps to that pc branch.  The new subsystem inherits the ancestor branch subsystem,
+  typically with ELECTIVE inheritance and WRITE+PORT capability.
+
+  *** HOW DO CHANGES PORT BACK TO MAIN BRANCH??? ***
+
+   ANSWER: main subsys can inherit from branch subsys circularly.
+   This means "inheritance" doesn't describe it, because ancestor then inherits from
+   descendant.   Really a "sharing relationship".
+   Each subsys: knows which subsystems use it, and which subsystems they use.
+   
+   ANSWER: we use cm_subsys_inherit_from on the main branch subsys to inherit from release branches.
+

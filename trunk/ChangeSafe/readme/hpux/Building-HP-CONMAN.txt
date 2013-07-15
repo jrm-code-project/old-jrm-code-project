@@ -1,0 +1,98 @@
+
+This file contains instructions for how to generate a CONMAN
+distribution for HP/UX, stating with a CVS checkout.
+
+Checkout ts50 onto a Windows machine.  Start AllegroCL and load ts50.
+You need to load ts50 because the code in ftp-files.lsp needs the
+system definition, JAVE-PRODUCTs and some functions in the UTILITY
+package.
+
+Compile and load the file ftp-files.lsp.  In a comment near the
+beginning of that file is a call to USER::PUSH-TS50-FILES.  Evaluating
+that will copy all the necessary files to the ~conman/ts50 directory
+on CONMAN.  It's probably a good idea to delete all of the files that
+were there before so you don't accidently keep any obsolete files.
+
+In the ~conman directory on CONMAN is a shell script called
+"fix-ts50-permissions".  If you run this as root then it will change
+the protection modes of all of the files under ~conman/ts50 so that
+the file protections don't get in the way.
+
+You are now ready to start ACL and load ts50.  Start lisp using the
+script ~naha/bin/run-lisp.  Note that only one lisp using AllegroStore
+can run on that machine at a time.  If there's another lisp running,
+you may need to kill it first.
+
+Load ts50, doing a clean build.  You may get a warning about not being
+able to use the tool for signing Java class files.  You will get a
+warning about not being able to run the Microsoft Java compiler.
+
+If you run the regression tests, don't be alarmed that they don't run
+very smoothly.  Live with it or fix it.
+
+The file delivery.lsp contains the code for generating the CONMAN
+server binary files.  Run the function DELIVER-CONMAN thusly
+
+  (deliver-conman :recompile-p nil    ; you just recompiled above
+		   :debug-p t
+		   :suppress-regressions t)
+
+The Lisp process that it starts to build the image in will eventually
+fail.  That's ok.  You still need to do this because other important
+files will be copied into the ts50/bin directory.
+
+The file ts50/hp-delivery-build.lsp was taken from a build.out file
+which was generated during a previous delivery of CONMAN.  If the
+delivery.lsp file has changed, you'll want to compare the build.out
+file just created during your call to DELIVER-CONMAN with this one.
+At the beginning of hp-delivery-build.lsp is a comment containing a
+shell command line which you will run to generate the conman.dxl lisp
+image file.  It will be created in the appropriate location under the
+ts50/bin directory.
+
+Now compile and load the file ts50/distribute.lsp and run the function
+DISTRIBUTE-CONMAN.  This will copy all the files which the customer
+should receive to the directory ts50/distribution-conman/hpux/.  The
+distribution process will fail if the target directory exists.  You'll
+need to delete it and try again.
+
+The ts50/distribution-conman/hpux/ contains all of the files needed by
+the customer.  This directory will include several subdirectories: one
+for the ObjectStore installation kit, one for the client and one for
+the server.
+
+After extracting these files, the customer will need to build the
+client CM command.  In the "client" subdirectory is a shell script
+called write-cm-shell-script.sh which should be run thusly:
+
+      /usr/bin/sh write-cm-shell-script.sh
+
+It expects to be run with the client subdirectory as the current
+directory.  This will write a file called CM which customers can use
+as shorthand for running the client.  They can copy it to a commonly
+searched directory like /usr/local/bin or make a soft link to it.  The
+command is called "CM" pather than "cm" because there is already a
+command with the lowercase name.
+
+Also in the clinet directory is a file named .conman-prefs.  The
+customer will need to edit this file, replacing "localhost" with the
+fully qualified domain name of the conman server.  It is recommended
+that the customer create a new domain name for this purpose and alias
+it to the conman server host name.  That way, if they decide to move
+the server, they don't have to reedit this file in each client
+installation.
+
+The customer will also need to install ObjectStore and configure the
+environment of the user which will be running the CONMAN server as
+needed.
+
+
+To start the server, run the "start-conman-server" shell script.
+
+
+If you'd like a canned set of commands for testing it, the file
+conman/demo-ts50-checkin.lsp contains code for writing shell command
+files containing conman commands.
+
+Ship it.
+

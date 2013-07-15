@@ -1,0 +1,16 @@
+Subject:          Auto version selection
+
+On some of the HTML pages, you have a drop down box for selecting the
+version.
+You can have the page auto-refresh when changing the selection (as opposed
+to a button)
+by assigning a name to the form that the drop-down box is part of, and an
+onChange method to the select that creates the drop-down box.
+
+<form name="TypeFormloc" method=get action="">
+
+<select onChange="TypeFormloc.submit()">
+
+
+
+

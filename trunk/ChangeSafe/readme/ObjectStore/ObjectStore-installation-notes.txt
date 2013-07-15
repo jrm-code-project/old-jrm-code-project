@@ -1,0 +1,80 @@
+	Installing ObjectStore on HP/UX
+
+Unfortunately, we've not had a chance to test this on a machine that
+did not have AllegroCommonLisp installed.  This is the same
+installation procedure as when installing ObjectStore during an
+Allegro installation.
+
+These instructions are copied almost verbatim from the AllegroCL
+installation documentation.
+
+In the instructions below <Allegro directory> refers to the directory
+named "acl" extracted from the CONMAN installation kit.
+
+
+*** Install ObjectStore:
+
+The supported operating system version levels are:
+
+     Solaris 2.5.1 and 2.6 
+     HP-UX 10.20 
+     SGI/IRIX 6.4 and 6.5 
+
+Make sure the OS_ROOTDIR environmental variable is not set before
+beginning the installation. The installation procedure will print an
+error message telling you to un-set the OS_ROOTDIR variable if it is
+set when you begin the installation.
+
+The osinstal (one l) script starts the installation. You must be root to
+run this script.
+
+# cd acl/astore/ostore
+# ./osinstal
+
+When the osinstal script ends, it instructs you what to do next. When
+running the osconfig step, calling osconfig with a server argument is
+recommended for most users.
+
+
+*** Set up the individual Runtime environments:
+
+Note that the runtime environment setup described here is only
+necessary for the user which will be running the CONMAN server.
+You'll probably create a dummy userid for this or use bin or some
+such.
+
+Each user should update their environment appropriately for their use
+of AllegroStore. The environment variables in the following table are
+used by ObjectStore and you may wish to change them from their default
+value. Variables required for proper AllegroStore operation are noted
+in the following table; don't remove those.
+
+       OS_ROOTDIR   [required]
+
+The value of this variable should be the name of the root directory of
+the ObjectStore installation. 
+
+       AS_CONFIG_PATH   [required]
+
+The value of this variable is the AllegroStore configuration
+directory, which is in all cases the same as the <Allegro directory>.
+
+       PATH    [required]
+
+The value of this variable should include $AS_CONFIG_PATH and
+$OS_ROOTDIR/bin. The value of this variable is set automatically on
+Windows by the ObjectStore installation.
+
+       OS_AS_SIZE    [optional]
+
+Specifies the maximum size of the persistent virtual memory address
+space.
+
+
+The SHLIB_PATH environmental path must include the <Allegro
+directory>, as well as /usr/lib. If the ObjectStore installation
+choice that creates links in /usr/lib was not selected, then it must
+also include the ObjectStore lib subdirectory, $OS_ROOTDIR/lib.
+
+See the ObjectStore installation readme.txt file for information about
+HP-UX patches recommended by ODI.
