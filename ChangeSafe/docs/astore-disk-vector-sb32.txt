@@ -1,0 +1,115 @@
+Subject: Re: [spr22781] Allegrostore database fragmentation - SHOWSTOPPER
+Date: Wed, 18 Oct 2000 13:01:12 -0700 (PDT)
+From: sdj@franz.com (Steve Jacobson)
+To: dtenny@content-integrity.com
+CC: bugs@franz.com, pww@content-integrity.com, jrm@content-integrity.com,
+     jkielty@franz.com, harding@franz.com
+
+Dave,
+
+>Gotcha.  Not sure of the specifics of the byte-array patch, but presumaly
+>it'll let me pick
+>fixnums out of SB32 vectors directly in the PSR, so that I can preallocate
+>them and
+>access/update them efficiently.  It's definitely of interest, but I don't
+>know if it'll fix the
+>fragmentation problem.
+>
+
+There are two zip files in pri/sdj/cii on the Franz ftp site:
+
+hp-astore.zip
+win-astore.zip
+
+They contain replacement Astore 1.3 shared libraries (and on HP, aslisp and
+aslispi executables), that support element specific signed byte 32
+array sets and gets. I've provided an example that shows usage at the
+end of this reply.
+
+Here are some things to note:
+
+The libraries and executables were compiled with symbol names
+included.
+
+This functionality will not be documented, since blobs provide similar
+functionality and are faster (this method requires a FFI call for each
+element; blobs use foreign type accesses, which are faster).
+
+This functionality WILL be in Astore 2.0, so use will be forward
+compatible.
+
+An official patch will not be generated, but if a subsequent patch
+results in replacement shared libraries and executables, those patched
+versions WILL contain this functionality.
+
+Support will be provided to Content Integrity for any issues involving
+this functionality (and also in regard to the previous slot-svref
+replacement code example).
+
+Regards,
+
+Steve
+
+---------------------------------------------------------------------
+(in-package :user)
+
+(eval-when (compile load eval)
+  (use-package :astore))
+
+(defclass foo ()
+  ((foo :accessor foo :initarg :foo :allocation :persistent))
+  (:metaclass persistent-standard-class))
+
+(ff:def-foreign-call get_arrayraw_sb32_element
+    ((arr (* :int )) (index :int))
+  :returning :int)
+
+(ff:def-foreign-call set_arrayraw_sb32_element
+    ((arr (* :int )) (index :int) (new-value :int)))
+
+(defun setup ()
+  (with-database (db "foo.db" :if-exists :supersede)
+    (with-transaction ()
+      (make-instance 'foo :foo
+                     (make-array 10 :element-type '(signed-byte 32)
+                                :initial-contents '( -5 -4 -3 -2 -1 1 2 3 4
+5))))))
+
+;; the technique below is valid ONLY if foo slot is :allocation :persistent
+;;  will not work for :allocation :persistent-class!!!
+;; Also, there is no check to verify that slot is truly sb32 array
+(defun show-them ()
+  (with-database (db "foo.db")
+    (with-transaction ()
+      (let ((foo (first (retrieve 'foo))))
+        ;; do this once per transaction to insure the instance is OK
+        (astore::validate-instance foo)
+        (let* ((pptr (astore::p-so-pptr foo))
+               (index (astore::p-class-slot-index
+                       (class-of foo) 'foo)) ;; 2nd arg is slot name symbol
+               (array-pptr (astore::instance-slot-value pptr index))
+               )
+          (dotimes (i 10)
+            (format t "i: ~s value: ~s~%" i (get_arrayraw_sb32_element
+array-pptr i))
+            ))))))
+
+(defun increment-them ()
+  (with-database (db "foo.db")
+    (with-transaction ()
+      (let ((foo (first (retrieve 'foo))))
+        ;; do this once per transaction to insure the instance is OK
+        (astore::validate-instance foo)
+        (let* ((pptr (astore::p-so-pptr foo))
+               (index (astore::p-class-slot-index
+                       (class-of foo) 'foo)) ;; 2nd arg is slot name symbol
+               (array-pptr (astore::instance-slot-value pptr index))
+               )
+          (dotimes (i 10)
+            (set_arrayraw_sb32_element array-pptr i
+                                       (+ (get_arrayraw_sb32_element
+array-pptr i)
+                                          1))
+            (format t "i: ~s value: ~s~%" i (get_arrayraw_sb32_element
+array-pptr i))
+            ))))))

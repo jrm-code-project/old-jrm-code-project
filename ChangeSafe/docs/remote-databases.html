@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>Accessing Remote ObjectStore Databases</title>
+  </head>
+
+  <body>
+    <h1>Accessing Remote ObjectStore Databases</h1>
+
+    <p>
+      Our three tier architecture provides for the ChangeSafe server
+      accessing ObjectStore servers on remote machines.  The
+      ChangeSafe server need only have the ObjectStore client software
+      running locally.
+    </p>
+
+    <h2>Provisions in ObjectStore</h2>
+
+    <p>
+      The ObjectStore client provides us with a fairly seamless means
+      of accessing remote databases.  ObjectStore stores the data for
+      a given database in a single host file.  When identifying the
+      database to be accessed by ObjectStore, one does so using a
+      string which we will refer to in this document as the
+      <b>database name</b>.  If the database resides on the same host
+      as the client (in our case the ChangeSafe server), the database
+      name is just the file path to the database file.
+    </p>
+
+    <p>
+      A simple extension to the local database naming scheme allows
+      access to the database file by a remote client.  The database
+      must be stored on a file system that is accessible from an
+      OnjectStore server.  A remote client would access the database
+      by prepending the host name of the database server (delimited by
+      a colon character) to the <b>database name</b> as would be used
+      if the database were being accessed by a client running on the
+      same machine as the server.
+    </p>
+
+    <dl>
+      <dt> <b>&lt;database name&gt;</b> ::=
+
+      <dd>
+	<b>&lt;local database name&gt;</b> | <b>&lt;remote database name&gt;</b>
+
+      <dt> <b>&lt;local database name&gt;</b> ::=
+
+      <dd>
+	A file pathstring identifying the database file.  This
+	pathstring is expressed in a pathname syntax appropriate to
+	the file system hosting the database file.  The database file
+	should be accessible via this pathstring.
+
+      <dt> <b>&lt;remote database name&gt;</b> ::=
+
+      <dd> <b>&lt;database host&gt;</b> "<b>:</b>" <b>&lt;local database name&gt;</b>
+
+      <dt> <b>&lt;database host&gt;</b> ::=
+
+      <dd>
+	The internet host name of a host running an ObjectStore server
+	which has access to the database via the <b>&lt;local database
+	name&gt;</b>.
+
+    </dl>
+
+    <p>
+      Accessing a database file via an NFS mount is discouraged.
+    </p>
+
+    <h2>Database Naming in ChangeSafe</h2>
+
+    <p>
+      A <b>ChangeSafe database</b> will typically be implemented as
+      serveral <b>ChangeSafe repositories</b>, each of which consists
+      of at least one ObjectStore database.  There is a <b>master
+      repository</b>, a <b>workspace repository</b> and numerous
+      <b>satellite repositories</b>.  The purposes of and distinctions
+      among these various repositories is beyond the scope of this
+      document.
+    </p>
+
+    <p>
+      Given only the name of a master repository, the names of the
+      other repositories can be determined via simple file pathname
+      transformations.  The ChangeSafe user sees only master
+      repository names.
+    </p>
+
+    <p>
+      Though CommonLisp <b>pathname</b> objects are general enough to
+      model <b>database names</b>, some lisp implementations do not
+      support pathnames in the fully general form described in the
+      CommonLisp specification.  As a workaround, in ChangeSafe
+      database names are modeled by DB-NAME objects.  A <b>DB-NAME</b>
+      object has slots for both the host and the file pathname of a
+      <b>database name</b>.
+    <p>
+
+    <p>
+      The host component of a DB-NAME will either be NIL for local
+      databases or a <b>DB-HOST</b> object.  DB-HOST's have a host
+      name and a platform type.  The host name is a string naming an
+      ObjectStore server host.  DB-HOSTs have identity: there should
+      only be one DB-HOST object per ObjectStore server.  Given a host
+      name string, ChangeSafe will try to find the DB-HOST object
+      corresponding to that name.  ChangeSafe does not have an
+      interface to the internet Domain Name System, so the only
+      mechanism it has available for matching a host name string to a
+      DB-HOST object is case insensitive string comparisson.
+    </p>
+
+    <p>
+      The platform type of a DB-HOST is a lisp keyword symbol
+      identifying the host type of the host.  It is typically
+      something like <tt>:DOS</tt> or <tt>:UNIX</tt> and is needed to
+      identify the file name syntax on that host.  ChangeSafe needs to
+      know the syntax so that it can parse and unparse namestrings to
+      lisp <b>pathname</b> objects, which are needed to compute the
+      workspace and satellite database repositories given a master
+      repository.
+    </p>
+
+    <p>
+      The source code for <b>DB-NAME</b>s and their related objects
+      and functions can be found in the file
+      <tt>ts50/utility/db-name.lsp</tt>.
+    </p>
+
+    <p>
+      A master repository is specified by the user as a string naming
+      the ObjectStore database file containing the master repository.
+      This string must be parsed into a <b>DB-NAME</b>.  Given the
+      DB-NAME of the master repository, DB-NAMEs of the workspace and
+      satellite repositories can be computed as needed.  At the point
+      where ChangeSafe is accessing ObjectStore (via the AllegroStore
+      interface to it), the DB-NAME is converted into the appropriate
+      ObjectStore <b>database name</b>.
+
+    <p>
+      Note that in the case of remote databases, the ChangeSafe server
+      has no access to the file system on which the database files are
+      stored.  Its only access to those database files is through
+      ObjectStore.
+    </p>
+
+    <h2>AllegroStore Configuration</h2>
+
+    <p>
+      ChangeSafe does not use ObjectStore directly, but does so
+      instead through Franz Inc.'s AllegroStore interface.
+      AllegroStore comes with a file named <tt>astore13.adb</tt> which
+      must be accessible to the ObjectStore server.  Before the
+      ChangeSafe server is started, the <tt>AS_CONFIG_PATH</tt>
+      environment variable must be setup on the host and in the
+      environment inwhich ChangeSafe will be running.  It should be
+      set to a string identifying the directory which contains the
+      <tt>astore13.adb</tt> file on the ObjectStore server host.  The
+      string should be in the format of a <b>database name</b> as
+      described above.  In other words, the value of the
+      <tt>AS_CONFIG_PATH</tt> environment variable is read by
+      AllegroStore (running on the ChangeSafe server) and passed to
+      the ObjectStore client, which identifies an ObjectStore server
+      and where in that file system the <tt>astore13.adb</tt> file can
+      be found.  Note however that it only identifies the directory
+      containing the file, not the file itself.
+    </p>
+
+    <p>
+      For AllegroStore to work properly when accessing remote
+      ObjectStore servers, A patch to allegroStore must be available
+      in the lisp environment inwhich ChangeSafe is compiled.  A
+      compilation warning will be issued if this patch is not present.
+      The exact details of the circumstances inwhich this patch is
+      required are beyond the scope of this document.
+    </p>
+
+    <h2>ChangeSafe Configuration</h2>
+
+    <p>
+      This simpleminded approach to the database naming and
+      identification problem results in a number of configuration
+      issues.
+    </p>
+
+    <p>
+      A <b>DB-HOST</b> object must first be created using the function
+      <b>DB-HOST-CREATE</b> before database names for that host can be
+      parsed into <b>DB-NAME</b> objects.  On a production ChangeSafe
+      server, database host definitions are typically placed in the
+      server's configuration file.  For development and debugging
+      purposes, database server hosts can be defined by typing
+      directly to the lisp environment's read/eval/print loop.
+    </p>
+
+    <h2>Operational Issues</h2>
+
+    <p>
+      Though the CONMAN/ChangeSafe specification requires that the
+      <tt>admin_database_create</tt> command create the directory in
+      which the new database will reside, it is unable to do so for
+      databases on remote servers because ChangeSafe has no access to
+      the filesystem on the remote server.  Its only access is through
+      ObjectStore, which does not provide an interface to the server's
+      file system.  When creating a new database repository on a
+      remote system, the ChangeSafe administrator will need to create
+      the directory which is to contain the database files by hand
+      before issuing the <tt>admin_database_create</tt> command.
+    </p>
+
+    <p>
+      The ChangeSafe command line server is always told what master
+      repository to use, either explicitly, or via a <tt>.conman</tt>
+      file in the user's workspace.  ChangeSafe's web based reports
+      server is not explicitly provided with the database name of a
+      master repository.  It prompts the user with a list of the
+      master repositories available to that server.  ChangeSafe is
+      unable to generate this list automatically.  It must be told
+      what master repositories are available.  There are two functions
+      available for this:
+      <b>NOTE-CONMAN-MASTER-REPOSITORY-DIRECTORY</b> and
+      <b>NOTE-CONMAN-REMOTE-MASTER-REPOSITORY</b>, both of which are
+      defined in the file <tt>ts50/conman/main.lsp</tt>.  Invocations
+      of these functions will typically be put in the configuration
+      file of a production ChangeSafe server.  For development and
+      testing, they can be executed directly in the lisp environment's
+      read/eval/print loop.
+      <b>NOTE-CONMAN-MASTER-REPOSITORY-DIRECTORY</b> takes a directory
+      pathname (on the ChangeSafe server host's file system) as
+      argument and will find all of the master repositories available
+      in that directory.  Since the ChangeSafe server has no way of
+      determining the contents of directories on a remote database
+      server host, remote master repositories must be explicitly
+      identified using <b>NOTE-CONMAN-REMOTE-MASTER-REPOSITORY</b>.
+      Note that the <b>DB-HOST</b> of such a remote repository must
+      have already been defined (e.g. earlier in the configuration
+      file) using the <b>DB-HOST-CREATE</b> function.
+    </p>
+
+    <hr>
+    Internal, Company Confidential
+    <br><address><a href="mailto:naha@content-integrity.com">Mark Nahabedian</a></address>
+<!-- Created: Tue May 02 10:54:55 Eastern Daylight Time 2000 -->
+<!-- hhmts start -->
+Last modified: Tue May 02 14:57:58 Eastern Daylight Time 2000
+<!-- hhmts end -->
+  </body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>ChangeSafe History Reports</title>
+  </head>
+
+  <body>
+    <h1>ChangeSafe History Reports</h1>
+
+    <p>
+      We collect information about events that concern the history of
+      products and subsystems into a <b>chronology</b> which we
+      implement as an RB-TREE oredered by TIME-STAMP.
+    </p>
+
+    <h2>User parameters</h2>
+
+    <p>
+      The user can specify several parameters which govern the history reports:
+    </p>
+
+    <ul>
+      <li>start date</li>
+      <li>end date</li>
+      <li>limit to file HARD!</li>
+      <li>limit to a particular class (subsystem history report)</li>
+      <li>verbosity</li>
+    </ul>
+
+    <h2>Issues</h2>
+
+    <p>
+      Is there a difference between the ways subsystem branches and
+      product branches are treated?
+    </p>
+
+    <h2>Events</h2>
+
+    <p>
+      These are the events that must be captured in the history
+      reports and the information to be collected for them:
+    </p>
+
+    <ul>
+
+      <li><b>USE-SUBSYSTEM</b>: Product branch starts using subsystem
+	<ul>
+	  <li>product name</li>
+	  <li>product DID</li>
+	  <li>branch name</li>
+	  <li>branch DID</li>
+	  <li>subsystem name</li>
+	  <li>subsystem DID</li>
+	</ul>
+	<p>
+	  <b>NOTE:</b> We record the product and branch information
+	  because in the case of a subsystem history report we want to
+	  track when the subsystem was used by which product branches.
+	</p>
+      </li>
+
+      <li><b>UNUSE-SUBSYSTEM</b>: Product branch stops using subsystem
+	<ul>
+	  <li>product name</li>
+	  <li>product DID</li>
+	  <li>branch name</li>
+	  <li>branch DID</li>
+	  <li>subsystem name</li>
+	  <li>subsystem DID</li>
+	</ul>
+	<p>
+	  See previous note.
+	</p>
+      </li>
+
+      <li><b>FREEZE</b>: subsystem is frozen
+	<ul>
+	  <li>subsystem name</li>
+	  <li>subsystem DID</li>
+	</ul>
+      </li>
+
+      <li>
+	<b>NEW-BRANCH</b>:
+	a branch of this product is made from this point in the timeline
+	<ul>
+	  <li>branch name</li>
+	  <li>branch DID</li>
+	  <li>
+	    the chronology for the child branch
+	  </li>
+	</ul>
+      </li>
+
+      <li>
+	<b>NEW-PRODUCT</b>: a new product is made based on this point in the timeline
+	<ul>
+	  <li>product name</li>
+	  <li>product DID</li>
+	</ul>
+      </li>
+
+      <li>
+	<b>NEW-SUBSYSTEM</b>: a new subsystem is made based on this point in the timeline
+	<ul>
+	  <li>parent subsystem name</li>
+	  <li>parent subsystem did</li>
+	  <li>subsystem name</li>
+	  <li>subsystem DID</li>
+	</ul>
+      </li>
+
+      <li>
+	<b>CSET-PROMOTION</b>: promotion of CSets
+	<ul>
+	  <li>added/removed</li>
+	  <li>cset name</li>
+	  <li>cset DID</li>
+	</ul>
+      </li>
+
+    </ul>
+
+    <p>
+      All events have a timestamp marking the point in the timeline
+      when they affected the product.
+    </p>
+
+    <p>
+      We will define a CLOS class to model each of these kinds of events.
+    </p>
+
+    <h2>Collection</h2>
+
+    <p>
+      We define the following fuinctions for collecting events into a
+      chronology:
+    </p>
+
+    <dl>
+
+      <dt>CHRONOLOGY-CREATE</dt>
+      <dd>Creates an empty chronology.</dd>
+
+      <dt>CHRONOLOGY-ADD-EVENT chronology event</dt>
+      <dd>
+	Adds the event to the chronology at the point specified by the
+	event's timestamp.
+      </dd>
+
+      <dt>
+	HISTORY-COLLECT-PRODUCT-COMPOSITION-CHANGES chronology
+	pc-branch interesting-classes interesting-subsystems
+	start-time end-time
+      </dt>
+      <dd>
+	Find the changes in the PC-SUBSYSTEMS slot of the PC of
+	pc-branch.  <b>USE-SUBSYSTEM</b> and <b>UNUSE-SUBSYSTEM</b>
+	events will be added to the chronology for those subsystems
+	which satisfy the criteria.
+      </dd>
+
+      <dt>
+	HISTORY-COLLECT-SUBSYSTEM-CHANGES chronology subsystem start-time end-time
+      </dt>
+      <dd>
+	Collects <b>CSET-PROMOTION</b> events for the specified
+	subsystem and adds them to the chronology.
+      </dd>
+
+      <dt>
+	HISTORY-COLLECT-SUBSYSTEM-FREEZES chronology subsystem start-time end-time
+      </dt>
+      <dd>
+	Creates <b>FREEZE</b> events concerning the specified
+	subsystem and adds then to the chronology.
+      </dd>
+
+    </dl>
+
+    <h2>Aggregation</h2>
+
+    <p>
+      The cronology will collect several cosynchronous events of the
+      same type concerning several subsystems of the product.  Under
+      certain circumstances, such a set of events should be coalesced
+      into a single event <i>for the product</i> rather than being
+      displayed as a separate event for each subsystem.
+    </p>
+
+    <ul>
+      <li>
+	When a branch event concerns all of the subsystems of a
+	product, they should be represented as a single branch event
+	for the product.
+      </li>
+
+      <li>
+	When several satellite cset events represent every satellite
+	cset of a master cset, they should be represented by a single
+	event describing the master cset.
+      </li>
+    </ul>
+
+    <h2>Display</h2>
+
+    <p>
+      Each event type will implement a method for
+      HISTORY-EVENT-DISPLAY which will output html describing the
+      event to a specified stream.
+    </p>
+
+    <h2>Random Requirements</h2>
+
+    <p>
+      HP wants a count of the number of lines added and removed for
+      each transaction.  This is potentially expensive to compute.
+      Perhaps we can cache it in the master catalog someday.
+    </p>
+
+    <hr>
+    <address><a href="mailto:naha@content-integrity.com">Mark Nahabedian</a></address>
+<!-- Created: Fri Aug 11 09:31:45 Eastern Daylight Time 2000 -->
+<!-- hhmts start -->
+Last modified: Tue Aug 15 16:32:30 Eastern Daylight Time 2000
+<!-- hhmts end -->
+  </body>
+</html>

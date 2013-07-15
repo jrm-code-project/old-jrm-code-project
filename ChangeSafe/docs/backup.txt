@@ -1,0 +1,96 @@
+The admin_database_backup command causes an invocation of osbackup, object 
+store's database backup command.
+
+For now, backup is always a full backup, and is to disk, rather than tape.
+
+Object store recommends taking a backup at least daily. According to
+object store, osbackup runs at about 4Gbytes per hour.  Using an estimated
+1 Gby database size, a full backup should thus take about 15 minutes.
+
+Object store claims that the backup can be done while the databases involved
+are still actively processing read-write transactions, and the entire set of
+databases that are backed up at once will be in a transaction consistent state.
+That is, the backup works in such a way that a restore of from the backup made
+while transactions are active will put the entire set of databases into a 
+state that is conceptually at an instant between transactions.  However,
+prudence dictates that we nevertheless take backups while transactions are
+not proceeding.
+
+As with any backup scheme, prudence also dictates that the backups be made to
+different places on different days.  An easy way to do that is to control the
+backups from cron jobs that fire in the wee hours of the morning.  A reasonable
+strategy would be to backup to one of 6 standard places on every day of the 
+week but one, and backup on that day to a place that contains the date as
+part of the backup file name. 
+
+There is always a risk that what is backed up is already corrupt, but the
+corruption has not yet been noticed.  Hence, keeping backups for an extended
+period of time mitigates the risk of having all the backups contain corrupted
+data.
+
+Backup requires 2 arguments: what master repository is to be backed up, and
+where it is to be backed up to.  If a raid disk system is not in use, the
+backups should be made to a different physical disk drive from the drive which
+holds the master repository, so that failure of the drive holding the master
+repository will not also make the backup unreadable.  Separate disk drives
+should also speed up the backup process.
+
+A master repository consists of a group of related object store databases, and
+all of them must be backed up with the same osbackup command in order to ensure
+that all are consistent. Currently, there are 2 databases plus one per class in
+each master repository.  Each time a class_create command is sucessfully 
+executed, one more database is added to the repository. Consequently, the
+set of databases in the repository is dynamic, and the admin_database_backup 
+command must tell osbackup what databases it should back up.
+
+Backups must be easy to do on a cron job basis with no human intervention. On
+the other hand, restoring from backup is hopefully rare, and ideally should
+only be done to test that it works.  This is because a restore typically
+loses all the transactions that occurred after the backup was done, so all
+restores are typically only partial restores.  During a restore, the database
+servers must be running, but the application servers should not be, as the
+databases are unusable until the restore is complete.
+
+
+To do a backup, invoke
+csf admin_database_backup -database <master-database> -image-file <backimagepath>
+
+The backupimagepath must be a path to a nonexisting file with adequate space
+in its mount point to hold the entire contents of all the databases which are
+associated with that master database. It must be prefixed by a hostname and a
+colon. The hostname is where the underlying osbackup command will be run, and
+the image file path is in that host's filesystem.  Further, the host should be
+the host that is the host where the database actually resides, to avoid the
+entire database moving through the network. 
+Let backupimagefilepath is the same as the backupimagepath, except that the
+prefixed host: has been omitted. Let importfile be the same as
+backupimagefilepath, except that .dbn has been appended.
+
+A small file with the name importfile is constructed that contains the names of
+every database to be backed up, one per line. The name of this file is passed
+to osbackup to inform osbackup what databases it should back up. This is known
+as an "import" file.
+
+The osbackup command that runs on the host given in the backupimagepath is:
+
+osbackup -a -I <importfile> -f <backupimagefilepath>
+
+To restore, should that ever be necessary, it is first necessary to ensure that
+there are no "extra" databases in the master repository directory. Such 
+databases could exist if a class_create command was executed after the backup
+but before the restore. If it is not known whether this is the case, the 
+entire set of database files in the directory can be removed prior to the 
+restore, or the backupimagepath.dbn file may be consulted to see what databases
+are in the backup. Alternatively, osrestore -t -f backupimagepath will print
+a list of databases in the backupimage.
+
+Once it is certain that there are no "extra" databases in the master database
+directory, a simple invocation of osrestore -f backupimagepath should restore
+all the databases to the state they had when the backup was done. Remember,
+work done on that master repository since the time of the backup will be lost
+by the restore, and must be redone after the restore operation completes.
+This is of course a potentially serious loss of important data, but it is
+implicit in the notion of restoring to a prior state from a backup, absent a
+transaction log of the changes since the backup. We currently do not yet 
+support the notion of keeping a transaction log.
+

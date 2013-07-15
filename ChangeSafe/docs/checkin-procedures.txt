@@ -1,0 +1,45 @@
+
+These are the steps for checking in changes to software and other entities
+that directly affect product operation.  If all you're doing is revising
+documents unrelated to operation of the product, then you don't necessarily
+need to perform all these steps, though item #1 is always required for
+checkin of any entity.  I suppose it's conceivable we should have other CM
+projects to manage these sorts of files. (An example of this type of file
+is the file you're reading now).
+
+1) Update your workspace (either way, with cvs or csf, as appropriate)
+
+1.5) Ensure you've updated version.txt, and the version number in load.lsp
+
+2) Do a clean recompile to ensure there are no warnings (which wouldn't
+necessarily surface in an incremental recompile), and to ensure that
+macros/inlines are observed in all modules.  You should perform the compile
+in a freshly started lisp to eliminate stale environmental impact on the
+compilation.
+
+3) Run the regressions.  If you know your changes don't impact all
+packages, you can theoretically avoid running all regressions, but conman
+is a must.
+
+4) Checkin your changes (cvs commit, changesafe master_change) For your change 
+comment (cvs), and abstract (csf), cut and past the version abstract you placed in 
+version.txt.  
+
+Make sure you have remembered to do the logical 'add_file' operation for
+new master files for new tests, and any other files which are new to the
+change.
+
+5) [cvs only, preferred but optional [really need LAN speeds to do it]]
+
+    Label the cvs repository with a 'tag' e.g. 'v157' for the ts50 root (recursively).
+
+6) Tar and gzip your ts50 hierarchy, which you have committed and which is known to 
+work, as a 'ts50vXXX.tgz' file and place it under the e-zserver ts-archive\packed 
+directory.
+
+Do this last step regardless of which CM product we're using.  It's a safety measure, 
+and I periodically burn these kits into cd-rom.  This is true regardless of whether or not 
+CM projects have reference directories.  
+
+7) Send mail to the team with your version description so we'll know there was a checkin.
+

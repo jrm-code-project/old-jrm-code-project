@@ -1,0 +1,174 @@
+
+ChangeSafe Database Schema Control
+
+Any database product has ways to represent data on disk
+within the database files.  This representation is called
+the schema or schema definition.  The DB products always
+have some mechanism to easily understand which 
+representation is in use within the server executable
+(the in-memory version) and which is in use within the
+disk files that make up the database (the on-disk version).
+
+In Changesafe, we do this in two ways.  First, our 
+compiler/database vendor has compact representations of
+the class definitions describing the data structures.
+These class definitions are kept in both the executable
+(in-memory) and the database files (on-disk).  These
+class definitions 
+are also called class schema definitions.  The second
+way ChangeSafe tracks this information is by means of
+two numbers.  These are the major and minor schema version
+numbers.  
+
+The first method (the class schema definitions) is 
+maintained automatically by Franz (our Lisp compiler
+vendor) and is derived directly from our source lisp code
+where the
+class declarations are made.  If we make a change to the
+class declarations, the difference between the in-memory
+version of the class schema and the on-disk version is
+automatically detected when the database file is opened
+and can be automatically handled.
+
+The second method (major and minor numbers) is used by
+CII to track both the changes handled by the first method
+(so we have a method to refer to them by) and to track
+other changes that class definition changes don't cover.
+For example, if the class definition says that a member
+can hold any kind of data (a relatively common occurrance)
+but we have always stored integers in that member, when
+we suddenly start storing strings in it, the class 
+definition would not change but we would most likely
+update one of the two schema numbers.  The server_version
+command will tell you these two schema version numbers
+(among other things).  
+
+At this time, ChangeSafe tries very hard to avoid any
+unexpected schema changes of either type.  When a database
+file is opened for normal use (as happens with nearly every
+command except HELP), we do it in such a way that the Franz
+automatic conversion will not take place.  We also check
+the schema major and minor version values.  If either would indicate that
+a database file is out of sync with the executable, we
+will give an error that says so, and refuse to use that
+database file.  The error would look something like:
+
+Schema mismatch between the executable and the DB file:
+/tmp/pww/ACL-temp/7bis7cne/server/__database/__port-test-16a-semipersistent-workspaces.db, talk to your
+ChangeSafe administrator about this problem.
+
+The error could also give you specific schema version 
+numbers.  In either case, that database file is unusable
+by the software until it has been upgraded.  The user
+is directed to speak with the ChangeSafe administrator.
+Note that additional information will be put into the
+server log file.  If the schema change is unexpected,
+this log file information will be important in diagnosing
+the problem.
+
+We provide the admin_database_upgrade command to do the
+database schema upgrade task.  You give it the name of
+your master database (the one with the .mdb extension)
+and we will upgrade all of the files in the set of
+database  files.  The upgrade will convert all of
+your existing data in the database files without loss
+of information.  However, a few words of warning
+before we get to the details of how to use this command.
+
+1) Schema upgrades are one way trips.  You can only upgrade
+from an older version (on-disk) to a newer version
+(in-memory).  That is to say, the database file will be
+upgraded to match the in-memory class schema definitions.
+You may not go from a newer version (on-disk) to an older
+version (in-memory).
+
+2) You should always do a admin_database_backup command before
+you use the admin_database_upgrade command.  This preserves the
+alternative of using an older executable as you may change your
+mind and want to go back to using the old executable.
+
+3) you can not use the same database files with two different
+versions of the software if there has been a schema change
+from one executable to the next.  Plan your software
+release upgrades accordingly.
+
+4) You may not downgrade (from a newer on-disk version to an
+older in-memory version).  Unfortunately, CII can not examine
+the schema version numbers until the schema class definitions
+have already been changed.  This means that we can not detect
+a downgrade situation until after the database file has been
+altered to have the different class schema definitions.
+Fortunately, we do detect the 
+problem before we upgrade your data.  Only the class schema
+definitions have been altered.  When this occurs, your 
+database is in a delicate condition.  You must immediately
+stop using this executable on the database files in question.
+This may mean shutting down the server.  You should then start
+a copy of the proper server and issue the admin_database_upgrade
+command again.  This will bring your class schema definitions
+back into sync with the data.  It will also 'upgrade' the
+instances of that data, but in this situation, this will 
+effectively be a no-op.  Please note that we are working with
+our compiler vendor to fix this inadvertant downgrade.  We
+will not do this inadvertant downgrade as soon as we are able
+to avoid it.
+
+The syntax of the admin_database_upgrade command is as follows:
+
+csf admin_database_upgrade -upgrade-password ms666
+    -repository-path "/your/path/to/your/master/db.mdb"
+
+This command may be run at any client machine but will, of
+course, be executed by the ChangeSafe server on the server
+machine.
+
+The -upgrade-password is required.  The password is not
+intended as a security shield.  Instead it is a way to verify
+your intention to upgrade.
+
+The -repository-path tells us where to find your master 
+database file (include the full pathname).  The command
+will upgrade each database in turn, starting with the master
+database.  If it turns out that you are doing a downgrade,
+only the master database file will be modified before we
+detect the situation.
+
+As the upgrade proceeds, we will generate output describing
+what is being done to each file.  This will cover the
+changes to the class schema definitions, the schema number
+changes, and the types of objects being converted.  The
+bulk of this output will be surpressed if you use -v0.
+
+Note that no attempt is made to determine if a conversion
+is actually needed.  We assume that when this command is
+used, you wish a conversion to happen.  If one is not needed,
+the command will have no effect except that every object in
+the database files will be touched.  
+
+The admin_database_upgrade command will attempt to convert
+the individual objects in such a manner that we will not
+run out of memory.  Since we will be touching every possible
+object in all of the databases, this is a real concern.  It
+is possible that our heuristic may not work in all 
+circumstances.  If you run out of memory while doing this
+command, there is one other command line option to help
+you control this.  It is:
+
+csf admin_database_upgrade -upgrade-password ms666
+    -repository-path "/your/path/to/your/master/db.mdb"
+    -class-block-count <some positive integer>
+
+The -class-block-count parameter controls how many blocks
+will be done at a time.  The default is 10000.  A larger
+value will be somewhat faster.  A smaller value will use
+less memory.  It should be made smaller if you have run out
+of memory.
+
+The command will adjust the -class-block-count value to
+make sure it is at least 1, and for other conditions.
+
+When you have run out of memory while using the 
+admin_database_upgrade command, the state of the set of your
+databases is inconsistent.  To fix this situation, you should
+choose an appropriate value for this parameter and rerun
+the admin_database_upgrade command.

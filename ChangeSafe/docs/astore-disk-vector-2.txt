@@ -1,0 +1,564 @@
+Subject: [Fwd: Re: [spr22781] Allegrostore database fragmentation - SHOWSTOPPER]
+Date: Mon, 16 Oct 2000 18:08:48 -0400
+From: Peter White <pww@content-integrity.com>
+To: Dev <cii-dev@content-integrity.com>
+
+-------- Original Message --------
+Subject: Re: [spr22781] Allegrostore database fragmentation -
+SHOWSTOPPER
+Date: Mon, 16 Oct 2000 08:58:49 -0400
+From: dtenny@content-integrity.com
+Reply-To: dtenny@content-integrity.com
+To: dtenny@content-integrity.com, sdj@franz.com (Steve Jacobson)
+CC: bugs@franz.com, pww@content-integrity.com,
+jrm@content-integrity.com,jkielty@franz.com, harding@franz.com
+
+On 14 Oct 2000, at 12:46, Steve Jacobson wrote:
+
+> Dave,
+>
+> >Good, so from our perspective the two salient issues are:
+> >
+> >a) that Franz is ok with us shipping runtime systems based on beta
+> >b) that we can receive necessary patches to release 6 in a timely
+fashion,
+> >whether it's beta or final
+> >
+> >What I hear Steve saying is that (A) is ok, and (B) will happen, but part
+of
+> >getting a patch may mean shifting from R6 beta to R6 final, and that's
+okay
+> >with us I think.
+> >
+> >Is the management team at Franz ok with this too?
+>
+> I will initiate discussions on our side about this.
+>
+> >2) We use SLOT-SVREF with preallocated arrays so that we don't have to
+> >reallocate the array every time, and because preallocation in any form is
+> >always good. The as noted above, slot-svref has a high overhead in its
+use,
+> >and unfortunately there are some arrays we have to iterate over a lot, so
+we
+> >use simple vectors because they're efficient at iteration.
+> >
+> >3) The simple vectors, and occasional lists, are probably where the
+problem
+> >arises.  A typical scenario in our code, in an oversimplified example
+> is:
+>
+> You may be able to reduce this problem by going exlusively to vectors,
+> preallocating a large vector size, and then exclusively using a
+> slot-svref replacement. At the bottom of this reply, I've included an
+example that
+> may address your slot-svref overhead concerns.
+
+So within a transaction we can stash both the object (instance) pptr, as
+well
+as the slot pptr, and index off that using the astore::vectort_slot_aref
+and
+astore::vectort_slot_setf_aref keywords.  We'll try it out to see how
+much
+overhead it eliminates, since it gives us the benefits of reusing
+preallocated
+buffers on disk and eliminating (at least some, maybe most) of the
+overhead of
+accessing them, as well as marshalling the vector into lisp heap space.
+(If I read your code correctly).
+
+Of course this completely thwarts the astore abstractions, but it could
+be very
+useful.
+
+Can this mechanism (which I take to be an expansion to some degree of
+SLOT-
+SVREF), and SLOT-SVREF, be used to update signed-byte 32 arrays?  Right
+now my
+impression is that we can't use SLOT-SVREF on SB32 arrays (which attempt
+to
+prevent fixnum allocation in the database).  It would be useful if we
+could do
+that too.  Right now, we have arrays which are SB32 but are reallocated
+every
+transaction as they grow. We didn't use SLOT-SVREF because they have
+10's of
+thousands of entries, and even if we make it efficient using your code
+below,
+we still can't afford to have 10's of thousands of fixnum objects in the
+database.  Obviously moving a whole 10,000 element sb32 array into and
+out of
+memory every transaction, and updating it on r/w transactions, isn't
+very good.
+A non-marshalled sb32 vector management interface would be a life
+saver.  We
+were considering encoding it in blobs, but haven't figured out if
+there's a
+better way, or how much overhead the blob encoding/decoding on that many
+elements would be.
+
+>
+> Note also that I looked at the list code, and Astore DOES do only one
+> allocation for the list "container". The members are allocated
+> seperately. It is true when you reset the list in the slot, the
+> original list and each member (if a fixnum, list, or vector, for
+> example, but not an instance) is deleted and a new list is allocated.
+>
+
+Good, one myth debunked.  Now we know that conses are marhshalled into a
+vector.
+
+> >But Franz may want to think about
+> >providing some more specific and efficient astore container mechanisms,
+> >or else improving the persistent performance of (at a minimum) lisp
+> >arrays.
+>
+> This is a valid point, and we have plans in this area. Specifically,
+> we intend to provide an indexable collection interface to allow
+> efficient range and multi-variable queries. Such functionality should
+> also help in your situation. This work has not yet been scheduled;
+> however, we have promised another customer a test version when it is
+> completed - it you are interested in this also, let me know.
+>
+
+Count me interested.
+
+> >
+> >For now we use preallocated vectors and slot-svref when we can, but it's
+just
+> >too inefficient for much of our use.
+>
+> Please look carefully and experiment with the example at the bottom of
+> this reply and then reexamine your opinion about accessing vectors "in
+> place".
+>
+> >So if you had a list with 100 conses, and each cons pointed to a fixnum,
+> >and you simply prepend a cons to that list,  Allegrostore will deallocate
+the
+> >100 conses AND the 100 fixnum objects, and reallocate them all.  I bet
+this
+> >just kills objectstore, and it's currently outside my control.
+> >
+>
+> As said above, there's only one allocation for the 100 element list,
+> but you are correct about the rest. If you can use preallocated
+> vectors, you will eliminate the "container" reallocations, and only do
+> fixnum reallocations on elements that "really" change.
+>
+> If you remain concerned about fixnum reallocation, there may be
+> strategies available with Astore 1.3, but there are costs. For example
+> (just off the top of my head), use blobs for all fixnums and have
+> vector elements contain blob offsets. Thus, the vector element will
+> never change, and you can change the blob data without triggering a
+> reallocation. The cost, of course, is non-locality - the blob may be
+> on a different page than the vector, which already may be on a
+> different page than the containing instance. That issue can only be
+> addressed in Astore 2.0 with presistent foreign type arrays.
+
+I'll have to think about that one.  It's slightly twisty to
+conceptualize the
+code maintenance and data use costs.
+
+While thinking on the fixnum problem, I had a related hack (really
+gross) idea.
+We could allocate a 'fixnum' database, with one 16MB blob segment, and
+use it
+across all of our databases in a cross-database pointer fashion.
+
+We could allocate pointers into the blob to the slots of pclos objects,
+and
+provide an interface to decode their fixnum value (by calculating the
+pointer
+into the blob minus the blob start address), we could eliminate all the
+fixnums
+in the system AND have the information be more or less directly encoded
+in the
+pclos slots.
+
+Could it work?  I'd happily give up all open-coded fixnums and 16MB to
+represent them.  I'd use just 16MB because most of our fixnums aren't
+going to
+be larger than the maximum array-index value anyway.
+
+>
+> >
+> >    Even if we couldn't do it for lists, I have "persistent cons" objects
+> >    that I could use, and I could make a subtype of it that was declared
+> > to hold
+> >    fixnums, and that might help some reallocation scenarios.
+> >
+> >    I'm guessing this would require the use of discriminant functions in
+> > astore
+> >    (an objectstore term), and that this isn't an easy fix for Franz. But
+> > I was
+> >    suggesting it two years ago, and I still feel it's a huge win for
+astore
+> >    apps.  If it *could* be done, is there anybody at Franz who thinks it
+is
+> >    NOT a win?
+>
+> It would be a win, but only if it was transparent - i.e. the current
+> Astore charter to support full CLOS functionality would still
+> work. That makes the *could* requirement that much more of a
+> hurdle.
+
+Of course I'd prefer transparency too. But they're such a huge
+percentage of
+the database and highly likely to be a big cause of segmentation, so we
+need to
+do something sooner or later, whether it's franz or cii.
+
+>
+> >5) What causes os_chained_list_pt allocations when we use astore?
+> >    I notice that they're second to fixnums in their allocation
+properties and
+> >    impact on the btrees.
+> >
+> >    29948        0    29948       24     718752 os_chained_list_pt<4,8>
+>
+> This is not our class. My guess: this is an Ostore object related to
+> our list and vector allocations, and also perhaps our instance
+> "containers".
+>
+
+My guess is that these arise from your use of os_set, os_bag and perhaps
+other
+ostore container types.  They don't appear in raw ostore applications
+unless
+you use the ostore container interfaces, or so I believe based on my
+out-of-
+date ostore programming experience.  And since there are a lot of them,
+it
+would be useful if I at least knew what I did to allocate (and
+reallocate?)
+them, if we can't get rid of them.
+
+> >6) What causes 'instance' allocations in astore? They're third in their
+> >    allocation. 'instance', 'os_chained_list_pt', and 'fixnum' objects
+> > together
+> >    represent 75% of the objects in the btree, anything we can do to
+reduce
+> >    their number would likely be the predominant wins in the btree
+clobbering
+> >    fix.
+> >
+> >    I'm guessing that 'instance' objects are related and proportional to
+> > pclos
+> >    objects and that we can't reduce 'instance' allocation. However the
+> >    fixnums and 'os_chained_list_pt' entries are still 52% of the btree
+> > entries.
+>
+> Instance objects are directly connected to pclos objects, and the
+> proportion is 1:1.
+>
+> >7) What exactly is the per-object overhead cost of pclos objects?
+> >    Bytes/slots/references added by the implementation in addition to our
+> >    own slots.
+> >
+>
+
+That's useful to know.  There's certainly enough overhead that we'd
+never want
+to use our own persistent conses and the like, at least without
+substantial
+need.
+
+> class instance: public lispobj
+> {
+> public:
+>
+>     wrapper *wrap;
+>     os_bag *back;
+
+This suggests to me that astore allocates N os_bag instances for N pclos
+instances, provided there are any references to the pclos instance (and
+it
+would be pointless not to have references in most cases).  That's sounds
+like a
+LOT of  overhead and would explain the near 1:1 ratio of
+os_chained_list_pt<4,8> to pclos instances.
+
+Is there any way to turn this off?  What would the impact be?  This is
+25% of
+the instance allocation in the database.  And since references to
+objects
+increase over time, potentially, the os_bag stuff will potentially grow
+and
+fragment the database, even if I preallocate objects.
+
+I suspect this is where we point to persistent ftypes as the answer, but
+it
+sounds to me, if I understand this correctly, that you're making pclos
+users
+pay a heavy price for an abstraction that many people won't use.
+(We use the 'referencers-of' capability, whatever it's called, in
+exactly one
+place, a diagnostic routine).
+
+Perhaps it's not as bad as it sounds, but it sounds very costly and the
+os_chained_list stuff is clearly a substantial part of the database
+btree
+information.
+
+>     plispobj *ivs; /* an array of pointers to lispobj's or os_set's */
+>     short   flags;  /* see iflag_ above */
+>     unsigned short ihash; /* for hash tables */
+>     unsigned int oid; /* used now during dumping */
+>
+>
+> The ivs array is the slot values.
+> The wrapper contains the information needed to know how many slots
+> there are and other meta info - this allows "stale" instances; not all
+> instances in the same class have the same wrapper.
+>
+> The amount of space needed for each slot value depends on what it
+> is. At the minimum, there is the overhead of an integer to store the
+> code for what it is. For example:
+>
+>
+> class plispobj
+> {
+> public:
+>     /* pointer to a lispobj or an os_set of lispobjs *\'s
+>      * we would like to use a union here but that would require tagging
+>      * each pointer with a type code and that would waste space
+>      * so we'll just use casting.
+>      */
+>     lispobj *obj;
+>
+>
+> class lispobj
+> {
+> public:
+>     int code; /* one of the t_xxx values */
+>
+> class fixnum: public lispobj
+> {
+> public:
+>     long value;
+>
+>
+> The "back" collection is used for referential integrity, another
+> Astore functionality I believe you've felt has a high cost for
+> benefits you don't need.
+>
+> All this adds up to not that big of an overhead, but a lot of
+
+I have to disagree here. Look at these top-three (by total size) entries
+for
+the fragmented database for which I sent the ossize output:
+
+       0      385   111340        8     893800  _CM_vanilla_ptr_slot_dup
+   29948        0    29948       24     718752  os_chained_list_pt<4,8>
+       0    54531   178602        4    1150656  plispobj
+
+The os_chained_list stuff is third in its consumption of size in the
+database,
+and second in the number of elements cluttering the btree.  This is a
+HUGE
+overhead.  Maybe it isn't the 'osbag* back' pointer causing the
+os_chained_list
+allocations, but whatever is causing that allocation, and it's in the
+astore
+code I'm sure, is imposing large overhead.
+
+Now maybe this is used for list or vector representations, in which case
+it's
+proportional to my usage.  But it doesn't look that way from the dump,
+since
+it's so close in number to the number of instance objects in the dump,
+i.e.:
+
+   29308        0    29308       24     703392  instance
+
+> non-local indirections. That is why I've felt that persistent foreign
+> type arrays are what you need - you have complete control, there is
+> only the same minimal overhead for the array itself, and NONE for each
+> element, and there is no overhead for things like referential
+> integrity.
+>
+> >Something Franz should be aware of is that we make use of the persistent
+hash
+> >tables.  Perhaps the most data intensive tables we use are these:
+> >
+> >Tables keyed by strings and valued by pclos objects, which can be
+expected to
+> >grow to 100,000 or more entries.  For example, our customer is trying to
+load
+> >30,000 change sets into the database as part of the initial load and data
+> >migration.  Each change-set has a string key in two tables (the string
+> >keys are
+> >different) that point to the change-set.
+> >
+> >I haven't done a test yet to see if these are scaling reasonably, but I
+> >wanted
+> >to let you know we're using them a fair bit in case there are known
+problems.
+> >
+>
+> I just learned that you rely on these yesterday during our phone
+> conversation. This is a new subject, separate from the list/vector
+> issues we have been discussing in detail. There are no known
+> persistent hash table issues, and they have been used extensively by a
+> number of customers. There have been no reported problems in at least
+> 3 years, but that also means that I haven't had my nose in the
+> relevant code area, so I don't have any "gotchas" in mind to warn you
+> about. It may be a very good idea for you to do stress tests in this
+> area (because any tests I do may not be similar to how you use hash
+> tables) and forward any questionable perfromance issues you see.
+>
+> >
+> >Guess that's enough brain dumping/storming for now.
+> >
+>
+> I hope this reply helps. Here is the low-level slot-svref replacement
+> example:
+>
+> (in-package :user)
+>
+> (eval-when (compile load eval)
+>   (use-package :astore))
+>
+> (defclass foo ()
+>   ((foo :accessor foo :initarg :foo :allocation :persistent))
+>   (:metaclass persistent-standard-class))
+>
+> (defun setup ()
+>   (with-database (db "foo.db" :if-exists :supersede)
+>     (with-transaction ()
+>       (make-instance 'foo :foo (vector 1 2 3 4 5 6 7 8 9 10)))))
+
+The reply helps.  While reading it I had another idea which I'd never
+had
+before.
+
+In my code, I have a caching layer to preserve the result of
+(slot-value f 'foo) so that when the array is marshalled into the lisp
+heap I
+can do EQ manipulations of the array until such time as I set the final
+updated
+array back into the slot to flush it to the database.
+
+It occurred to me that may be I could use lisp-marshalled arrays for
+speed of
+access, mutation, etc, and use setf of SLOT-SVREF (or inlined code
+below) to
+perform in-place vector update of the disk structure.
+
+This would combine the best (and worst) of both worlds.  I could have my
+lisp
+array type for fast access, and I could propagate updates both to the
+memory
+version and the disk version, WITHOUT reallocating the disk version,
+thus
+allowing me to preallocate, etc.
+
+Is there anything which precludes me doing setf of slot-svref if I've
+retrieved
+the marshalled copy of the array?
+
+This might be an occasionally useful workaround to the code below,
+especially
+if I were to cache the memory representation across transactions so that
+I
+could reuse it without remarshalling it (provided I have a way of
+knowing if
+the representation has changed on disk between transactions to assess
+the
+validity of my lisp-heap array).  It would be especially useful for
+those
+signed-byte 32 arrays, if the slot-svref (or inlined example below)
+could be
+used to manipulate sb32 arrays without allocating fixnum objects in the
+database.
+
+I could see a couple of new hybrid array implementations/abstractions in
+my
+astore interface library with this technique (if it works), and I can
+rework my
+astore-disk-vector for improved access below.  So to resummarize the two
+questions in this section of the memo:
+
+1) can I get the slot value lisp-marsheleld memory vector representation
+and
+STILL do setf of slot-svref if I don't zap the slot value?
+
+2) can I do sb32 element access and update with slot-svref? (I think the
+answer
+is no.)
+
+3) Can I do sb32 element access and update with some special varient of
+the
+code below? (Basically implement my own sb32 access to disk vector
+access)?
+
+4) If I can do 3, can I execute the hybrid technique combining 3 for
+update and
+simply slot-value marshalling of the sb32 vector as I do now into the
+lisp
+heap?
+
+>
+> ;; the technique below is valid ONLY if foo slot is :allocation
+:persistent
+> ;;  will not work for :allocation :persistent-class!!!
+> (defun show-them ()
+>   (with-database (db "foo.db")
+>     (with-transaction ()
+>       (let ((foo (first (retrieve 'foo))))
+>       (astore::validate-instance foo) ;; do this once per transaction to
+insure the instance is OK
+>       (let* ((pptr (astore::p-so-pptr foo))
+>              (db (database-of foo))
+>              (index (astore::p-class-slot-index (class-of foo) 'foo)) ;;
+2nd arg is slot name symbol
+>              )
+>         (dotimes (i 10)
+>           (let (result
+>                 (result-pptr (astore::vectort_slot_aref
+>                               pptr index i 0))) ;; 3rd arg is vector index
+>             (if* (eq result-pptr 0) then (setf result nil)
+>              elseif (<= result-pptr 2)
+>                then (error "unexpected vector lookup return value")
+>                else (setf result (astore::pptr-to-lisp-value result-pptr
+db)))
+>             (format t "i: ~s value: ~s~%" i result))))))))
+>
+> ;; almost the same as show-them, except there is an additional set call
+> (defun increment-them ()
+>   (with-database (db "foo.db")
+>     (with-transaction ()
+>       (let ((foo (first (retrieve 'foo))))
+>       (astore::validate-instance foo) ;; do this once per transaction to
+insure the instance is OK
+>       (let* ((pptr (astore::p-so-pptr foo))
+>              (db (database-of foo))
+>              (index (astore::p-class-slot-index (class-of foo) 'foo)) ;;
+2nd arg is slot name symbol
+>              )
+>         (dotimes (i 10)
+>           (let (result
+>                 (result-pptr (astore::vectort_slot_aref
+>                               pptr index i 0))) ;; 3rd arg is vector index
+>             (if* (eq result-pptr 0) then (setf result nil)
+>              elseif (<= result-pptr 2)
+>                then (error "unexpected vector lookup return value")
+>                else (setf result (astore::pptr-to-lisp-value result-pptr
+db)))
+>             ;; we're assuming result is always an integer here
+>             (incf result)
+>             (setf result-pptr (astore::vectort_slot_setf_aref
+>                                    pptr index i
+>                                    (astore::lisp-value-to-pptr result) 0))
+>             (if* (eq result-pptr 0) then (setf result nil)
+>              elseif (<= result-pptr 2)
+>                then (error "unexpected vector lookup return value")
+>                else (setf result (astore::pptr-to-lisp-value result-pptr
+db)))
+>             (format t "i: ~s value: ~s~%" i result))))))))
+
+Summary: Looks like some new and useful technqiues are being proposed
+for
+efficient array manipulation.  I still have concerns about fixnums (and
+some
+questions above on how we might eliminate them), and concerns about the
+os_chained_list elements.

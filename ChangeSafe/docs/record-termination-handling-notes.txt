@@ -1,0 +1,71 @@
+This is a complicated topic.  The following matrix describes the possible inputs to the
+product, and the options for what comes out based on various platforms and terminators.
+
+What Goes In from a given client			        What Comes Out
+-----------------------------------------------------------     -------------------------
+Binary	Client		Foreign		Mixed			Binary Originating Client
+	Host		Host		Terminators		       Host	    Host
+	Convention	Convention				
+	(eg CRLF on DOS)(eg LF on DOS)	(LF & CRLF on DOS)
+(B)	(CH)		(FH)		(M)			(B)	(OH)	    (CH)
+===========================================================     =========================
+ X								 X
+-----------------------------------------------------------     -------------------------
+         X									      X
+-----------------------------------------------------------     -------------------------
+			X 
+4 Scenarios:
+
+A) Treat foreign terminators as if they were CH convention.			      A
+   (Normalize/convert)
+B) Treat as terminators, but note terminator preference
+   for file.                                                            B1            B2
+   B1 is default, B2 is an option.
+   (Default, what went in comes out)
+C) Treat as Binary                                              C       C (same result)
+
+A is a suitable default, B and C are
+more problematic options, but worth having.
+We're using B right now, as derived from a general
+case of (D) below.
+-----------------------------------------------------------     -------------------------
+                                           X								
+
+A) as above.
+B) As above, however it is not pragmatic for
+   the mixed terminator case.  
+   There is an implementation difficulty, we have
+   to store the terminator used with each record, and
+   retrieve only in views with the 'note terminator'
+   option enabled.  
+C) As above.
+D) Heuristically determine 'dominant' terminator convention
+   note as record terminator preference for the file (for
+   purposes of record boundary detection).
+   KEY: don't convert non-dominant terminator delimited
+   text into records.  So if CRLF is dominant, all
+   it is the record deliminiter, and LF's are left in the
+   file but as plain text.						D (WITH CAVEAT!)
+
+   Caveat 1: Revision granularity is reduced, which is
+   not desirable.
+
+   Caveat 2: Dos->Unix->Dos is a lossful operation.
+   Unix->Dos->Unix is not.  (??, can't remember why)
+
+E) Treat client host conventions only, note this option.			     E
+   E.g. only CRLF on dos client is terminator,
+   ignore LF's, treat as text.  Warn about using this
+   option.
+
+   Really a variant on D above, with potentially the same
+   caveats, we just automatically determine the 'dominant'
+   terminator by virtue of platform.
+
+   Caveat: Dos->Unix->Dos makes complete garbage
+   (semantically) of diffs, since record boundary 
+   is client specific.  Bad choice, don't allow at all.
+
+A is a suitable default, D is what we're trying now so that 'what you put into it is what
+you get out of it' on homogeneous client platforms, even if it has mixed terminator types.
+(Which happens quite a bit at e-zchange).

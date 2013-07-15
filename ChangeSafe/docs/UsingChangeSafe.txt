@@ -1,0 +1,362 @@
+ChangeSafe is powerful and very easy to use.  It is hard to get a feel
+for the advantages of the tool without playing with it.  I'll try to
+illustrate by showing how ChangeSafe is typically used.  I've culled
+these examples from some of our own production logs[1], but I've
+changed the examples to show how a fictitious software company,
+`Albatross Vaporware', develops its `Argon' product[2]. 
+
+
+The Developer's View
+
+Here is an example of the simplest use of ChangeSafe.
+
+Like many source control systems, ChangeSafe uses a `workspace' model
+for development.  A software engineer will create a local copy of the
+files in a project, make changes to the local copy, and then transfer
+the modified files back to the server.  The workspace can then be
+deleted, or simply reused for further development.  Some developers
+prefer to have a single workspace while others have several.  Each
+workspace has its own separate copy of the files.
+
+
+Creating a workspace
+
+The following command line creates a workspace[3]
+
+  csf ws_create -product Argon wksp
+
+This creates on the local disk a subdirectory called wksp and
+populates that subdirectory with the files from the latest version of
+the main branch of the `Argon' product.  The files are initially set
+to read-only.
+
+These next commands assume that we have done a `cd' to the workspace.
+
+Creating a cset
+
+Before editing any files, we create a `cset' that will hold the
+changes.
+
+  csf cset_create -name "memory_leak"
+
+The name is just a simple short mnemonic you can use to refer to the
+cset.  It isn't used as an `offical' name, so it doesn't need to be
+unique or even relevant.
+
+A workspace can have at most one `open' cset.  The cset_create command
+will raise an error if the workspace already has an open change.  When
+a workspace is created, there is no open cset associated with it.
+Commands to add, change, rename or delete files in a workspace are
+disabled until a cset is opened, and the managed files in the
+workspace are set to read-only.  Creating a cset enables the
+ChangeSafe file commands for the workspace.
+
+
+Checking out files
+
+We check out a couple of files.
+
+  csf co utility/mem-manager.c utility/mem-manager.h
+
+This is a bit of a misnomer --- a copy of the files was created when
+the workspace was created.  This command does some basic sanity
+checks, makes a note in the cset that the files should be checked for
+edits when we are done, and puts the files into read-write mode.
+
+ChangeSafe uses a concurrent development model; files are not locked
+upon checkout.  For this first simple example, we'll assume no
+conflict arise.
+
+
+Committing the change
+
+After editing and testing, we decide to commit our changes to the
+repository[4].
+
+  csf master_change -description "Typo in mem-manager.c
+      caused a leak when cross-threading.  Update header file."
+
+ChangeSafe places the changes from the two modified files into the
+cset created above and `closes' that cset.  The cset is `promoted'
+into the latest version of the main branch of the product.  By
+default, the cset is an atomic unit.  Unless you specifically direct
+otherwise, all changes in a cset will be made simultaneously.  If the
+projects is `rolled back', all changes will be simultaneously
+removed.
+
+When the cset is `closed' by the master_change, the file commands are
+once again disabled and the modified files are set to read-only.  If
+you wish, you can begin the next change with a cset_create.
+
+
+Additional File Commands
+
+In addition to co, there are these file commands.
+
+New files can be added to a project with the file_add command:
+
+  csf file_add Docs/README.txt
+
+Files can be renamed and moved with the file_rename command:
+
+  csf file_rename Docs/FAQ.txt Docs/Html/FAQ.htm
+
+The file_remove command is used to `delete' files:
+
+  csf file_remove Config/Amiga.cfg
+
+(The file is not really deleted, it is simply hidden.  It can be
+restored either by an explicit request or by rolling back the changes
+to before the delete.)
+
+The file commands take effect immediately in your workspace, but
+they have no effect in the repository until you perform the
+master_change.
+
+--------
+
+More Complicated Examples
+
+In the simple example above, there is little difference between using
+ChangeSafe and other popular version control software.  Here are some
+more complicated examples that show how ChangeSafe can be used to
+handle a number of problems that typically arise during development.
+
+
+A fix for bug 253 is at the top of our task list.  Using the same
+workspace as before, we once again create a cset:
+
+  csf cset_create -name "bug253"
+
+This time, we find that ChangeSafe updates a number of files in
+our workspace.  Apparently another developer has promoted his changes
+to the product and our workspace has become `stale'.  ChangeSafe
+ensures our workspace is up-to-date before creating the cset.
+
+We suspect that bug 253 is an error in the hash table code, so we
+check out the file:
+
+  csf co Hashtable/hasher.cpp
+
+We might as well `cd' to the Hashtable directory, too.  Then we won't
+need to type the directory prefix.
+
+But silly us, everyone knows that you put your C++ code in the header
+files, so we uncheck it out:
+
+  csf unco hasher.cpp
+
+and check out the header file instead:
+
+  csf co hasher.hpp
+
+We find a typo (someone used '>' instead of '>=') and repair it.
+
+We could perform a master_change at this point, but the company policy
+at Albatross Vaporware is that the full regression test suite must be
+run before every master_change.  We shouldn't continue using this same
+cset because we'd be unable to easily separate the changes.  Instead,
+we simply close this cset:
+
+  csf cset_close -description "Typo in hasher caused array overrun."
+
+The cset_close command is *exactly* the same as master_change --- the
+changes have been transferred back to the database, the cset has been
+permanently registered, the file commands have been disabled in your
+workspace --- but there is one very important difference:  the cset is
+*not* `promoted' to the latest version of the product.  No one else
+will be affected by your untested change.  Later on, after we have
+accumulated a few changes, we'll run the full regression tests and
+`batch promote' the changes. 
+
+We create a new cset for the next change:
+
+  csf cset_create -name "unicode_filenames"
+
+This change will be extensive.  We need to edit a couple of files:
+
+  csf co Pathnames.lsp PathnameParser.lsp
+
+Give this a more accurate name (Albatross Vaporware hasn't supported
+DOS in years):
+
+  csf file_rename DOSPathnames.lsp WindowsPathnames.lsp
+
+Fix the Makefile with the new name:
+
+  csf co Makefile
+
+And get rid of the Amiga file because no one uses it.
+
+  csf file_remove AmigaPathnames.lsp
+
+Several hours and many edits later, we've the Unicode pathnames
+showing some signs of life.  Let's get a brief summary of our changes:
+
+  csf ws_query -show-work
+
+  Workspace of product Argon, branch Main.
+  Workspace is NOT up to date.
+    Workspace timestamp 2005-04-18T14:53:03
+    Branch timestamp    2005-04-18T14:53:49
+  Current change "jrm_20050418_argon:unicode_filenames":
+    Checkout file  FileSystem/Makefile
+    Checkout file  FileSystem/PathnameParser.lsp
+    Checkout file  FileSystem/Pathnames.lsp
+    Rename file    FileSystem/DOSPathnames.lsp FileSystem/WindowsPathnames.lsp
+    Remove file    FileSystem/AmigaPathnames.lsp
+  Added and removed changes:
+    Subsystem utility:
+      Added change jrm_20050418_argon:bug253
+
+We see that the workspace is not up to date.  Someone has promoted
+changes to the product since the time we last updated the workspace
+(when we created the unicode_filenames cset).
+
+The details of our current change are listed.
+
+The added and removed changes are those changes that are present (or
+absent) in our workspace that are not present in the product version
+our workspace is based on.  The unpromoted bug253 change is listed
+here because it is still part of our workspace.  That is, the change
+that fixes the bug is being applied to your workspace even though it
+has not been promoted to the product.
+
+Since the workspace is not up to date, we'll need to update it before
+we can promote our changes.  But let's see how much work that would
+entail: 
+
+  csf ws_update -report 
+
+  Report of work necessary to update workspace.
+    Subsystems gui and logging are unchanged, no update is necessary.
+    Subsystem demos will be updated.
+     + "tetris-demo.lsp" will be added to your workspace...
+    Subsystem utility in workspace will be updated.
+    *C "Makefile" has changes, merge detected 4 conflicts...
+     R "useful-stuff.lsp" will be renamed to "miscellaneous.lsp"..
+     - "useless-stuff.lsp" is obsolete and will be removed...
+    Subsystem webapi is new.
+
+This isn't a big deal, so we go ahead and do the update:
+
+  csf ws_update
+
+We tweak the Makefile to resolve the conflicts and rebuild.
+
+
+--------
+
+Concurrent Development
+
+As mentioned earlier, ChangeSafe's concurrent development model allows
+many developers to work on a product simultaneously.  Between the time
+that a developer begins working on a change and when the change is
+finished other developers may have introduced changes.  If a workspace
+did not incorporate the most recent changes when committed, the
+changes would appear to be lost.
+
+A related problem arises from the use of Composite Versioning.  The
+changes in the repository can be independently `turned on' or `off'.
+This is a powerful feature that gives you the ability to perform
+`partial roll backs', but it also allows you to synthesize nonsensical
+views of the repository.  It is important to ensure that changes
+promoted to the latest version of a product are coherent.
+
+To ensure changes are not lost and that the product development always
+progresses through coherent versions, ChangeSafe enforces this rule:
+
+  A new version of a product may only be created from a workspace that
+  has been derived from the most recent version of the product.
+
+By requiring that new versions be created from a workspace, we know
+that the opportunity to validate the new version existed (of course
+there's no way to know if the developer actually *did* any sort of
+testing).  By requiring that the new version derive from the most
+recent version, we ensure that changes are not lost when the product
+is updated.
+
+
+Updating the Workspace
+
+The ws_update command brings a workspace up to date with the most
+recent version of the product.
+
+  csf ws_update
+
+If the workspace does not have an open cset, this command simply
+transfers the relevant changes from the server to the workspace.  If
+the workspace has an open cset, then the effect is much more
+complicated.
+
+When the cset was first opened, the files in the workspace were a
+simple copy of some version of the product.  The changes in the open
+cset were performed with that version as the starting point.  When we
+update the workspace, we want to present the illusion that the current
+state of the workspace is the result of changes performed with the new
+version as the starting point.
+
+The update process attempts to merge the changes from the repository
+with the changes in the workspace.  If a file has changed in the
+repository but not in the workspace, the updated file is transferred
+to the workspace.  If a file has changed in the workspace, but not
+in the repository, it is left alone.  However, if there are changes to
+a file in both the repository and the workspace, then an attempt is
+made to merge the file contents based on the regions of lines being
+changed.  Often the resulting merged file correctly incorporates both
+sets of changes, but when the changes overlap a `merge conflict'
+occurs.
+
+The ws_update command will alert you to any merge conflicts that arise
+while updating.  You will need to manually resolve these conflicts.
+
+--------
+
+Changing your Mind
+
+ChangeSafe makes it very easy to undo mistakes.  ChangeSafe even makes
+it easy to redo mistaken undos.
+
+--------
+
+Accidents Happen
+
+
+
+
+
+
+
+
+ChangeSafe expects that workspaces will accumulate all sorts of random
+files and directories like editor backup files, object files from
+compilation, directories for release and debug builds, etc.  It is
+very careful not to touch any file that it doesn't know about.
+
+A workspace being used for active development often contains
+`uncommitted changes' to local files that have not yet been
+transferred back to the ChangeSafe server.  ChangeSafe is very careful
+to not lose uncommitted changes when it performs its operations on the
+workspace.
+
+
+
+
+--------
+[1] Yes, we do `eat our own dogfood'.
+
+[2] Unfortunately for us, the ChangeSafe company develops the
+    ChangeSafe product using ChangeSafe as our source-code management
+    system.  This makes the actual development logs rather confusing.
+
+    Albatross Vaporware is a small company that markets `Helium' as a
+    lightweight alternative to the competition's ubiquitous `Nitrogen'
+    product.  `Argon' is to be the flagship of the `Inert Gas' product
+    line.
+
+[3] All ChangeSafe functions can be accessed from the csf command line
+    tool.  The first argument is the name of the command.  There are
+    often several optional `keyword' or `options' that follow the
+    command, then possibly a few `required' arguments.
+
+[4] Command line has been wrapped for readability.

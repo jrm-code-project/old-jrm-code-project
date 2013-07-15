@@ -1,0 +1,141 @@
+The ChangeSafe application is built upon a quasi-temporal
+object-oriented database.  Through use of the Meta-Object Protocol, we
+extend CLOS with both persistence and composite version indexing.
+We build a simple file system and project configuration model using
+the extended CLOS classes.  The versioning in the file system and
+project configuration model comes from the underlying versioned object
+model.
+
+The persistent object model has two characteristic features:  a CLOS
+extension to define persistent classes, and a transaction mechanism to
+provide the ACID properties to the persistent database.
+
+Defining a persistent class is easy.  All that is required is to
+specify a metaclass of persistent-standard-class.  Here is an
+example: 
+
+  (defclass test-class ()
+    ((name :initarg  :name
+           :initform 'zippy
+           :reader   object-name))
+    (:metaclass persistent-standard-class))
+
+A persistent object exists within a persistent store.  Persistent
+stores are created or opened by calling
+
+  persistent-store/open pathname &key (mode :read-write)
+
+    returns <persistent-store>
+
+  <pathname> names the file that will be used to contain the store.
+  If the file does not exist, it will be created.  If the file does
+  exist, the persistent objects within it will become accessible to
+  the system.  If the file exists, but is not a persistent store, an
+  error is raised.  
+
+  The mode may be :read-write (default) or :read-only.  In :read-only
+  mode, attempts to modify or create objects will cause an error.
+
+  Only those persistent objects that have been committed since the
+  last transaction will be accessible.  If a transaction fails to
+  commit because of an abort or a crash, all persistent objects
+  created during that transaction will be unavailable, as if the
+  transaction never started.
+
+  No special action need be taken to recover from a crash.  When
+  opening the store, the system recovers to the point of the last
+  valid transaction.  This allows the system to be simply restarted
+  when a crash occurs.
+
+
+  persistent-store/close persistent-store
+
+  Closes the persistent store.  
+
+  If a transaction is in progress, the store will be closed when the
+  transaction ends.
+
+A persistent object can only be manipulated within a transaction.  The
+call-with-transaction function is used to establish a transaction
+context, create a transaction object, and arrange for the necessary
+cleanup or commit to occur at the end of the transaction.
+
+  CALL-WITH-TRANSACTION <pstore> <transaction-kind> <reason> <receiver>
+
+  <pstore> is a persistent store.  During the transaction, this store
+  will be used for allocation of new persistent objects and for the
+  resolution of persistent object identifiers.
+
+  <transaction-kind> is one of :read-only, :read-write, or :read-cons
+  indicating the operations allowed during the transaction.  A
+  :read-cons transaction is one in which reading of objects and
+  construction of new objects is permitted, but modification of old
+  objects is not.
+
+  <reason> is a human readable string describing the purpose of the
+  transaction.  This is permanently recorded in the transaction log.
+
+  <receiver> is a procedure of a single argument.  It will be called
+  within the transaction context and be passed an object that
+  represents the transaction.
+
+  If the <receiver> returns normally, the transaction will commit at
+  the time of return.  The value returned from the <receiver> will be
+  the value returned from the call to call-with-transaction.  If
+  control leaves the <receiver> via a non-local exit (e.g. a throw or
+  return-from), the transaction is aborted as control passes out of
+  the receiver.
+
+  The transaction object passed to the receiver allows the program to
+  abort without transfer of control, commit before leaving the
+  context, or inspect the current state of the transation.
+
+Transactions may be nested.  When a nested transaction aborts, any
+changes to persistent object performed by the nested transaction are
+rolled back to the state when the nested transaction was started; it
+is as if the nested transaction never occurred.  If a nested
+transaction commits, its changes are visible to the containing
+transaction.  Only the outermost transaction causes changes that
+persist within the database, however.
+
+
+
+
+
+
+
+
+
+Here is the class definition for a file object (this is a simplified
+version of the one in ChangeSafe):
+
+  (defclass file ()
+    ((name    :initarg           :name
+              :type              string
+              :version-technique :scalar
+              :accessor          file-name)
+
+     (content :initform nil
+              :version-technique :composite
+              :accessor          file-content))
+
+    (:metaclass versioned-standard-class))
+
+It differs from a standard CLOS class definition in that it specifies
+a :version-technique for each slot and a metaclass of
+versioned-standard-class.  
+
+
+
+
+As would normally be the case, we can now
+create instances of the file class and access their components through
+the generic functions:
+
+ (setq my-file (make-instance 'file :name "Foo"))
+ (setf (file-content my-file) '("line1" "line2"))
+ (file-name foo) => "Foo"
+
+
+
+

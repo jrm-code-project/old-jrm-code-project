@@ -1,0 +1,119 @@
+Subject: interning symbols for "dib"s
+Date: Wed, 01 Nov 2000 09:46:09 -0800
+From: Steve Jacobson <sdj@franz.com>
+To: Peter White <pww@content-integrity.com>
+
+Peter,
+
+I looked at the Astore symbol stuff and it looks good for what we talked
+about.
+
+In fact, it's so good that you don't need your own persistent hash table -
+Astore stores interned symbols in its own hash table, so you don't need to
+duplicate it.
+
+I've included a simple example that shows how to do it. Once you've
+interned a symbol in the database and you then want to have an instance
+point to it, just set a slot value to the symbol, as in (setf (some-slot
+foo) (intern "xc123" (find-package :SOME-PACKAGE)). Every time you do
+something like that, the slot will point to the same interned symbol.
+
+Steve
+
+(in-package :astore)
+
+;; stick the symbols in their own package (not required)
+(defpackage :XXX)
+
+(defun tryit ()
+   (with-database (db "foo.db" :if-exists :supersede)
+     (with-transaction ()
+       (let ((pkg (find-package :XXX))
+            (count 0) ;; used to make interesting demo
+            )
+        (do* ((n (random 100) (random 100))
+              (sym (intern (format nil "XXX~s" n) pkg)
+                   (intern (format nil "XXX~s" n) pkg)))
+            ((= count 5))
+          (if* (/= (astore::os-find-symbol (string sym) pkg)
+                   0)
+             then
+                  ;; already interned in database
+                  (format t "found ~s interned~%" sym)
+                  (incf count)
+             else
+                  ;; put in database
+                  (astore::intern-lisp-string
+                   (string sym) pkg)
+                  (format t "interning ~s~%" sym)
+                  (setf count 0)))))))
+
+
+Subject: interning symbol stress test
+Date: Wed, 01 Nov 2000 14:59:28 -0800
+From: Steve Jacobson <sdj@franz.com>
+To: Peter White <pww@content-integrity.com>
+
+Peter,
+
+I've attached a function I wrote to attempt to stress the symbol stuff. I
+ran it with Astore 2.0/Ostore 6.0, so you should probably try this yourself
+to make sure you see the same results.
+
+The test uses 'random to try to simulate what would happen in real life.
+The first part of the test sets up the desired number of symbols. There's
+this thing called the Central Limit Theorem that implies that this step
+will take longer and longer as the number of iterations increase. It took
+quite a while for 100,000 symbols.
+
+After the desired number of symbols are written, then the tests times how
+much it costs to add and lookup symbols. There's some randomness here, too
+- it will run until it finds a symbol already interned.
+
+When I ran the test, the time to look up or add a symbol was too fast for
+the 'time macro to measure how long it took.
+
+Let me know if you have any questions.
+
+Steve
+
+(in-package :astore)
+
+;; stick the symbols in their own package (not required)
+(defpackage :XXX)
+
+(defun tryit2 (iterations)
+   (with-database (db "foo.db" :if-exists :supersede)
+     (with-transaction ()
+       (let ((pkg (find-package :XXX))
+            (limit (* 2 iterations)))
+        (dotimes (i iterations)
+          (let* ((n (random limit))
+                 (sym (intern (format nil "XXX~s" n) pkg))
+                 (found-it (astore::os-find-symbol (string sym) pkg)))
+            (when (/= found-it 0)
+              (do () ((= found-it 0))
+                (setf n (random limit))
+                (setf sym (intern (format nil "XXX~s" n) pkg))
+                (setf found-it (astore::os-find-symbol (string sym) pkg))))
+            (astore::intern-lisp-string
+             (string sym) pkg)))
+        ;; now time adding & finding
+        (let (added-one found-one n sym found-it)
+          (do () ((and found-one added-one))
+            (format t "~%found-one: ~s added-one: ~s~%" found-one added-one)
+            (setf n (random iterations))
+            (setf sym (intern (format nil "XXX~s" n) pkg))
+            (format t "~%timing lookup~%")
+            (setf found-it
+              (time
+               (astore::os-find-symbol (string sym) pkg)))
+            (if* (= found-it 0)
+               then
+                    ;; time add
+                    (format t "~%timing add~%")
+                    (time
+                     (astore::intern-lisp-string
+                      (string sym) pkg))
+                    (setf added-one t)
+               else (setf found-one t))))))))

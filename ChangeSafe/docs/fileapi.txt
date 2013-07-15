@@ -1,0 +1,228 @@
+Proposed versioned-file API
+
+This is a preliminary spec for an API to a versioned file.
+
+The purpose of this document is to describe an API for
+high-performance change management of text files.  This applies only
+to `plain' text files, not binary or `structured' text files.
+Manipulating text files was one of the major bottlenecks in
+ChangeSafe.  While this document is written in terms of storing the
+data in the flat file format provided by the operating system, the
+actual location of the data should be abstracted away (so one could
+use this same API to store the file data in an Oracle database).
+How the API associates CIDs with actual insertions and deletions is
+beyond the scope of this document.
+
+We propose to separate text file changes from the main database.  By
+placing all the changes to a particular compositely versioned text
+file in a single physical file we hope to achieve higher performance
+through higher amount of data clustering and the ability to
+parallelize I/O.  
+
+We intend to use some of the functionality provided by the operating
+system for maintenance of the separate database.  The file should be
+stored on a recoverable medium (e.g. a RAID array) or mirrored in some
+manner.  The file should part of a backup set.  The file should be
+protected from modification by all except the Changesafe process.  If
+the file system supports defragmentation, that should be run
+periodically.  The separate database is designed such that clustering
+and compaction may be handled by a separate thread of execution,
+however. 
+
+Separating out part of the database can pose many problems with regard
+to synchronization and consistency.  To avoid these problems we put
+restrictions on the separate database.  First, the separate database
+is a write-once database:  no data is ever erased.  Provided that data
+are written to stable storage before the main transaction decides to
+commit or abort, there is no need to synchronize with main
+transaction.  (If the main transaction *does* abort, then there will
+remain unreferenced data in the separate database, but we assume that
+aborts will not be frequent enough that this unreferenced data will
+become a significant waste of space.)  From this first restriction it
+follows that indexes into the separate database must be maintained
+within the separate database (so that it cannot get `out of sync').
+
+Because there is always the possibility that only partial data are
+appended to the file, it is necessary for this API to ensure that it
+can recover the file up to the last valid record.  This is done by
+appending `checkpoint records' after the blocks of data are written.
+A checkpoint record is recognizable by its contents which are to
+include the index of the previous checkpoint record, a strong hash of
+the data appended after the previous record, but before this record,
+and a strong hash of itself (the probability of hash collision whereby
+a partial data record is misinterpreted as a valid checkpoint record
+can be made arbitrarily low with sufficient computation.  There are
+high-performance cryptographically secure hash functions that meet our
+requirements.)
+
+The second restriction is that the separate database does not
+reference data outside of itself (either in the main database or in
+other databases).  This allows us to commit or abort in the main
+database without having to worry about dangling references in the
+separate database.
+
+One consequence of having no outside references is that change set
+information is *not* stored in the separate database with the file.
+This means that the file contents will not be very useful without the
+associated main database.  Specific change-set information like
+timestamps, comments, etc. would be maintained in the main database.
+
+In this API manipulates objects of type `versioned file'.  The client
+of this api need not know how these are implemented.  In order to
+abstract out the actual storage of the versioned file data structures,
+the API entries that construct a versioned file are passed a binary
+i/o stream.  The API is allowed to seek to arbitrary points within the
+stream, append to the end of the stream, and it is allowed to assume
+that flushing the stream causes all buffered data to be written to
+stable storage.  (A binary file stream would work, but one could
+create a stream that stored the data in an SQL database.)
+
+A text file is a series of `lines', each line consists of a string
+of zero or more characters.  (Each line will consist of Unicode 3.2
+code points in UTF-16 encoded format.  The lines may or may not be
+normalized.)  It is assumed that lines are separated by some sort of
+`newline'.  A file may end with zero or more blank lines.
+
+A compositely versioned text file consists of a number of versions of
+a physical text file.  It is expected that extracting a particular
+version from the compositely versioned text file is a high-performance
+operation.
+
+A CID (change id) is a number that is meaningful only in the context
+of an individual file.  A CID-SET is a compact representation of a set
+of such numbers. 
+
+
+MAKE-VERSIONED-FILE stream id  =>  versioned-file
+
+  stream -- a binary file i/o stream
+
+  id -- a string
+
+  Creates and returns a versioned-file object with the specified id.
+  Stream may be assumed to be empty.
+  The ID is not interpreted by this API, it is simply stored such that
+  it can be retrieved later.  It is up to the client of this API to
+  use this to good effect.
+
+
+
+OPEN-VERSIONED-FILE stream => versioned-file
+
+  stream -- a binary file input or input/output stream
+
+  Re-creates a versioned file object from stream.  Versioned file may
+  be read-only if stream is not an output-stream.
+
+
+
+VERSIONED-FILE/ID versioned-file => string
+
+  versioned-file -- a versioned file object
+
+  Returns a copy of the ID string that was passed in when the
+  versioned file was created.  Used for consistency checking.
+
+
+VERSIONED-FILE/SCAN-VIEW versioned-file cid-set => series-of-lines
+
+  versioned-file -- a versioned file object
+
+  cid-set -- a file-relative set of change ids
+
+  Returns a series (see Dick Waters series package) of the lines in
+  the file when viewing the file with cid-set.
+  
+  Because data is never overwritten, there should be no need to lock
+  the file.  Note that there may be multiple outstanding series being
+  read from the file.
+
+
+
+VERSIONED-FILE/ADD-VIEW versioned-file base-cid-set new-view => cid
+
+  versioned-file -- a versioned file object
+
+  cid-set -- a file-relative set of change ids
+    
+  new-view -- a vector of strings (file lines)
+
+  Returns a new file-relative cid (change id).  The view is `diffed'
+  against the view obtained by `base-cid-set', then the differences
+  are stored in the versioned file.  It is assumed that
+  when the cid is returned that the view has been made persistent. 
+
+  The API assumes that the new view was derived from the view obtained
+  by `base-cid-set'.  It is up to clients of this API to ensure that.
+
+  This need not support rollback because if an outer transaction
+  restarts, it will simply call this function again and obtain a new
+  CID.  This may make `garbage' CIDs in the database, but that should
+  be a fairly rare occurrance.
+
+  The file need *not* be `locked' during allocation of the CIDs
+  provided that the CID allocation table is updated after the file has
+  been extended.  A crash at the point the file is extended but the
+  CID table is not updated would leave unindexed lines in the file
+  (which wastes space, but is otherwise benign).
+
+
+
+VERSIONED-FILE/GC versioned-file stream continuation
+
+  versioned-file -- a versioned-file object
+
+  stream -- a binary output stream
+
+  continuation -- a procedure of one argument that will be called
+  upon completion of the GC.
+
+  Duplicates the contents of versioned-file to stream.  When the
+  duplicate is consistent with the versioned-file, invokes
+  continuation.  The duplicate versioned-file is logically identical
+  to the original, but may be more compact and be reorganized for
+  better performance.
+
+
+
+-------------
+Other API elements
+
+The above API is sufficient for check-in/check-out operations and
+should be high performance.  The following is for utilities and
+bookkeeping.
+
+
+VERSIONED-FILE/MAXIMUM-CID versioned-file
+
+  Returns the highest assigned CID in the versioned file.  
+
+VERSIONED-FILE/EXPORT versioned-file export-stream changes-omitted changes-required
+
+  The EXPORT-STREAM is initially empty.
+  Writes to EXPORT-STREAM a subset of the compositely versioned data.
+  This subset has all the information necessary to reconstruct any view
+  that does *not* contain any changes-omitted and *does* contain
+  changes-required.
+
+  For example, suppose we had a file with nine changes.  We specify
+  that changes 0, 1, 2, 3, and 4 are required, that changes 6 and 7
+  are omitted.  The resulting file may be viewed under these cid sets:
+
+  876543210 (here changes are presented MSB first)
+
+  000001111
+  000011111
+  010001111
+  010011111
+  100001111
+  100011111
+  110001111
+  110011111
+
+VERSIONED-FILE/CID-CONTENTS versioned-file cid
+
+  Returns the list of insertions and deletions associated with CID in
+  the versioned file.
+
+

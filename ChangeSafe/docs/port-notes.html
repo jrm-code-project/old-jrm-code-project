@@ -1,0 +1,364 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>Notes about the CONMAN Port operation</title>
+  </head>
+
+  <body>
+    <h1>Notes about the CONMAN Port operation</h1>
+
+    <h1>What's What</h2>
+
+    <p>
+      We must distinguish between the following entities (HP's terms):
+    </p>
+
+    <dl>
+
+      <dt><b>subsystem delta</b></dt>
+      <dd>
+	<p>
+	  A subsystem delta resides in a satellite repository and
+	  describes changes to objects in that repository.
+	</p>
+      </dd>
+
+      <dt><b>delta</b></dt>
+      <dd>
+	<p>
+	  A delta is a change set in the master repository which
+	  affects objects in the master repository.
+	</p>
+	<p>
+	  Each delta relates to some set of subsystem deltas.  This
+	  relationship is captured in the CSET-RELATIONSHIP-TUPLES of
+	  the MASTER-CATALOG.
+	</p>
+      </dd>
+
+      <dt><b>transaction</b></dt>
+      <dd>
+	<p>
+	  The set of transactions is a subset of the set of deltas.  A
+	  delta is a transaction if it alters the CID-OBJECTS slot of
+	  a version.  Thus transactions are deltas which affect the
+	  promotion and demotion of changes in a product branch.
+	</p>
+      </dd>
+
+    </dl>
+
+    <p>
+      The function VERSION-LIST-CSET-CHANGES will return a list
+      describing each transaction and its affected deltas.
+    </p>
+
+    <p>
+      <i>
+	For the product or subsystems being ported from, we need some
+	sense of a baseline before which changes will not be
+	considered for porting, otherwise we will need to keep track
+	of what changes have been rejected for all time.
+      </i>
+    </p>
+
+    <p>
+      <i>
+	Is this right:
+      </i>
+      It is the subsystem deltas which are either <tt>port</tt>ed,
+      <tt>defer</tt>ed or <tt>reject</tt>ed during the course of the
+      port operation.  Though the user interface provides similar
+      operations on transactions and deltas, they are merely a
+      convenience for operating on a bunch of subsystem deltas
+      en-mass.
+      <b>Answer:</b>
+      Right.  Port is driven ENTIRELY by subsystem activity, which is
+      correlated into high level transaction activity (where possible,
+      when all *applicable* affected subsystems are present/relevant)
+      to make it more tractable for the end-user.
+    </p>
+
+    <p>
+      <i>
+	Once the port operation is complete, is the state of the
+	product in the master repository altered or just the
+	workspace's virtual private branch?
+      </i>
+      <b>Answer:</b> Port affects only the workspace.  No action is
+      taken in the master until MASTER_CHANGE is executed against the
+      workspace.
+    </p>
+
+    <h2>terms and conditions defined in the specification</h2>
+
+    <p>
+      <b>Choosible</b> means the item merits a port/defer/reject radio
+      button group.
+    </p>
+
+    <p>
+      subsystem delta is <b>available</b> if:
+    </p>
+
+    <ul>
+      <li>not rejected</li>
+      <li>port relationship exists</li>
+      <li>current port operation limited to exclude this subsystem</li>
+      <li>project has write permission for subsystem</li>
+    </ul>
+
+    <p>
+      A subsystem delta is <b>choosible</b> if it is <b>available</b>
+      and is not already in the workspace.
+    </p>
+
+    <p>
+      A delta is only <b>visible</b> in the port report if it has
+      <b>available</b> subsystem deltas.
+    </p>
+
+    <p>
+      A transaction is only <b>visible</b> if it has <b>visible</b>
+      deltas.
+    </p>
+
+    <p>
+      If all of the subsystem deltas in a delta are <b>available</b>
+      the delta itself is <b>choosible</b>.
+    </p>
+
+    <p>
+      If all the deltas in a transaction are <b>choosable</b> then the
+      transaction is <b>choosable</b>.
+      </p>
+
+    <p>
+      There is a distinct difference in appearance between items which
+      are not <b>choosible</b> and items which are not <b>available</b>.  The spec
+      says that unavailable items do not have port/defer/reject radio
+      buttons, while those that are available but not choosible have
+      buttons but they are greyed out.
+    </p>
+
+    <p>
+      The spec also provides for a mode in which previously rejected
+      satellite cset dids can be reconsidered:
+    </p>
+
+    <blockquote>
+      Finally, you can invoke the GUI to see only the transactions and
+      csets that have previously been rejected (with the “No” choice).
+      This is a way to “unignore” csets you have previously rejected.
+    </blockquote>
+
+    <p>
+      We interpret this to mean that in this mode such changes are
+      <b>available</b> even though they were rejected.
+    </p>
+
+    <p>
+      We will commonly refer to this mode of operation as
+      <b>resurrection mode</b>.
+    </p>
+
+    <p>
+      The spec gives no indication of how such changes should be
+      treated if the inheritance relationship of the subsystem for
+      which the change was rejected is changed or if the rejected
+      change is portable from another subsystem different from the one
+      from which it was originally rejected.
+    </p>
+
+    <h2>the port to product page</h2>
+
+    <p>
+      Various factors affect whether a change is shown on the port UI
+      page and how it is shown.  For satellite csets, these factors include
+
+    </p>
+
+    <ul>
+      <li>
+	whether the change is already present in the workspace's view
+      </li>
+      <li>
+	whether the change was rejected by port activity in a previous
+	change
+      </li>
+      <li>
+	the inheritcance relationship between the subsystem being
+	ported from and the subsystem being ported to
+      </li>
+    </ul>
+
+    <p>
+      Based on these criteria, the user interface decides on the
+      appearance of the change set's description and, what control the
+      user has over its porting, and what will be sent back in the
+      response concerning the change's porting (via a hidden input
+      field in the case of port-all, for example).
+    </p>
+
+    <ul>
+      <li>
+	the change might or might not appear on the port UI page
+      </li>
+      <li>
+	if the change appears, it might have port/defer/reject buttons
+	or not.
+      </li>
+      <li>
+	submitting the port UI form might or might not tell the server
+	how to process the change.
+      </li>
+    </ul>
+
+    <p>
+      An entry will appear in the port user interface only for changes
+      which are <b>visible</b>.
+    </p>
+
+
+    <p>
+      Based on the rules from the spec listed above, we can fill in
+      this table.
+    </p>
+
+    <table border=1>
+
+      <tr>
+	<td>&nbsp;</td>
+	<th>Available</th>
+	<th>Visible</th>
+	<th>Choosible</th>
+	<th>Electibile</th>
+      </tr>
+
+      <tr>
+	<th>Transactions</th>
+	<td>
+	  <i>not specified</i>
+	</td>
+	<td>
+	  if any deltas are <b>visible</b>
+	</td>
+	<td>
+	  if every delta is <b>choosible</b>
+	</td>
+	<td rowspan=2>
+	  consider <b>electibility</b> of subordinates:
+	  <ul>
+	    <li>If any are <i>present</i> then <i>nil</i>
+	    <li>if not in resurrect mode and any are <i>reject</i> then <i>nil</i>
+	    <li>if any are <i>port selective</i> then <i>port selective</i>
+	    <li>else nil
+	  </ul>
+	</td>
+      </tr>
+
+      <tr>
+	<th>Deltas</th>
+	<td>
+	  <i>not specified</i>
+	</td>
+	<td>
+	  if any subsystem deltas are <b>available</b>
+	</td>
+	<td>
+	  if every subsystem delta is <b>available</b>
+	</td>
+      </tr>
+
+      <tr>
+	<th>Subsystem Deltas</th>
+	<td>
+	  <ul>
+	    <li>not rejected
+	    <li>port relationship exists
+	    <li>product can modify subsystem
+	    <li>within scope of port operation (e.g. class not excluded
+	  </ul>
+	</td>
+	<td>
+	  if containing delta is visible
+	  <i>(assumed, not clearly stated in specification)</i>
+	</td>
+	<td>
+	  <b>available</b> and not already present in workspace
+	</td>
+	<td>
+	  <ul>
+	    <li>if already present then <i>present</i>
+	    <li>if previously rejected and not in resurrection mode then <i>spurned</i>
+	    <li>otherwise <i>port all</i>, <i>port selective</i> or
+	    <i>no port</i> according to disposition
+	  </ul>
+	</td>
+      </tr>
+
+    </table>
+
+
+    <p>
+      In the CONMAN specification, <i>port all</i> changes are not
+      considered by the port user interface but are assumed to be
+      handled separately, so the <b>choosible</b> property as
+      specified doesn't apply to them.  Since our implementation
+      handles the <i>port all</i> and <i>port selective</i> changes
+      together, we need to further distinguish between these cases.
+      For what appears in the "button area" of an entry, we would like
+      to distinguish among these cases:
+    </p>
+
+    <ul>
+      <li> the change is <i>port all</i> and does not require buttons
+
+      <li> the change is <i>port selective</i> and does require buttons
+
+      <li> the change is already present in the product
+
+      <li> the change is to a subsystem which is not a component of
+      the product being ported to
+    </ul>
+
+    <p>
+      Unfortunately, the CONMAN spec's concept of <b>choosibility</b>
+      is not suitable to distinguish these cases so instead we
+      introduce the concept of <b>electibility</b> as described in the
+      table above.
+    </p>
+
+
+    <p>
+      How a delta is displayed is based on how its component satellite
+      change sets are displayed.  How a transaction is displayed
+      depends on how its subordinate deltas are displayed.
+    </p>
+
+    <p>
+      The spec dictates that the transactions and deltas should have
+      buttons which serve as a convenience feature so that the user
+      can use these buttons to operate on all subordinates in the same
+      way.  Since I don't have the JavaScript expertice to achieve
+      this behavior, for now neither transactions nor deltas will have
+      buttons.  They will only serve to provide context for the
+      satellite changes.
+    </p>
+
+    <h2>Issues</h3>
+
+    <p>
+      What if subsystem inheritance, porting action or subsystem use
+      change during port activity, for example, between using the port
+      user interface and the <tt>port -act</tt> command?
+    </p>
+
+    <hr>
+    <address><a href="mailto:naha@content-integrity.com">Mark Nahabedian</a></address>
+<!-- Created: Fri Feb 18 13:05:15 Eastern Standard Time 2000 -->
+<!-- hhmts start -->
+Last modified: Wed May 03 14:38:54 Eastern Daylight Time 2000
+<!-- hhmts end -->
+  </body>
+</html>

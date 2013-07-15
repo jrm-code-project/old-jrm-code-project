@@ -1,0 +1,93 @@
+Subject: preserve-pointer & r/o operations
+Resent-Date: Tue, 31 Oct 2000 16:28:17 -0500
+Resent-From: dtenny@content-integrity.com
+Resent-To: aambler@content-integrity.com, pww@content-integrity.com
+Date: Tue, 31 Oct 2000 11:02:05 -0700
+From: Steve Jacobson <sdj@franz.com>
+To: dtenny@content-integrity.com
+
+Dave,
+
+The good news is that the Astore you have has everything in it you need to
+experiment with preserved pointers in R/O operations. I've included some
+simple examples that show various things:
+
+test1 shows that without preserve-pointer, you can't save a pptr across
+tranaactions.
+
+test2 shows preserve-pointer working in a R/W operation.
+
+test3 shows preserve-pointer failing in a R/O operation.
+
+test4 shows a workaround to preserve pointers across transactions in R/O
+operations. Note that unlike test2, you have to know beforehand that you
+are working with the preserved pointer so that you can call internal Astore
+functions to get to the referred to instance. Note also, that you are in
+danger if some other client snuck in there between the two transactions and
+deleted the instance.
+
+It would be possible to make an Astore change so that "unprotected"
+preserved pointers worked transparently the way that preserve-pointer does.
+I do not believe this would require a C++ schema change. It would, however,
+take a little while to do it robustly.
+
+Steve
+
+------------------------------------------------------
+
+(in-package :astore)
+
+(defclass foo ()
+   ((foo :allocation :persistent :initarg :foo :accessor foo))
+   (:metaclass persistent-standard-class))
+
+;; demonstrate that, normally, can't cache a pptr across transactions
+(defun test1 ()
+   (with-database (db "foo.db" :if-exists :supersede)
+     (let (foo)
+       (with-transaction ()
+        (setf foo (make-instance 'foo :foo 999)))
+       ;; try to access it in another txn
+       (with-transaction ()
+        (format t "foo is: ~s~%" (foo foo))))))
+
+;; now show that preserve-pointer enables cross transaction pptrs
+(defun test2 ()
+   (with-database (db "foo.db" :if-exists :supersede)
+     (let (foo)
+       (with-transaction ()
+        (setf foo (preserve-pointer (make-instance 'foo :foo 999))))
+       ;; try to access it in another txn
+       (with-transaction ()
+        (format t "foo is: ~s~%" (foo foo))))))
+
+;; now show that it won't work in r/o mode
+(defun test3 ()
+   (with-database (db "foo.db" :if-exists :supersede)
+     (with-transaction ()
+       (setf foo (make-instance 'foo :foo 999))))
+   (with-database (db "foo.db" :read-only t)
+     (let (foo)
+       (with-transaction ()
+        (setf foo (preserve-pointer (first (retrieve 'foo)))))
+       ;; try to access it in another txn
+       (with-transaction ()
+        (format t "foo is: ~s~%" (foo foo))))))
+
+;; now try to do it with non-protected references
+(defun test4 ()
+   (with-database (db "foo.db" :if-exists :supersede)
+     (with-transaction ()
+       (setf foo (make-instance 'foo :foo 999))))
+   (with-database (db "foo.db" :read-only t)
+     (let (foo)
+       (with-transaction ()
+        (setf foo (astore::create_reference
+                   (astore::p-so-pptr (first (retrieve 'foo))))))
+       ;; try to access it in another txn
+       (with-transaction ()
+        (format t "foo is: ~s~%"
+                (foo (astore::pptr-to-lisp-value
+                      (astore::resolve_reference foo) *db*)))))))
+
+
