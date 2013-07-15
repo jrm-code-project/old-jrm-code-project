@@ -1,0 +1,306 @@
+A character is an abstraction of an atomic unit of communication.  It
+is not a `glyph', `name', `phoneme' or `combination of bits'.  A
+`coded character set' is a function from a finite subset of integers
+to characters.  A `code point' is an element from the integer set and
+a `character repertoire' is the range of the `coded character set'
+function. 
+
+
+Text is sequence of `code points'.
+
+The mapping from `character' to code point is *many-to-many*.
+Some code points represent more than one character (as in the
+case of ligature glyphs).  Some characters are encoded in
+multiple code points (the Devanagari syllable ksha is represented by
+three code points).  Some characters can be represented by one of
+several code points depending on the desired glyph.
+
+A `code point' is a number in the range [0, 1114112)  (34 points are
+`illegal':  if they end in FFFE or FFFF hex).
+
+A `code unit' is a particular representation of a code point as single
+byte, double byte, or quad byte value.  A series of code points will
+be represented as a series of code units.  Obviously, *how* you
+represent code points is implementation dependent and could be done in
+*any* convenient way (we could represent code points as 21-bit
+values.)  However, there are 3 popular and recommended
+representations:
+
+    UTF-8  A code point is one, two, three, or four bytes.
+
+    UTF-16 A code point is two or four bytes.
+
+    UTF-32 A code point is a 32-bit value.
+
+The UTF-8 and UTF-16 format is specially designed to be easily
+synchronizable.  Thus it is easy to find the code unit boundaries from
+an arbitrary point in the stream.  However, you cannot do fast
+indexing into UTF-8 or UTF-16 format, you have to step from the front.
+
+Externally, we serialize code units into an `octet stream' (series of
+bytes).  There are several external formats.  Unfortunately, the term
+UTF is overloaded to describe the external format as well as the
+implementation dependent internal format.  (No co-incidence there,
+it's not unreasonable to conflate them, but let's be pedantic and
+distinguish between internal `code units' and the mechanism for
+serializing them.)  Unicode defines these external formats:
+
+      UTF-8     Inital signature of EF BB BF.
+
+    * UTF-8n    No signature on file.
+
+      UTF-16    Signature of FF FE and little-endian follows.
+		Signature of FE FF and big-endian follows.
+		No signature and big-endian follows.
+
+      UTF-16LE  Little-endian, no signature.
+
+      UTF-16BE  Big-endian, no signature.
+
+    * UTF-32    Signature of FE FF 00 00 and little-endian follows.
+		Signature of 00 00 FE FF and big-endian follows.
+		No signature and big-endian follows.
+
+    * UTF-32LE  Little-endian, no signature.
+
+    * UTF-32BE  Big-endian, no signature.
+
+(formats with asterisk are not official names)
+
+There are other external formats.  Unicode is designed to subsume most
+of them.  The notable exception is ISO/IEC 10646 UCS-4.  There are
+more elements in UCS-4 that can be represented in Unicode, so the
+transformation would be information losing.  However, the extra
+elements will be (have been?) removed shortly.
+
+Formats with fewer code points than Unicode can be read into unicode
+and written out in the same format, but arbitrary code points cannot
+be encoded.  Thus reading in one format and writing into another may
+lose information.  Here are some that we should handle:
+
+    EBCDIC 
+
+    ISO-646-IRV (ASCII, ANSI X3.4, US-ASCII, ASCII-US, 7-bit ASCII
+                 ISO-646-US)
+    ISO-646-DE (German DIN 66003)
+    ISO-646-DK (Danish DS 2089)
+    ISO-646-CA (Canadian CSA Z243.4) 
+    ISO-646-CN (Chinese GB 1988-80)
+    ISO-646-CU (Cuban NC NC00-10)
+    ISO-646-ES (Spanish)
+    ISO-646-FR (French NF Z 62-010)
+    ISO-646-HU (Hungarian MSZ 7795.3)
+    ISO-646-IT (Italian)
+    ISO-646-JP (Japanese JIS X 0201 Roman)
+    ISO-646-KR (Korean KS C 5636)
+    ISO-646-NO (Norwegian NS 4551-1)
+    ISO-646-PT (Portuguese)
+    ISO-646-SE (Swedish SEN 850200 B)
+    ISO-646-UK (British BS 4730)
+    ISO-646-YU (Yugoslavian JUS I.B1.002)
+
+    ISO-IR-111 (KOI8)
+
+    DEC-MCS
+    ISO-8859-1  (Latin1)
+    ISO-8859-2  (Latin2, CP912)
+    ISO-8859-3  (Latin3)
+    ISO-8859-4  (Latin4)
+    ISO-8859-5  (Cyrillic)    
+    ISO-8859-6  (Arabic)
+    ISO-8859-7  (Greek, ELOT-928, ECMA-188:1986)
+    ISO-8859-8  (Hebrew)
+    ISO-8859-9  (Latin5)
+    ISO-8859-10 (Latin6)
+    ISO-8859-11 (Thai)
+    ISO-8859-12 ( not assigned, possibly Indian)
+    ISO-8859-13 (Latin7)
+    ISO-8859-14 (Latin8)
+    ISO-8859-15 (Latin9, Latin0)
+
+    EUC-JP
+    JIS X 0208 (JIS C 6220)
+    JIS X 0212
+
+    OII standards
+
+    CP437 (DOSLatinUS)
+    CP737 (DOSGreek)
+    CP775 (DOSBaltRim)
+    CP850 (DOSLatin1)
+    CP852 (DOSLatin2)
+    CP855 (DOSCyrillic)
+    CP857 (DOSTurkish)
+    CP860 (DOSPortuguese)
+    CP861 (DOSIcelandic)
+    CP862 (DOSHebrew)
+    CP863 (DOSCanadaF)
+    CP864 (DOSArabic)
+    CP865 (DOSNordic)
+    CP866 (DOSCyrillicRussian)
+    CP869 (DOSGreek2)
+    CP874 (DOSThai)
+    CP878 (aka KOI8-R)
+
+    CP1252 (WinLatin1)
+    CP1250 (WinLatin2)
+    CP1251 (WinCyrillic)
+    CP1253 (WinGreek)
+    CP1254 (WinTurkish)
+    CP1255 (WinHebrew, see ISO-8859-8)
+    CP1256 (WinArabic)
+    CP1257 (WinBaltic)
+    CP1258 (WinVietnamese)
+
+    CJK-CP932 (Shift-JIS)
+
+    ISO-IR-180 VISCII 
+    RFC1456 VIQR
+    VN5712-1
+    VN5712-2
+
+    ISO/IEC 2022
+    ISO/IEC 4873
+
+    Adobe Standard Encoding
+    MacIntosh Encodings
+    NextStep
+    HP-Roman8
+
+    RFC1341 (Mime)
+    RFC1521 (Mime)
+    Quoted-Pintable
+    Base64
+
+    ETSI GSM 03.38
+    SGML character entity
+
+    KOI-0 (GOST-13052)
+    KOI-7 (GOST-19768-74 part 1)
+    KOI-8 (GOST-19768-74 part 2)
+    KOI-8r (RFC 1489)
+    KOI-8e (ISO-IR-111 ECMA-Cyrillic)
+    GOST-19768-87
+    ECMA-113:1986
+    KOI-8u (RFC2319)
+    KOI-8f
+    Bulgarian MIK
+BIG5  (i18n)
+
+
+EUC-JP
+EUC-CN
+EUC-TW
+EUC-KR
+
+UTF-1 is deprecated
+UTF-7??
+UTF-8mod EBCDIC
+UTF-7.5 
+
+UTF-7 (RFC 1642, RFC 2152)
+
+UTS-6 (SCSU compression)
+
+--- Sample stuff ----
+
+Numeric character references: &#2432;
+Hex numeric character references: &#x1bc;
+Named character references: &eacute;
+Java character encoding:  \u20ac
+Quoted-printable encoding: La premi=E8re journe=E9
+
+Q-encoded header:  From: =?iso-8859-1?Q?R=F6lf Fusco?=
+
+B-encoding : base64
+---- CR LF CRLF NEL
+
+
+---- quoted printable encoding
+
+
+--- notes ---
+
+A codec transforms between input and output type.
+Example:  (unicode) -> UTF-8 -> octet-stream
+
+Codecs are bi-directional, so you can decode, too.
+
+Coding systems may be `stacked':
+ (unicode) -> iso-latin-1 -> quoted-printable -> ascii -> octet-stream
+
+In general, you cannot tell from the result what codec was used to
+generate it, but you can often guess.  Codecs might not change the
+character format.  For example a MIME codec could prepend some
+headers.  Ambiguity arises because the output format is a subset
+of another format.  For instance, quoted-printable output is
+a subset of ASCII.  7-bit ascii is a subset of 8-bit.
+
+Given a file, we want to extract semantic meaning from it rather
+than just an octet stream.  To do this we need to select the correct
+codec set for the file.  One way is for the user to be explicit about
+the codec, another is for the system to guess.
+
+Guessing isn't all *that* hard, and is being done more and more.  To
+guess we take into consideration the file extension, the mimecap or
+registry mime type, and the contents of the octet stream.  Codecs
+should preserve information, so auxiliary info might need to be kept.
+For instance, quoted-printable text is also ascii text, so perhaps we
+need to preserve the ascii mapping somehow.
+
+Keeping the codec stack small is better.
+
+Hints for decoding an octet stream:
+
+    Ascii is 7-bits
+    Unicode-8 has this signature EF BB BF
+    Some octet-streams have `cookies'
+
+    -*- mode: text; coding: iso-2022-7bit -*-
+    Java class files have #xCAFEBABE at the beginning.
+    PDF files begin %PDF-1.0
+    PostScript files begin %!PS-Adobe
+    .doc files begin D0CF11e0
+    <!DOCTYPE ...>
+    GIF files begin GIF89a or GIF87a
+    JPEG files have Exif or JFIF at offset 6
+    Executables have MZ at offset 0
+    Bitmaps have BM at offset 0
+    Quicken files have AC9EBD8F
+    Zip files have PK  (504b0304)
+    RAR files have RAR! 52617221
+    Wave file have RIFF 52494646
+
+
+Mime types:
+text/richtext 
+text/html 
+audio/x-aiff 
+audio/basic 
+audio/wav 
+image/gif 
+image/jpeg 
+image/pjpeg 
+image/tiff 
+image/x-png 
+image/x-xbitmap 
+image/bmp 
+image/x-jg 
+image/x-emf 
+image/x-wmf 
+video/avi 
+video/mpeg 
+application/postscript 
+application/base64 
+application/macbinhex40 
+application/pdf 
+application/x-compressed 
+application/x-zip-compressed 
+application/x-gzip-compressed 
+application/java 
+application/x-msdownload 
+
+
+----- US-ASCII strings are used to identify character set names
+
+MIBenum is a number assigned to a character set

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Jrm's Persistent Store Reference Manual</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <style type="text/css">
+/*<![CDATA[*/
+    dt {margin: 5pt;}
+    dt span.type {text-decoration: underline; }
+    dt span.key {font-style: italic; font-family: courier new, monospace;}
+    span.argument {font-style: italic;}
+    span.keyword {font-family: courier new, monospace;}
+    dt span.term {font-weight: bold;}
+    .pi {font-style: italic;}
+    .code {font-family: monospace;}
+    .file {font-family: monospace; font-variant: small-caps;}
+/*]]>*/
+    </style>
+
+  </head>
+<BODY LANG="en" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" VLINK="#800080" ALINK="#FF0000">
+
+<P>Here is the API for jrm's simple persistent store.</p>
+
+
+<p>
+<dl><dt><span class="type">Class:</span>&nbsp;<span class="term">persistent-store</span></dt><dd></dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">persistent-store/open</span>&nbsp;<span
+class="argument">filename</span>&nbsp<span
+class="key">&key</span>&nbsp;<span
+class="argument">mode</span>&nbsp;<span
+class="argument">auxiliary-info</span><br /><span
+class="key">=&gt;</span>&nbsp;<span class="argument">persistent-store</span></dt>
+<dd><span class="argument">filename</span>&nbsp;&mdash;&nbsp;the absolute
+pathname of the persistent store log file.<br /><span
+class="argument">mode</span>&nbsp;&mdash;&nbsp; one of
+<span class="keyword">:read-only</span> or <span
+class="keyword">:read-write</span>.  The default is <span
+class="keyword">:read-write</span>.<br /><span
+class="argument">auxiliary-info</span>&nbsp;&mdash;&nbsp; an arbitrary
+object.  The default is <span class="keyword">NIL</span>.<br />
+<br />Opens an existing persistent store or creates a new one.  If
+<span class="argument">filename</span> exists, it opened and the
+stored data in the file is reconstructed from the last committed
+state.  If <span class="argument">filename</span> does not exist, it
+is created and initialized with no stored data.<br /><br />A
+persistent store may be opened in <span
+class="keyword">:read-only</span> mode by many processes, but a
+persistent store should only be opened by a single process when in <span
+class="keyword">:read-write</span> mode, even if only one process in
+writing.  There is currently no protection mechanism to
+enforce this.<br /><br />When a persistent store is first opened, a search
+is performed to find the latest valid commit record.  If the
+persistent store was closed as part of normal operation, the latest
+valid commit record should be at the end of the log file.  If, however,
+the process using the store crashed, there could be a sizeable amount
+of uncommitted data that must be skipped over to find the latest valid
+commit record.  Recovery after a crash can take noticably longer than
+recovery after a graceful shutdown.<br /><br />A process may call
+<span class="keyword">persistent-store/open</span> on a store that is
+already open.  Each call to <span
+class="keyword">persistent-store/open</span> should eventually have a
+matching call to <span class="keyword">persistent-store/close</span>.
+If <span class="argument">persistent-store</span> was originally
+opened in <span class="keyword">:read-only</span> mode and is
+recursively opened in <span class="keyword">:read-write</span> mode,
+the store will be closed and re-opened in the new mode.  If <span class="argument">persistent-store</span> was originally
+opened in <span class="keyword">:read-write</span> mode and is
+recursively opened in <span class="keyword">:read-only</span> mode,
+the store will continue to be open in <span
+class="keyword">:read-write</span>  mode.
+<br /><br />When a new persistent
+store  is created the <span class="argument">auxiliary-info</span>
+object is simply printed near the beginning of the log file.  It is
+intended to be used for debugging or documentation.  The <span
+class="argument">auxiliary-info</span> is ignored if the database
+already exists.<br /><br />Opening a persistent store may cause other
+persistent stores to be opened in <span
+class="keyword">:read-only</span> mode if the most recent transaction spanned
+multiple persistent stores.</dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">persistent-store/open?</span>&nbsp;<span
+class="argument">persistent-store</span><br /><span
+class="key">=&gt;</span>&nbsp;<span
+class="argument">boolean</span></dt>
+<dd><span class="argument">persistent-store</span>&nbsp;&mdash;&nbsp;
+a persistent-store.<br /><br />Returns <span
+class="keyword">T</span> if <span
+class="argument">persistent-store</span> is open, <span
+class="keyword">NIL</span> otherwise.</dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">persistent-store/open-mode</span>&nbsp;<span class="argument">persistent-store</span><br /><span
+class="key">=&gt;</span>&nbsp;<span
+class="argument">mode</span></dt><dd><span class="argument">persistent-store</span>&nbsp;&mdash;&nbsp;
+a persistent-store.<br /><br />Returns either <span
+class="keyword">:read-only</span> or <span
+class="keyword">:read-write</span>.  The return value is meaningless
+if <span
+class="argument">persistent-store</span> isn't open.</dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">persistent-store/close</span>&nbsp;<span class="argument">persistent-store</span><br /><span
+class="key">=&gt;</span>&nbsp;<span
+class="argument">unspecific</span></dt><dd><span class="argument">persistent-store</span>&nbsp;&mdash;&nbsp;
+a persistent-store.<br /><br />Closes <span
+class="argument">persistent-store</span>.<br /><br />Each recursive call to
+<span class="term">persistent-store/open</span> will increment a
+counter associated with the persistent store.  Each call to <span
+class="term">persistent-store/close</span> decrements that counter.
+When the counter reaches zero, <em>and</em> all transactions in which
+<span class="argument">persistent-store</span> participates have
+finished, the log file is closed.  If a persistent store is involved
+in a running nested transaction or a transaction that spans multiple stores,
+it may remain open <em>even after</em> the call to <span
+class="term">persistent-store/close</span>.</dd>
+</dl>
+</p>
+<p><dl>
+<dt><span class="type">Special Variable:</span>
+<span class="term">*default-persistent-store*</span></dt><dd>When a
+transaction is in process this variable is bound to the persistent store in which
+all implicit persistent allocations will be made.  This variable is
+unbound outside of a transaction as a safety measure.  Should an
+erroneous program attempt to allocate persistent storage outside of a
+transaction, and unbound variable error will be raised.</dd>
+<dt><span class="type">Procedure:</span>
+<span
+class="term">call-with-default-persistent-store</span>&nbsp;<span
+class="argument">persistent-store</span>&nbsp;<span class="argument">thunk</span><br /><span
+class="key">=&gt;</span>&nbsp;<span
+class="argument">values</span></dt><dd><span class="argument">persistent-store</span>&nbsp;&mdash;&nbsp;
+a persistent-store.<br /><span class="argument">thunk</span>&nbsp;&mdash;&nbsp;
+a procedure of no arguments.<br /><br />Invokes <span
+class="argument">thunk</span> in a dynamic context where <span
+class="keyword">*default-persistent-store*</span> is bound to <span
+class="argument">persistent-store</span>.  The values returned are
+those returned from <span
+class="argument">thunk</span>.  This is used to dynamically
+control which persistent store is used for allocation when multiple
+stores are open at the same time.</dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">call-with-transaction</span>&nbsp;<span class="argument">persistent-store</span>&nbsp;<span class="argument">transaction-type</span>&nbsp;<span class="argument">reason</span>&nbsp;<span class="argument">receiver</span><br /><span
+class="key">=&gt;</span>&nbsp;<span
+class="argument">values</span></dt><dd><span
+class="argument">persistent-store</span>&nbsp;&mdash;&nbsp;a
+persistent store.<br />
+<span class="argument">transaction-type</span>&nbsp;&mdash;&nbsp;one of
+<span class="keyword">:read-only</span>, <span
+class="keyword">:read-write</span>, or <span class="keyword">:read-cons</span>.<br />
+<span class="argument">reason</span>&nbsp;&mdash;&nbsp;a string.<br />
+<span class="argument">receiver</span>&nbsp;&mdash;&nbsp;a procedure of one
+argument.<br /><br />Invokes <span class="argument">receiver</span>
+within a transaction.  All persistent allocation must take place
+within a transaction.  If <span class="argument">receiver</span>
+returns normally, the transaction is committed and the persistent
+objects are made accessible to future transactions.  If the <span
+class="argument">receiver</span> performs a non-local exit, or if the
+process crashes, the transaction aborts and the state of the
+persistent store is unchanged.<br /><br />Transactions only protect
+allocations and modifications to the persistent store; modifications
+to non-persistent data structures or variables are not undone if a
+transaction aborts.</dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">persistent-object/save</span>&nbsp;<span class="argument">object</span>&nbsp;<span class="argument">persistent-store</span>&nbsp;<span class="key">&optional</span>&nbsp;<span class="argument">node-id</span><br /><span
+class="key">=&gt;</span>&nbsp;<span class="argument">positive-integer</span></dt><dd></dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">persistent-object/find</span>&nbsp;<span class="argument">persistent-store</span>&nbsp;<span class="argument">node-id</span><br /><span
+class="key">=&gt;</span>&nbsp;<span class="argument">object</span></dt><dd></dd>
+<dt><span class="type">Type:</span>
+<span class="term">transaction-type</span></dt><dd></dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">transaction/disposition</span>&nbsp;<span class="argument">transaction</span><br /><span
+class="key">=&gt;</span>&nbsp;<span class="argument">disposition</span></dt><dd></dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">transaction/find-root</span>&nbsp;<span class="argument">transaction</span>&nbsp;<span class="argument">persistent-store</span><br /><span
+class="key">=&gt;</span>&nbsp;<span class="argument">object</span></dt><dd></dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">transaction/mode</span>&nbsp;<span class="argument">transaction</span><br /><span
+class="key">=&gt;</span>&nbsp;<span class="argument">transaction-mode</span></dt><dd></dd>
+<dt><span class="type">Procedure:</span>
+<span class="term">transaction/reason</span>&nbsp;<span class="argument">transaction</span><br /><span
+class="key">=&gt;</span>&nbsp;<span class="argument">string</span></dt><dd></dd>
+</dl>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Jrm's Persistent Store Reference Manual</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <style type="text/css">
+/*<![CDATA[*/
+    .argument {font-style: italic;}
+    .type {font-style: underline;}
+    .term {font-style: bold;}
+    .pi {font-style: italic;}
+    .code {font-family: monospace;}
+    .file {font-family: monospace; font-variant: small-caps;}
+/*]]>*/
+    </style>
+
+  </head>
+<BODY LANG="en" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" VLINK="#800080" ALINK="#FF0000">
+
+<P>Here is the API for jrm's simple persistent store.</p>
+
+
+<p>
+<dl><dt><span class="type">Procedure:</span><span
+class="term">persistent-store/open</span> <span class="argument"></span>
+<dd></dd></dl>
+</p>
+</body>
+</html>

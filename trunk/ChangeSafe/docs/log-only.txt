@@ -1,0 +1,275 @@
+It's obvious we need some kind of database back end.  
+
+Before we rip AllegroStore/ObjectStore out of the back end of
+ChangeSafe, we ought to enumerate what properties we are using, how
+much we depend on them, and how the replacement is going to fulfill
+the need.
+
+The database gives us the standard `ACID' properties:  Atomicity,
+Consistency, Independence (parallism), and Durability.  In addition to
+these primary properties we are using the following secondary
+properties:  distribution of clients, large data volume, query
+capability, schema maintenance, db utilities.
+
+
+Distribution of clients
+
+    The database layer (ObjectStore) is designed to support multiple
+clients on heterogeneous platforms.  Objects placed into the database
+may be extracted in another client.  This is a rather expensive
+mechanism for network communication, but it is what ensures that all
+clients see exactly the same view of the database.
+
+Large data volumes
+
+    ObjectStore (and in theory by extension AllegroStore) allows you
+to make and manipulate databases much larger than the address space of
+your process.  ObjectStore does this by mapping pages of the database
+into the process space upon demand with the expectation that the
+number of pages touched per transaction *is* smaller than the address
+space.  If this assumption is violated, it falls upon the client to
+figure out a mechanism of data access that does not map in this amount
+of storage. 
+
+    On the one hand, we need this capability because we are storing a
+tremendous amount of data.  On the other hand, we expect to be caching
+most of the data we store in order to get at it rapidly.
+
+Query Capability
+
+    Like relational databases, object-oriented databases have query
+mechanisms.  But instead of SQL or a derivative, the object queries
+come in two varieties:  navigational queries and collection queries.
+A navigational query occurs when you locate an object in the database
+by dereferencing a `slot' in another (the parent) object.  ObjectStore
+maps these queries into pointer dereferencing.
+
+    An interesting design decision is made here:  access to objects is
+mediated via machine addressing.  When a pointer to a currently unmapped
+object is dereferenced, a page fault occurs which ObjectStore
+intercepts.  It fetches the database page containing the object and
+restarts the reference.  Thus the database access pattern is derived
+from the virtual memory access pattern, and ObjectStore more or less
+`discovers' the access patterns via this mechanism.
+
+    It may not be such a good idea to use the page-fault mechanism as
+the mechanism for fetching data.  The assumptions made for designing
+the page-fault handle may not apply to the database.  
+
+    The second kind of object-oriented database query is a collection
+query.  Typically, the objects allocated in an object-oriented
+database are kept in collections so that they may be sorted and
+searched upon without needing explicit maintenance of a containing
+object.  (The database is doing implicitly what the user code would be
+doing explicity.)  There are mechanisms for accessing all objects of a
+particular type or all objects matching a particular predicate.  For
+performance, an index is maintained in these collections.  However,
+this index must be updated when an object is instantiated or deleted.
+
+    We don't use this type of query in ChangeSafe.  The cost of
+maintaining the indexes to collections, however, is present whether
+you use it or not.  For AllegroStore, we were able to get a
+modification from Franz to turn off the indexing.
+
+
+Schema Maintenance (Such as it is)
+
+    Although we had trouble with schema maintenance, ObjectStore and
+AllegroStore provided mechanisms for upgrading the schema of the
+stored data.  When we decide on a new database, the ease of
+schema-upgrade should be considered.
+
+
+DB Utilities
+
+    This is a general category for things like backup, recovery,
+validation, etc.
+
+--------
+
+The way that ChangeSafe uses the database is somewhat atypical.  To a
+first approximation, we never remove anything from the database.  We
+operate in an `append-only' mode.  This is because the old versions of
+the data are explicitly designed to be accessible.
+
+
+--------
+
+Current Core Architecture
+
+    Distributed Object Identifier
+        A distributed identifer (also known as a DID), is a handle to
+    a persistent object.  Standard texts call this an `object
+    identifier' or OID.  DIDs have a printable form called a `string
+    did'.  A fundamental property of a DID is that if two DIDs have
+    the same string form, they refer to the same object, and if they
+    have differing string forms, they refer to different objects.
+    Another key property of a DID is that they have global extent:  a
+    DID refers to the same object no matter what physical machine is
+    currently manipulating the DID.  Finally, a DID encapsulates all
+    the information necessary to locate the persistent object within
+    the context of a ChangeSafe installation.
+
+        A DID has 6 components:  domain, site, host, repository,
+    class, and numeric ID.
+
+    Mapper
+        Each repository contains a table that maps DIDs to the actual
+    object referred to.  When an object is created it is entered into
+    the table.  An object may be `imported' from a different
+    repository.  If so, it will be entered into the table as well.
+    The literature also calls this sort of table an `object identifier
+    index'.
+
+    Versioned Object
+        This is the base class for an object with versioned slots.  A
+    DID will resolve to an object descended from this class.  A
+    versioned slot contains a versioned index which can be used to
+    reconstruct a value for that slot.
+
+    Versioned Index
+        This represents the `value' of a slot in a versioned object.
+    There are 4 kinds:
+
+        NVI  Represents a persistent, but non-versioned slot.
+             Modifications to this slot do not create change records.
+
+        LNVI  Represents a persistent, but non-versioned slot.
+             Modifications to this slot *do* create change records.
+             Because it is non-versioned, historical information is
+             not kept.
+
+        SVI  Represents a persistent, versioned slot for which
+             historical information is kept.  The `value' of this type
+             of slot is the value set by the latest (chronologically)
+             active change. 
+
+        CVI  Represents a persistent, compositely versioned slot.  The
+             `value' of this type of slot is *always* an ordered
+             sequence of records.  Each change to a CVI slot logs
+             which records were deleted and which were added (movement
+             and modification are *not* dealt with.)  The `value' of
+             this type of slot is computed by walking the set of
+             active changes and serially applying the appropriate
+             insertions and deletions.
+
+    CID-master-table-entry
+        This object represents an atomic unit of change.  One is added
+    to the database upon every successful change transaction.  It has
+    several fields, but the interesting ones are these: 
+
+        cid_detail_table
+            Records which objects and which slots within the object
+            have been modified in this change.
+
+        cid_set_basis
+            Records the set of changes that were active when this
+            change was created.  This allows us to recreate the state
+            of the world as it was when this change was created and is
+            important for establishing the context of a change.
+
+        who
+            Records an identification of who created the change.
+
+        when_start
+            Records when the change transaction began.
+
+        when_end
+            Records when the change transaction committed.
+
+        why
+            Records a description of the reason for the change.
+            Currently a user supplied text string.
+
+        versioned_change_information
+            This allows us to associate versioned information with a
+            change.  It is currently unused.
+
+    CID-detail-table
+        This table contains a list of entries, each entry contains a
+    pointer to the object that was modified and a list of the slots
+    that were modified.
+
+The above objects are sufficient to implement the core model, but
+there are several performance hacks in the core model that one should
+be aware of.
+
+The changes in a repository are represented as a compact set drawn
+from a known universe.  As such, we can define an ordering on them
+(and chronological is the default).  Then, we can represent a
+particular change by ordinal (a fixnum), and a set of changes by a
+bitmap.  The ordinal is called a CID, and a set of changes is called a
+CID-set.  This is used *everywhere* in the core.
+
+A `cid-object' is a distributed (non-versioned) object that represents
+a change.  If the change it represents is `resident', then there is a
+fixnum that the cid-object maps to.  Since it is a distributed object,
+it has a DID.  This is the `cid-did'.  The cid-did is often used to
+refer to changes that are in remote repositories.
+
+--------
+
+Issues surrounding the core architecture
+
+There are several inefficiencies and performance problems that arise
+as a direct consequence of the core architecture.  These can be
+divided into two categories: those arising from the database layer
+architecture (the AllegroStore and ObjectStore implementation) and
+those arising from the way in which the core code uses these layers.
+
+Here are some of the issues:
+
+1.  Only one ObjectStore transaction per process limits the Lisp to
+    processing one ChangeSafe operation at a time.  Newer versions of
+    ObjectStore provide a mechanism for getting around this, but
+    AllegroStore does not support it.
+
+2.  Although ObjectStore maps the database into the client process
+    address space, AllegroStore makes no use of this.  The data are
+    marshalled across the database/client boundary on each
+    transaction.
+
+3.  Although the data are *primarily static and read only*, they are
+    marshalled on *every* transaction.  This is simply a waste of
+    time.
+
+4.  Since the versioned indexes are held within the persistent
+    objects, when an object is `updated' the page holding the object
+    must be written.
+
+--------
+
+Proposal
+
+    I propose that we do not use a database at all!
+
+
+    Ok, I'm prevaricating a wee bit.  Rather than replace
+AllegroStore/ObjectStore with a relational database, I propose we
+replace it with a log-structured persistent object store.
+
+ChangeSafe is a `temporal object-oriented database management system'
+that has been specialized for the task of configuration management.
+The modifier `temporal' indicates that time is being modeled within
+the database as well as object content.  Recent research into this
+area has shown that traditional object-oriented, relational, and
+object-relational hybrid databases, are ill-suited to supporting a
+temporal model.
+
+Logically, the data in the database are *never* modified.  Data may be
+added, but it is never removed.  This fact is key to several important
+performance improvements.
+
+1.  Persistent data need not be `read-locked'.  Since no overwrite is
+    possible, locking against superseded data is unnecessary.
+
+2.  Persistent data need not be marshalled.  Once the data are in lisp
+    memory, there is no need to discard it because it cannot be
+    modified.
+
+3.  Multiple transactions can take place in one process.  Since each
+
+
+
+
+

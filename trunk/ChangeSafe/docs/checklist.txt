@@ -1,0 +1,1493 @@
+Conman checklist
+
+____ Essential Commands
+     co, cset_create, cset_unceate, file_add, file_remove,
+     master_change, unco, ws_create, ws_update
+
+____ User Commands
+     ci, cset_add, cset_close, cset_remove, csets_from_file,
+     description_replace, file_rename, help, master_lock,
+     master_unlock, master_unlock_force, port, undo, ws_delete,
+     ws_move, ws_query, ws_regenerate, ws_set
+
+_____ Commands return 0 on success
+
+_____ Command abbreviations
+
+    _____ -a works as abbreviation for -abstract
+
+    _____ -c works as abbreviation for -class
+
+    _____ -d works as abbreviation for -description
+
+    _____ -n works as abbreviation for -name
+
+    _____ -p works as abbreviation for -product
+
+    _____ -r works as abbreviation for -release
+
+    _____ -s works as abbreviation for -subsystem
+
+
+_____ .conman priority
+
+    _____ Default arguments are taken from .conman at or above current
+	  working directory.
+
+    _____ Default arguments also taken from .conman in user home
+	  directory.
+
+    _____ Command line overrides working directory .conman, working
+	  directory .conman overrides user .conman.
+
+_____ Verbosity
+
+    ____ -v0 silent
+
+    ____ -v1 single line of status
+
+    ____ -v2 fully verbose
+
+
+
+_____ File specifications
+
+     _____ Absolute pathnames may always be used.
+
+     _____ Relative pathnames work relative to current directory.
+
+     _____ `..' works (means up from current directory)
+
+     _____ `~/' and '~foo/' works (means current user home directory
+	    and user foo home directory respectively).
+
+     _____ '*' and '?' work as per unix globbing standards.
+	   foo*.txt means all files in directory starting with foo
+	   with extension txt, ba?.txt means all three letter files in
+	   directory starting with ba with extension txt.
+
+
+
+     _____ co
+
+	____ Command Syntax
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Succeeds if file is missing from workspace.
+
+	    ____ File is made writable.
+
+	    ____ Email sent to other users, list of other users
+		 printed.
+
+	    ____ Wildcard characters are processed.
+
+	    ____ When multiple files are specified, failure to
+                 checkout any one file does not abort checkout of
+                 rest. 
+
+	____ Warnings
+
+	    ____ Succeeds if product is not writable, but warning is
+		 issued.
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Fails if no active cset
+
+	    ____ Fails if file is not part of product.
+
+	    ____ Fails if file exists in workspace but is writable.
+		 (note, this indicates a `wild' file or an already
+		  checked out file.)
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ cset_create
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Cset name can contian
+		____ =
+		____ a-z A-Z
+		____ -
+		____ 0-9
+		____ .
+		____ _
+
+	    ____ Optional -description
+
+	    ____ Optional -abstract file
+
+	    ____ Workspace is updated as per ws_update unless
+                 -noupdate 
+
+	    ____ Optional -noupdate flag inhibits update.
+
+	    ____ Optional filenames to be immediately checked out.
+
+	    If files are sepecified,
+	    _____ Succeeds if file is missing from workspace.
+
+	    _____ File is made writable.
+
+	    _____ Email sent to other users, list of other users
+		  printed.
+
+	    _____ Wildcard characters are processed.
+
+	    _____ When multiple files are specified, failure to
+                  checkout any one file does not abort checkout of
+                  rest. 
+
+	____ Warnings
+
+	    ____ Warns if cset_name is not unique, even if `full
+                 cset_name'  is
+
+	    If files are specified
+	    _____ Succeeds if product is not writable, but warning is
+		  issued.
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Fails unless no current cset
+
+	    ____ Fails if cset name is in use.
+
+	    ____ Error if cset_name is not legal
+
+	     If files are specified, must behave as follows:
+
+	    _____ Fails if file is not part of product.
+
+	    _____ Fails if file exists in workspace but is writable.
+		  (note, this indicates a `wild' file or an already
+		   checked out file.)
+
+	____ verbosity
+
+	____ Performance
+
+
+    ____ cset_uncreate
+
+	____ Command Syntax
+
+	    ____ new files (added with file_add) are not deleted
+
+	    ____ removed files (removed with file_remove) are restored
+
+	    ____ renamed files are restored to original name
+
+	____ Basic Behavior
+
+	    ____ unco all checked out files
+
+	____ Warnings
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Error if no cset active
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ file_add
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ File is added to subsystem determined by context.
+
+	    ____ Behavior when file previous present in subsystem, but
+                 has been deleted ???
+
+	    ____ Behavior when file present in different subsystem in 
+                 same class.
+
+	    ____ optional -force flag
+
+	    ____ Auto detection of text/binary
+
+	    ____ Override auto detection with -binary/-text flag.
+
+	    ____ Wildcard characters are processed.
+
+	    ____ When multiple files are specified, failure to
+                 checkout any one file does not abort checkout of
+                 rest. 
+
+	    ____ With verbosity 1 or 2, exit code indicates whether
+                 file was classified as text or binary.
+
+	____ Warnings
+
+	    ____ Succeeds if product is not writable, but warning is
+		 issued.
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Error if no cset active
+
+	    ____ File must exist in workspace.
+
+	    ____ Error if file already present in subsystem.
+
+
+	____ Performance
+
+
+    ____ file_remove
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ File is removed from subsystem determined by context.
+
+	    ____ Undoes effect file_add if file has been added.
+
+	    ____ Wildcard characters are processed.
+
+	    ____ When multiple files are specified, failure to
+                 checkout any one file does not abort checkout of
+                 rest. 
+
+	____ Warnings
+
+	    ____ Succeeds if product is not writable, but warning is
+		 issued.
+
+	    ____ Warning if file is not present in workspace.
+                 Duplicate file_removes produce warning.
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Error if no cset active
+
+	    ____ Error if file is checked out.	Use unco first.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ master_change
+
+	____ Command Syntax
+
+	    ____ Name can contian
+		____ =
+		____ a-z A-Z
+		____ -
+		____ 0-9
+		____ .
+		____ _
+
+	____ Basic Behavior
+
+	    ____ If no open cset, -description and -name are required,
+		 -abstract is optional.
+
+	    ____ If open cset, cset_close is performed first.  Failure
+                 of cset_close aborts master_change.
+
+	    ____ ws_update automatically called if necessary,
+		 master_change does not proceed if update produces
+                 conflicts. 
+
+	    ____ If cset_close and ws_update *both* need to be done,
+                 the cset_close is done first, then the ws_update,
+                 then the master_change.
+
+	    ____ Master_change atomic with respect to csets, all csets
+                 or none are promoted.
+
+	    ____ Locked subsystems are released.
+
+	    ____ If multiple walls, holes must exist in ALL walls.
+
+	____ Warnings
+
+	    ____ Warns if name is not unique, even if `full name' is
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ If no open cset, error if no unpromoted cset in
+		 workspace.
+
+	    ____ If open cset, -description, -abstract, and -name must
+                 be provided either by the call to cset_create or for
+		 master_change.
+
+	    ____ Fails if name is in use.
+
+	    ____ Error if name is not legal
+
+	    ____ Error if wall is raised and no hole for cset.
+
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ unco
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Optional -all	Uncos all checked out files
+
+	    ____ Optional -class  Uncos all files in a particular
+                 class 
+
+	    ____ Optional -subsystem  Uncos all files in a particular
+                 subsystem 
+
+	    ____ Files must be in some subsystem.
+
+	    ____ Files are made read-only.
+
+	    ____ Unless -nocopy, backup copies of file made (if file
+                 has been changed?)
+
+	    ____ If filenames are used, wildcard characters are
+                 processed. 
+
+	    ____ When multiple files are specified, failure to unco
+		 any one file does not abort unco of rest.
+
+	____ Warnings
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ ws_create
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Optional -release
+
+	    ____ Optional -date-time
+
+	    ____ Optional -label
+
+	    ____ -product
+
+	    ____ Optional -description
+
+	    ____ directory name can be relative or absolute
+
+	    ____ Replicates current tip of main branch unless
+                 -release, -date-time, or -label specified.
+
+	____ Warnings
+
+	    ____ Warning if workspace baseline is frozen release
+                 branch 
+
+	    ____ Warning if workspace baseline is slush release branch 
+
+	____ Errors
+
+	    ____ Error if product does not exist.
+
+	    ____ Must create a new directory, error if directory
+                 exists. 
+
+	    ____ Workspaces may not be nested; error if current
+		 directory is within a workspace.
+
+	    ____ Unless -xeno switch specified, directory must be
+                 `under' users home directory.	Does not affect
+                  nesting restriction. 
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ ws_update
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Optional -date-time
+
+	    ____ Optional -label
+
+	    ____ Updates workspace with respect to master or release
+                 tip, unless -date-time or -label is specified.
+
+	    ____ If -report specified, no change to workspace is
+		 performed, but all detection is performed.
+
+	    ____ If no open csets, this works by simply bringing in
+		 the latest csets and refreshing the workspace.	 No
+		 merge takes place.
+
+	____ Warnings
+
+	    ____ Warn if merge conflicts are found.
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Error if label is not on same branch as baseline or
+		 earlier than workspace.
+
+	____ Verbosity
+
+	____ Performance
+
+
+
+    ____ ci
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ This command is a no-op, but it might point the user
+		 to cset_close or master_change.
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ cset_add
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Adds a named cset to the workspace.
+
+	    ____ If a cset is open within the workspace, a merge must
+		 happen.  If not, the workspace must be refreshed.
+
+	    ____ -class name  Adds only the subsys cset for that class.
+
+	____ Warnings
+
+	    ____ Warn if cset affects no files in workspace.
+
+	    ____ Warn if merge conflict occurs (when an open cset
+                 exists.) 
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Error if cset not found.
+
+	    ____ Error if cset is already in the workspace.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ cset_close
+
+	____ Command Syntax
+
+	    ____ Name can contian
+		____ =
+		____ a-z A-Z
+		____ -
+		____ 0-9
+		____ .
+		____ _
+
+	____ Basic Behavior
+
+	    ____ If no open cset, -description and -name are required,
+		 -abstract is optional.	 This will redescribe the cset.
+
+	    ____ Changed files will be snapshot, and made read-only.
+
+	    ____ Undo information for the change context is discarded.
+
+	____ Warnings
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Warns if name is not unique, even if `full name' is
+
+	    ____ Warn if no open cset. (this command can be used to
+		 redescribe an already closed cset.)
+
+	____ Errors
+
+	    ____ If open cset, -description, -abstract, and -name must
+                 be provided either by the call to cset_create or for
+		 cset_close.
+
+	    ____ Error if abstract file doesn't exist.
+
+	    ____ Fails if name is in use.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ cset_remove
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Removes a named cset from the workspace.
+
+	    ____ If a cset is open within the workspace, a merge must
+		 happen.  If not, the workspace must be refreshed.
+
+	    ____ -class name  Removes only the subsys cset for that
+                 class. 
+
+	____ Warnings
+
+	    ____ Warning if cset does not affect any files in
+                 workspace. 
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Error if named cset doesn't exist.
+
+	    ____ Error if named cset isn't in the workspace.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ csets_from_file
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Adds or removes named csets from workspace.
+
+	    ____ Addition or removal is atomic.
+
+	    ____ If a cset is open within the workspace, a merge must
+		 happen.  If not, the workspace must be refreshed.
+
+	    ____ -class name  Removes only the subsys cset for that
+                 class. 
+
+	____ Warnings
+
+	    ____ Warning if all csets affect no files in workspace.
+
+	    ____ Warning if merge conflict occurs.
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Error if file doesn't exist.
+
+	    ____ Error if file is in the wrong format.
+
+	    ____ Error if any named cset does not exist.
+
+	    ____ Error if cset to remove is not in workspace
+
+	    ____ Error if cset to add is already in workspace.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ description_replace
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Replace description on object.
+
+	    ____ -abstract, if specifed, names file to be used as new
+		 abstract on cset or master_change.
+
+	____ Warnings
+
+	____ Errors
+
+	    ____ Error if item_name does not exist
+
+	    ____ Error if item_name cannot have abstract and -abstract
+		 is specified.
+
+	    ____ Error if abstract file specified but is not found.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ file_rename
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Renames file in workspace.
+
+	    ____ Indicates file to renamed in subsystem upon checkin.
+
+	    ____ Rename of rename allowed.
+
+	    ____ Rename of file_add allowed.
+
+	    ____ Wildcards not allowed.
+
+	____ Warnings
+
+	    ____ Warning if product does not have write permission for
+		 this subsystem.
+
+	____ Errors
+
+	    ____ Error if current directory is not within workspace.
+
+	    ____ Error if new_filename matches previous filename in
+		 subsystem (and -force is not specified).
+
+	    ____ Error if new name already exists in this subsystem
+		 (and it has not been file_removed by the current
+		 change).
+
+	    ____ Error if file of new name already exists in workspace
+		 (wild file).
+
+	    ____ Error if different file_rename has same new_filename.
+
+	    ____ Error if new_filename doesn't belong in any
+		 subsystem.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ help
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Assumes 80 character display.
+
+	____ Warnings
+
+	____ Errors
+
+	    ____ command does not exist
+
+	    ____ argument does not exist
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ master_lock
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	    ____ Warning if workspace baseline does not match
+		 master_tip
+
+	    ____ warning if no subsystems are locked.
+
+	____ Errors
+
+	    ____ Error if product does not have write permission in
+                 workspace. 
+
+	    ____ Error if current directory is not within workspace.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ master_unlock
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Releases locks on locked subsystems.
+
+	____ Warnings
+
+	    ____ Warning if no subsystems are locked.
+
+	____ Errors
+
+	    ____ Error if not locked by current user.
+
+	    ____ Error if current directory is not within workspace.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ master_unlock_force
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ -subsystem
+
+	    ____ -product -class
+
+	    ____ Releases a lock on a single locked subsystems.
+
+	    ____ Email sent to holder of lock.
+
+	____ Warnings
+
+	    ____ Specified subsystem was not locked.
+
+	____ Errors
+
+	    ____ Specified subsystem or class doesn't exist.
+
+	    ____ Specified product doesn't exist.
+
+	    ____ Conman busy with another operation.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ port
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+		 Behavior is complicated, need a better checklist.
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ undo
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Undo the effect of file_add, file_remove, or
+                 file_rename 
+
+	____ Warnings
+
+	____ Errors
+
+	    ____ Command is not one of file_add, file_remove, or
+		 file_rename
+
+	    ____ File has not been affected by command, or undo
+		 information has been lost.
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ ws_delete
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Remove controlled files from workspace and delete
+		 empty directories.
+
+	    ____ if open cset, error, unless -force
+
+	    ____ if -force, uncreate_cset before deleting
+
+	    ____ user need not own workspace to delete it, but if he
+		 does not have file-delete privileges, they will not
+		 be deleted.
+
+	____ Warnings
+
+	____ Errors
+
+	     ____ No workspace in specified location.
+
+	     ____ Open csets, but no -force
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ ws_move
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Move a workspace to another location on the same file
+		 system.
+
+	    ____ if -xeno flag not specified, new directory must be
+		 under user's root directory.
+
+	____ Warnings
+
+	____ Errors
+
+	    ____ old directory not a workspace
+
+	    ____ new directory already exists
+
+	    ____ new directory within another workspace
+
+	    ____ new directory not under user root and -xeno not
+                 specified 
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ ws_query
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ list work done in this workspace, or list all users
+		 workspaces
+
+	____ Warnings
+
+	____ Errors
+
+	    ____ -list-ws user specified and user does not exist
+
+	    ____ -list-ws not specified and current directory not a
+                 workspace. 
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ ws_regenerate
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Restores workspace to state consistent with current
+		 change context (if any) and current workspace
+		 baseline.
+
+	    ____ Regenerates all files as read-only (except checked
+		 out)
+
+	    ____ backs up wild files if necessary
+
+	    ____ does not modify checked out files, but will restore
+		 them if missing.
+
+	____ Warnings
+
+	____ Errors
+
+	    ____ current directory is not in a workspace
+
+	____ Verbosity
+
+	____ Performance
+
+
+    ____ ws_set
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	   ____	 Discard workspace vpb info and reset workspace
+		 baseline to master_tip or other specified node.
+
+	   ____ -product
+
+	   ____ -date-time
+
+	   ____ -label
+
+	   ____ if -force not specified, workspace must match
+		 baseline, i.e. no VPB information.
+
+	____ Warnings
+
+	   ____	 Warning if master is not changable.
+
+	____ Errors
+
+	    ____ Error if arguments are not compatible.
+
+	    ____ Error if open cset.
+
+	    ____ Error if workspace does not match baseline and -force
+		 not present.
+
+	____ Verbosity
+
+	____ Performance
+
+	    ____ target of 30 second or less to run
+
+
+____ Product Code Manager Commands
+
+    ____ class_create
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	    ____ Create a new class.
+
+	    ____ Class name can contian
+		____ =
+		____ a-z A-Z
+		____ -
+		____ 0-9
+		____ .
+		____ _
+
+	____ Warnings
+
+	____ Errors
+
+	    ____ Illegal class name.
+
+	    ____ Class name in use.
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ product_create
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ product_deactivate
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ product_directory_move
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ product_directory_regenerate
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ product_reactivate
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ product_rename
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ subsys_create
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ subsys_inherit_from
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ subsys_rename
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ subsys_subscriber_list
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+____ Release Manager Commands
+
+    ____ label_assign
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ label_create
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ release_create
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ release_freeze
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ release_rename
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ wall_hole
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ wall_lower
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ wall_raise
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+____ Administrator Commands
+
+    ____ admin_database_error_log
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ admin_database_performance_log
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ admin_database_backup_and_restore
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ admin_database_control
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ admin_database_create
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ admin_database_integrity
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ admin_database_remove
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ admin_database_rename
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ context_set
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ trigger
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ user_account
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ user_permission_set
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ ws_restore
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance
+
+    ____ ws_save
+
+	____ Command Syntax
+
+	____ Basic Behavior
+
+	____ Warnings
+
+	____ Errors
+
+	____ Verbosity
+
+	____ Performance

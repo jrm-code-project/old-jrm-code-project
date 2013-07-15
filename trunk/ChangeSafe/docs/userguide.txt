@@ -1,0 +1,46 @@
+NVI, LNVI, SVI indexes support (for versioned class slot assignment and slot retrieval)
+the following data types:
+
+1) Any primitive lisp datatype (sequences, integers, lists, etc..)
+2) VI-SEGMENTED-VALUE-STREAM types.
+
+CVI index attributes accept the following inputs:
+
+1) VI-RECORD-STREAM
+2) Lisp sequence types (vectors, lists)
+3) Lisp streams
+
+#2 and #3 are automatically wrapped in VI-RECORD-STREAM object subtypes for use by the CVI engine.
+
+and return the following outputs:
+
+2) VI-RECORD-STREAM
+
+Note that VI-RECORD-STREAM types may be used to encapsulate any lisp SEQUENCE type,
+and lisp streams.  For small slot values, you may wish to call the VI-RECORD-STREAM
+AS-LIST or AS-VECTOR functions rather than iterate over them manually.  These
+are convenient, but will cons more, depending on usage.
+
+NOTE: Support is partly implemented for VI-RECORD-STREAM types which
+return VI-SEGMENTED-VALUE-STREAM objects for every value access.
+It should be complete, but it hasn't been tested.  And VI-VALUE-MANAGER stuff is even
+further from being complete.
+
+				      EXPORT/IMPORT
+
+Note that semantics of NVI w.r.t. export are TBD.
+Ditto LNVI.  For now, they're exported only if the assigning cid is in the
+exporting CID-SET, and imported only if unassigned on receiving side, or
+if local assignment is an older cid than transport package value.
+
+					 CAVEATS
+
+If you assign to VI slots multiple times within a transaction, we discard the old value of
+the slot but we do NOT delete any PCLOS objects which may have been in the slot.  The
+reason is that often what you're doing in this case is
+(set-slot-x object (cons 'y (vi-value-stream-as-list (slot-x object))))
+
+In other words, it wasn't your intent to delete the objects.  And persistent object
+deletion must always be explicit in Allegrostore.   So if you intended to throw away
+values in setting a versioned slot, you must call DELETE-OBJECT on those values you care
+about if they're persistent.

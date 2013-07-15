@@ -1,0 +1,334 @@
+Bug tracking.
+
+-------------------------------------------	-------	-------
+BUG						WHO	STATUS
+-------------------------------------------	-------	-------
+
+RS00	000710-0000				JRM	Resolved - Customer error
+
+    files still writeable after master_change/cset_close
+    (.csf-prefs was incorrect with respect to chmod)
+
+RS01	000710-0013				JRM	Fixed v0.231
+
+    co should work with relative paths crossing subsystem boundaries
+
+RS02	000710-0014				JRM	Fixed v0.231
+
+    co should work from relative path above subsystem
+
+RS03	000710-0015				PWW	Fixed V0.253 [JC13 is Duplicate]
+
+    co->rename->co of file doesn't refresh file as per spec
+    [JDT: Spec may be bogus here]
+
+RS04	000710-0016				PWW	Done V0.275
+
+    co twice of same file in succession should fail the second attempt
+
+    JDT: Right now we just warn.  This seems ok to me.
+    Perhaps related to possible spec flaws in RS03.
+    PWW: we now give an error
+
+RS05	000710-0017				PWW	Done V0.275
+
+    co operation not correct if file to be co'd is writable at time of operation
+    (not spec compliant, should give error, probable regression test impact for test-14)
+
+RS06	000710-0018				GeoB     Deferred (RS10 is duplicate of this)
+
+    This particular bug is in error code reporting, stemming from the fact that the
+    command line parser isn't signalling errors compatible with other args.
+    It's not quite a duplicate of JC01.
+
+RS07	000710-0019				PWW	Deferred, reply to hp pending
+
+    If same cset name is created immediately after closing a first
+    time, then the operation succeeds and spec says it should fail.
+
+    JDT: right now we detect this on cset_close instead of cset_create,
+    it would be nice to do it on cset_create, but we'll leave it this way for now.
+    Note that by deferring to cset_close, the name may in fact be unique at that time,
+    since its system-qualified value will be different and perhaps unique where it wasn't before.
+
+RS08	000710-0020				PWW	Fixed V0.255
+
+    If create then close a cset in one product context, then create
+    the same cset name under a different product context, the
+    specification says that a warning should be returned.
+
+RS09	000710-0021				PWW	Done V0.275
+
+    [JDT: contradiction in spec: cset_create warns, "co" errors, issue sent to hp]
+    [JDT: See \\change\e$\bugs\rs09jdt.txt]
+
+    When creating a cset and giving a list of files to check out
+    such that at least one of the files isn't a file currently
+    under control in this context, then the specification says
+    the cset should be created.  It is not.
+    Signal a warning, not an error. 
+
+RS10	000710-0022				Duplicate of RS06
+
+    Running master_lock with no options outputs a message
+    that -description is needed.  It also has a return code
+    of 102, which is not in the return code document.
+
+RS11	000710-0023				GeoB	TBD
+
+    Not a bug, return codes in doc are meaningless
+    As long as we return warning, we're ok.
+    Warning reporting cleanup related to bug JC01.
+
+    Running master_unlock in a workspace that has no locks
+    gives a return code of 100, when document says that it
+    will give a return code 3 (only a warning)
+
+RS12	000710-0024				BILL	In-Progress
+
+    [JDT: Ade signed off on this in the May-31 deliverables, apparently he was confused.
+     The tests look somewhat WRONG in use of mixes of products, classes, and subsystems
+     in unlock_force commands.]
+
+    master_unlock -force doesn't handle -product or -class arguments 
+
+	I set up two workspaces on the same product, and
+	create work in one of them, and do a master_lock.
+
+	I then go to the other workspace and do a
+		master_unlock_force -product myprod -class C1
+
+	and get a message saying 'no -subsystem specified'.
+
+	The spec lists "-subsystem | -product -class"
+
+------------------------------------------------------------------------------
+
+JC01	000710-0000				GeoB	Waiting 
+
+    warnings/errors not returning correct codes (reporting mechanism needs serious
+    rearchitecture, return codes should probably be limited to 0/1)
+
+JC02	000710-0001				PWW	Fixed v0.236
+
+    `-ws' argument to ws_delete and ws_move was causing confusion.
+    And incorrect ws deleted if ws_delete called from another ws.
+
+JC03	000710-0002				Naha	Fixed v0.232
+
+    Email being sent to cassidy@content-integrity.com
+
+JC04	000710-0003				AAmbler	(Deferred:low priority)
+
+    database create semantics differ on remote/local databases
+      (i.e., remote requires directory exists, local requires
+       directory not exist)
+
+JC05   000710-0004
+    						George	Resolved, Workaround
+    (1) Address space full (PSR).  Workaround given (OS_AS_SIZE)
+
+						George  TBD
+    (2) Update and check in hpux-install-notes,
+	we need to document this parameter for customers anyway.
+
+JC06	000710-0005				Arol/George	In-progress *****
+
+    ***** Reproduction attempts suspended until we try the following:
+    1) Have jack run the broken build with PHSS_17225 installed.
+    2) Have jack reproduce the problem with a new build.
+    3) Have jack send us the test input files he used with the test script that he sent
+       us, since it doesn't work for us (at least not on the latest dog food build).
+
+    crash after GC (product in weeds)
+
+JC07	000710-0006				PWW	Done V0.282
+
+    ws_set doesn't delete undesirable leftover files (same for ws_regenerate)
+
+    Customer Severity(1-hi; 5-lo):  2
+
+    -- Details --
+
+    ws_create a workspace for product P1
+    ws_set -product P2
+
+    After the above sequence, the workspace should look like P2, with P2's
+    files and directories. Instead, it ends up looking like the union of P1
+    and P2, including all files that are in either product.
+
+    -- Suggestion --
+
+    Delete files and directories of P1.
+    Wild files should be left behind, but all change-controlled P1 files
+    should be removed from the file system.
+
+    ws_regenerate should do the same.
+
+JC08	000710-0007				GeoB	Deferred/Fixed?
+    [JDT: Jack is now unable to reproduce the problem]
+
+    One of two servers gives err msg Database directory xxx already exists
+
+    Severity(1-hi;5-lo): 4 
+
+    -- Details --
+
+    Installed CS servers on two machines, with more or less identical config
+    files.
+
+    Ran the same command on both:
+    COMMAND: con admin_database_create -db-directory
+    c###.sdd.hp.com:/local/ODI/database/img/ img7-6c
+
+    On both machines, there already exists a directory
+    /local/ODI/database/img
+
+    On machine c819, received the normal warning:
+    Unable to verify that database directory does not exist on remote
+    server c819.sdd.hp.com.
+    Master repository creation completed with warnings.
+
+    On machine c796, received this error:
+    An error occurred while attempting master repository creation:
+    Database directory #p"c796.sdd.hp.com:/local/ODI/database/img/" already
+    exists
+
+    ... Now I've got a problem with this error, in that the database
+    directory is *supposed to exist*. Plus of course, the issue of getting
+    different behavior from the two servers. 
+
+JC09						N/A	Not-A-Bug
+
+    JDT: "-d" is speced to be "description", not "-database".  User error.
+    George and Jack have resolved this together.
+
+	Summary		"-d" option misbehaves in ws_create
+
+	Severity(1-hi;5-lo): 4
+
+	-- Details --
+	Server was started using the new alias commands, i.e.
+	(conman:do-param-alias-create "d" "description") ... and so forth
+
+	This command 
+	con ws_create -d c819.sdd.hp.com:/local/ODI/database/img/img1 -p avalon
+	ws_img1f
+	Gives this error
+	An error occurred while attempting workspace creation:
+	No product (ever) named "avalon" exists
+
+	This command
+	con ws_create -database c819.sdd.hp.com:/local/ODI/database/img/img1 -p
+	avalon ws_img1f
+	Creates the workspace without complaint
+
+	Only difference is substitution of "-d" for "-database"!
+
+	(I do have a .csf file in my home directory that points to a different
+	db, where the product "avalon" apparently doesn't exist.)
+
+
+JC10	000711-0000				Mark	Fixed
+
+	Summary		ws_query says "Chechout"
+
+	Severity(1-hi;5-lo):5
+
+	-- Details --
+
+	ws_query gives list of files checked out in ws
+	Listing says "Chechout" instead of "Checkout"
+
+JC12	000711-0002				Arol	TBD
+
+	Summary         Entire subsystem made writable after cset_create with
+	file args.
+
+	Severity(1-hi;5-lo): 1
+
+	-- Details --
+
+	I cd to a subsystem and do an ll command. All the files are read-only,
+	as expected:
+	total 30
+	drwxrwxr-x   2 cassidy    SdFw          1024 Jul  7 12:27 ./
+	drwxrwxr-x   3 cassidy    SdFw          1024 Jul  7 12:27 ../
+	-r--r--r--   1 cassidy    SdFw         10885 Jul  7 12:27 otoe.c
+	-r--r--r--   1 cassidy    SdFw          2357 Jul  7 12:27 otoe.h
+	-r--r--r--   1 cassidy    SdFw           596 Jul  7 12:27 otoe.mf
+	-r--r--r--   1 cassidy    SdFw          6381 Jul  7 12:27 otoe_firm.c
+	-r--r--r--   1 cassidy    SdFw          4116 Jul  7 12:27 otoe_firm.h
+	-r--r--r--   1 cassidy    SdFw          6242 Jul  7 12:27 otoe_otoe.c
+	-r--r--r--   1 cassidy    SdFw          2203 Jul  7 12:27 otoe_sys.c
+	-r--r--r--   1 cassidy    SdFw          1132 Jul  7 12:27 otoe_sys.h
+	-r--r--r--   1 cassidy    SdFw         18613 Jul  7 12:27 otoe_udw.c
+	-r--r--r--   1 cassidy    SdFw           354 Jul  7 12:27 otoe_udw.h
+
+	I create a cset, at the same time doing a checkout:
+	con cset_create -name "hotdog" otoe.c
+
+	then do another ll - everything is writable:
+	total 30
+	drwxrwxr-x   2 cassidy    SdFw          1024 Jul  7 12:27 ./
+	drwxrwxr-x   3 cassidy    SdFw          1024 Jul  7 12:27 ../
+	-rw-rw-rw-   1 cassidy    SdFw         10885 Jul  7 12:27 otoe.c
+	-rw-rw-rw-   1 cassidy    SdFw          2357 Jul  7 12:27 otoe.h
+	-rw-rw-rw-   1 cassidy    SdFw           596 Jul  7 12:27 otoe.mf
+	-rw-rw-rw-   1 cassidy    SdFw          6381 Jul  7 12:27 otoe_firm.c
+	-rw-rw-rw-   1 cassidy    SdFw          4116 Jul  7 12:27 otoe_firm.h
+	-rw-rw-rw-   1 cassidy    SdFw          6242 Jul  7 12:27 otoe_otoe.c
+	-rw-rw-rw-   1 cassidy    SdFw          2203 Jul  7 12:27 otoe_sys.c
+	-rw-rw-rw-   1 cassidy    SdFw          1132 Jul  7 12:27 otoe_sys.h
+	-rw-rw-rw-   1 cassidy    SdFw         18613 Jul  7 12:27 otoe_udw.c
+	-rw-rw-rw-   1 cassidy    SdFw           354 Jul  7 12:27 otoe_udw.h
+
+	Only the file I co'ed should be writable.
+
+	(If I do not include the file name in the "cset_create" and do a
+	separate "co", only the one file is writable.)
+
+	File system permissions are pretty important. People use them to know
+	what they are doing. It's also a confidence factor that the system is
+	treating their files right and not messing with them.
+
+        PWW (2000-07-14) a quick test using conman\test-43a (modified with
+        a couple of break's) did not duplicate this on NT
+
+JC13	000711-0003				PWW	FIXED [DUPLICATE OF RS03]
+	Summary         Second "co" doesn't give me a fresh copy of a file I
+	previously checked out.
+
+------------------------------------------------------------------------------
+
+LE00	000710-0008			       	Bill	Queued
+
+    cset_add doesn't work with -class argument
+
+    ??? CHECK (pww) ??? this is claimed to be fixed in RightNow
+
+LE01	000710-0009				GeoB	(Deferred to V2+)
+
+    executable bit on files isn't preserved
+
+LE02	000710-0010			       	JRM	Believed Fixed (version unknown, "a while ago")
+
+    Problem doing cset_add of unpromoted csets from one workspace into another workspace
+    with checked out files affected by csets to be imported.
+
+LE03	000710-0011				GeoB	Possibly also fixed, needs a check, related to LE02
+
+    Unable to remove a cset from a workspace when a file is checked out and the cset
+    alters the file.
+
+LE04	000710-0012				George	Verify
+
+    cset_remove: Unable to remove a cset specifying only one class
+
+    First I create a cset that affects two different classes 
+    (add a file, one to each class).
+
+    Next, I try to remove this same cset from only one class (using
+    -class name) in a different workspace.  However, the cset is
+    removed from all affected classes.
+

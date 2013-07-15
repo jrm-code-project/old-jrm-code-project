@@ -1,0 +1,211 @@
+
+		  Dave's guidelines for Lisp programming
+
+They might be good, they might not, but they're what was used in coding
+e-zchange, and Dave's good will is achieved by using them.  Nothing is
+hard and fast however, there are always exceptions and I've broken
+the rules myself.  These are guidelines, after all. I'm open to
+feedback about how to improve upon them.
+
+These are meant to embody reasonable practices, though some things will no
+doubt cause some lispers to itch (like my heavy documentation preferences).
+Your cooperation is appreciated.  Some items undoubtedly reflect Dave's
+eccentricities, apologies in advance.
+
+
+0) If you're having trouble reading the code because it doesn't fit on your
+   screen, note that it was written on 110 char width terminals.  This
+   works fine even with 800x600 laptop displays.  I use 8-character tab
+   stops.
+
+   We'll call 110 the "Dave Standard Terminal Width" which is recommended
+   for editing e-zchange sources.  Greater widths are not recommended, they
+   won't fit on 800x600 laptops (not with any readable fonts anyway).
+
+   Ah, the joys of eccentricity and developing the core code base.
+
+   On an anachronistic note, I typically restrict my module header comments
+   to 80 chars, for no reason other than to help the terminally challenged
+   who audit or otherwise surf modules at a high level.
+
+   I also use formfeeds to separate logically distinct module subunits,
+   including a formfeed after module header comments so I can skip past
+   them in my editor easily. (I have this bound to a key).
+
+   Finally, don't ask me how to print 110-char code.  I don't know.  I
+   never print my code.  If you know how to print it nicely, edit this file
+   and share with the rest of us.
+
+1) If you write a new module, include the \ts50\template.{java,lsp} modules
+   as appropriate, and fill in the module description with something
+   meaningful. Bits and pieces of architectural elaboration here can make
+   somebody's day a year from now.
+
+2) There is no such thing as self documenting code in my projects.
+
+   Generic functions should have :DOCUMENTATION supplied, as well as
+   DEFUN docstrings.  Any but the most trivial of arguments should be
+   documented.
+
+   If you're trying to decide whether function documentation should be a
+   comment or a docstring, consider what you'd like to see if you request
+   the essential function documentation from emacs via "C-c d".
+
+   Phrased with more emphasis, all DEFUN and DEFMACRO entities which are not the result of
+   macro expansion should have *meaningful* docstrings.
+
+2.5) Use DEFGENERIC/DEFMETHOD where overloading might be useful,
+     particularly in conjunction with CLOS classes.
+
+     Use DEFUN where overloading is considered undesirable, or where
+     performance is paramount.  
+
+3) Document arguments and return values.  How much documentation should be
+   proportional to the complexity of the routine and its inputs and
+   outputs.  Use docstrings for usage, not comments, so that they'll appear
+   in editor/ide tools, use comments for architecture or long technical
+   details.
+
+   Parameter naming should seldom serve as a substitute for documentation
+   (via docstrings) on the arguments.  However I often let formal parameter
+   names reflect the expected type of the argument where possible and
+   appropriate.
+
+   This is particularly useful with DEFUN.  DEFMETHOD and DEFGENERIC do a
+   better job of specifying the type and so name-encoding is less
+   essential, but there are still &optional, &key, and other "Type T"
+   parameters for which it's nice to have a clue as to what's expected at
+   runtime.
+
+   Note that I often use the plural form of an object name, like "foos"
+   to reflect an input which is a sequence of FOO objects.  Usually I mean
+   a list, vectors usually get a -vector suffix.  
+
+4) Use DEFINE-TENN-CLASS and DEFINE-TENN-STRUCTURE instead of defclass and
+   defstruct.  If you're using the e-zchange version engine, use
+   DEFINE-VERSIONED-CLASS, and DEFINE-TENN-CLASS only rarely, such as with
+   CANONICAL-OBJECT.
+
+   These macros have saved my butt inumerable times, they can save your
+   butt too.  They won't get any awards for being pretty or well written
+   macros however.  (I barely knew how to write macros when I wrote them, I
+   still barely know how to write macros...)
+
+   [There is work to be done here to allow you to use DEFINE-TENN-CLASS for
+   objects which aren't distributed, aren't canonical, aren't versioned,
+   and which are to be referenced by versioned objects.  The need in e-zchange
+   for these classes hasn't arisen yet, so the interface is not provided.
+   The work is required for IMPORT/EXPORT to work.  See Dave if you have
+   questions.] 
+
+5) All classes have constructor functions of the form <class-name>-CREATE.
+
+   In some cases, abstract superclasses have -CREATE ctors which are used
+   to select an appropriate subtype, and in this case subtypes may not have
+   -CREATE ctors, since they're not supposed to be invoked directly.
+   (The VI subtypes in CORE are an example).
+
+6) If you are using the e-zchange core services, you must ALWAYS use the
+   accessors provided by DEFINE-TENN-CLASS and DEFINE-VERSIONED-CLASS to
+   manipulate slots.  Do not use SLOT-VALUE or related CLOS capabilities.
+
+   If you are hacking the CORE engine of e-zchange, use slot-value with
+   extreme care, there are many cache management and other nasty things
+   happening with object slots in the presence of Allegrostore.
+   
+   If you are coding something which has nothing to do with e-zchange or
+   Allegrostore, use of DEFINE-TENN-CLASS is still recommended, as is use
+   of its generated slot accessors.  But SLOT-VALUE usage is quite
+   all right in this case if you're using CLOS/MOP tricks to manage class
+   instances generically.
+
+7) If you aren't in the module (file) which defines a class, you shouldn't
+   use SETF of a slot accessor of the class.  Provide an interface for
+   updating the slot in the module, and let module-outsiders use the
+   interface. (Purely an encapsulation technique).
+
+   There are rare exceptions to this, such as those objects which have no behavior
+   other than being a structure through which temporarily lived data is passed.
+
+8) I operate with defaults of SPEED 1, SAFETY 3, and DEBUG 3.
+   When a routine is debugged and requires performance, I then add blastoff
+   optimizations via the following line:
+
+   (declare (optimize (speed #.*speed-declaration*) (safety #.*safety-declaration*)))
+
+   In the rare event that you get SEGVs from lisp which crash lisp, you can
+   recompile the whole system for debugging simply by altering the two
+   special variables in UTILS.LSP, so that you have SPEED 0 SAFETY 3, and
+   often save lots of time trying to find the SEGV cause.
+
+9) Consing is cheap, but that doesn't mean it's free.
+
+   Cons if you need to, not because you're sloppy.  Consider the overall
+   context in which the code is called.  Consider the magnitude of data on
+   which it will operate.  GC is not a wonder drug. It's a tool to be used
+   wisely, and finding memory leaks after the fact isn't always easy.
+
+   Java programmers learn this the hard way, and the JDK pretty much shows
+   how not to manage memory.  "Object Oriented" doesn't have to mean
+   "rediculous memory usage".  And my friends at Silverstream wonder they
+   they can't scale to more than 1.3 processors...
+
+10) Testing
+
+   YOU are responsible for writing tests and adding them to the
+   regressions. Don't expect that we'll hire an army of test scripters to
+   do it for you after the fact.  People with your brains aren't plentiful,
+   and what you write demands detailed testing attention to ensure that
+   nobody breaks your code down the line (as well as to ensure that it
+   works in the first place).
+
+   That isn't to say we can test everything.  But the tools are there to
+   help you add tests, and if it's possible you should do so.
+
+11) Special global variables and constants
+
+    At a minimum, use the starred convention for special variables,
+    i.e. *foo*. I usually lower case them, but uppercase is fine too.
+    If you like, use +foo+ for constants ala defconstant, though I usually
+    use *foo* for those too.
+
+12) Quality Mantra:
+
+   Produce quality code and documentation which assist people in
+   maintaining and learning modules long after they're written.  The more
+   complicated the logic, the better the documentation and structure I
+   expect.
+
+   Do quality work.  Practice the boy scout rule and leave code cleaner
+   than when you found it.  If you're working on this code, then you're
+   presumably a PROFESSIONAL software engineer.  Show 'em why you get paid
+   the big bucks.
+
+13) Export symbols:
+
+   Export those symbols in your module which you expect to be used by another package,
+   and which generally are the restricted set of symbols expected to be used outside the
+   module in the same package.
+
+   You should almost never have references to internal symbols in your code with the '::'
+   symbol notation.  Be prepared to defend your code if you do.
+
+14) Regression test conventions.
+
+   There are some conventions to writing/debugging regression tests.
+
+   Various packages have tests modules in 'tests.lsp'.  Tests are named similar to the
+   following:  test-1a test-1b test-1c test-2a test-3a ...
+
+   The idea is that in a test-XY series where X is the same and where Y varies, each test
+   is related to the other, and relies on successful completion of the prior test in
+   series.  For example, test-1b requires that test-1a execute first, because test-1a sets
+   up context for test-1b.   The only question which remains in this case is whether
+   test-1b may be executed repeatedly without re-executing test-1a, or whether it must be
+   accompanied by test-1a for every invocation of test-1b.  This depends on the test and
+   should be noted in the test function documentation. (Since you can debug test-1b faster
+   if you don't have to execute test-1a every time).
+
+   Test-XY sequences where X varies are unrelated.  So Test-1a and test-2a are unrelated,
+   and test-2a can always safely be executed whether or not test-1a has been executed.
+   
