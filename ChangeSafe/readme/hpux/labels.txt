@@ -1,0 +1,46 @@
+Key things to know about labels.
+
+1) They are simple product-wide alias for date-time specifications.
+
+   This is what we've implemented, non versioned, mutually exclusive with date-time.
+   Product-wide, not per branch.
+
+   We could have implemented this per-branch, but HP didn't originally care, and it was a
+   small upgrade requiring subtyping of vm::branch objects to maintain conman::release
+   specific label bindings since the data wasn't versioned, and therefore couldn't be
+   viewed under branch context.  I feel they should be able to be per branch.
+
+2) There is a better way to handle time aliasing:
+
+   As time aliases, it would be simpler in some ways to simply have classes of 'alias' of
+   which labels are time aliases, such that they could be used as -DATE-TIME arguments,
+   and thereby eliminate all LABEL parameters.
+
+   If we suppose existence of an ALIAS commands like this:
+
+       alias_create alias-type alias-name
+       alias_assign alias-name alias-value
+
+   Where alias-type is one of {-date-time, -command, -parameter},
+
+   Then we have a generic facility for defining aliases for components of command syntax,
+   which doesn't alter any command syntax.
+   
+   This would be my preferred approach for the current label implementation of date-time aliases.
+   It also lets sites define command name and parameter syntax variants.
+
+3) There is a need for another kind of lable, one which labels environment state under
+   time-machine control.  For *this* I'd use a label command and label parameteres.
+
+   This cabability basically lets you define 'latest-good' labels which are under version
+   control, per branch, and which are used in conjunction with -date-time specifications
+   to allow you to see what versions of a branch were 'latest-good' at any point in time.
+   That seems a very useful thing to me, especially if it turns out that the current
+   latest-good isn't really working and you'd like to go back to the last latest good,
+   which did work, and which was in effect for several days last week.  I.e.
+
+   ws_create ... -date-time last-wednesday -label latest-good
+
+   This, to me, is much more useful than most clearcase and visual sourcesafe labels.
+   If you simply want the equivalent of VSS label capabilities, use the time alias mechanism.
+

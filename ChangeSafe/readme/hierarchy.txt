@@ -1,0 +1,1028 @@
+Ok, we have a tricky mapping of the ConMan object model to the ChangeSafe object model.
+Prepare yourself, this is a brain bender.
+
+Legend:
+=	Contains
+>	References
+<	Inherits or otherwise ISA
+[n]	Number of entitiies permitted, '*' is zero or more.  '+' is one or more.
+;	Comment on material nearby
+?	TBD comment/issue
+
+From a general class standpoint, we have this hierarchy of objects (with many TBD things):
+
+Master Repository
+  = Master Catalog[1]
+    = Satellite Project Ref[*]
+      > Project in satellite repositories[1]
+    = cset-relationships ; a table listing master cids and the satellite cids they create.
+                         ; strictly added to, elements never change, no need to version.
+			 ; only added to for parent cids which created child cids.
+    = Product Family[*]
+      = Subsystem[*]			(< VM::Project-Context)
+         ; Subsystem maps to a class (satellite project) branch.
+	 ; While subsystems might be versioned for history maintenance, they're not versioned
+	 ; with the intent or providing different simultaneous views of the subsystem.
+	 ; (the branch in the satellite project which maps to the subsystem IS versioned and
+         ;  and the versions of the versions and their satellite contents ARE important.)
+	 = Wall Status			; not versioned, but logged, assume down unless otherwise specified
+         = Inherit[*]	    		; {all <subsys>,elective <subsys>,none}
+         = Subscriber[*]
+           > product-configuration(pc)
+	   > pc branch
+           = Mode {write or nowrite)	; read always implicit.  Deprecated PORT mode now coexists with write
+	 = ProjectContext[1]		; never a cross db pointer, just cross-db handle
+	   = Branch SDID
+	   = Version SDID or NIL (latest)
+      = Product Configuration[*]	(< VM::Project)
+        = Contents			? (< RFM::Project) ?  either way, some contents of this project
+	  > Subsystem[*]
+          = Master Cset List
+	    ; list of master csets active in product configuration
+	    ; Only includes csets created with change_close or added with change_add or change_port,
+	    ; and ultimately (in all cases) promoted with master_change. To be in this list
+	    ; it had to be promoted.
+	    ; *** THIS LIST DOES NOT REFLECT ALL MASTER CHANGE-SETS WHICH EXIST IN PC BRANCHES ***
+	    ; it describes a logical view of of the pc, not a complete versioned physical view.
+	    ; It is versioned as much for event logging as it is for versioned (pc branch simultaneous)
+	    ; views of the list.
+	  = Satellite Cset List
+	    ; Satellite cset id's corresponding to master csets, which may not be in sync
+	    ; with master cset list.  When we promote into master cset list, we
+	    ; promote into this list.  However you can add/substract from this list
+	    ; without adding/subtracting to master list, and reports and such have to deal with this.
+        = Release[+]			(< VM::Branch)
+	  ; Branch of product configuration/project
+	  ; Always a main, unnamed release, or perhaps named "main"
+	  ; Others created with cm_slush_create
+
+Workspace Repository		; semipersistent repository of non-versioned objects
+  = Workspace[*]		; One for every user workspace active on this PC. 
+    ; you can have a workspace with no active change context, but not a change context with
+    ; no active workspace
+    = VM::VersionRef[1]	   ; never a cross db pointer, encodes a baseline
+      ; VersionRef information describes state of product configuration in master,
+      ; unlike VersionRef within ProjectContext in PC contents slot, which describes
+      ; state of projects in satellites.  This is the 'reference' a.k.a. baseline for the workspace.
+    = user directory path to desktop workspace file hierarchy[1]
+    = RFM::change-context[0|1] (records file addition, deletion, rename, and change activities)
+
+Satellite Repository
+  = Rfm-Project[1]
+    = Rfm-Directory[1]
+    = Branch[*]
+      ? one branch for each release of each product configuration using this project
+      = Version[+]
+        ; at least one version per branch, checkpoint behavior TBD, possibly none.
+    = Change-Sets
+
+				   ********************
+    THE FOLLOWING MODEL IS AN OBSOLETE VERSION OF THE ABOVE MODEL,
+    FOR WHICH EXAMPLES HAVEN'T BEEN UPGRADED BUT IN WHICH TERMS THEY ARE COUCHED.
+				   ********************
+
+Master Repository
+  = Master Catalog[1]
+    = Satellite Project Ref[*]
+      > Project in satellite repositories[1]
+    = cset-relationships ; a list of master cids and the satellite cids they create.
+                         ; strictly added to, elements never change, no need to version.
+			 ; only added to for parent cids which created child cids.
+    = Product Family[*]
+      = Subsystem[*]			(< VM::Project-Context)
+         ; Subsystem maps to a class branch.
+	 = Wall Status			; not versioned, but logged, assume down unless otherwise specified
+         = Inherit	    		; {all <subsys>,elective <subsys>,none}
+         = Subscriber[*]
+           > product-configuration(pc)
+	   > pc branch
+           = Mode {write, port}		; read implicit, can we write? can we port if inheritance?
+	 = ProjectContext[1]		; never a cross db pointer, just cross-db handle
+	   = Branch SDID
+	   = Version SDID or NIL (latest)
+      = Product Configuration[*]	(< VM::Project)
+        = Contents			? (< RFM::Project) ?  either way, some contents of this project
+	  > Subsystem[*]
+        = Release[+]			(< VM::Branch)
+	  ; Branch of product configuration/project
+	  ; Always a main, unnamed release, or perhaps named "main"
+	  ; Others created with cm_slush_create
+        = Workspace[*]			(< RFM:Workspace)	; SEMIPERSISTENT, not really under PC's
+	  ? RFM::Workspace?  Or not...?
+	  ? workspace and the slots which point to them are not versioned
+	  ? workspace operations should not use change transactions
+	  ; All workspace information is semipersistent.
+	  ; One for every user workspace active on this PC.  Workspace slot of PC is not versioned
+	  ; Candidate for external storage with normal semipersistent data.
+	  = VM::VersionRef[1]	   ; never a cross db pointer, encodes a baseline
+	    > Branch
+	    > Version on Branch
+	    > state to encode version of version, like time spec or something, if mutable version
+            ; this VersionRef information is describing state of product configuration in master,
+	    ; unlike VersionRef within ProjectContext in PC contents slot, which describes
+	    ; state of projects in satellites.
+	  = user file path
+	  = persistent form of rfm::change-context (lists adds/deletes/etc)
+	  > CM change context (reference), if one is active
+        ; you can have a workspace with no active change context, but not a change context with
+        ; no active workspace
+        = CM Change Context[*]
+	  ; CM change contexts active on this configuration. This is semipersistent data.
+	  > workspace
+
+Satellite Repository
+  = Rfm-Project[1]
+    = Rfm-Directory[1]
+    = Branch[*]
+      ? one branch for each release of each product configuration using this project
+      = Version[+]
+        ; at least one version per branch, checkpoint behavior TBD, possibly none.
+    = Change-Sets
+
+------------------------------------------------------------------------------
+					 Scenario
+
+cm_master_create jo							; Jo.cid.1
+cm_product_family_create -mdb jo -fam printers				; Jo.cid.2
+cm_product_create -fam printers -product akron -dir /akron-refdir	; Jo.cid.3, promoted into akron
+cm_class_create -fam printers -class pcl -path pcl/src			; Jo.cid.4
+cm_class_create -fam printers -class penspit -path penspit/src		; Jo.cid.5
+cm_subsys_create -class pcl -product akron -name pcl_a			; Jo.cid.6, promoted into akron
+cm_subsys_create -class penspit -product akron -name penspit_a		; Jo.cid.7, promoted into akron
+
+; We have:
+; Cset-Relationships
+;   (jo.cid.4 jo-satellite-1.cid.1)		; to create project/repository
+;   (jo.cid.5 jo-satellite-2.cid.1)		; to create project/repository
+;   (jo.cid.6 jo-satellite-1.cid.2)		; to create project branch/version
+;   (jo.cid.7 jo-satellite-2.cid.2)		; to create project branch/version
+; Product Family (Printer)
+;   Subsystem (Pcl_A) (Jo.subsystem.1)
+;     .inherit none 
+;     Subscriber 
+;       >akron_main(jo.pc.1, jo.branch.1) write
+;     ProjectContext
+;       Jo-satellite-1.project.1
+;       Jo-satellite-1.branch.1
+;       version-sdid=NIL
+;   Subsystem (Penspit_A) (Jo.subsystem.2)
+;     .inherit none
+;     Subscriber 
+;       >akron_main(jo.pc.1, jo.branch.1) write
+;     ProjectContext 
+;       Jo-satellite-2.project.1
+;       Jo-satellite-2.branch.1
+;       version-sdid=NIL
+;   Product Configuration (Akron, Jo.pc.1)
+;     Contents
+;       >Jo.subsystem.1 (PCL_A)
+;       >Jo.subsystem.2 (Penspit_A)
+;     Release (Main)
+;       version={jo.cid.3, jo.cid.6, jo.cid.7}
+;
+; Satellite Rfm-Project (Pcl) (Jo-satellite-1.project.1)	 ; the PCL class
+;   Rfm-Directory (pcl)
+;     Rfm-Directory (src)
+; Satellite Project (Penspit) (Jo-satellite-2.project.2)	; the PenSpit class
+;   Rfm-Directory (penspit)
+;     Rfm-Directory (src)
+
+cm_ws_create -product akron -wsdir ~/akron-ws			; no jo cid, semipersistent only
+; creates ~/akron-ws/pcl/src and ~/akron-ws/penspit/src on user disk
+; creates a semipersistent workspace record (in either a separate db, or
+; grouped under the product configurations).
+
+; Now cd to ~/akron-ws/pcl/src and create/edit pcl-parser.c and pcl-parser.h
+
+cm_change_create -name "initial load"				; no jo cid, semipersistent only
+; Note, only one superc per workspace, and vice versa.
+; creates a CM change context
+
+cm_file_add pcl-parser.c pcl-parser.h				; no jo cid, semipersistent only
+? Infers which subsystem and workspace from file position (yes), and information in .conman (?)
+; updates workspace with intent to add these files, could even store a copy
+; stores this in the workspace change context
+
+cm_master_change -desc "load up 2 files" -abstract "foo.txt" -cname "add parser"
+; jo.cid.8, promoted into akron
+; picks up stuff from current workspace...
+
+; We have:
+; Master Repository
+;   Master Catalog
+;     Cset-Relationships
+;       (jo.cid.4 jo-satellite-1.cid.1)		; to create project/repository
+;       (jo.cid.5 jo-satellite-2.cid.1)		; to create project/repository
+;       (jo.cid.6 jo-satellite-1.cid.2)		; to create project branch/version
+;       (jo.cid.7 jo-satellite-2.cid.2)		; to create project branch/version
+;+      (jo.cid.8 jo-satellite-1.cid.3)		; to add files to jo-satellite-1.project.1
+;
+;     Product Family (Printer)
+;
+;       Subsystem (Pcl_A) (Jo.subsystem.1)
+;         .inherit none 
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.1
+;           version-sdid=NIL
+;       Subsystem (Penspit_A) (Jo.subsystem.2)
+;         .inherit none
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         ProjectContext 
+;           Jo-satellite-2.project.1
+;           Jo-satellite-2.branch.1
+;           version-sdid=NIL
+;
+;       Product Configuration (Akron, Jo.pc.1)
+;         Contents
+;           >Jo.subsystem.1 (PCL_A)
+;           >Jo.subsystem.2 (Penspit_A)
+;         Release (Jo.branch.1) (Main)
+;/          version={Jo.cid.3, jo.cid.6, jo.cid.7, jo.cid.8}
+;         Workspace (~/akron-ws)
+;
+; Satellite Repository
+;   Rfm-Project (Pcl)		(Jo-Satellite-1.project.1)
+;     Branch (Printers+Akron+Main) ; family+product-config+release ;(Jo-Satellite-1.branch.1) (main)
+;       ; Assuming master wants to reference satellite version/branch
+;/      version(Jo.satellite-1.version.1)={Jo-satellite-1.cid.3}
+;         ; assuming master wants to ref a satellite version/branch
+;     Rfm-Directory (pcl)
+;       Rfm-Directory (src)
+;+        Rfm-File (pcl-parser.c)
+;+        Rfm-File (pcl-parser.h)
+;
+; Satellite Repository
+;   Rfm-Project (Penspit)	(Jo-Satellite-2.project.1)
+;     Branch (Printers+Akron+Main) (Jo-Satellite-2.branch.1) (main)
+;       Version (Jo-Satellite-2.version.1) ; empty
+;     Rfm-Directory (penspit)
+;       Rfm-Directory (src)
+
+; Now, create Beale and share PCL
+
+cm_product_create -fam printers -product beale -dir /beale-refdir -base Akron ; jo.cid.9, promote into beale
+
+; Subsystems modified to become:
+;
+;         Subsystem (Pcl_A, Jo.subsystem.1)
+;           .inherit none 
+;           Subscriber
+;             >akron_main(Jo.pc.1, jo.branch.1) write
+;+          Subscriber
+;+            >beale_main(Jo.pc.2, jo.branch.2) read	; nowrite, noport
+;           ProjectContext
+;             Jo-satellite-1.project.1
+;             Jo-satellite-1.branch.1
+;             version-sdid=NIL
+;         Subsystem (Penspit_A, Jo.subsystem.2)
+;           .inherit none
+;           Subscriber
+;             >akron_main(Jo.pc.1, jo.branch.1) write
+;+	    Subscriber
+;+            >beale_main(Jo.pc.2, jo.branch.2) read
+
+cm_class_create -fam printers -class scanner -path scanner/src	       ; jo.cid.10
+cm_class_create -fam printers -class fax -path fax/src		       ; jo.cid.11
+cm_subsys_create -class scanner -product beale -name scanner_b	       ; jo.cid 12, promote into beale
+cm_subsys_create -class fax -product beale -name fax_b		       ; jo.cid.13, promote into beale
+
+; Now the Beale product group gets tired of Akron's antics for managing change,
+; keeping the wall up too much of the time, etc, with respect to the PCL source.
+; so they create their subsystem for PCL
+
+cm_subsys_create -class pcl -product beale -name pcl_b -base akron	; jo.cid.14, promote into beale
+; subsys_create with a -base is really a subsys_replace
+; promote into akron too so akron sees correct version of subsystem? *TBD*
+
+cm_ws_create -product beale -wsdir ~/beal-ws				; no Jo cid, semipersistent only
+
+; We have:
+;
+; Master Repository
+;   Master Catalog
+;     Cset-Relationships
+;       (jo.cid.4 jo-satellite-1.cid.1)		; create project/repository (pcl)
+;       (jo.cid.5 jo-satellite-2.cid.1)		; create project/repository (penspit)
+;       (jo.cid.6 jo-satellite-1.cid.2)		; create project branch/version (pcl branch.1)
+;       (jo.cid.7 jo-satellite-2.cid.2)		; create project branch/version (penspit branch.1)
+;       (jo.cid.8 jo-satellite-1.cid.3)		; add files to jo-satellite-1.project.1 (PCL)
+;+      (jo.cid.10 jo-satellite-3.cid.1)	; create project/repository (scanner)
+;+      (jo.cid.11 jo-satellite-4.cid.1)	; create project/repository (fax)
+;+      (jo.cid.12 jo-satellite-3.cid.2)	; create project branch/version (scanner branch.1)
+;+      (jo.cid.13 jo-satellite-4.cid.2)	; create project branch/version (fax branch.1)
+;+      (jo.cid.14 jo-satellite-1.cid.4)	; create PCL_B branch.2
+;     ;Satellite project refs.  Potentially to be grouped under product family. (TBD)
+;     Product Family (Printer)
+;
+;/      Subsystem (Pcl_A) (Jo.subsystem.1)	; beale removed as subscriber
+;         .inherit none 
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.1
+;           version-sdid=NIL
+;       Subsystem (Penspit_A) (Jo.subsystem.2)
+;         .inherit none
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         Subscriber
+;           >beale_main(Jo.pc.2, jo.branch.2) read
+;         ProjectContext 
+;           Jo-satellite-2.project.1
+;           Jo-satellite-2.branch.1
+;           version-sdid=NIL
+;+      Subsystem (Pcl_B) (Jo.subsystem.3)
+;+        .inherit Pcl_a (Jo.subsystem.1) all
+;+        Subscriber 
+;+          >beale_main(Jo.pc.2, jo.branch.2) write, port
+;+        ProjectContext
+;+          Jo-satellite-1.project.1
+;+          Jo-satellite-1.branch.2
+;+          version-sdid=NIL
+;+      Subsystem (Scanner_B) (Jo.subsystem.4)
+;+        .inherit none
+;+        Subscriber 
+;+          >beale_main(jo.pc.2, jo.branch.2) write
+;+        ProjectContext
+;+          Jo-satellite-3.project.1 (scanner)
+;+          Jo-satellite-3.branch.1
+;+          version-sdid=NIL
+;+      Subsystem (Fax_B) (Jo.subsystem.5)
+;+        .inherit none
+;+        Subscriber 
+;+          >beale_main(jo.pc.2, jo.branch.2) write
+;+        ProjectContext
+;+          Jo-satellite-4.project.1 (Fax)
+;+          Jo-satellite-4.branch.1
+;+          version-sdid=NIL
+;
+;       Product Configuration (Akron, Jo.pc.1)
+;         Contents		           ; subsystem/branch/version specifications
+;           >Jo.subsystem.1 (PCL_A)
+;           >Jo.subsystem.2 (Penspit_A)
+;         Release (Akron Main) (Jo.branch.1)
+;           version={Jo.cid.3, jo.cid.6, jo.cid.7, jo.cid.8} (Jo.version.1)
+;?	    ;*TBD* ? Add jo.cid.14 to reflect update to Jo.subsystem.1 which removes beale subscriber?
+;?	    ;???? Probably doesn't care if it sees it.  But if it was a subsys rename, it would care.
+;           ;didn't modify contents slot, it's an indirect modification.
+;         Workspace (~/akron-ws)
+;
+;+      Product Configuration (Beale, jo.pc.2)
+;+        Contents
+;+          >Jo.subsystem.2 (Penspit_A)
+;+          >Jo.subsystem.3 (PCL_B)
+;+          >Jo.subsystem.4 (Scanner_B)
+;+	    >Jo.subsystem.5 (Fax_B)
+;+        Release (Beal Main)  (Jo.branch.2)
+;+          version={<version qualified VersionRef, jo.version.1 w/timestamp,
+;+		      yields {Jo.cid.3, jo.cid.6, jo.cid.7, jo.cid.8}>
+;+		      + jo.cid.9, jo.cid.12, jo.cid.13, jo.cid.14}	    
+;+          ; jo.cid.14 added on priciple because it modified this pc content list, 
+;+        Workspace (~/beale-ws)
+;
+; Satellite Repository		(Jo-Satellite-1, PCL)
+;   Rfm-Project (Pcl)		(Jo-Satellite-1.project.1)
+;     Branch (Printers+Akron+Main) ; family+product-config+release ;(Jo-Satellite-1.branch.1) 
+;       version=(Jo-satellite-1.cid.3) ; (Jo-satellite-1.version.1)
+;+    Branch (Printers+Beal+Main) ; family+product-config+release ;(Jo-Satellite-1.branch.2) 
+;+      version=(Jo-satellite-1.cid.3(from ancestor)) ; (Jo-satellite-1.version.2)
+;+      ; KEY: branch split from akron pcl main branch, version has jo-satellite-1.version.1 as ancestor.
+;+      ; cidset content actually derived from ancestor implicitly, not explicitly in new version
+;     Rfm-Directory (pcl)
+;       Rfm-Directory (src)
+;         Rfm-File (pcl-parser.c)
+;         Rfm-File (pcl-parser.h)
+;
+; Satellite Repository		(Jo-Satellite-2, Penspit)
+;   Rfm-Project (Penspit)	(Jo-Satellite-2.project.1)
+;     Branch (Printers+Akron+Main) (Jo-Satellite-2.branch.1) (main)
+;       Version (Jo-Satellite-2.version.1) ; empty
+;     Rfm-Directory (penspit)
+;       Rfm-Directory (src)
+;
+;+Satellite Repository		(Jo-Satellite-3, Scanner)
+;+  Rfm-Project (Scanner)	(Jo-Satellite-3.project.1)
+;+    Branch (Printers+Scanner+Main) (Jo-Satellite-3.branch.1) (main)
+;+      Version (Jo-Satellite-3.version.1) ; empty
+;+    Rfm-Directory (scanner)
+;+      Rfm-Directory (src)
+;+
+;+Satellite Repository		(Jo-Satellite-4, Fax)
+;+  Rfm-Project (Fax)	(Jo-Satellite-4.project.1)
+;+    Branch (Printers+Fax+Main) (Jo-Satellite-4.branch.1) (main)
+;+      Version (Jo-Satellite-4.version.1) ; empty
+;+    Rfm-Directory (fax)
+;+      Rfm-Directory (src)
+
+;; Akron user, home of ~/akron-ws
+cm_change_create			; no jo cid, semipersistent only (excluding locking issues)
+cm_file_add pcl-interpreter.c		; to pcl/src directory, no jo cid, semipersistent only
+cm_file_add penspit.c			; to penspit/src directory, no jo cid, semipersistent only
+cm_master_change <args>			; jo.cid.15, promoted to akron
+; NOTE: all users of affected subsystems get jo.cid.15 to correlate change activity at high level.
+
+; We have:
+;
+; Master Repository
+;   Master Catalog
+;     Cset-Relationships
+;       (jo.cid.4 jo-satellite-1.cid.1)		; create project/repository (pcl)
+;       (jo.cid.5 jo-satellite-2.cid.1)		; create project/repository (penspit)
+;       (jo.cid.6 jo-satellite-1.cid.2)		; create project branch/version (pcl branch.1)
+;       (jo.cid.7 jo-satellite-2.cid.2)		; create project branch/version (penspit branch.1)
+;       (jo.cid.8 jo-satellite-1.cid.3)		; add files to jo-satellite-1.project.1 (PCL)
+;       (jo.cid.10 jo-satellite-3.cid.1)	; create project/repository (scanner)
+;       (jo.cid.11 jo-satellite-4.cid.1)	; create project/repository (fax)
+;       (jo.cid.12 jo-satellite-3.cid.2)	; create project branch/version (scanner branch.1)
+;       (jo.cid.13 jo-satellite-4.cid.2)	; create project branch/version (fax branch.1)
+;       (jo.cid.14 jo-satellite-1.cid.4)	; create PCL_B branch.2
+;+      (jo.cid.15 jo-satellite-1.cid.5 jo-satellite-2.cid.3) ; add pcl-interpreter.c, penspit.c files
+;+                                                         ; to TWO satellite projects
+;     Product Family (Printer)
+;
+;       Subsystem (Pcl_A) (Jo.subsystem.1)
+;         .inherit none 
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.1
+;           version-sdid=NIL
+;       Subsystem (Penspit_A) (Jo.subsystem.2)
+;         .inherit none
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         Subscriber
+;           >beale_main(Jo.pc.2, jo.branch.2) read
+;         ProjectContext 
+;           Jo-satellite-2.project.1
+;           Jo-satellite-2.branch.1
+;           version-sdid=NIL
+;       Subsystem (Pcl_B) (Jo.subsystem.3)
+;         .inherit Pcl_a (Jo.subsystem.1) all 
+;         Subscriber 
+;           >beale_main(Jo.pc.2, jo.branch.2) write, port
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.2
+;           version-sdid=NIL
+;        <<< Subsystems scanner_B and Fax_B elided >>>
+;
+;       Product Configuration (Akron, Jo.pc.1)
+;         Contents		           ; subsystem/branch/version specifications
+;           >Jo.subsystem.1 (PCL_A)
+;           >Jo.subsystem.2 (Penspit_A)
+;         Release (Akron Main) (Jo.branch.1)
+;/          version={Jo.cid.3, jo.cid.6, jo.cid.7, jo.cid.8, jo.cid.15} (Jo.version.1)
+;/	    ; promoted jo.cid.15 on principle here of change against subsystem to which Beale subscribes.
+;	    ; Note that cm_change_port of effects of jo.cid.15 wouldn't promote jo.cid.15!
+;	    ; (It would promote cid at that time into affected users of affected subsystems at that time).
+;         Workspace (~/akron-ws)
+;
+;       Product Configuration (Beale, jo.pc.2)
+;         Contents
+;           >Jo.subsystem.2 (Penspit_A)		; does see effect of jo.cid.15
+;           >Jo.subsystem.3 (PCL_B)		; doesn't see effects of jo.cid.15 yet, needs cm_change_port
+;           >Jo.subsystem.4 (Scanner_B)
+; 	    >Jo.subsystem.5 (Fax_B)
+;         Release (Beale Main)  (Jo.branch.2)
+;           version={Jo.cid.{3,6,7,8,9,12,13,14,15}}
+;	    ; jo.cid.15 added for no reason other than to idenfity fact that jo.cid.15 affects
+;	    ; beale, even though it didn't DIRECTLY change it, the effect was indirect because
+;           ; beale reads penspit_a, which was modified.
+;         Workspace (~/beale-ws)
+;
+; Satellite Repository
+;   Rfm-Project (Pcl)		(Jo-Satellite-1.project.1)
+;     Branch (Printers+Akron+Main) ; family+product-config+release ;(Jo-Satellite-1.branch.1) 
+;/      version=(Jo-satellite-1.cid.3 Jo-satellite-1.cid.5) ; (Jo-satellite-1.version.1)
+;     Branch (Printers+Beal+Main) ; family+product-config+release ;(Jo-Satellite-1.branch.2) 
+;       version=(Jo-satellite-1.cid.3(from ancestor)) ; (Jo-satellite-1.version.2)
+;     Rfm-Directory (pcl)
+;       Rfm-Directory (src)
+;         Rfm-File (pcl-parser.c)
+;         Rfm-File (pcl-parser.h)
+;+        Rfm-File (pcl-interpreter.c)
+;
+; Satellite Repository
+;   Rfm-Project (Penspit)	(Jo-Satellite-2.project.1)
+;     Branch (Printers+Akron+Main) (Jo-Satellite-2.branch.1) (main)
+;       Version (Jo-Satellite-2.version.1) 
+;+	  {Jo-Satellite-2.cid.3}
+;     Rfm-Directory (penspit)
+;       Rfm-Directory (src)
+;+        Rfm-File (penspit.c)
+;
+; <<< Satellite Repositories Scanner and Fax elided >>>
+
+;; Beal user, home of ~/beale-ws
+cm_change_create			; no jo cid *TBD*: needed, implicit, or exclusive with change_port?
+					; Dave thinks change_port implicitly starts a change if necessary,
+					; but there are flows of behavior which need to be considered *TBD*
+cm_change_port -class pcl		; into ~/beale-ws workspace of user, no jo cid,
+					; but some semipersistent state recording
+cm_master_change			; jo.cid.16
+
+; We have:
+;
+; Master Repository
+;   Master Catalog
+;     Cset-Relationships
+;       (jo.cid.4 jo-satellite-1.cid.1)		; create project/repository (pcl)
+;       (jo.cid.5 jo-satellite-2.cid.1)		; create project/repository (penspit)
+;       (jo.cid.6 jo-satellite-1.cid.2)		; create project branch/version (pcl branch.1)
+;       (jo.cid.7 jo-satellite-2.cid.2)		; create project branch/version (penspit branch.1)
+;       (jo.cid.8 jo-satellite-1.cid.3)		; add files to jo-satellite-1.project.1 (PCL)
+;       (jo.cid.10 jo-satellite-3.cid.1)	; create project/repository (scanner)
+;       (jo.cid.11 jo-satellite-4.cid.1)	; create project/repository (fax)
+;       (jo.cid.12 jo-satellite-3.cid.2)	; create project branch/version (scanner branch.1)
+;       (jo.cid.13 jo-satellite-4.cid.2)	; create project branch/version (fax branch.1)
+;       (jo.cid.14 jo-satellite-1.cid.4)	; create PCL_B branch.2
+;       (jo.cid.15 jo-satellite-1.cid.5 jo-satellite-2.cid.3) ; add pcl-interpreter.c, penspit.c files
+;+      (jo.cid.16 jo-satellite-1.cid.7)        ; migrate jo-satellite-1.cid.5 from PCL_A to PCL_B
+;
+;     Product Family (Printer)
+;
+;       Subsystem (Pcl_A) (Jo.subsystem.1)
+;         .inherit none 
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.1
+;           version-sdid=NIL
+;       Subsystem (Penspit_A) (Jo.subsystem.2)
+;         .inherit none
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         Subscriber
+;           >beale_main(Jo.pc.2, jo.branch.2) read
+;         ProjectContext 
+;           Jo-satellite-2.project.1
+;           Jo-satellite-2.branch.1
+;           version-sdid=NIL
+;       Subsystem (Pcl_B) (Jo.subsystem.3)
+;         .inherit Pcl_a (Jo.subsystem.1) all 
+;         Subscriber 
+;           >beale_main(Jo.pc.2, jo.branch.2) write, port
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.2
+;           version-sdid=NIL
+;        <<< Subsystems scanner_B and Fax_B elided >>>
+;
+;       Product Configuration (Akron, Jo.pc.1)
+;         Contents		           ; subsystem/branch/version specifications
+;           >Jo.subsystem.1 (PCL_A)
+;           >Jo.subsystem.2 (Penspit_A)
+;         Release (Akron Main) (Jo.branch.1)
+;/          version={Jo.cid.3, jo.cid.6, jo.cid.7, jo.cid.8, jo.cid.15} (Jo.version.1)
+;/	    ; promoted jo.cid.15 on principle here of change against subsystem to which Beale subscribes.
+;	    ; Note that cm_change_port of effects of jo.cid.15 wouldn't promote jo.cid.15!
+;	    ; (It would promote cid at that time into affected users of affected subsystems at that time).
+;         Workspace (~/akron-ws)
+;
+;       Product Configuration (Beale, jo.pc.2)
+;         Contents
+;           >Jo.subsystem.2 (Penspit_A)		; does see effect of jo.cid.15
+;           >Jo.subsystem.3 (PCL_B)		; doesn't see effects of jo.cid.15 yet, needs cm_change_port
+;           >Jo.subsystem.4 (Scanner_B)
+; 	    >Jo.subsystem.5 (Fax_B)
+;         Release (Beale Main)  (Jo.branch.2)
+;           version={Jo.cid.{3,6,7,8,9,12,13,14,15}}
+;	    ; jo.cid.15 added for no reason other than to idenfity fact that jo.cid.15 affects
+;	    ; beale, even though it didn't DIRECTLY change it, the effect was indirect because
+;           ; beale reads penspit_a, which was modified.
+;         Workspace (~/beale-ws)
+;
+; Satellite Repository (PCL)
+;   Rfm-Project (Pcl)		(Jo-Satellite-1.project.1)
+;     Branch (PCL_A) ; family+product-config+release ;(Jo-Satellite-1.branch.1) 
+;       version=(Jo-satellite-1.cid.3 Jo-satellite-1.cid.5) ; (Jo-satellite-1.version.1)
+;     Branch (PCL_B) ; family+product-config+release ;(Jo-Satellite-1.branch.2) 
+;/      version=(Jo-satellite-1.cid.3 Jo-satellite-1.cid.5) ; (Jo-satellite-1.version.2)
+;     Rfm-Directory (pcl)
+;       Rfm-Directory (src)
+;         Rfm-File (pcl-parser.c)
+;         Rfm-File (pcl-parser.h)
+;         Rfm-File (pcl-interpreter.c)
+;
+; Satellite Repository (Penspit)
+;   Rfm-Project (Penspit)	(Jo-Satellite-2.project.1)
+;     Branch (Penspit_A) (Jo-Satellite-2.branch.1) (main)
+;       Version (Jo-Satellite-2.version.1) 
+;	  {Jo-Satellite-2.cid.3}
+;     Rfm-Directory (penspit)
+;       Rfm-Directory (src)
+;       Rfm-File (penspit.c)
+;
+; <<< Satellite Repositories Scanner and Fax elided >>>
+
+cm_slush_create -prod akron -name "c1"	     ; jo.cid.17, satellite cids, new branches on pc's and satellites
+; jo-satellite-1.cid.8 - create a branch
+; jo-satellite-2.cid.4 - create a branch
+
+; We have:
+;
+; Master Repository
+;   Master Catalog
+;     Cset-Relationships
+;       (jo.cid.4 jo-satellite-1.cid.1)		; create project/repository (pcl)
+;       (jo.cid.5 jo-satellite-2.cid.1)		; create project/repository (penspit)
+;       (jo.cid.6 jo-satellite-1.cid.2)		; create project branch/version (pcl branch.1)
+;       (jo.cid.7 jo-satellite-2.cid.2)		; create project branch/version (penspit branch.1)
+;       (jo.cid.8 jo-satellite-1.cid.3)		; add files to jo-satellite-1.project.1 (PCL)
+;       (jo.cid.10 jo-satellite-3.cid.1)	; create project/repository (scanner)
+;       (jo.cid.11 jo-satellite-4.cid.1)	; create project/repository (fax)
+;       (jo.cid.12 jo-satellite-3.cid.2)	; create project branch/version (scanner branch.1)
+;       (jo.cid.13 jo-satellite-4.cid.2)	; create project branch/version (fax branch.1)
+;       (jo.cid.14 jo-satellite-1.cid.4)	; create PCL_B branch.2
+;       (jo.cid.15 jo-satellite-1.cid.5 jo-satellite-2.cid.3) ; add pcl-interpreter.c, penspit.c files
+;       (jo.cid.16 jo-satellite-1.cid.7)        ; migrate jo-satellite-1.cid.5 from PCL_A to PCL_B
+;+      (jo.cid.17 jo-satellite-1.cid.8 jo-satellite-2.cid.4) ; cm_slush_create -prod akron -name "c1"
+;
+;     Product Family (Printer)
+;
+;       Subsystem (Pcl_A) (Jo.subsystem.1)
+;         .inherit none 
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.1
+;           version-sdid=NIL
+;       Subsystem (Penspit_A) (Jo.subsystem.2)
+;         .inherit none
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         Subscriber
+;           >beale_main(Jo.pc.2, jo.branch.2) read
+;         ProjectContext 
+;           Jo-satellite-2.project.1
+;           Jo-satellite-2.branch.1
+;           version-sdid=NIL
+;+      Subsystem (Pcl_A_C1) (Jo.subsystem.6)
+;+        .inherit Pcl_A (Jo.subsystem.1) ELECTIVE
+;+        Subscriber 
+;+          >akron(jo.pc.1, jo.branch.3(Akron_C1)) write, port
+;+        ProjectContext
+;+          Jo-satellite-1.project.1
+;+          Jo-satellite-1.branch.3 (PCL_A_C1)
+;+          version-sdid=NIL
+;+      Subsystem (Penspit_A_C1) (Jo.subsystem.7)
+;+        .inherit Penspit_A (Jo.subsystem.2) ELECTIVE
+;+        Subscriber 
+;+          >akron(jo.pc.1, jo.branch.3(Akron_C1)) write, port
+;+        ProjectContext 
+;+          Jo-satellite-2.project.1
+;+          Jo-satellite-2.branch.2 (Penspit_A_C1)
+;+          version-sdid=NIL
+;       Subsystem (Pcl_B) (Jo.subsystem.3)
+;         .inherit Pcl_a (Jo.subsystem.1) all 
+;         Subscriber 
+;           >beale_main(Jo.pc.2, jo.branch.2) write, port
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.2
+;           version-sdid=NIL
+;        <<< Subsystems scanner_B and Fax_B elided >>>
+;
+;       Product Configuration (Akron, Jo.pc.1)
+;         Contents		           ; subsystem/branch/version specifications
+;           >Jo.subsystem.1 (PCL_A)	   ; visible to jo.branch.1 (Akron_Main) and branch.3 (to a point)
+;           >Jo.subsystem.2 (Penspit_A)	   ; visible to jo.branch.1 (Akron_Main) and branch.3 (to a point)
+;+	    >Jo.subsystem.6 (PCL_A_C1)     ; visible to jo.branch.3 (Akron_C1)
+;+	    >Jo.subsystem.7 (Penspit_A_C1) ; visible to jo.branch.3 (Akron_C1)
+;         Release (Akron Main) (Jo.branch.1)
+;           version(Jo.version.1)={Jo.cid.3, jo.cid.6, jo.cid.7, jo.cid.8, jo.cid.15}
+;+        Release (Akron_C1) (Jo.branch.3)
+;+          ancestor jo.branch.1
+;+          version(Jo.version.3)={3,6,7,8,15 (ancestor), + jo.cid.16}
+;         Workspace (~/akron-ws)
+;
+;+ ***KEY***  Only jo.branch.3 PCL_A_C1 can see *_A_C1 subsystems in versioned pc contents,
+;+        and they can ALSO see a particular version of the ancestor subsystems PCL_A Penspit_A
+;
+;       Product Configuration (Beale, jo.pc.2)
+;         Contents
+;           >Jo.subsystem.2 (Penspit_A)		; does see effect of jo.cid.15
+;           >Jo.subsystem.3 (PCL_B)		; doesn't see effects of jo.cid.15 yet, needs cm_change_port
+;           >Jo.subsystem.4 (Scanner_B)
+; 	    >Jo.subsystem.5 (Fax_B)
+;         Release (Beale Main)  (Jo.branch.2)
+;           version(Jo.version.2)={Jo.cid.{3,6,7,8,9,12,13,14,15}}
+;         Workspace (~/beale-ws)
+;
+; Satellite Repository (PCL)
+;   Rfm-Project (Pcl)		(Jo-Satellite-1.project.1)
+;     Branch (PCL_A) ; family+product-config+release ;(Jo-Satellite-1.branch.1) 
+;       version=(Jo-satellite-1.cid.3 Jo-satellite-1.cid.5) ; (Jo-satellite-1.version.1)
+;     Branch (PCL_B) ; family+product-config+release ;(Jo-Satellite-1.branch.2) 
+;       version=(Jo-satellite-1.cid.3 Jo-satellite-1.cid.5) ; (Jo-satellite-1.version.2)
+;+    Branch (PCL_A_C1, Jo-satellite-1.branch.3)
+;+      version=({3, 5} (inherited from PCL_A), 8)
+;     Rfm-Directory (pcl)
+;       Rfm-Directory (src)
+;         Rfm-File (pcl-parser.c)
+;         Rfm-File (pcl-parser.h)
+;         Rfm-File (pcl-interpreter.c)
+;
+; Satellite Repository (Penspit)
+;   Rfm-Project (Penspit)	(Jo-Satellite-2.project.1)
+;     Branch (Penspit_A) (Jo-Satellite-2.branch.1) (main)
+;       Version (Jo-Satellite-2.version.1) 
+;	  {Jo-Satellite-2.cid.3}
+;     Branch (Penspit_A_C1) (Jo-Satellite-2.branch.2) (main)
+;       Version (Jo-Satellite-2.version.2) 
+;	  {Jo-Satellite-2.cid.3 (from ancestor Jo-satellite-2.branch.1), Jo-satellite-2.cid.4}
+;     Rfm-Directory (penspit)
+;       Rfm-Directory (src)
+;       Rfm-File (penspit.c)
+;
+; <<< Satellite Repositories Scanner and Fax elided >>>
+
+cm_ws_create -product akron -release "c1" -wsdir ~/akron-c1-ws	; no Jo cid, semipersistent only
+<use ~/akron-c1-ws>
+cm_change_create penspit/src/penspit.c pcl/src/pcl-parser.c ; no jo cid, semipersistent data only
+<edit the files... >
+cm_master_change -desc "edit files"		; jo.cid.18, jo-satellite-1.cid.9, jo-satellite-2.cid.5
+
+; We have:
+;
+; Master Repository
+;   Master Catalog
+;     Cset-Relationships
+;       (jo.cid.4 jo-satellite-1.cid.1)		; create project/repository (pcl)
+;       (jo.cid.5 jo-satellite-2.cid.1)		; create project/repository (penspit)
+;       (jo.cid.6 jo-satellite-1.cid.2)		; create project branch/version (pcl branch.1)
+;       (jo.cid.7 jo-satellite-2.cid.2)		; create project branch/version (penspit branch.1)
+;       (jo.cid.8 jo-satellite-1.cid.3)		; add files to jo-satellite-1.project.1 (PCL)
+;       (jo.cid.10 jo-satellite-3.cid.1)	; create project/repository (scanner)
+;       (jo.cid.11 jo-satellite-4.cid.1)	; create project/repository (fax)
+;       (jo.cid.12 jo-satellite-3.cid.2)	; create project branch/version (scanner branch.1)
+;       (jo.cid.13 jo-satellite-4.cid.2)	; create project branch/version (fax branch.1)
+;       (jo.cid.14 jo-satellite-1.cid.4)	; create PCL_B branch.2
+;       (jo.cid.15 jo-satellite-1.cid.5 jo-satellite-2.cid.3) ; add pcl-interpreter.c, penspit.c files
+;       (jo.cid.16 jo-satellite-1.cid.7)        ; migrate jo-satellite-1.cid.5 from PCL_A to PCL_B
+;       (jo.cid.17 jo-satellite-1.cid.8 jo-satellite-2.cid.4) ; cm_slush_create -prod akron -name "c1"
+;+      (jo.cid.18 jo-satellite-1.cid.9 jo-satellite-2.cid.5) ; file changes to pcl_a_c1, penspit_a_c1
+;
+;     Product Family (Printer)
+;
+;       Subsystem (Pcl_A) (Jo.subsystem.1)
+;         .inherit none 
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.1
+;           version-sdid=NIL
+;       Subsystem (Penspit_A) (Jo.subsystem.2)
+;         .inherit none
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         Subscriber
+;           >beale_main(Jo.pc.2, jo.branch.2) read
+;         ProjectContext 
+;           Jo-satellite-2.project.1
+;           Jo-satellite-2.branch.1
+;           version-sdid=NIL
+;       Subsystem (Pcl_A_C1) (Jo.subsystem.6)
+;         .inherit Pcl_A (Jo.subsystem.1) ELECTIVE
+;         Subscriber 
+;           >akron(jo.pc.1, jo.branch.3(Akron_C1)) write, port
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.3 (PCL_A_C1)
+;           version-sdid=NIL
+;       Subsystem (Penspit_A_C1) (Jo.subsystem.7)
+;         .inherit Penspit_A (Jo.subsystem.2) ELECTIVE
+;         Subscriber 
+;           >akron(jo.pc.1, jo.branch.3(Akron_C1)) write, port
+;         ProjectContext 
+;           Jo-satellite-2.project.1
+;           Jo-satellite-2.branch.2 (Penspit_A_C1)
+;           version-sdid=NIL
+;       Subsystem (Pcl_B) (Jo.subsystem.3)
+;         .inherit Pcl_a (Jo.subsystem.1) all 
+;         Subscriber 
+;           >beale_main(Jo.pc.2, jo.branch.2) write, port
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.2
+;           version-sdid=NIL
+;        <<< Subsystems scanner_B and Fax_B elided >>>
+;
+;       Product Configuration (Akron, Jo.pc.1)
+;         Contents		           ; subsystem/branch/version specifications
+;           >Jo.subsystem.1 (PCL_A)	   ; visible to jo.branch.1 (Akron_Main) and branch.3 (to a point)
+;           >Jo.subsystem.2 (Penspit_A)	   ; visible to jo.branch.1 (Akron_Main) and branch.3 (to a point)
+; 	    >Jo.subsystem.6 (PCL_A_C1)     ; visible to jo.branch.3 (Akron_C1)
+; 	    >Jo.subsystem.7 (Penspit_A_C1) ; visible to jo.branch.3 (Akron_C1)
+;         Release (Akron Main) (Jo.branch.1)
+;           version(Jo.version.1)={Jo.cid.3, jo.cid.6, jo.cid.7, jo.cid.8, jo.cid.15}
+;         Release (Akron_C1) (Jo.branch.3)
+;           ancestor jo.branch.1
+;/          version(Jo.version.3)={3,6,7,8,15 (ancestor), + jo.cid.16, jo.cid.18}
+;         Workspace (~/akron-ws)	      ; really semipersistent
+;+        Workspace (~/akron-c1-ws)	      ; really semipersistent
+;
+;       Product Configuration (Beale, jo.pc.2)
+;         Contents
+;           >Jo.subsystem.2 (Penspit_A)		; does see effect of jo.cid.15
+;           >Jo.subsystem.3 (PCL_B)		; doesn't see effects of jo.cid.15 yet, needs cm_change_port
+;           >Jo.subsystem.4 (Scanner_B)
+; 	    >Jo.subsystem.5 (Fax_B)
+;         Release (Beale Main)  (Jo.branch.2)
+;           version(Jo.version.2)={Jo.cid.{3,6,7,8,9,12,13,14,15}}
+;         Workspace (~/beale-ws)
+;
+; Satellite Repository (PCL)
+;   Rfm-Project (Pcl)		(Jo-Satellite-1.project.1)
+;     Branch (PCL_A) ; family+product-config+release ;(Jo-Satellite-1.branch.1) 
+;       version=(Jo-satellite-1.cid.3 Jo-satellite-1.cid.5) ; (Jo-satellite-1.version.1)
+;     Branch (PCL_B) ; family+product-config+release ;(Jo-Satellite-1.branch.2) 
+;       version=(Jo-satellite-1.cid.3 Jo-satellite-1.cid.5) ; (Jo-satellite-1.version.2)
+;     Branch (PCL_A_C1, Jo-satellite-1.branch.3)
+;/      version=({3, 5} (inherited from PCL_A), 8, 9)
+;     Rfm-Directory (pcl)
+;       Rfm-Directory (src)
+;/        Rfm-File (pcl-parser.c)	; updated by cid 9 in PCL_A_C1 branch
+;         Rfm-File (pcl-parser.h)
+;         Rfm-File (pcl-interpreter.c)
+;
+; Satellite Repository (Penspit)
+;   Rfm-Project (Penspit)	(Jo-Satellite-2.project.1)
+;     Branch (Penspit_A) (Jo-Satellite-2.branch.1) (main)
+;       Version (Jo-Satellite-2.version.1) 
+;	  {Jo-Satellite-2.cid.3}
+;     Branch (Penspit_A_C1) (Jo-Satellite-2.branch.2) (main)
+;       Version (Jo-Satellite-2.version.2) 
+;/	{Jo-Satellite-2.cid.3 (from ancestor Jo-satellite-2.branch.1), Jo-satellite-2.cid.4, 5}
+;     Rfm-Directory (penspit)
+;       Rfm-Directory (src)
+;/      Rfm-File (penspit.c)		; updated by cid 5 in Penspit_A_C1 branch
+;
+; <<< Satellite Repositories Scanner and Fax elided >>>
+
+cm_slush_freeze -p akron -release "c1" -name "r1" ; jo.cid.19
+; whether there's a cid in the satellites depends on whether we want to cap the satellite branch.
+; TBD, and not too important since access is gated by the master.  Here we elect to do the controls
+; at the master level.
+
+; We have:
+;
+; Master Repository
+;   Master Catalog
+;     Cset-Relationships
+;       (jo.cid.4 jo-satellite-1.cid.1)		; create project/repository (pcl)
+;       (jo.cid.5 jo-satellite-2.cid.1)		; create project/repository (penspit)
+;       (jo.cid.6 jo-satellite-1.cid.2)		; create project branch/version (pcl branch.1)
+;       (jo.cid.7 jo-satellite-2.cid.2)		; create project branch/version (penspit branch.1)
+;       (jo.cid.8 jo-satellite-1.cid.3)		; add files to jo-satellite-1.project.1 (PCL)
+;       (jo.cid.10 jo-satellite-3.cid.1)	; create project/repository (scanner)
+;       (jo.cid.11 jo-satellite-4.cid.1)	; create project/repository (fax)
+;       (jo.cid.12 jo-satellite-3.cid.2)	; create project branch/version (scanner branch.1)
+;       (jo.cid.13 jo-satellite-4.cid.2)	; create project branch/version (fax branch.1)
+;       (jo.cid.14 jo-satellite-1.cid.4)	; create PCL_B branch.2
+;       (jo.cid.15 jo-satellite-1.cid.5 jo-satellite-2.cid.3) ; add pcl-interpreter.c, penspit.c files
+;       (jo.cid.16 jo-satellite-1.cid.7)        ; migrate jo-satellite-1.cid.5 from PCL_A to PCL_B
+;       (jo.cid.17 jo-satellite-1.cid.8 jo-satellite-2.cid.4) ; cm_slush_create -prod akron -name "c1"
+;       (jo.cid.18 jo-satellite-1.cid.9 jo-satellite-2.cid.5) ; file changes to pcl_a_c1, penspit_a_c1
+;+      (jo.cid.19)			        ; cm_slush_freeze -prod akron -release "c1" -name "r1" 
+;+	; we normally omit these one-elemnt tuples, but this might become a multi-element tuple *TBD*
+;
+;     Product Family (Printer)
+;
+;       Subsystem (Pcl_A) (Jo.subsystem.1)
+;         .inherit none 
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.1
+;           version-sdid=NIL
+;       Subsystem (Penspit_A) (Jo.subsystem.2)
+;         .inherit none
+;         Subscriber 
+;           >akron_main(Jo.pc.1, jo.branch.1) write
+;         Subscriber
+;           >beale_main(Jo.pc.2, jo.branch.2) read
+;         ProjectContext 
+;           Jo-satellite-2.project.1
+;           Jo-satellite-2.branch.1
+;           version-sdid=NIL
+;       Subsystem (Pcl_A_C1) (Jo.subsystem.6)
+;+	  WALL: UP
+;         .inherit Pcl_A (Jo.subsystem.1) ELECTIVE
+;         Subscriber 
+;           >akron(jo.pc.1, jo.branch.3(Akron_C1)) write, port
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.3 (PCL_A_C1)
+;           version-sdid=NIL
+;       Subsystem (Penspit_A_C1) (Jo.subsystem.7)
+;+	  WALL: UP
+;         .inherit Penspit_A (Jo.subsystem.2) ELECTIVE
+;         Subscriber 
+;           >akron(jo.pc.1, jo.branch.3(Akron_C1)) write, port
+;         ProjectContext 
+;           Jo-satellite-2.project.1
+;           Jo-satellite-2.branch.2 (Penspit_A_C1)
+;           version-sdid=NIL
+;       Subsystem (Pcl_B) (Jo.subsystem.3)
+;         .inherit Pcl_a (Jo.subsystem.1) all 
+;         Subscriber 
+;           >beale_main(Jo.pc.2, jo.branch.2) write, port
+;         ProjectContext
+;           Jo-satellite-1.project.1
+;           Jo-satellite-1.branch.2
+;           version-sdid=NIL
+;        <<< Subsystems scanner_B and Fax_B elided >>>
+;
+;       Product Configuration (Akron, Jo.pc.1)
+;         Contents		           ; subsystem/branch/version specifications
+;           >Jo.subsystem.1 (PCL_A)	   ; visible to jo.branch.1 (Akron_Main) and branch.3 (to a point)
+;           >Jo.subsystem.2 (Penspit_A)	   ; visible to jo.branch.1 (Akron_Main) and branch.3 (to a point)
+; 	    >Jo.subsystem.6 (PCL_A_C1)     ; visible to jo.branch.3 (Akron_C1)
+; 	    >Jo.subsystem.7 (Penspit_A_C1) ; visible to jo.branch.3 (Akron_C1)
+;         Release (Akron Main) (Jo.branch.1)
+;           version(Jo.version.1)={Jo.cid.3, jo.cid.6, jo.cid.7, jo.cid.8, jo.cid.15}
+;/        Release (Akron_R1) (Jo.branch.3)  ; name changed to R1 from C1, *TBD*: rename subsys?
+;           ancestor jo.branch.1
+;/          version(Jo.version.3)={3,6,7,8,15 (ancestor), + jo.cid.16, jo.cid.18, jo.cid.19}
+;?	    jo.cid.19 need be promoted only if we view release name from within version scope...
+;?	    Typically handled by metaversion.
+;         Workspace (~/akron-ws)	      ; really semipersistent
+;         Workspace (~/akron-c1-ws)	      ; really semipersistent
+;
+;       Product Configuration (Beale, jo.pc.2)
+;         Contents
+;           >Jo.subsystem.2 (Penspit_A)		; does see effect of jo.cid.15
+;           >Jo.subsystem.3 (PCL_B)		; doesn't see effects of jo.cid.15 yet, needs cm_change_port
+;           >Jo.subsystem.4 (Scanner_B)
+; 	    >Jo.subsystem.5 (Fax_B)
+;         Release (Beale Main)  (Jo.branch.2)
+;           version(Jo.version.2)={Jo.cid.{3,6,7,8,9,12,13,14,15}}
+;         Workspace (~/beale-ws)
+;
+; Satellite Repository (PCL)
+;   Rfm-Project (Pcl)		(Jo-Satellite-1.project.1)
+;     Branch (PCL_A) ; family+product-config+release ;(Jo-Satellite-1.branch.1) 
+;       version=(Jo-satellite-1.cid.3 Jo-satellite-1.cid.5) ; (Jo-satellite-1.version.1)
+;     Branch (PCL_B) ; family+product-config+release ;(Jo-Satellite-1.branch.2) 
+;       version=(Jo-satellite-1.cid.3 Jo-satellite-1.cid.5) ; (Jo-satellite-1.version.2)
+;     Branch (PCL_A_C1, Jo-satellite-1.branch.3)
+;?	*TBD* could cap this branch and rename it with subsys renames...  For now we don't
+;       version=({3, 5} (inherited from PCL_A), 8, 9)
+;     Rfm-Directory (pcl)
+;       Rfm-Directory (src)
+;         Rfm-File (pcl-parser.c)	; updated by cid 9 in PCL_A_C1 branch
+;         Rfm-File (pcl-parser.h)
+;         Rfm-File (pcl-interpreter.c)
+;
+; Satellite Repository (Penspit)
+;   Rfm-Project (Penspit)	(Jo-Satellite-2.project.1)
+;     Branch (Penspit_A) (Jo-Satellite-2.branch.1) (main)
+;       Version (Jo-Satellite-2.version.1) 
+;	  {Jo-Satellite-2.cid.3}
+;     Branch (Penspit_A_C1) (Jo-Satellite-2.branch.2) (main)
+;?	*TBD* could cap this branch and rename it with subsys renames...  For now we don't
+;       Version (Jo-Satellite-2.version.2) 
+;	{Jo-Satellite-2.cid.3 (from ancestor Jo-satellite-2.branch.1), Jo-satellite-2.cid.4, 5}
+;     Rfm-Directory (penspit)
+;       Rfm-Directory (src)
+;       Rfm-File (penspit.c)		; updated by cid 5 in Penspit_A_C1 branch
+;
+; <<< Satellite Repositories Scanner and Fax elided >>>
+
+Scenario considered but not enacted in this file, where we change PCL_A to inherit
+from PCL_A_R1 (formerly PCL_A_C1).
+
+This would change PCL_A inheritance list, in view only accessible to Akron (TBD).
+If we change it only so akron can see inheritance change, other subscribers to PCL_A are
+unaffected.  We *probably* want them to be affected, since that is the intent of shared subsystems,
+so that is probably another logged but unversioned attribute like wall(?), or versioned and changes
+to it propagate to all users (better, since changes other than wall have more interesting histories).
+
+
+------------------------------------------------------------------------------
+Notes.
+
+All cm_master_change operations effectively promote changes to multiple subsystems owners.
+All subsystems affected by a change in a promoted fashion requires that all subsystem readers
+be notified of the change as well, and so we promote the master cid into these product configuration
+branches which use the subsystem(s) affected.  This is true for subsystem renames, wall status
+changes, etc., if we want to view the correct value of the attribute...  If it's a non-versioned
+attribute like WALL, we don't need to propagate the cids.
+
+It's *probably* possible to have PC's be versions and contents of products, so that
+all product configurations in a family are versions of each other.  Given that there are branches on PC's,
+which would imply branches on branches if we did this, it just gets too confusing, so
+for now we don't do that.  PC's are VM::Projects subtypes, Products are (not currently)
+vm::project subtypes.

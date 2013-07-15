@@ -1,0 +1,130 @@
+------ general notes, in no particular order
+
+These are 'bits', but hardly what I condsider adequate for customer
+viewing, so please limit your expectations.  This isn't an alpha or beta,
+or any other Greek letter in the software lifecycle.  We aren't using the
+bits yet for our own development, so that pretty much tells you these
+bits aren't ready for any real testing yet.
+
+We don't have a 'clean' machine here on which to test bits and
+installation, so the (rudimentary? prehistoric?) install may require
+handholding from us, don't hesitate to call.  We're converting our
+brand-spanking-new 11.0 system to run 10.20 (that hurts), then we can use
+an existing 10.20 system as our 'clean' machine, but we didn't want to hold
+up giving you bits any more than we have.  (Please tell Natalie not to
+worry!  I suggest you don't show her these bits :-)
+
+None of the workspace commands deal with file protection in any way,
+so workspace files will always be read/write.
+
+We suspect that client/server interactions which are not on the same host
+will sometimes fail due to a to-be-fixed buffering problem.  (i.e. to test
+bits, you may need to run client and server on the same host).
+
+If you type a cm command without required parameters, the response doesn't
+always accurately reflect the required parameters.  I.e. cm database_create
+may not give the right answer, but cm help database_create will give you
+more reliable information.
+
+Commands and parameters haven't been completely updated to reflect changes
+to the spec.  cm help  will aid you in this regard.
+
+Many commands will generate a 'WITH-CACHED-OPEN-REPOSITORIES' warning.
+Ignore them.  The whole way we treat repositories right now is hosed, and
+causes the implementation to be as slow as humanly possible.  We'll fix it.
+
+Some commands will generate warnings on the server which aren't reflected
+on the client, so the client will say "command completed with warnings",
+but you won't see warnings (the new return-code-specific exception system
+isn't fully in place yet, and causes this behavior).
+
+Telling the CM client where the server is has been hacked with a
+.conman-prefs file, which is described in Files.html.  This is
+temporary.
+
+The delivered bits contain an extra 10-12 MB of debugging information
+and environment, to help us debug problems on your site if we don't
+already know about them.  The final bits will be much smaller.
+
+All -release, -label, and -time specs are not yet implemented in the
+command interface, even though lots of the underlying support is there.
+
+The following sections describe limitations of current commands, but it
+isn't necessarily a definitive list.
+
+------ file_ commands
+
+None of the file commands take the current working directory into
+account yet.
+
+------ co
+
+Is working and tested, but with the following limitations:
+
+   * It does not report which other users have the file checked out
+
+   * It does not send email to those who have the file checked out.
+
+------ delta_uncreate
+
+Only works if there have been no file operations.  It does not yet
+know what to do with file_adds, file_removes, file_renames or checked out
+files.
+
+------ delta_add and delta_remove
+
+Cset changes are recorded, but we haven't integrated the merge/update code
+to process the changes in the workspace yet.
+
+------ file_add
+
+Works fine for files in subsystem root directories (i.e. pcl/src/*.c) but gives unfriendly
+error messages if you attempt to add files not under the subsystem directory root
+(i.e. akron-ws\foo.c), or in subdirectories of the subsystem (i.e. pcl/src/subdir/foo.c).
+
+------ master_unlock_force
+
+is only implemented for the case where a subsystem is specified.  This has
+not yet been tested.
+
+------ unco
+
+is stubbed in but is otherwise completely unimplemented.
+
+------ ws_delete
+
+partially implemented.  No useful functionality yet.
+
+------ ws-update
+
+The -report flag suppresses actual update, but produces no useful report.
+
+ws_update only merges in the changes made to the branch since the creation
+of the workspace, ws_update does not yet understand the effects of
+change_add and change_remove.
+
+ws_update workspace actions are non-atomic, if it errors out in the middle
+of the process, files (on disk) will have been modified.
+
+ws_update does not understand addition or deletion of subsystems and will
+simply disregard them.
+
+ws_update has certain limitations in regard to filename collisions.  Most
+are handled in a reasonable way, but there are complicated cases (involving
+multiple cascaded file renames) where it may make a mistake.
+
+ws_update may make changes to the current delta in progress.  This is not a
+bug, but it might be unexpected.  For instance, if you attempt to check in
+a new file that is identical to a new file in the repository (supposing
+someone emailed you a patch, and you simply added it to your workspace),
+ws_update will essentially undo the ws_file_add that used to add the file.
+
+ws_update will not remove files from your workspace if you have edited
+them, even if the file is has been deleted in the main branch.  Your
+updates will proceed correctly, but will not be visible because you are
+updating a deleted file.
+
+These limitations will be removed in the released product and
+should not impact testing of ws_update in a controlled environment.
+Ws_update does correctly merge changes in the workspace in the most common
+cases.

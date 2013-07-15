@@ -1,0 +1,141 @@
+The following environment variables currently affect ChangeSafe server
+operation in its capacity as an ObjectStore database client.
+
+OS_ROOTDIR		     [REQUIRED]
+
+    This variable must always be set to point to the ObjectStore
+    installation on those machines hosting either ObjectStore servers
+    or ObjectStore clients (which are ChangeSafe servers).
+    It typically it points to /usr/local/ODI/OS5.0.
+
+SHLIB_PATH		     [REQUIRED]
+
+    SHLIB_PATH must include $OS_ROOTDIR/lib.
+
+OS_CACHE_SIZE		     [RECOMMENDED - see OS_COMMSEG_SIZE]
+
+    This is the single most important environment variable governing
+    ChangeSafe server performance.
+
+    The size, in bytes, of memory used to cache data from the database.
+    Usually the larger the better.  Values greater than 64MB (65536000) on
+    HP/UX 10.20 require updating values of the OS_COMMSEG_SIZE and
+    OS_COMMSEG_RESERVE_SIZE variables because of a bug in ObjectStore 5.0
+    SP4 (and supposedly fixed in ObjectStore 5.1).
+
+    On Unix platforms, the cache memory is mapped via 'mmap' into the
+    ChangeSafe process.  A file which is sized according to this value
+    (which defaults to 8MB if absent) is allocated in the directory
+    indicated by OS_CACHE_DIR, or /tmp/ostore if OS_CACHE_DIR is not set.
+    Thus /tmp/ostore should have sufficient memory to allocate files of
+    size OS_CACHE_SIZE (and a few others).
+
+    Example posix shell setting of this variable:
+
+    $ OS_CACHE_SIZE=65536000
+    $ export OS_CACHE_SIZE
+
+OS_CACHE_DIR			[OPTIONAL - depends on OS_COMMSEG_DIR]
+
+    This variable conrols the location of memory mapped cache files.
+    It specifies the pathname of a directory, which MUST NOT be NFS
+    mounted.
+
+    Cache and commseg files must reside in the same directory, see
+    OS_COMMSEG_DIR. (Why there are two variables which must be in sync
+    is beyond our control).
+
+OS_COMMSEG_DIR			[OPTIONAL - depends on OS_CACHE_DIR]
+
+    A rediculous variable which should always be equal to the value of OS_CACHE_DIR.
+
+OS_COMMSEG_SIZE			[OPTIONAL - depends on OS_CACHE_SIZE]
+				[	  - see OS_COMMSEG_RESERVE_SIZE]
+
+    Default: 270 KB
+
+    Specifies, in bytes, the initial size of the communications segment
+    (commseg). You must specify an integer that is a multiple of the page
+    size.
+
+    We're not precisely sure what ODI thinks the page size is on HP/UX.  We
+    suspect it's 1024 bytes, and we've used that in sample calculations
+    below. (This based on guesswork applied to the result of an OSSIZE
+    command against a database).
+
+    The commseg is a preallocated region that holds ObjectStore internal
+    data (global data, cache indexing info, and data that describes
+    databases and segments used by the application).  The size of the
+    commseg depends on the size of the cache file.
+
+    Theoretically, when you modify the size of the cache file as needed and
+    ObjectStore adjusts the size of the commseg. However this is broken on
+    AIX and HP/UX platforms, and must be done by hand.
+
+    The basic formula for commseg size requirements, roughly, is that
+    you need:
+
+    - At least 2000 bytes constant overhead
+    - Plus 84 bytes times the number of pages in the cache
+    - Plus 840 bytes for each segment you use or create.
+      Note that every client of the database causes a commseg to be created
+#     (???)
+    - Plus a bit more for each Server you use and for each database
+      you use (ODI is unspecific here, guessing pagesize bytes per database)
+
+    Example 1: A 128MB cache as specified with OS_CACHE_SIZE and assume
+    one-kilobyte pages =
+    (+ 2000			; constant overhead
+       (* 84 (* 128 1000))      ; 84 bytes times number of pages, which
+                                ; equals 128MB/1024
+       (* 840 200)		; assume 200 users of the database server
+       (* 200 1024)             ; assume 200 HP databases
+       (* 1 1024)               ; and one database server
+       1024)                    ; plus pagesize bytes to ensure we don't
+                                ; round below necessary amount with
+				; pagesize rounding
+
+    The above adds up to 11128848 bytes.
+
+    (JDT: The following is from ODI docs, and doesn't make sense to me...)
+    Example 2: for 15,000 segments, assuming an 8 MB cache, which is 2048
+    four-kilobyte pages, you can expect to need about 12732840 bytes (12.7
+    MB) of commseg.
+
+    Specifying a value below the minimum size needed to store required
+    structures in the communications segment has no effect.  If necessary,
+    ObjectStore rounds down the number you specify to a page-size boundary,
+    that is, a multiple of the page size.   THIS IS ALSO BROKEN, AND MUST
+    BE MAINTAINED BY HAND.
+
+    Example posix shell setting of this variable:
+
+    # set to 32MB
+    $ OS_COMMSEG_SIZE=33554432
+    $ export OS_COMMSEG_SIZE
+
+OS_COMMSEG_RESERVE_SIZE		[OPTIONAL - depends on OS_COMMSEG_SIZE]
+
+    The maximum size, in bytes, to which the COMMSEG can grow.  It should
+    be equal to or larger than OS_COMMSEG_SIZE.  It defaults to 8MB.
+
+    Example posix shell setting of this variable
+
+    $ OS_COMMSEG_RESERVE_SIZE=33554432
+    $ export OS_COMMSEG_RESERVE_SIZE
+
+OS_AS_SIZE			[optional]
+
+Specifies the maximum size of the persistent virtual memory address
+space.
+
+If you receive an "out of address space" message try increasing the
+OS_AS_SIZE. Sizes of 500mb are not unheard of.
+
+The SHLIB_PATH environmental path must include the <Allegro
+directory>, as well as /usr/lib. If the ObjectStore installation
+choice that creates links in /usr/lib was not selected, then it must
+also include the ObjectStore lib subdirectory, $OS_ROOTDIR/lib.
+
+
+*FINISH*

@@ -1,0 +1,284 @@
+This is a list of the various fixes and workarounds of Franz bugs that 
+currently exist in the product.  SPR's are provided when known.
+
+-----
+Bug:
+    Arrays of type unsigned-byte 24 or signed-byte 24 are promoted to
+    -byte 32 arrays rather than type T arrays.  This is a performance
+    problem because it unboxes and shifts the data when storing into
+    the array and boxes and shifts the data when retrieving, where if
+    it kept the data as a boxed fixnum, it could simply store and
+    fetch.
+
+SPR .....
+    Noted a while ago, but unfixed.  Franz seems reluctant to fix
+    this.  They argue that promoting to unsigned-byte 32 is a legal
+    promotion. (It is, but so is T, and promoting to T produces faster 
+    code).
+
+Fix/Workaround:  
+    Change declarations of 
+       (simple-array (unsigned-byte 24) (*)) to (simple-array t (*))
+       (simple-array (signed-byte 24) (*)) to (simple-array t (*))
+
+-----
+Bug:
+    Franz ignores inline declarations.  Although it is technically
+    allowed to do so by ANSI standards, ignoring inline declarations
+    is simply lame.
+
+No SPR
+    Franz argues that inline declarations could be abused (see
+    documentation).  This is true, but there are a lot of things in
+    Lisp that could be abused, and they provide _them_.  It is much
+    more likely that they simply punted on implementing INLINE and use 
+    this as a rationalization.
+
+Fix/Workaround:
+    Macro DEFSUBST provides sufficient functionality, and
+    DESTRUCTURE-FUNCTION-LAMBDA is provided for writing beta-reducing
+    compiler macros.  Both of these macros are portable.
+
+-----
+Bug:
+    Race conditions in multitasking code.
+    Incorrect implementation of WITH-OPEN-FILE, WITH-OPEN-STREAM, and
+    UNWIND-PROTECT, and EXCL:RUN-SHELL-COMMAND.
+
+SPR 21833    
+    Fix sent to Franz, but they have not responded.
+    
+Fix/Workaround:
+    Add *DEFER-INTERRUPTS* flag, and a process to
+    deliver deferred interrupts.  Advise MP::INTERRUPT-BREAK to check
+    deferred interrupts flag.  Provide macros
+    WITH-DEFERRED-INTERRUPTS,
+    UNWIND-PROTECT-WITH-DEFERRED-INTERRUPTS, and shadow
+    CL:WITH-OPEN-FILE and CL:WITH-OPEN-STREAM with definitions that
+    cause interrupt deferral.  (We shadow these symbols because their
+    use is rather pervasive.)
+    On windows, define foreign functions that can manipulate win32
+    process handles.
+    Wrap EXCL:RUN-SHELL-COMMAND with CALL-SYNCHRONOUS-SUBPROCESS
+    function that ensures process and stream cleanup.
+
+    While this code is peculiar to Franz, most lisp systems offer
+    similar functionality (with similar bugs, too).
+
+
+-----
+Bug:
+    USER-HOMEDIR-PATHNAME always returns "C:\\" on Windows NT.
+    
+SPR 21944
+    Franz says fix may be forthcoming in 6.0
+
+Fix/Workaround:
+    Replace Franz function EXCL::USER-HOMEDIR (which provides the
+    functionality for CL:USER-HOMEDIR-PATHNAME) as follows:
+
+    (defun nt-home-directory ()
+      "Return the users home directory as NT understands it."
+      (make-pathname :device (subseq (sys:getenv "HOMEDRIVE") 0 1)
+	             :directory (sys:getenv "HOMEPATH")))
+
+    (defun nt-home-directory-namestring ()
+      (namestring (nt-home-directory)))
+
+    (eval-when (:load-toplevel :execute)
+      (without-package-locks
+       (setf (symbol-function 'user-homedir)
+             (symbol-function 'nt-home-directory-namestring))))
+
+    And use the following function in TS50:
+
+    (defun home-directory-pathname ()
+      "Return a pathname which unambiguously indicates the current home directory of the
+    user."
+      #+(and allegro mswindows)
+      (nt-preserve-pathname-case
+       (make-pathname :device (subseq (sys:getenv "HOMEDRIVE") 0 1)
+		      :directory (sys:getenv "HOMEPATH")
+		      :defaults nil))
+      #-(and allegro mswindows)
+      (truename (canonicalize-pathname (user-homedir-pathname))))
+
+-----
+Bug:
+    Last byte in (unsigned-byte 8) arrays is not preserved by
+    allegrostore. 
+
+SPR ??????
+
+Fix/Workaround:
+    We add padding to the end of binary files (which are stored as
+    unsigned-byte 8), so that the last byte contains no useful data.
+    The variable *BINARY-FILE-PADDING*, currently set to 1, specifies
+    the padding to add.  This can be removed once the bug is fixed.
+
+-----
+Bug:
+    On Unix, Franz attempts to prevent use of the pathname device
+    slot by forcing the device slot to be NIL or :UNSPECIFIC when you
+    call make-pathname.
+
+SPR ??????
+    Franz simply refuses to fix this.  They argue that this behavior
+    is allowed by the ANSI spec, but it is easily seen from the spec
+    that a STRING (the value we wish to put in the slot) is a legal
+    value despite the fact that such a pathname may not be useful to
+    the file system.  (note that the host slot is also of no use to
+    the file system, yet it can be set)
+
+Fix/Workaround:
+    Advise MAKE-PATHNAME to SETF the EXCL::.PATHNAME-DEVICE slot after 
+    constructing the pathname normally.  This is somewhat gross, but
+    since we are using the named slot `.PATHNAME-DEVICE' rather than
+    some slot index, it is actually reasonably robust.
+
+----- 
+Bug:
+    RENAME-FILE fails to rename directories on the new machines with
+    the latest Franz software.
+
+SPR 21854
+    Franz cannot reproduce this, but we can.  It is rather worrisome.
+
+Fix/Workaround:
+    Use a foreign function call under Windows NT to directly call the
+    Win32 MoveFileEx function.  There is only one place in ts50 that
+    uses RENAME-FILE:  the file-system-rename method on the
+    lisp-file-system.  The workaround is therefore installed in the
+    error handler for FILE-SYSTEM-RENAME.
+
+-----
+Bug:
+    No way to modify file permissions or file time.  (ANSI doesn't
+    define a way, but there are no extensions to Franz, either).
+
+NO SPR
+    This is likely to be a problem for any lisp we use, and the
+    solution is somewhat portable as any lisp we use should have
+    subprocess capability.    
+
+Fix/Workaround:
+    Scan file system for CHMOD or ATTRIB.EXE executable, use
+    RUN-SYNCHRONOUS-SUBPROCESS to invoke them.
+
+    On windows, use foreign functions to access Win32 GetFileTime and
+    SetFileTime functions.
+
+    On unix, we should shell out to the TOUCH command, but we don't do 
+    that yet.  (needs to be done!)
+    
+-----
+
+Bug:
+    Franz file copier only copies text files and doesn't preserve
+    dates.
+
+NO SPR
+    See above.    
+
+Fix/Workaround:
+    Scan file system for CP or CMD executable, use
+    RUN-SYNCHRONOUS-SUBPROCESS to invoke.
+
+-----
+
+Bug:
+    The TAIL-CALL-SELF-MERGE-SWITCH is ignored in the compiler (it
+    erroneously looks at TAIL-CALL-NON-SELF-MERGE-SWITCH), so
+    LABELS statements do not compile tail-recursively when they
+    should.
+
+SPR ?????
+    Should be fixed at some point.  We will continue to use the macro, 
+    however, because although all commercial lisps define a mechanism
+    for ensuring tail-recursion, they differ in implementation.
+
+Fix/Workaround:
+    TAIL-LABELS macro binds COMPILER:TAIL-CALL-NON-SELF-MERGE-SWITCH
+    during the compilation of each label body.
+
+    This macro has two mechanisms for working around this bug.
+
+-----
+
+Bug:
+    PROBE-FILE does not return filenames with the NT preserved
+    canonicalized capitalization.
+
+NO SPR
+    This seems to be a deficiency in the Win32 API.    
+
+Fix:
+    Use NT-PRESERVE-PATHNAME-CASE which deduces the correct
+    capitalization. 
+
+-----
+
+Bug:
+    No way to control which database is used consing encoded NON-CLOS
+    objects pointed to by persistent objects.
+    
+NO SPR
+
+Fix/Workaround:
+    Switch to ASTORE:DATABASE-OF owning object just before calling
+    ASTORE-FLUSH-SLOTS. 
+
+-----
+
+Bug:
+    No way to store host information (like platform) in pathnames.
+
+NO SPR
+    Given that Franz refuses to fix the device bug, it is unlikely
+    that they will want to extend pathnames to include this
+    information. 
+
+Fix/Workaround:
+    db-name objects used for naming databases on remote machines.
+
+-----
+
+Bug:
+    Network (socket) errors are signalled as if they were file errors, 
+    and details of the error are missing.
+
+SPR ?????
+    Don't know if this has been reported to Franz.    
+
+Fix/Workaround:
+    Look at the FILE-ERROR-PATHNAME in the signalled error.  Sockets
+    have fixnums for their pathname, so if we find a fixnum there, we
+    assume it is a socket error.  Furthermore, we assume it is a
+    dropped connection, but who knows.
+
+----
+
+Bug:
+    Franz lisp indenter has bugs.  Names beginning with DEF and WITH
+    are assumed to DEFINITIONS and MACROS, even if they appear in
+    binding lists.
+
+NO SPR
+    This hasn't been reported to Franz.
+
+Fix/Workaround: 
+    Make sure WITH doesn't appear first in a binding list by either
+    re-ordering the binding list, misspelling WITH, or adding an
+    unused binding.
+
+-----
+
+Bug:
+    Franz doesn't officially support ADD-LOOP-PATH for extending LOOP.
+
+SPR ?????    
+    Don't know if this has been reported to Franz.    
+
+Fix/Workaround:
+    Use internal Franz definition, and provide abstraction layer in
+    case ADD-LOOP-PATH disappears.  (considered unlikely)

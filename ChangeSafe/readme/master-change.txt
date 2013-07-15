@@ -1,0 +1,45 @@
+Steps for master change
+
+0) Determine set of altered subsystems in ws
+1) Lock master (whatever we lock, in addition to cm_master_lock)
+
+   Exit if we can't lock master.
+
+1.5) Observe cm_master_lock subsystem locks (like temporary walls, sort of)
+   i.e. make sure we have access to the subsystems identified in 0.
+
+2) Check wall permissions for affected subsystem/cset combos
+   If wall is up, no change can be open
+   (because csets are granted wall exceptions status, NOT change-contexts)
+
+   Must have holes in all walls by all subsystem blockers if wall(s) are up.
+   Remember there can be multiple walls on a subsystem, one by each user.
+
+   If wall blocks, exit.
+
+2.5) Must have write access to all subsystems with checked out files.
+     Note that checkout allows you to checkout into subsystems which are readonly
+     to product.  If not writeable, DO NOT CLOSE CHANGE, even though change-close
+     is permitted.
+
+3) Determine if there is a conflict in affected subsystems
+   (where conflict here is defined as ANY by others in the affected subsystem set,
+   whether or not there are file level conflicts)
+
+   If there is conflict, exit.
+
+
+... At this point we have all we need to succeed, barring out-of-disk
+or other unusual exceptions ...
+
+4) change_close
+
+5) ws_update
+   [June-3-2000 JDT: not really, but we must update the ws VPB and baseline, clearing the
+   VPB]
+
+6) promote changes to product configuration branch (cset additions/removals)
+
+7) release master lock
+
+8) write files to master directory (reference area)

@@ -1,0 +1,255 @@
+This memo describes the March 08, 2000 release of ChangeSafe.
+This should be considered a pre-alpha release and should not be used for
+production work. 
+
+Implemented in this release are the following elements of the Version 3.3
+Command Descriptions (subject to limitations noted below):
+
+- Essential Commands (section 3)
+- User Commands (section 4)
+- Product Code Manager Commands (section 5)
+- A potentially non-compliant DATABASE_CREATE command from section 7.
+
+		      ------------------------------
+			      Overall Status
+
+The release is nearly (but not quite) achieved critical mass from the
+formal feature standpoint of sections 3-5, and we have tests for most
+of the features in this regard.  A pass was made to bring commands up
+to date with the command specification with regard to syntax and
+features.  The first browser capabilities have been added to the
+product. (See notes on server operation in order to access these
+features).
+
+The product is not yet ready for anything but evaluation use.
+
+Change-set representations in the repository are believed to be correct,
+however disk file management is still messy, and ws_update is not called
+automatically when necessary (though errors will be signalled if a
+ws_update is necessary).
+
+Effects of cset_add and cset_remove on a workspace with an open cset
+are not well tested.
+
+The agreed upon ADC import modes are implemented, and a secret switch
+"-ADC-IMPORT"  has been added to cset_close and master_change commands.
+However there is a known problem which causes it not to work with this
+release. 
+
+		      ------------------------------
+			   Software Requirements
+
+- HP/UX 10.20
+
+- [MAYBE] OS Patch PHSS_17225 dld.sl(5) cumulative patch
+  (We're not sure about this one: you may not need it, we're running it)
+
+- Objectstore 5.1 SP4
+  (assumed installed already this release, and not in the distribution)
+
+- Files in this distribution.
+
+		      ------------------------------
+		       Miscellaneous Feature Notes.
+
+* PORT
+
+  We support the browser-based product report, but no back end processing
+  of PORT yet.  This is the 'first half'.
+
+* REPORTS
+
+  - The workspace report is mostly implemented.  It does not currently
+    report the names of added and removed changes correctly.
+
+  - The PORT report is implemented (but not the back end)
+
+  - The product composition and inheritance report is implemented.
+
+  - The delta report is a stub.
+
+  - The change history report is a stub.
+
+* CSET_CLOSE, MASTER_CHANGE
+
+  - The -ADC-IMPORT switch is not yet operational.
+
+* ObjectStore 
+
+  - We've discovered that large values of OS_CACHE_SIZE are completely
+    broken, we're working with Object Design (now Exceloncorp) for a fix.
+
+    This release was tested with an OS_CACHE_SIZE of 65536000 bytes,
+    which seems to work.  Don't forget that this variable can have a
+    dramatic effect on ChangeSafe server performance.
+
+		      ------------------------------
+			    General Limitations
+
+* Verbosity settings (-v0, -v1, -v2) generally aren't observed yet
+
+* We don't yet detect inappropriate defaulting of various arguments in
+  .conman (possibly because of workspace context) (particularly important
+  for product code and release manager commands)
+
+* Read-only bit setting isn't handled yet (we've got partial support, but
+  not yet visible to user)
+
+* Subsystem additions/removals to/from a product are not reflected in
+  product reference directories or workspaces in a timely manner.
+
+* The product is way too noisy any time it maintains disk files, we need to
+  quiet the 'publish' options for -v0, -v1.  Noise is probably ok for -v2.
+
+* Many parts of the system still think they're "CONMAN" instead of
+  "ChangeSafe".  We're working on it.
+
+* Product installation and configuration is grossly lacking in all respects
+  (Hiring ads appear in papers tomorrow, soon we'll have people to start
+   and/or finish all this stuff!)
+
+* Some error messages still refer to csets as deltas.
+
+		      ------------------------------
+		       Command Specific Limitations
+
+* CSET_CLOSE
+
+    - Doesn't find files which were checked out AND renamed in the same
+      change.
+
+    - May not work correctly unless you execute it from the workspace root
+      directory because of some overzealous pathname mangling.
+
+* CSET_CREATE
+
+    - Will signal an error if ws isn't up to date, but won't automatically
+      do a ws_update.  JDT is beginning to wonder if this might be the
+      preferred behavior.
+
+    - -ABSTRACT argument not yet supported.
+
+    - File specifications for initial checkouts give a confusing (though
+      accurate) error message if instead wild files were specified.
+
+* DATABASE_CREATE
+
+    - In adding support for remote databases, we discovered at the last
+      minute that this command now requires a trailing "/" on the database
+      directory name.  (This will be fixed, as will all limitations)
+
+* FILE_ADD
+
+    - -TEXT, -BINARY switches not yet implemented.  Currently
+       auto-detecting file type.
+
+* PRODUCT_CREATE
+
+    - -BASE-PRODUCT <xxx> not yet supported.
+
+    - -COPY-FILE <yyyy> not yet supported.
+
+    - -TIME probably isn't semantically correct, (HP question #74 TBR next
+       meeting)
+
+* SUBSYS_CREATE
+
+    - Doesn't support the optional positional subsystem argument, right now
+      it's required.
+
+    - Doesn't support the -base-product argument, use -base-subsystem
+      instead since they're effectively aliases.  Subsystem cset derivation
+      from preexisting subsystems isn't well tested yet.
+
+    - -date-time processing hasn't been tested.
+
+    - Doesn't yet support the -subdirectory parameter.
+
+* UNCO
+
+    - Doesn't notice when you specifiy files that are not in the
+      repository.  (i.e. ignores wild files accidentally typed in unco file
+      list).
+
+* UNDO
+
+    - FILE_RENAME doesn't work unless the file was just added.  Undo
+      currently only knows how to undo the renaming of a file that was
+      added in the current change.
+
+    - FILE_REMOVE not yet supported.
+
+* WS_DELETE
+
+    - It can't delete a workspace by pathname yet only by ws_id.
+      (This basically means you need to be IN the workspace
+       or nap the ws-id out of its .conman file)
+
+    - No effort is made to delete empty directories.  This is just a
+      temporary limitation.
+
+    - If the workspace being deleted has an open change which adds
+      a file and then renames it, the renaming of the file isn't undone 
+      when the workspace is removed.
+
+* WS_QUERY, WS_REGENERATE, WS_MOVE
+
+    - Not yet implemented.  These user commands were added late in the spec
+      cycle.  The information that WS_QUERY would provide is available from 
+      the workspace report.
+
+* WS_SET
+
+    - Not deleting past product file structure, only adds/updates for now
+
+    - Not handling workspace VPB correctly if change-add/remove effects are
+      present
+
+    - Not creating logical subsystem directory substructure if there are no
+      files present in the subsystem view.
+
+    - Deletes wild files in subsystems.      **** WARNING! ****
+
+* WS_UPDATE
+
+    - -REPORT isn't complete.
+
+    - -DATE-TIME not yet implemented.
+
+		      ------------------------------
+		      Running the ChangeSafe Servers
+
+To run the command server, which listens on port 7999, invoke 'conman.exe'.
+
+To run the browser-based report server, which listens on port 8000, invoke
+'conman.exe -- -http'.
+
+The conman.exe file is part of the distribution.
+
+Included in the distribution are example shell scripts for starting
+the servers.  They might need tweaking for your installation though.
+
+		      ------------------------------
+	       Accessing Remote ObjectStore Database Servers
+
+We've done some work to ensure that remote access to ObjectStore database
+servers works.  One of two techniques are required in order to have a
+-database name work when it refers to remote databases.
+
+The first and easiest technique is simply to NFS mount the disk which
+hosts the databases.  When databaes are accessed via NFS-mounted
+pathnames, the ChangeSafe server will attempt to work with an
+ObjectStore database server which resides on the machine hosting the
+NFS-mounted disk.  The database files are not accessed over NFS.  NFS
+is just used as a means of finding the right server.
+
+The second and slightly more difficult technique requires that you instruct
+the ChangeSafe server as to the names and platform types of remote systems
+hosting the database and the ObjectStore database server.  To instruct
+ChangeSafe, you must edit the 'conman-server-config.lsp' file.  This file
+contains documentation on the format of entries.  It must be present in the
+current directory containing 'conman.exe', so that it will find the file
+upon startup and register the information.  A sample configuration file is
+present in the distribution.
+
+
