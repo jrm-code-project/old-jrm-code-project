@@ -1,0 +1,58 @@
+
+TS major software version:   0
+TS minor software version:   558
+TS major schema version:     9
+TS minor schema version:     19
+
+Lisp implementation type:    "International Allegro CL Enterprise Edition"
+Lisp implementation version: "6.1 [Windows] (Apr 16, 2002 20:02)"
+Lisp machine type:           "x86"
+Lisp machine version:        "x86"
+Lisp software type:          "Microsoft Windows 9x/Me and NT/2000/XP"
+Lisp software version:       "Generic"
+
+Lisp features: 
+        :ACL-SOCKET
+        :ALLEGRO
+        :ALLEGRO-V6.1
+        :ALLEGRO-VERSION>=
+        :ALLEGROSTORE
+        :ANSI-CL
+        :CLOS
+        :CLTL2
+        :COMMON-LISP
+        :COMPILER
+        :CONFORMING-IEEE
+        :DLWIN
+        :DRAFT-ANSI-CL-2
+        :DYNLOAD
+        :DYNLOAD-ACL-LIBRARY
+        :ENCAPSULATING-EFS
+        :EXCL
+        :FLAVORS
+        :FRANZ-INC
+        :GSGC
+        :HIPER-SOCKET
+        :ICS
+        :IEEE
+        :IEEE-FLOATING-POINT
+        :LITTLE-ENDIAN
+        :MICROSOFT
+        :MICROSOFT-32
+        :MK-DEFSYSTEM
+        :MODULE-VERSIONS
+        :MSWINDOWS
+        :MULTIPROCESSING
+        :OS-C-LINKAGE-INSTALLED
+        :OS-THREADS
+        :PCLOS
+        :PROFILER
+        :PROJECT-CHANGE-SETS-UNMAINTAINED
+        :RELATIVE-PACKAGE-NAMES
+        :SERIES
+        :SERIES-ANSI
+        :TESTWINAPI
+        :USE-STRUCTS-IN-COMPILER
+        :VERIFY-CAR-CDR
+        :X3J13
+        :X86

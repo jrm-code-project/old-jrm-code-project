@@ -1,0 +1,102 @@
+So you wanna get started.
+
+1.  Make sure you have the basic Lispworks installed on your system.
+
+2.  Check the parameters in  rebuild-environment.bat  and ensure
+    that the values of LISPWORKS_DIRECTORY, LISPWORKS_BASE_IMAGE,
+    DERIVED_IMAGE_PATH, DERIVED_IMAGE_NAME, and BUILD_SCRIPT are
+    appropriate (they should default to reasonable values unless
+    you are doing something weird or didn't install lispworks in
+    the default location).
+
+3.  Run rebuild-environment.bat
+    This should start lispworks twice.  Each time it will dump an
+    image to DERIVED_IMAGE_PATH (default is same directory as
+    lispworks) csf-devel-console and csf-devel-gui are the default
+    names.
+
+4.  Use either one as your development lisp.  You shouldn't need
+    to rebuild lispworks too often (only when a package is added).
+
+5.  To start developing, start one of the development images.
+
+6.  Make sure your `current directory' is your workspace root.
+    (Start the image from that directory!)
+
+7.  (load "build\\lwboot.lsp")  to get the system loaded.
+
+8.  Use the system browser or just load the system.
+
+NOTE:  Here is the order of files.
+
+rebuild-environment.bat  takes a raw lisp image and loads lwrebuild.lisp
+
+  lwrebuild.lsp performs the following:
+    1.  Loads the patches.
+
+    2.  Forces the compiler to always do tail-recursion elimination.
+
+    3.  Create the CSF/CONFIG and CSF/UTILITY packages.
+
+    4.  Loads the package definition files for third-party code.
+        - ansi-series
+        - lisp-server-pages
+
+    5.  Loads packages.lsp, which is the package definition file for 
+        changesafe.
+
+    6.  Loads `utility\replacement-macros.lsp' to fixup the basic
+        macros before compiling the third-party code.
+
+    7.  Compiles and loads the third-party code.
+ 
+    8.  Installs the `series' package.
+
+    9.  Dumps the image.
+
+When starting the new image, the packages and third-party code should
+be set up, but there will be no changesafe code.  The file lwboot.lsp
+should be loaded.
+
+  lwboot.lsp performs the following:
+
+    1.  Determines the workspace root (assumes it is the directory
+        *above* where lwboot.lsp resides).
+
+    2.  Sets up the pathname translations for the CSF logical host.
+
+    3.  Load "build\lwsystem.lsp"
+
+The file "build\lwsystem.lsp" contains the system definition for the
+rest of changesafe.
+
+
+
+
+
+Tips:
+ 
+  Put a `shortcut' in
+      Start/Programs/Xanalys LispWorks 4.2/
+  that points to the `rebuild-environment.bat' file.  Rebuilding
+  the environment will be a snap.
+
+  Put a `shortcut' in
+      Start/Programs/Xanalys LispWorks 4.2/
+  that points to the console and the gui development images.
+
+  Add this to your .lispworks file:
+
+(let* ((config-package (find-package "CSF/CONFIG"))
+       (boot-file      (probe-file "build\\lwboot.lsp")))
+  (when config-package
+    (mapc (lambda (entry)
+	    (set (intern (car entry) config-package) (cadr entry)))
+	  `(("*DEBUG-NOISE-LEVEL*"          0)
+	    ;; add other parameters here
+            ))
+    (import (intern "*DEBUG-NOISE-LEVEL*" (find-package "CSF/UTILITY"))
+	    (find-package "CL-USER"))
+    (when boot-file
+      (format t "~&Loading boot file...")
+      (load boot-file))))
