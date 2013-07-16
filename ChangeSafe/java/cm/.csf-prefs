@@ -1,0 +1,63 @@
+
+# ChangeSafe preferences file
+
+# CHANGESAFE_SERVER_URI should be set based on what host
+# is running the ChangeSafe server.  The port should
+# always be 7999.
+#CHANGESAFE_SERVER_URI	http://keating:7999/
+CHANGESAFE_SERVER_URI	http://localHost:7999/
+
+# Support for non-portable file-system operations.
+#
+# SET_FILE_READ_ONLY should be a command line that can be used to set
+# a file to read-only status.  The ChangeSafe java client will invoke this
+# command on a filename in order to make the file not-writable.
+#
+# SET_FILE_READ_WRITE should be a command line that can be used to set
+# a file to read-write status.  The ChangeSafe java client will invoke this
+# command on a filename in order to make the file writable.
+#
+# GET_FILE_EXECUTABLE should be a command line that can be used to query
+# if a file is executable.  The ChangeSafe java client will invoke this
+# command on a filename in order test if the file is executable.
+# This only makes sense on unix-like file-systems that have an
+# executable bit - it has no effect on MS-Windows.
+#
+# SET_FILE_EXECUTABLE should be a command line that can be used to set
+# a file to executable status.  The ChangeSafe java client will invoke
+# this command on a filename in order to make the file executable.
+# This only makes sense on unix-like file-systems that have an
+# executable bit - it has no effect on MS-Windows.
+#
+# SET_FILE_NOT_EXECUTABLE should be a command line that can be used to
+# set a file not-executable.  The ChangeSafe java client will invoke 
+# this command on a filename in order to make the file not-executable.
+# This only makes sense on unix-like file-systems that have an
+# executable bit - it has no effect on MS-Windows.
+#
+# SET_FILE_LAST_MODIFIED should be a command line that can be used to
+# change the timestamp on a file.  The ChangeSafe java client will invoke
+# this command on a filename in order to set the timestamp on the file.
+# There is no native command on Windows that can do this, but there
+# are several ports of the unix touch program that can do this.  Be
+# aware that some touch programs expect the date in CCYYMMDDhhmm.ss
+# while others use MMDDhhmmCCYY.ss
+#   If you don't want ChangeSafe to maintain timestamps, simply do not
+# specify a command for changing the timestamp.
+
+# Sample lines for a Unix installation
+#GET_FILE_EXECUTABLE     /bin/test -x
+#SET_FILE_EXECUTABLE     /bin/chmod a+x
+#SET_FILE_LAST_MODIFIED  /bin/touch -t CCYYMMDDhhmm.ss
+#SET_FILE_NOT_EXECUTABLE /bin/chmod a-x
+#SET_FILE_READ_ONLY      /bin/chmod a-w
+#SET_FILE_READ_WRITE     /bin/chmod a+w
+
+# Sample line for a Windows installation.
+#SET_FILE_READ_ONLY     C:\\WinNT\\System32\\Attrib.exe +R
+#SET_FILE_READ_WRITE    C:\\WinNT\\System32\\Attrib.exe -R
+#SET_FILE_LAST_MODIFIED "C:\\cygnus\\cygwin-b20\\H-i586-cygwin32\\bin\\touch.exe" -t MMDDhhmmCCYY.ss
+
+SET_FILE_READ_ONLY      ATTRIB.EXE +R
+SET_FILE_READ_WRITE     ATTRIB.EXE -R
+SET_FILE_LAST_MODIFIED "C:\\cygnus\\cygwin-b20\\H-i586-cygwin32\\bin\\touch.exe" -t MMDDhhmmCCYY.ss
