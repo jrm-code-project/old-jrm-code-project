@@ -1,0 +1,35 @@
+So what on earth is the license for the code in ChangeSafe?  The copyright notice on each file
+looks awfully scary.
+
+As one reader pointed out, it could take some work to properly release this under a BSD
+license.  I'm a programmer, not a lawyer, so I don't know what would be involved.
+
+However,
+  The scary copyright notice notwithstanding, I declare that the ChangeSafe code checked in to
+this repository to be available for use under the "New BSD License" as described
+here:  http://opensource.org/licenses/BSD-3-Clause
+  I expect and intend that the code be distributed and used in whole or in part by anyone who
+wishes to do so.
+  ChangeSafe, LLC assumes no responsibility for the use or reliability of this software.
+  ChangeSafe, LLC reserves the right to create and license its own derivative software.
+  
+In plain English:
+  Use the code!  Have fun!  ChangeSafe won't sue.  Not even if you take the entire thing as is
+and try to sell it.
+  You agree that:
+      You may not use the code if you try to sue ChangeSafe.
+      ChangeSafe is under no obligation to maintain or repair the code.
+      ChangeSafe is under no obligation to inform anyone about problems discovered or adverse
+  consequences of using the code, no matter how severe.
+      If ChangeSafe LLC builds a product based on this software, we keep any new code and are
+  under no obligation to release it.
+  
+Joe Marshall
+CTO ChangeSafe, LLC
+July 16, 2013
+
+
+
+P.S.  No doubt someone will find some technicality to worry about.  ChangeSafe LLC is happy
+to consider other licensing terms.  But if you aren't worried enough to consult your own
+lawyer, our consideration will be limited to peals of laughter.
