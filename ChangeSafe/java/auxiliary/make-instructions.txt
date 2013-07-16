@@ -1,0 +1,55 @@
+The following step is required once per machine installation of the development
+environment.
+
+0) Ensure that you have generated a certificate key called 'ContentIntegrityTest'.
+   
+   This is a one-time per machine step (assuming you don't sack your Netscape
+   installation), and is described in the document 'signing.doc'.
+
+------------------------------------------------------------------------------   
+
+The following steps are required every time you change java code which runs as
+as signed applet in browsers.
+
+1) Compile the classes with the COMPILE-JAVA.BAT file, resulting in classes\*.class files.
+
+   This should be readily automated in the TS-LOAD function, but hasn't been done yet.
+
+   COMPILE-JAVA.bat and lisp-internal invocations of 'javac' assume that the CLASSPATH
+   environment variable includes '.', and that '.' for purposes of compilation is the
+   \ts50\server directory.
+
+2) Sign the classes with the SIGN-CLASSES.BAT file, generating the FSTestApplet.jar file.
+
+   This step assumes that you've generated certificate keys as per the procedure
+   documented in 'signing.doc'.
+
+   This should also be automated, but it isn't straightforward.
+
+   You must feed in your Netscape certificate database password and user database
+   location, which varies by machine and user.  Assuming you can figure out where the
+   database location is, and that you know the password, the location is passed with -d,
+   and the password with -p.  Usage.html has details (I had to cut and past this from a
+   netscape site frame, since they don't appear to publish the documentation for signtool
+   in downloadable form).
+
+   For now, I've copied essential certificate key files from my machine
+   (in the "D:\Program Files\Netscape\Users\Default" directory)
+   and put them in the signtool directory. These files require the password
+   "implementer", which is used in the sign-classes.bat file.
+
+  -rw-rw-rw-   1 dave     5           98304 Dec  9 19:55 cert7.db
+  -rw-rw-rw-   1 dave     5           16384 Dec  9 19:55 key3.db
+  -rw-rw-rw-   1 dave     5           16384 Dec  9 19:55 secmod.db
+
+  So the sign-classes.bat file will use these certificate databases to sign the
+  classes, and you don't absolutely have to have done step (0) (maybe, I haven't tested
+  this assumption) before doing step (1).
+------------------------------------------------------------------------------
+
+HACK HACK HACK:
+
+Classes are compiled into the 'classes' subdirectory for purposes of producing a signed
+applet.  They are compiled into the 'server' directory for purposes of running the
+application oriented test harness.  The 'class' files are generally identical, if they've
+been compiled with the same switches.  
