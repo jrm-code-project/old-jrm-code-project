@@ -499,7 +499,7 @@
                                      persistent-store node-id node-index init-plist)
   (debug-message 2 "Upgrading schema for workspace.")
   ;; This needs work.  The zeros are the OID of NIL.
-  (call-next-method class 1 persistent-store node-id node-index
+  (pstore::restore-instance class 1 persistent-store node-id node-index
                     (list* :added-master-csets 0
                            :removed-master-csets 0
                            :transitional-added-master-csets 0
