@@ -147,6 +147,18 @@
         ((zero? (head cf)) (tail cf))
         (else (cons-stream 0 cf))))
 
+(define (cf:positive? cf)
+  (or (empty-stream? cf)
+      (positive? (head cf))
+      (and (zero? (head cf))
+	   (cf:positive? (tail cf)))))
+
+(define (cf:negative? cf)
+  (and (not (empty-stream? cf))
+       (or (negative? (head cf))
+	   (and (zero? (head cf))
+		(cf:negative? (tail cf))))))
+
 ;;; Compare two continued fractions.
 ;;; One thing you give up when you have an incremental representation
 ;;; is the ability to reliably determine equality!
@@ -215,7 +227,7 @@
   (cf:< cf (rat:->cf rat)))
 
 (define (rat*cf:> rat cf)
-  (cf:> (rat->cf rat) cf))
+  (cf:> (rat:->cf rat) cf))
 
 (define (rat*cf:< rat cf)
   (cf:< (rat:->cf rat) cf))
@@ -346,7 +358,7 @@
 
           (else (fail)))))
 
-(define (gosper-1 cf a b c d)
+(define (gosper-1 a b c d cf)
   ;; Incrementally compute the coefficients of
   ;;
   ;;      ax + b
@@ -415,35 +427,48 @@
 ;;; Functions based on single-input gosper algorithm.
 
 (define (cf:negate cf)
-  (gosper-1 cf -1 0 0 1))
+  (if (empty-stream? cf)
+      the-empty-stream
+      (cons-stream (- (head cf)) (cf:negate (tail cf)))))
+
+(define (cf:abs cf)
+  (if (cf:negative? cf)
+      cf
+      (cf:negate cf)))
 
 (define (cf*rat:+ cf rat)
-  (gosper-1 cf (denominator rat) (numerator rat)
-                0                (denominator rat)))
+  (gosper-1 (denominator rat) (numerator rat)
+	    0                 (denominator rat)
+	    cf))
 
 (define (cf*rat:- cf rat)
-  (gosper-1 cf (denominator rat) (- (numerator rat))
-                0                (denominator rat)))
+  (gosper-1 (denominator rat) (- (numerator rat))
+	    0                 (denominator rat)
+	    cf))
 
 (define (cf*rat:* cf rat)
-  (gosper-1 cf (numerator rat)   0
-               0 (denominator rat)))
+  (gosper-1 (numerator rat) 0
+            0               (denominator rat)
+	    cf))
 
 (define (cf*rat:/ cf rat)
-  (gosper-1 cf (denominator rat) 0
-               0   (numerator rat)))
+  (gosper-1 (denominator rat) 0
+	    0                 (numerator rat)  
+	    cf))
 
 (define-integrable (rat*cf:+ rat cf) (cf*rat:+ cf rat))
 
 (define (rat*cf:- rat cf)
-  (gosper-1 cf (- (denominator rat)) (numerator rat)
-                0                    (denominator rat)))
+  (gosper-1 (- (denominator rat)) (numerator rat)
+	    0                     (denominator rat)
+	    cf))
 
 (define-integrable (rat*cf:* rat cf) (cf*rat:* cf rat))
 
 (define (rat*cf:/ rat cf)
-  (gosper-1 cf 0                 (numerator rat)
-               (denominator rat) 0))
+  (gosper-1 0                 (numerator rat)
+	    (denominator rat)  0
+	    cf))
 
 ;;; Printing a continued fraction.
 ;;; This is simply a variation on gosper-1,
@@ -773,7 +798,7 @@
          (newline)
          (cf:render (cf:negate (cf:recip cf)))
          (newline)
-         (cf:render (gosper-1 cf -2 5 -3 6)))
+         (cf:render (gosper-1 -2 5 -3 6 cf)))
        (list phi sqrt-two sqrt-three e cf:pi)))
 
 (define (test-1)
@@ -782,10 +807,10 @@
     (if (= count 100)
         (floor (* (- (runtime) start) 10))
         (begin
-          (stream-ref (gosper-1 sqrt-two 0 2 -1 3) 1000)
-          (stream-ref (gosper-1 cf:pi 1 2 0 3) 1000)
-          (stream-ref (gosper-1 e 1 1 1 -1) 1000)
-          (stream-ref (gosper-1 phi 0 1 6 2) 1000)
+          (stream-ref (gosper-1 0 2 -1 3 sqrt-two) 1000)
+          (stream-ref (gosper-1 1 2 0 3 cf:pi) 1000)
+          (stream-ref (gosper-1 1 1 1 -1 e) 1000)
+          (stream-ref (gosper-1 0 1 6 2 phi) 1000)
           (loop (1+ count) start)))))
 
 (define (test-2)
@@ -801,15 +826,16 @@
                     (begin (newline) (display i) (display " ")
                            (display j) (display " ")
                            (display k) (display " ")
-                           (cf:render (gosper-1 cf:pi i j k (- i)))
-                           (cf:render (gosper-1 e i j k (- i)))
+                           (cf:render (gosper-1 i j k (- i) cf:pi))
+                           (cf:render (gosper-1 i j k (- i) e))
                            (l3 (+ k 1))))))))))
 
 (define (test)
   (newline)
-  (display "")
+  (display
+   "1.261203874963741442514768206917056593877049107250556592336194210...")
   (newline)
-  (cf:render (gosper-1 sqrt-two 0 2 -1 3))
+  (cf:render (gosper-1 0 2 -1 3 sqrt-two))
   (newline)
 
   (newline)
